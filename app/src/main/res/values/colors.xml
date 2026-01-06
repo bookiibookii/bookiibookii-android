@@ -13,10 +13,17 @@
     <color name="grey_800">#42413F</color>
     <color name="grey_900">#242322</color>
 
-    <color name="main">#FF7618</color>
-    <color name="main_pale">#FFEADB</color>
+    <!--신규 추가-->
+    <color name="page">#FDFBF7</color>
+    <color name="main">#48B48A</color>
+    <color name="point1">#FFB800</color>
+    <color name="point2">#FF6B6B</color>
 
-    <color name="sub">#37AAFF</color>
-    <color name="sub_pale">#D4EDFF</color>
+<!--이전 UI 색상 -> 미사용 시 추후 삭제 필요-->
+    <color name="pre_main">#FF7618</color>
+    <color name="pre_main_pale">#FFEADB</color>
+
+    <color name="pre_sub">#37AAFF</color>
+    <color name="pre_sub_pale">#D4EDFF</color>
 
 </resources>
