@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.bookData.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.BuildConfig
 import com.bookiibookii.bookiibookii.bookData.API.RetrofitClient
 import com.bookiibookii.bookiibookii.bookData.Data.Book
 import com.bookiibookii.bookiibookii.bookData.Data.BookCategory
