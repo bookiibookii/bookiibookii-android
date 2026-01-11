@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/page">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.08" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.92" />
+
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipRecommended"
+        style="@style/Widget.App.Chip.Filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:checked="true"
+        android:text="추천순"
+        android:checkable="true"
+        android:clickable="true"
+        android:focusable="true"
+        app:checkedIconVisible="false"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintEnd_toStartOf="@id/chipNewest"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipNewest"
+        style="@style/Widget.App.Chip.Filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="최신순"
+        android:checkable="true"
+        android:clickable="true"
+        android:focusable="true"
+        app:checkedIconVisible="false"
+        app:layout_constraintStart_toEndOf="@id/chipRecommended"
+        app:layout_constraintEnd_toStartOf="@id/chipPopular"
+        app:layout_constraintTop_toTopOf="@id/chipRecommended" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipPopular"
+        style="@style/Widget.App.Chip.Filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="인기순"
+        android:checkable="true"
+        android:clickable="true"
+        android:focusable="true"
+        app:checkedIconVisible="false"
+        app:layout_constraintStart_toEndOf="@id/chipNewest"
+        app:layout_constraintEnd_toStartOf="@id/chipCategory"
+        app:layout_constraintTop_toTopOf="@id/chipRecommended" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipCategory"
+        style="@style/Widget.App.Chip.Filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="분야별"
+        android:checkable="true"
+        android:clickable="true"
+        android:focusable="true"
+        app:checkedIconVisible="false"
+        app:layout_constraintStart_toEndOf="@id/chipPopular"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintTop_toTopOf="@id/chipRecommended" />
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/group_recyclerview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@id/chipRecommended"
+        tools:listitem="@layout/item_grp_card" />
+    <ImageView
+        android:id="@+id/grp_group_list_Iv"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:src="@drawable/ic_grouplist"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
