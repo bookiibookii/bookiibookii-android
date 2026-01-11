@@ -26,6 +26,7 @@ android {
     }
     buildFeatures {
         buildConfig = true
+        viewBinding = true
     }
 
     buildTypes {
@@ -67,5 +68,10 @@ dependencies {
 
     //viewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
+
+    //chip
+    implementation("com.google.android.material:material:1.12.0")
+    //glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
 }
