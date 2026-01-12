@@ -3,13 +3,14 @@ package com.bookiibookii.bookiibookii.bookData.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.BuildConfig
 import com.bookiibookii.bookiibookii.bookData.API.RetrofitClient
 import com.bookiibookii.bookiibookii.bookData.Data.Book
 import com.bookiibookii.bookiibookii.bookData.Data.BookCategory
 import kotlinx.coroutines.launch
 
 // 더미 데이터 (나중에 검색 입력과 연결)
-private const val DUMMY_TITLE = "돈의 방정식"
+private const val DUMMY_TITLE = "살인자의 기억법"
 
 class BookViewModel : ViewModel() {
 
