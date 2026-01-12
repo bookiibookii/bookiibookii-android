@@ -68,12 +68,12 @@
         <item name="android:letterSpacing">-0.023</item>
     </style>
 
-<!--    <style name="headline" parent="TextAppearance.MaterialComponents.Body2">-->
-<!--        <item name="android:fontFamily">@font/pretendard_variable</item>-->
-<!--        <item name="android:textSize">17sp</item>-->
-<!--        <item name="android:textFontWeight">400</item>-->
-<!--        <item name="android:textColor">@color/black</item>-->
-<!--    </style>-->
+    <!--    <style name="headline" parent="TextAppearance.MaterialComponents.Body2">-->
+    <!--        <item name="android:fontFamily">@font/pretendard_variable</item>-->
+    <!--        <item name="android:textSize">17sp</item>-->
+    <!--        <item name="android:textFontWeight">400</item>-->
+    <!--        <item name="android:textColor">@color/black</item>-->
+    <!--    </style>-->
     <style name="headline_semibold">
         <item name="android:fontFamily">@font/pretendard_variable</item>
         <item name="android:textSize">17sp</item>
@@ -184,4 +184,87 @@
         <item name="lineHeight">13dp</item>
         <item name="android:letterSpacing">0.005</item>
     </style>
+
+    <style name="chip_title_select">
+        <item name="android:fontFamily">@font/pretendard_variable</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textColor">@color/grey_100</item>
+        <item name="lineHeight">13dp</item>
+        <item name="android:letterSpacing">0.005</item>
+    </style>
+
+    <style name="chip_title_unselect">
+        <item name="android:fontFamily">@font/pretendard_variable</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="lineHeight">13dp</item>
+        <item name="android:letterSpacing">0.005</item>
+    </style>
+    <!--CHIP Style-->
+
+    <style name="TextAppearance.App.Chip"
+        parent="TextAppearance.MaterialComponents.Chip">
+        <item name="android:fontFamily">@font/pretendard_variable</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:letterSpacing">0.005</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="Base.App.Chip"
+        parent="Widget.MaterialComponents.Chip.Action">
+        <item name="android:textAppearance">@style/TextAppearance.App.Chip</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAlignment">gravity</item>
+
+        <item name="chipMinTouchTargetSize">0dp</item>
+        <item name="chipCornerRadius">27dp</item>
+        <item name="checkedIconVisible">false</item>
+    </style>
+
+    <style name="Widget.App.Chip.Filter" parent="Base.App.Chip">
+        <item name="android:checkable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="chipBackgroundColor">@color/selector_chip_background</item>
+        <item name="android:textColor">@color/selector_chip_text</item>
+        <item name="chipStrokeColor">@color/selector_chip_stroke</item>
+    </style>
+
+    <style name="Widget.App.Chip.Tag" parent="Base.App.Chip">
+        <item name="android:layout_width">47dp</item>
+        <item name="android:layout_height">23dp</item>
+        <item name="chipStartPadding">0dp</item>
+        <item name="chipEndPadding">0dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAlignment">gravity</item>
+        <item name="chipCornerRadius">8dp</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="android:checkable">false</item>
+        <item name="android:clickable">false</item>
+        <item name="chipBackgroundColor">@color/pre_main</item>
+        <item name="android:textColor">@color/grey_100</item>
+    </style>
+
+    <style name="Widget.App.Chip.hashtag" parent="Base.App.Chip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="chipStartPadding">0dp</item>
+        <item name="chipEndPadding">0dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAlignment">gravity</item>
+        <item name="chipCornerRadius">8dp</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="android:checkable">false</item>
+        <item name="android:clickable">false</item>
+        <item name="chipBackgroundColor">#1AFF7618</item>
+        <item name="android:textColor">@color/pre_main</item>
+    </style>
+
 </resources>

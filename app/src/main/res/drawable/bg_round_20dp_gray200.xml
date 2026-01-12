@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:shape="rectangle">
+
+    <!-- 배경색 -->
+    <solid android:color="@color/grey_200" />
+    <!--컬러는 배경에 맞는 컬러-->
+
+    <!-- 모서리 둥글기 -->
+    <corners android:radius="20dp" />
+
+</shape>
