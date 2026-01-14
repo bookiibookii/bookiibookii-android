@@ -26,12 +26,14 @@
     <color name="pre_sub">#37AAFF</color>
     <color name="pre_sub_pale">#D4EDFF</color>
 
-    <color name="toggle_bg_selected">#48B48A</color>
+    <color name="toggle_bg_selected">#242322</color>
     <color name="toggle_bg_unselected">#FFFFFF</color>
 
-    <color name="toggle_stroke_selected">#48B48A</color>
-    <color name="toggle_stroke_unselected">#F4F4F4</color>
+    <color name="toggle_stroke_selected">#242322</color>
+    <color name="toggle_stroke_unselected">#E2E1DF</color>
 
     <color name="toggle_text_selected">#FFFFFF</color>
-    <color name="toggle_text_unselected">#000000</color>
+    <color name="toggle_text_unselected">#242322</color>
+
+    <color name="app_background">#F6F6F6</color>
 </resources>

@@ -1,9 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+<!--    기본 테마 설정-->
     <style name="Base.Theme.BookiiBookii" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:windowBackground">@color/app_background</item>
+
+<!--        폰트 수정하기-->
+        <item name="android:fontFamily">@font/pretendard_variable</item>
+        <item name="fontFamily">@font/pretendard_variable</item>
+    </style>
+
+
+    <style name="Theme.Bookii.BottomSheet.NoDim"
+        parent="Theme.Material3.Light.BottomSheetDialog">
+        <!-- 배경 어두워짐 제거 -->
+        <item name="android:backgroundDimEnabled">false</item>
     </style>
 
     <style name="Theme.BookiiBookii" parent="Base.Theme.BookiiBookii" />
+
 </resources>
