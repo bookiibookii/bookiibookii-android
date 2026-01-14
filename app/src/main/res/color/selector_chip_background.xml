@@ -2,7 +2,7 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 <!--선택 시 주황색-->
     <item android:state_checked="true"
-        android:color="@color/pre_main" />
+        android:color="@color/grey_900" />
 <!--기본은 흰색-->
     <item android:color="@color/white" />
 </selector>

@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/page">
+    android:background="@color/ui_bg"
+    android:fitsSystemWindows="true">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_start"
@@ -21,8 +22,39 @@
         app:layout_constraintGuide_percent="0.92" />
 
 
+    <ImageView
+        android:id="@+id/grp_main_dashBoard_Iv"
+        android:layout_width="match_parent"
+        android:layout_height="113dp"
+        android:background="@drawable/bg_grp_dashboard_border"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+    <TextView
+        android:id="@+id/grp_main_title_Tv"
+        android:layout_width="42dp"
+        android:layout_height="34dp"
+        android:text="그룹"
+        android:textSize="24sp"
+        android:fontFamily="@font/pretendard_variable"
+        android:textStyle="bold"
+        android:textColor="@color/grey_700"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toTopOf="@id/grp_search_Iv"
+        app:layout_constraintBottom_toBottomOf="@id/grp_search_Iv"
+        />
+
+    <ImageView
+        android:id="@+id/grp_search_Iv"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_search"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintTop_toTopOf="parent"/>
+
     <com.google.android.material.chip.Chip
-        android:id="@+id/chipRecommended"
+        android:id="@+id/grp_recommend_Cp"
         style="@style/Widget.App.Chip.Filter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -35,11 +67,12 @@
         app:checkedIconVisible="false"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintEnd_toStartOf="@id/chipNewest"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toStartOf="@id/grp_newest_Cp"
+        app:layout_constraintTop_toBottomOf="@id/grp_main_title_Tv"
+        app:layout_goneMarginTop="16dp"/>
 
     <com.google.android.material.chip.Chip
-        android:id="@+id/chipNewest"
+        android:id="@+id/grp_newest_Cp"
         style="@style/Widget.App.Chip.Filter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -48,12 +81,12 @@
         android:clickable="true"
         android:focusable="true"
         app:checkedIconVisible="false"
-        app:layout_constraintStart_toEndOf="@id/chipRecommended"
-        app:layout_constraintEnd_toStartOf="@id/chipPopular"
-        app:layout_constraintTop_toTopOf="@id/chipRecommended" />
+        app:layout_constraintStart_toEndOf="@id/grp_recommend_Cp"
+        app:layout_constraintEnd_toStartOf="@+id/grp_popular_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_recommend_Cp" />
 
     <com.google.android.material.chip.Chip
-        android:id="@+id/chipPopular"
+        android:id="@+id/grp_popular_Cp"
         style="@style/Widget.App.Chip.Filter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -62,12 +95,12 @@
         android:clickable="true"
         android:focusable="true"
         app:checkedIconVisible="false"
-        app:layout_constraintStart_toEndOf="@id/chipNewest"
-        app:layout_constraintEnd_toStartOf="@id/chipCategory"
-        app:layout_constraintTop_toTopOf="@id/chipRecommended" />
+        app:layout_constraintStart_toEndOf="@id/grp_newest_Cp"
+        app:layout_constraintEnd_toStartOf="@id/grp_category_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_recommend_Cp" />
 
     <com.google.android.material.chip.Chip
-        android:id="@+id/chipCategory"
+        android:id="@+id/grp_category_Cp"
         style="@style/Widget.App.Chip.Filter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -76,22 +109,22 @@
         android:clickable="true"
         android:focusable="true"
         app:checkedIconVisible="false"
-        app:layout_constraintStart_toEndOf="@id/chipPopular"
+        app:layout_constraintStart_toEndOf="@id/grp_popular_Cp"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
-        app:layout_constraintTop_toTopOf="@id/chipRecommended" />
+        app:layout_constraintTop_toTopOf="@id/grp_recommend_Cp" />
 
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/group_recyclerview"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:clipToPadding="false"
         android:paddingBottom="80dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintTop_toBottomOf="@id/chipRecommended"
+        app:layout_constraintTop_toBottomOf="@id/grp_main_dashBoard_Iv"
         tools:listitem="@layout/item_grp_card" />
     <ImageView
         android:id="@+id/grp_group_list_Iv"
