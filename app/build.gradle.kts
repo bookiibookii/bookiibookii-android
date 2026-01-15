@@ -17,6 +17,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "ALADIN_TTB_KEY",
+            "\"${project.findProperty("ALADIN_TTB_KEY") ?: ""}\""
+        )
     }
 
     buildTypes {
@@ -38,6 +44,8 @@ android {
         }
     }
     buildFeatures {
+        buildConfig = true
+        viewBinding = true
         dataBinding = true
     }
 }
