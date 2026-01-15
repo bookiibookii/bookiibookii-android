@@ -15,3 +15,14 @@ enum class ReadStatus {
     READING, // 진행 중
     DONE     // 종료
 }
+
+data class LibReview(
+    val id: Long,
+    val userName: String,
+    val content: String,
+    val page: Int,
+    val date: String,
+    val profileImage: Int? = null,
+    val reviewImageUri: String? = null,
+    val isMine: Boolean = false
+)

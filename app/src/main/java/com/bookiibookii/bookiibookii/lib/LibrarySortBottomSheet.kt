@@ -1,10 +1,11 @@
-package com.bookiibookii.bookiibookii
+package com.bookiibookii.bookiibookii.lib
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.databinding.FragmentLibSortDialogBinding
+import com.google.android.material.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -32,14 +33,14 @@ class LibrarySortBottomSheet : BottomSheetDialogFragment() {
         super.onStart()
 
         val dialog = dialog as? BottomSheetDialog
-        val bottomSheet = dialog?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+        val bottomSheet = dialog?.findViewById<View>(R.id.design_bottom_sheet)
 
         bottomSheet?.let { sheet ->
             val metrics = resources.displayMetrics
             val screenHeight = metrics.heightPixels
 
             val layoutParams = sheet.layoutParams
-            layoutParams.height = (screenHeight * 0.35).toInt()
+            layoutParams.height = (screenHeight * 0.55).toInt()
             sheet.layoutParams = layoutParams
 
             val behavior = BottomSheetBehavior.from(sheet)

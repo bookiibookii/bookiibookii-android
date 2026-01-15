@@ -27,7 +27,7 @@
             android:textAppearance="@style/medium24"
             android:textColor="@color/grey_900"
             android:text="내 서재"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="55dp"
             app:layout_constraintStart_toStartOf="@id/guideline_start"
             app:layout_constraintTop_toTopOf="parent"/>
 
@@ -35,7 +35,7 @@
             android:id="@+id/lib_search_iv"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="55dp"
             android:layout_marginEnd="8dp"
             android:src="@drawable/ic_search"
             app:layout_constraintTop_toTopOf="parent"
@@ -45,7 +45,7 @@
             android:id="@+id/lib_sort_iv"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="55dp"
             android:src="@drawable/ic_sort"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="@id/guideline_end"/>

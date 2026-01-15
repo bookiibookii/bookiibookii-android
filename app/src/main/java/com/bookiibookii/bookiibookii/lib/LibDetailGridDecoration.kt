@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii
+package com.bookiibookii.bookiibookii.lib
 
 import android.graphics.Rect
 import android.view.View

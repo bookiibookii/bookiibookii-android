@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii
+package com.bookiibookii.bookiibookii.lib
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
-import com.bookiibookii.bookiibookii.bookData.Data.Book
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.Data.LibBook
 import com.bookiibookii.bookiibookii.bookData.Data.ReadStatus
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBinding
@@ -20,12 +20,37 @@ class LibraryFragment : Fragment() {
     private lateinit var libraryAdapter: LibraryBookAdapter
 
     private val allMyBooks = listOf(
-        LibBook(title = "괴테는 모든 것을 말했다", author = "noshel", readStatus = ReadStatus.READING, progress = "50% 읽음"),
-        LibBook(title = "자바의 정석", author = "남궁성", readStatus = ReadStatus.READING, progress = "p.120"),
-        LibBook(title = "해리포터와 마법사의 돌", author = "J.K.롤링", readStatus = ReadStatus.DONE, rating = 5),
-        LibBook(title = "클린 코드", author = "로버트 C", readStatus = ReadStatus.READING, progress = "독서 시작 전"),
+        LibBook(
+            title = "괴테는 모든 것을 말했다",
+            author = "noshel",
+            readStatus = ReadStatus.READING,
+            progress = "50% 읽음"
+        ),
+        LibBook(
+            title = "자바의 정석",
+            author = "남궁성",
+            readStatus = ReadStatus.READING,
+            progress = "p.120"
+        ),
+        LibBook(
+            title = "해리포터와 마법사의 돌",
+            author = "J.K.롤링",
+            readStatus = ReadStatus.DONE,
+            rating = 5
+        ),
+        LibBook(
+            title = "클린 코드",
+            author = "로버트 C",
+            readStatus = ReadStatus.READING,
+            progress = "독서 시작 전"
+        ),
         LibBook(title = "반지의 제왕", author = "톨킨", readStatus = ReadStatus.DONE, rating = 4),
-        LibBook(title = "코틀린 인 액션", author = "드미트리", readStatus = ReadStatus.READING, progress = "80% 읽음"),
+        LibBook(
+            title = "코틀린 인 액션",
+            author = "드미트리",
+            readStatus = ReadStatus.READING,
+            progress = "80% 읽음"
+        ),
         LibBook(title = "안드로이드 프로그래밍", author = "구글", readStatus = ReadStatus.DONE, rating = 3)
     )
 
@@ -48,8 +73,19 @@ class LibraryFragment : Fragment() {
     }
 
     private fun initRecyclerView() {
-        libraryAdapter = LibraryBookAdapter(emptyList()) // 초기 데이터
+        libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
 
+            // 1. 상세 프래그먼트 생성
+            val detailFragment = LibraryBookDetailFragment()
+
+            // 데이터 선택 추후 구현
+
+            // 2. 화면 이동 (트랜잭션)
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.main_frm, detailFragment)
+                .addToBackStack(null) // 뒤로가기 시 목록으로 돌아오기 위해 필수
+                .commit()
+        }
         binding.libBookListRv.apply {
             layoutManager = GridLayoutManager(context, 3)
 

@@ -24,7 +24,7 @@
         android:id="@+id/lib_detail_back_iv"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginTop="13.5dp"
+        android:layout_marginTop="65.5dp"
         android:src="@drawable/ic_back"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="@id/guideline_start"/>
@@ -36,7 +36,7 @@
         android:textAppearance="@style/medium20"
         android:textColor="@color/grey_900"
         android:text="괴테는 모든 것을 말했다"
-        android:layout_marginTop="19.5dp"
+        android:layout_marginTop="71.5dp"
         app:layout_constraintStart_toEndOf="@id/lib_detail_back_iv"
         app:layout_constraintEnd_toStartOf="@id/lib_detail_more_iv"
         app:layout_constraintTop_toTopOf="parent"/>
@@ -45,7 +45,7 @@
         android:id="@+id/lib_detail_more_iv"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginTop="13.5dp"
+        android:layout_marginTop="65.5dp"
         android:src="@drawable/ic_more"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"/>

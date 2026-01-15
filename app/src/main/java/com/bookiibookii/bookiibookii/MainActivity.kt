@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.bookiibookii.bookiibookii.bookData.viewModel.BookViewModel
+import com.bookiibookii.bookiibookii.lib.LibraryFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,6 +20,11 @@ class MainActivity : AppCompatActivity() {
 //            insets
 //        }
         setContentView(R.layout.activity_main)
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.main_frm, LibraryFragment())
+                .commit()
+        }
 
         viewModel.toString()
     }

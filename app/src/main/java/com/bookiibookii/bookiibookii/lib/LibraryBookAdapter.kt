@@ -1,15 +1,17 @@
-package com.bookiibookii.bookiibookii
+package com.bookiibookii.bookiibookii.lib
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bookiibookii.bookiibookii.bookData.Data.Book
 import com.bookiibookii.bookiibookii.bookData.Data.LibBook
 import com.bookiibookii.bookiibookii.bookData.Data.ReadStatus
 import com.bookiibookii.bookiibookii.databinding.ItemLibBookBinding
 
-class LibraryBookAdapter(private var items : List<LibBook>) : RecyclerView.Adapter<LibraryBookAdapter.BookViewHolder>(){
+class LibraryBookAdapter(
+    private var items: List<LibBook>,
+    private val itemClickListener: (LibBook) -> Unit
+) : RecyclerView.Adapter<LibraryBookAdapter.BookViewHolder>(){
     inner class BookViewHolder(private val binding: ItemLibBookBinding) : RecyclerView.ViewHolder(binding.root){
         fun bind(item : LibBook){
             binding.libItemBookTitleTv.text = item.title
@@ -31,6 +33,9 @@ class LibraryBookAdapter(private var items : List<LibBook>) : RecyclerView.Adapt
 
                     // 별점 로직
                 }
+            }
+            itemView.setOnClickListener {
+                itemClickListener(item)
             }
         }
     }
