@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/ui_bg"
+    android:fitsSystemWindows="true">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.08" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.92" />
+
+
+    <ImageView
+        android:id="@+id/act_grp_search_dashBoard_Iv"
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:background="@drawable/bg_grp_dashboard_border"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+    <ImageView
+        android:id="@+id/act_grp_search_back_Iv"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_arrow"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toTopOf="@id/act_grp_search_dashBoard_Iv"
+        app:layout_constraintBottom_toBottomOf="@id/act_grp_search_dashBoard_Iv"
+        />
+
+    <EditText
+        android:id="@+id/act_grp_search_bar"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="12dp"
+        android:background="@drawable/bg_grp_search_input"
+        android:drawableStart="@drawable/ic_search_simple"
+        android:drawablePadding="8dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="16dp"
+        android:hint="도서명, 저자명, 태그 검색"
+        android:textColorHint="@color/grey_400"
+        android:fontFamily="@font/pretendard_variable"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:imeOptions="actionSearch"
+        android:inputType="text"
+        android:maxLines="1"
+        app:layout_constraintStart_toEndOf="@id/act_grp_search_back_Iv"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintTop_toTopOf="@id/act_grp_search_dashBoard_Iv"
+        app:layout_constraintBottom_toBottomOf="@id/act_grp_search_dashBoard_Iv"/>
+
+    <TextView
+        android:id="@+id/act_grp_title_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/pretendard_variable"
+        android:textSize="15dp"
+        android:textColor="@color/grey_700"
+        android:text="인기 검색어"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@id/act_grp_search_dashBoard_Iv"
+        android:layout_marginTop="20dp"
+        />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_popular"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="20dp"
+        app:chipSpacingHorizontal="8dp"
+        app:chipSpacingVertical="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/act_grp_title_Tv"
+        app:layout_constraintTop_toBottomOf="@id/act_grp_title_Tv">
+
+    </com.google.android.material.chip.ChipGroup>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/act_grd_card_promo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_round_20dp_white"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@id/chip_group_popular">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="32dp"
+            android:paddingHorizontal="24dp">
+
+            <TextView
+                android:id="@+id/card_title_Tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="아직 그룹을 만들지 않았어요 😭"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/card_sub_title_Tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="읽고 싶은 책을 골라 그룹을 만들어볼까요?"
+                android:textColor="@color/grey_600"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/card_title_Tv" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/act_grp_next_Btn"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="14dp"
+                android:background="@drawable/bg_round_10dp_gray900"
+                android:text="그룹 만들기"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:stateListAnimator="@null"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/card_sub_title_Tv" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
