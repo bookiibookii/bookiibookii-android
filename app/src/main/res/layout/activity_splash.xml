@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/splashRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/pre_main">
+
+        <!-- 중앙 로고 + 타이틀 이미지 영역 -->
+        <LinearLayout
+            android:id="@+id/logoContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintVertical_bias="0.42">
+
+            <!-- 심볼 로고 -->
+            <ImageView
+                android:id="@+id/imgLogo"
+                android:layout_width="92dp"
+                android:layout_height="92dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/ic_bookii_logo_white" />
+
+            <!-- 타이틀 이미지 -->
+            <ImageView
+                android:id="@+id/imgTitle"
+                android:layout_width="137.72dp"
+                android:layout_height="71dp"
+                android:layout_marginStart="18dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/ic_bookii_title_white" />
+        </LinearLayout>
+
+        <!-- 로딩 인디케이터 -->
+        <ProgressBar
+            android:id="@+id/progressLoading"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="69dp"
+            android:layout_height="69dp"
+            android:indeterminate="true"
+            app:layout_constraintTop_toBottomOf="@id/logoContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="230dp" />
+
+        <!-- 상태 텍스트 -->
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/splash_loading"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:includeFontPadding="false"
+            app:layout_constraintTop_toBottomOf="@id/progressLoading"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>
