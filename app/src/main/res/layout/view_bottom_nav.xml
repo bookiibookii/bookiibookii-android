@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottomNavRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="14dp"
+    android:paddingBottom="14dp">
+
+    <!-- 둥근 흰색 바(배경) -->
+    <LinearLayout
+        android:id="@+id/bottomNavContainer"
+        android:layout_width="0dp"
+        android:layout_height="72dp"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_bottom_nav"
+        android:elevation="8dp"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:gravity="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- item 1: 홈 -->
+        <LinearLayout
+            android:id="@+id/itemHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ivHome"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home_unselected" />
+
+            <TextView
+                android:id="@+id/tvHome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="홈"
+                android:textSize="11sp"
+                android:textColor="@color/grey_400" />
+        </LinearLayout>
+
+        <!-- item 2: 그룹 -->
+        <LinearLayout
+            android:id="@+id/itemGroup"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ivGroup"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_group_unselected" />
+
+            <TextView
+                android:id="@+id/tvGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="그룹"
+                android:textSize="11sp"
+                android:textColor="@color/grey_400" />
+        </LinearLayout>
+
+        <!-- item 3: 트래커 -->
+        <LinearLayout
+            android:id="@+id/itemTracker"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ivTracker"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_tracker_unselected" />
+
+            <TextView
+                android:id="@+id/tvTracker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="트래커"
+                android:textSize="11sp"
+                android:textColor="@color/grey_400" />
+        </LinearLayout>
+
+        <!-- item 4: 서재 -->
+        <LinearLayout
+            android:id="@+id/itemLibrary"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ivLibrary"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_library_unselected" />
+
+            <TextView
+                android:id="@+id/tvLibrary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="서재"
+                android:textSize="11sp"
+                android:textColor="@color/grey_400" />
+        </LinearLayout>
+
+        <!-- item 5: 마이페이지 -->
+        <LinearLayout
+            android:id="@+id/itemMy"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ivMy"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_mypage_unselected" />
+
+            <TextView
+                android:id="@+id/tvMy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="마이페이지"
+                android:textSize="11sp"
+                android:textColor="@color/grey_400" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
