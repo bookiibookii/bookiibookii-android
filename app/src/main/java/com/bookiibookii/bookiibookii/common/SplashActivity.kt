@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.bookiibookii.bookiibookii.home.HomeActivity
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.databinding.ActivitySplashBinding
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -43,7 +43,7 @@ class SplashActivity : AppCompatActivity() {
         // val hasValidToken = TokenManager.hasValidToken()
 
         // 현재 단계에서는 항상 홈으로 이동
-        startActivity(Intent(this, HomeActivity::class.java))
+        startActivity(Intent(this, MainActivity::class.java))
 
         // TODO [v1] 토큰 분기 로직 활성화 시 아래 코드 사용
         /*
