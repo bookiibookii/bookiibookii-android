@@ -208,7 +208,6 @@
         parent="TextAppearance.MaterialComponents.Chip">
         <item name="android:fontFamily">@font/pretendard_variable</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textFontWeight">600</item>
         <item name="android:letterSpacing">0.005</item>
         <item name="android:includeFontPadding">false</item>
     </style>
@@ -263,8 +262,25 @@
         <item name="chipStrokeWidth">0dp</item>
         <item name="android:checkable">false</item>
         <item name="android:clickable">false</item>
-        <item name="chipBackgroundColor">#1AFF7618</item>
-        <item name="android:textColor">@color/pre_main</item>
+        <item name="chipBackgroundColor">@color/ui_main_sub_pale</item>
+        <item name="android:textColor">@color/ui_main_sub</item>
+    </style>
+
+    <style name="Widget.App.Chip.hot" parent="Base.App.Chip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="chipStartPadding">0dp</item>
+        <item name="chipEndPadding">0dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAlignment">gravity</item>
+        <item name="chipCornerRadius">5dp</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipStrokeColor">@color/ui_point_red_pale</item>
+        <item name="android:checkable">false</item>
+        <item name="android:clickable">false</item>
+        <item name="chipBackgroundColor">@color/ui_point_red_105</item>
+        <item name="android:textColor">@color/ui_point_red</item>
     </style>
 
 </resources>
