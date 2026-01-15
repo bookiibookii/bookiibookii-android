@@ -20,11 +20,6 @@ class MainActivity : AppCompatActivity() {
 //            insets
 //        }
         setContentView(R.layout.activity_main)
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.main_frm, LibraryFragment())
-                .commit()
-        }
 
         viewModel.toString()
     }
