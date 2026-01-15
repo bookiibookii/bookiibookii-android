@@ -58,7 +58,7 @@ class FilterBottomSheetFragment(val itemClick: (String) -> Unit) : BottomSheetDi
                     }
                 }
             }
-            binding.chipGroupCategory.addView(chip)
+//            binding.chipGroupCategory.addView(chip)
         }
     }
 
