@@ -44,6 +44,9 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    buildFeatures {
+        viewBinding = true
+    }
 }
 
 dependencies {
@@ -67,5 +70,7 @@ dependencies {
 
     //viewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
+
+    implementation("com.google.android.material:material:1.13.0")
 
 }
