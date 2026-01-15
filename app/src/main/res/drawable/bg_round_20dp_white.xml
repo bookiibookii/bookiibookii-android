@@ -4,7 +4,7 @@
     android:shape="rectangle">
 
     <!-- 배경색 -->
-    <solid android:color="@color/grey_200" />
+    <solid android:color="@color/white" />
     <!--컬러는 배경에 맞는 컬러-->
 
     <!-- 모서리 둥글기 -->

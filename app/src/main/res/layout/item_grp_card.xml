@@ -1,111 +1,139 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <View
-        android:id="@+id/virtual_area_box"
-        android:layout_width="311dp"
-        android:layout_height="108dp"
-        android:visibility="invisible"
-        tools:visibility="visible"
-        tools:background="#33FF0000"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="16dp"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="16dp"/>
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <ImageView
-        android:layout_width="343dp"
-        android:layout_height="171dp"
-        android:background="@drawable/bg_round_20dp_gray200"
+        android:id="@+id/grp_item_bg_card"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_round_20dp_white"
+        app:layout_constraintDimensionRatio="340:161"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <View
+        android:id="@+id/virtual_area_box"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        android:visibility="invisible"
+        tools:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/grp_item_bg_card"
+        app:layout_constraintEnd_toEndOf="@id/grp_item_bg_card"
+        app:layout_constraintStart_toStartOf="@id/grp_item_bg_card"
+        app:layout_constraintTop_toTopOf="@id/grp_item_bg_card" />
+
     <ImageView
         android:id="@+id/grp_item_cover_Iv"
-        android:layout_width="72dp"
-        android:layout_height="102dp"
+        android:layout_width="74dp"
+        android:layout_height="94dp"
         android:background="@drawable/bg_round_10dp_gray300"
         app:layout_constraintStart_toStartOf="@id/virtual_area_box"
-        app:layout_constraintTop_toTopOf="@id/virtual_area_box"
-        android:layout_marginTop="3dp"/>
-
-    <TextView
-        android:id="@+id/grp_item_date_Tv"
-        android:layout_width="wrap_content"
-        android:layout_height="14dp"
-        android:textColor="@color/grey_500"
-        android:textSize="10sp"
-        android:fontFamily="@font/pretendard_variable"
-        android:text="등록일 2025. 12. 16."
-        app:layout_constraintTop_toTopOf="@id/virtual_area_box"
-        app:layout_constraintStart_toEndOf="@id/grp_item_cover_Iv"
-        android:layout_marginStart="16dp"/>
-
-    <com.google.android.material.chip.Chip
-        android:id="@+id/grp_item_status_Cp"
-        style="@style/Widget.App.Chip.Tag"
-        android:layout_width="47dp"
-        android:layout_height="23dp"
-        android:textSize="11sp"
-        android:checked="true"
-        android:text="모집 중"
-        app:layout_constraintEnd_toEndOf="@id/virtual_area_box"
-        app:layout_constraintTop_toTopOf="@id/virtual_area_box"/>
-
-    <ImageView
-        android:id="@+id/grp_item_profile_Iv"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:background="@drawable/bg_circle_gray500"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_date_Tv"
-        app:layout_constraintStart_toEndOf="@id/grp_item_cover_Iv"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"/>
-
-    <TextView
-        android:id="@+id/grp_item_nickname_Tv"
-        android:layout_width="wrap_content"
-        android:layout_height="17dp"
-        android:textColor="@color/black"
-        android:textSize="12sp"
-        android:fontFamily="@font/pretendard_variable"
-        android:textStyle="bold"
-        android:text="noshel"
-        app:layout_constraintTop_toTopOf="@id/grp_item_profile_Iv"
-        app:layout_constraintStart_toEndOf="@id/grp_item_profile_Iv"
-        app:layout_constraintBottom_toBottomOf="@id/grp_item_profile_Iv"
-        android:layout_marginStart="4dp"/>
+        app:layout_constraintTop_toTopOf="@id/virtual_area_box" />
 
     <TextView
         android:id="@+id/grp_item_book_title_Tv"
-        android:layout_width="wrap_content"
-        android:layout_height="20dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/pretendard_variable"
+        android:maxLines="1"
+        android:text="괴테는 모든 것을 말했다"
         android:textColor="@color/black"
         android:textSize="14sp"
-        android:fontFamily="@font/pretendard_variable"
-        android:textStyle="bold"
-        android:text="괴테는 모든 것을 말했다"
-        app:layout_constraintStart_toStartOf="@id/grp_item_profile_Iv"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_profile_Iv"
-        android:layout_marginTop="4dp"/>
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/virtual_area_box"
+        app:layout_constraintStart_toEndOf="@id/grp_item_cover_Iv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_cover_Iv" />
 
     <TextView
         android:id="@+id/grp_item_book_author_Tv"
         android:layout_width="wrap_content"
-        android:layout_height="17dp"
-        android:textColor="@color/grey_500"
-        android:textSize="12sp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:fontFamily="@font/pretendard_variable"
-        android:text="스즈키 유이 지음"
+        android:text="스즈키 유이"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
         app:layout_constraintStart_toStartOf="@id/grp_item_book_title_Tv"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_book_title_Tv"
-        android:layout_marginTop="4dp"/>
-    
+        app:layout_constraintTop_toBottomOf="@id/grp_item_book_title_Tv" />
+
+    <TextView
+        android:id="@+id/grp_item_book_sort_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="(소설)"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_book_author_Tv"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_book_title_Tv" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_status_Cp"
+        style="@style/Widget.App.Chip.Tag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:checked="true"
+        android:text="모집 중"
+        android:textSize="11sp"
+        app:layout_constraintEnd_toEndOf="@id/virtual_area_box"
+        app:layout_constraintTop_toTopOf="@id/virtual_area_box" />
+
+    <ImageView
+        android:id="@+id/grp_item_cal_Iv"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginTop="12dp"
+        android:src="@drawable/ic_cal"
+        app:tint="@color/grey_500"
+        app:layout_constraintStart_toStartOf="@id/grp_item_book_author_Tv"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_book_author_Tv" />
+
+    <TextView
+        android:id="@+id/grp_item_deadlineNo_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="7"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_cal_Iv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_cal_Iv" />
+
+    <TextView
+        android:id="@+id/grp_item_deadlineTxt_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="일"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_deadlineNo_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_cal_Iv" />
+
+    <ImageView
+        android:id="@+id/grp_item_vector_Iv"
+        android:layout_width="wrap_content"
+        android:layout_height="16dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="0.5dp"
+        android:src="@drawable/ic_vector_86"
+        app:layout_constraintStart_toEndOf="@id/grp_item_deadlineTxt_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_cal_Iv" />
+
     <ImageView
         android:id="@+id/grp_item_group_Iv"
         android:layout_width="16dp"
@@ -115,96 +143,132 @@
         app:layout_constraintTop_toBottomOf="@id/grp_item_book_author_Tv"
         app:layout_constraintStart_toStartOf="@id/grp_item_book_author_Tv"
         android:layout_marginTop="4dp"/>
+        android:layout_marginStart="4dp"
+        android:src="@drawable/ic_group"
+        app:tint="@color/grey_500"
+        app:layout_constraintStart_toEndOf="@id/grp_item_vector_Iv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_cal_Iv" />
 
     <TextView
-        android:id="@+id/grp_item_group_member_No_Tv"
+        android:id="@+id/grp_item_mem_statusNo_Tv"
         android:layout_width="wrap_content"
-        android:layout_height="17dp"
-        android:textColor="@color/grey_500"
-        android:textSize="12sp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:fontFamily="@font/pretendard_variable"
-        android:text="1/2명"
+        android:text="5"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
         app:layout_constraintStart_toEndOf="@id/grp_item_group_Iv"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_book_author_Tv"
-        android:layout_marginTop="4dp"
-        android:layout_marginStart="4dp"/>
+        app:layout_constraintTop_toTopOf="@id/grp_item_cal_Iv" />
+
+    <TextView
+        android:id="@+id/grp_item_mem_statusTxt_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="명 대기 중"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mem_statusNo_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_cal_Iv" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_hot_Cp"
+        style="@style/Widget.App.Chip.hot"
+        android:layout_width="wrap_content"
+        android:layout_height="16dp"
+        android:layout_marginStart="4dp"
+        android:text="HOT"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mem_statusTxt_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mem_statusTxt_Tv"/>
 
     <ImageView
-        android:id="@+id/grp_item_cal_Iv"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
-        android:src="@drawable/ic_cal"
-        android:tint="@color/grey_500"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_book_author_Tv"
-        app:layout_constraintStart_toEndOf="@id/grp_item_group_member_No_Tv"
+        android:id="@+id/grp_item_profile_Iv"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:layout_marginTop="4dp"
-        android:layout_marginStart="8dp"/>
+        android:background="@drawable/bg_round_10dp_gray500"
+        app:layout_constraintStart_toStartOf="@id/grp_item_book_title_Tv"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_cal_Iv" />
 
     <TextView
-        android:id="@+id/grp_item_deadline_Tv"
+        android:id="@+id/grp_item_nickname_Tv"
         android:layout_width="wrap_content"
-        android:layout_height="17dp"
-        android:textColor="@color/grey_500"
-        android:textSize="12sp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:fontFamily="@font/pretendard_variable"
-        android:text="7일"
-        app:layout_constraintStart_toEndOf="@id/grp_item_cal_Iv"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_book_author_Tv"
-        android:layout_marginTop="4dp"
-        android:layout_marginStart="4dp"/>
+        android:text="noshel"
+        android:textColor="@color/grey_700"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@id/grp_item_profile_Iv"
+        app:layout_constraintStart_toEndOf="@id/grp_item_profile_Iv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_profile_Iv" />
+
+    <TextView
+        android:id="@+id/grp_item_date_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="2025. 12. 16."
+        android:textColor="@color/grey_400"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toBottomOf="@id/grp_item_profile_Iv"
+        app:layout_constraintStart_toEndOf="@id/grp_item_nickname_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_profile_Iv" />
+
 
     <com.google.android.material.chip.Chip
         android:id="@+id/grp_item_hash1_Cp"
         style="@style/Widget.App.Chip.hashtag"
         android:layout_width="wrap_content"
         android:layout_height="23dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="16dp"
         android:text="#메모환영"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@id/grp_item_cover_Iv"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_cover_Iv"
-        android:layout_marginTop="11dp"/>
+        app:layout_constraintTop_toBottomOf="@id/grp_item_profile_Iv" />
 
     <com.google.android.material.chip.Chip
         android:id="@+id/grp_item_hash2_Cp"
         style="@style/Widget.App.Chip.hashtag"
         android:layout_width="wrap_content"
         android:layout_height="23dp"
+        android:layout_marginStart="8dp"
         android:text="#인사이트"
         app:layout_constraintStart_toEndOf="@id/grp_item_hash1_Cp"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_cover_Iv"
-        android:layout_marginTop="11dp"
-        android:layout_marginStart="10dp"/>
+        app:layout_constraintTop_toTopOf="@id/grp_item_hash1_Cp" />
 
     <com.google.android.material.chip.Chip
         android:id="@+id/grp_item_hash3_Cp"
         style="@style/Widget.App.Chip.hashtag"
         android:layout_width="wrap_content"
         android:layout_height="23dp"
-        android:textSize="11sp"
+        android:layout_marginStart="8dp"
         android:text="#깔끔"
         app:layout_constraintStart_toEndOf="@id/grp_item_hash2_Cp"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_cover_Iv"
-        android:layout_marginTop="11dp"
-        android:layout_marginStart="10dp"/>
+        app:layout_constraintTop_toTopOf="@id/grp_item_hash1_Cp" />
 
     <com.google.android.material.chip.Chip
-    android:id="@+id/grp_item_hash4_Cp"
-    style="@style/Widget.App.Chip.hashtag"
-    android:layout_width="wrap_content"
-    android:layout_height="23dp"
-    android:text="#태그"
-    app:layout_constraintStart_toEndOf="@id/grp_item_hash3_Cp"
-    app:layout_constraintTop_toBottomOf="@id/grp_item_cover_Iv"
-    android:layout_marginTop="11dp"
-    android:layout_marginStart="10dp"/>
+        android:id="@+id/grp_item_hash4_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginStart="8dp"
+        android:text="#태그"
+        app:layout_constraintStart_toEndOf="@id/grp_item_hash3_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_item_hash1_Cp" />
 
     <com.google.android.material.chip.Chip
         android:id="@+id/grp_item_hash5_Cp"
         style="@style/Widget.App.Chip.hashtag"
         android:layout_width="wrap_content"
         android:layout_height="23dp"
+        android:layout_marginStart="8dp"
         android:text="#태그"
         app:layout_constraintStart_toEndOf="@id/grp_item_hash4_Cp"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_cover_Iv"
-        android:layout_marginTop="11dp"
-        android:layout_marginStart="10dp"/>
+        app:layout_constraintTop_toTopOf="@id/grp_item_hash1_Cp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
