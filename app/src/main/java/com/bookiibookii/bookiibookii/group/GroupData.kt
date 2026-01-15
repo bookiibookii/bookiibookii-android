@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii
+package com.bookiibookii.bookiibookii.group
 
 data class GroupData(
     val coverImgUrl: String,      // 책 표지 URL

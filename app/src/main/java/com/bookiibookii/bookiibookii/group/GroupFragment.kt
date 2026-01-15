@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii
+package com.bookiibookii.bookiibookii.group
 
 import android.graphics.Rect
 import android.os.Bundle
