@@ -110,7 +110,7 @@
         android:id="@+id/grp_item_group_Iv"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:src="@drawable/ic_group"
+        android:src="@drawable/ic_group_selected"
         android:tint="@color/grey_500"
         app:layout_constraintTop_toBottomOf="@id/grp_item_book_author_Tv"
         app:layout_constraintStart_toStartOf="@id/grp_item_book_author_Tv"

@@ -26,11 +26,6 @@
         </activity>
 
         <activity
-        android:name=".home.HomeActivity"
-        android:exported="false">
-        </activity>
-
-        <activity
         android:name=".onboarding.LoginActivity"
         android:exported="false">
         </activity>
@@ -38,7 +33,7 @@
         <activity android:name=".MainActivity"
             android:exported="false">
         </activity>
-        
+
     </application>
 
 </manifest>
