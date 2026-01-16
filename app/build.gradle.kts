@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,12 +23,6 @@ android {
             "ALADIN_TTB_KEY",
             "\"${project.findProperty("ALADIN_TTB_KEY") ?: ""}\""
         )
-
-
-    }
-    buildFeatures {
-        buildConfig = true
-        viewBinding = true
     }
 
     buildTypes {
@@ -42,8 +38,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
+    buildFeatures {
+        buildConfig = true
+        viewBinding = true
+        dataBinding = true
     }
 }
 
@@ -58,12 +61,15 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
+    // splash screen
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // TODO: 주석 추가
     implementation("androidx.activity:activity-ktx:1.9.0")
 
     //API 연결 간 의존성 추가
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     //viewModel
@@ -71,6 +77,7 @@ dependencies {
 
     //chip
     implementation("com.google.android.material:material:1.12.0")
+
     //glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
