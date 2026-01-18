@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.bookData.viewModel.BookViewModel
 import com.bookiibookii.bookiibookii.home.HomeFragment
+import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.trk.TrkMainFragment
 
 class MainActivity : AppCompatActivity() {
@@ -58,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.itemLibrary).setOnClickListener {
-//            selectTab(NavTab.LIBRARY, LibraryFragment())
+            selectTab(NavTab.LIBRARY, LibraryFragment())
         }
 
         findViewById<View>(R.id.itemMy).setOnClickListener {

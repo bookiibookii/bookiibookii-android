@@ -82,7 +82,7 @@ class LibraryFragment : Fragment() {
 
             // 2. 화면 이동 (트랜잭션)
             parentFragmentManager.beginTransaction()
-                .replace(R.id.main_frm, detailFragment)
+                .replace(R.id.fragmentContainer, detailFragment)
                 .addToBackStack(null) // 뒤로가기 시 목록으로 돌아오기 위해 필수
                 .commit()
         }
@@ -122,7 +122,7 @@ class LibraryFragment : Fragment() {
         }
         binding.libSearchIv.setOnClickListener {
             parentFragmentManager.beginTransaction()
-                .replace(R.id.main_frm, LibrarySearchFragment())
+                .replace(R.id.fragmentContainer, LibrarySearchFragment())
                 .addToBackStack(null)
                 .commit()
         }

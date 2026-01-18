@@ -95,7 +95,7 @@ class LibrarySearchFragment : Fragment() {
             val detailFragment = LibraryBookDetailFragment()
 
             parentFragmentManager.beginTransaction()
-                .replace(R.id.main_frm, detailFragment) // main_frm에 교체
+                .replace(R.id.fragmentContainer, detailFragment) // main_frm에 교체
                 .addToBackStack(null) // 뒤로가기 시 목록으로 돌아오기 위해 필수
                 .commit()
         }

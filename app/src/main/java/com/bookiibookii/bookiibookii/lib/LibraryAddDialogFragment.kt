@@ -96,7 +96,7 @@ class LibraryAddDialogFragment : BottomSheetDialogFragment() {
             fragment.arguments = args
 
             parentFragmentManager.beginTransaction()
-                .replace(R.id.main_frm, fragment)
+                .replace(R.id.main, fragment)
                 .addToBackStack(null)
                 .commit()
         }

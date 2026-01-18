@@ -34,7 +34,7 @@
             android:name=".MainActivity"
             android:exported="false">
         </activity>
-        
+
         <activity
             android:name=".GrpSearchActivity"
             android:exported="false">
