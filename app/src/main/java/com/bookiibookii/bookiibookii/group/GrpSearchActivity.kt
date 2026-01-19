@@ -1,10 +1,11 @@
-package com.bookiibookii.bookiibookii
+package com.bookiibookii.bookiibookii.group
 
 import android.graphics.Color
 import android.os.Bundle
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpSearchBinding
 import com.google.android.material.chip.Chip
 
