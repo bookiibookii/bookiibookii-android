@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.lib
 
-import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -10,7 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.bookiibookii.bookiibookii.R
@@ -18,7 +17,6 @@ import com.bookiibookii.bookiibookii.bookData.Data.LibReview
 import com.bookiibookii.bookiibookii.bookData.viewModel.ReviewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibAddCardBinding
 import com.bumptech.glide.Glide
-import com.canhub.cropper.CropImage
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
@@ -38,15 +36,13 @@ class LibraryAddCardFragment : Fragment() {
     private var isEditMode = false
     private var editTargetId: Long = -1
 
-
+    // 이미지 크롭 런처
     private val cropImage = registerForActivityResult(CropImageContract()) { result ->
         if (result.isSuccessful) {
-            // 성공 시 uriContent를 가져옵니다.
             selectedImageUri = result.uriContent
             showImage(selectedImageUri)
-            checkInputValidity()
+            // 이미지 등록 여부는 필수 조건이 아닐 수도 있으나, 필요하다면 여기서 checkInputValidity() 호출
         } else {
-            // 실패 시 에러 메시지
             val exception = result.error
             Toast.makeText(requireContext(), "사진 로드 실패: ${exception?.message}", Toast.LENGTH_SHORT).show()
         }
@@ -63,7 +59,7 @@ class LibraryAddCardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 수정 모드 데이터 확인
+        // 1. 수정 모드인지 확인 (Arguments)
         val reviewId = arguments?.getLong("edit_review_id", -1L) ?: -1L
         if (reviewId != -1L) {
             val data = viewModel.getReviewById(reviewId)
@@ -72,21 +68,28 @@ class LibraryAddCardFragment : Fragment() {
             }
         }
 
+        // 2. 리스너 초기화
         initListeners()
         initTextWatchers()
+
+        // 3. [중요] 화면 처음 진입 시 버튼 상태 초기화 (입력값이 없으면 비활성화 되도록)
         checkInputValidity()
     }
 
+    // 수정 모드 세팅
     private fun setupEditMode(data: LibReview) {
         isEditMode = true
         editTargetId = data.id
 
+        // 타이틀과 버튼 텍스트 변경
         binding.libAddTitleTv.text = "카드 수정"
-        binding.btnSubmit.text = "수정하기"
+        binding.libAddBtn.text = "수정하기"
 
+        // 기존 데이터 채워넣기
         binding.libAddPageEt.setText(data.page.toString())
         binding.libAddMemoEt.setText(data.content)
 
+        // 이미지 로드
         if (data.reviewImageUri != null) {
             selectedImageUri = Uri.parse(data.reviewImageUri)
             showImage(selectedImageUri)
@@ -96,6 +99,7 @@ class LibraryAddCardFragment : Fragment() {
     private fun showImage(uri: Uri?) {
         if (uri == null) return
         binding.libAddCardCv.removeAllViews()
+
         val imageView = ImageView(requireContext())
         imageView.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -103,30 +107,25 @@ class LibraryAddCardFragment : Fragment() {
         )
         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
         Glide.with(this).load(uri).into(imageView)
+
         binding.libAddCardCv.addView(imageView)
     }
 
     private fun initListeners() {
         binding.libAddBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
-
-        // 카드 클릭 시 크롭 실행
         binding.libAddCardCv.setOnClickListener { startCrop() }
-
-        binding.btnSubmit.setOnClickListener { saveReview() }
+        binding.libAddBtn.setOnClickListener { saveReview() }
     }
 
     private fun startCrop() {
-        // 옵션 설정
         val options = CropImageOptions(
-            imageSourceIncludeGallery = true, // 갤러리 포함
-            imageSourceIncludeCamera = true,  // 카메라 포함
-            guidelines = CropImageView.Guidelines.ON, // 가이드라인 표시
-            aspectRatioX = 1, // 1:1 비율
+            imageSourceIncludeGallery = true,
+            imageSourceIncludeCamera = true,
+            guidelines = CropImageView.Guidelines.ON,
+            aspectRatioX = 1,
             aspectRatioY = 1,
             fixAspectRatio = true
         )
-
-        // 실행 (uri = null이면 갤러리 선택창이 뜸)
         cropImage.launch(
             CropImageContractOptions(uri = null, cropImageOptions = options)
         )
@@ -137,10 +136,14 @@ class LibraryAddCardFragment : Fragment() {
         val memo = binding.libAddMemoEt.text.toString()
         val date = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault()).format(Date())
 
+        // 실제 앱에서는 유저 정보를 가져와야 함 (현재는 하드코딩)
+        val userName = "kanghunsim"
+
         if (isEditMode) {
+            // 수정 로직
             val updatedReview = LibReview(
                 id = editTargetId,
-                userName = "kanghunsim",
+                userName = userName,
                 content = memo,
                 page = page,
                 date = date,
@@ -150,9 +153,10 @@ class LibraryAddCardFragment : Fragment() {
             viewModel.updateReview(updatedReview)
             Toast.makeText(context, "수정되었습니다.", Toast.LENGTH_SHORT).show()
         } else {
+            // 등록 로직
             val newReview = LibReview(
                 id = System.currentTimeMillis(),
-                userName = "kanghunsim",
+                userName = userName,
                 content = memo,
                 page = page,
                 date = date,
@@ -168,7 +172,10 @@ class LibraryAddCardFragment : Fragment() {
 
     private fun initTextWatchers() {
         val watcher = object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) = checkInputValidity()
+            override fun afterTextChanged(s: Editable?) {
+                // 텍스트가 변할 때마다 유효성 검사 수행
+                checkInputValidity()
+            }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         }
@@ -176,23 +183,23 @@ class LibraryAddCardFragment : Fragment() {
         binding.libAddMemoEt.addTextChangedListener(watcher)
     }
 
+    // [핵심] 입력 유효성 검사 및 버튼 디자인 변경
     private fun checkInputValidity() {
         val isPageValid = binding.libAddPageEt.text.isNotEmpty()
         val isMemoValid = binding.libAddMemoEt.text.isNotEmpty()
 
-        // 1. 버튼 활성화 상태 변경
+        // 페이지와 메모가 모두 입력되어야 활성화
         val isEnabled = isPageValid && isMemoValid
-        binding.btnSubmit.isEnabled = isEnabled
+        binding.libAddBtn.isEnabled = isEnabled
 
-        // 2. 상태에 따른 디자인(배경색/글자색) 변경
         if (isEnabled) {
-            // [활성화] 배경: Gray900, 글자: White
-            binding.btnSubmit.setBackgroundResource(R.drawable.bg_round_20dp_gray900)
-            binding.btnSubmit.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.white))
+            // 활성화 상태: 진한 회색 배경 + 흰색 글씨
+            binding.libAddBtn.setBackgroundResource(R.drawable.bg_round_20dp_gray900)
+            binding.libAddBtn.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
         } else {
-            // [비활성화] 배경: Gray200, 글자: Grey500 (혹은 기존 비활성 색상)
-            binding.btnSubmit.setBackgroundResource(R.drawable.bg_round_20dp_gray200)
-            binding.btnSubmit.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.grey_500))
+            // 비활성화 상태: 연한 회색 배경 + 회색 글씨
+            binding.libAddBtn.setBackgroundResource(R.drawable.bg_round_20dp_gray200)
+            binding.libAddBtn.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_500))
         }
     }
 

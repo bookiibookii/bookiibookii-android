@@ -20,16 +20,15 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.92" />
 
-    <!-- 상단 앱바 영역 -->
     <ImageButton
         android:id="@+id/lib_add_back_iv"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:src="@drawable/ic_back"
         android:layout_marginTop="65.5dp"
+        android:background="@android:color/transparent"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintTop_toTopOf="parent" />
-
     <TextView
         android:id="@+id/lib_add_title_tv"
         android:layout_width="wrap_content"
@@ -52,25 +51,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- 이미지 업로드 카드 -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/lib_add_card_cv"
-        android:layout_width="340dp"
+        android:layout_width="0dp"
         android:layout_height="200dp"
         android:layout_marginTop="16dp"
         app:cardCornerRadius="20dp"
         app:cardElevation="0dp"
+        app:strokeWidth="0dp"
         app:cardBackgroundColor="@color/grey_200"
         app:layout_constraintTop_toBottomOf="@id/lib_line_v"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical">
-
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
@@ -87,7 +84,6 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- 페이지 입력 -->
     <TextView
         android:id="@+id/lib_add_page_tv"
         android:layout_width="wrap_content"
@@ -111,7 +107,6 @@
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintEnd_toEndOf="@id/guideline_end" />
 
-    <!-- 메모 입력 -->
     <TextView
         android:id="@+id/lib_add_memo_tv"
         android:layout_width="wrap_content"
@@ -135,9 +130,8 @@
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintEnd_toEndOf="@id/guideline_end" />
 
-    <!-- 하단 버튼 -->
-    <Button
-        android:id="@+id/btnSubmit"
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/lib_add_btn"
         android:layout_width="0dp"
         android:layout_height="72dp"
         android:text="등록하기"
