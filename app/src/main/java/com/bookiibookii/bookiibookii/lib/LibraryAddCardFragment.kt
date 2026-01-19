@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.Data.LibReview
 import com.bookiibookii.bookiibookii.bookData.viewModel.ReviewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibAddCardBinding
@@ -37,8 +38,7 @@ class LibraryAddCardFragment : Fragment() {
     private var isEditMode = false
     private var editTargetId: Long = -1
 
-    // [수정] 4.5.0 버전의 표준 방식 (Contract 사용)
-    // 람다 식의 result는 'CropImageView.CropResult' 타입입니다.
+
     private val cropImage = registerForActivityResult(CropImageContract()) { result ->
         if (result.isSuccessful) {
             // 성공 시 uriContent를 가져옵니다.
@@ -74,6 +74,7 @@ class LibraryAddCardFragment : Fragment() {
 
         initListeners()
         initTextWatchers()
+        checkInputValidity()
     }
 
     private fun setupEditMode(data: LibReview) {
@@ -114,7 +115,6 @@ class LibraryAddCardFragment : Fragment() {
         binding.btnSubmit.setOnClickListener { saveReview() }
     }
 
-    // [수정] 크롭 실행 함수
     private fun startCrop() {
         // 옵션 설정
         val options = CropImageOptions(
@@ -180,15 +180,20 @@ class LibraryAddCardFragment : Fragment() {
         val isPageValid = binding.libAddPageEt.text.isNotEmpty()
         val isMemoValid = binding.libAddMemoEt.text.isNotEmpty()
 
-        binding.btnSubmit.isEnabled = isPageValid && isMemoValid
+        // 1. 버튼 활성화 상태 변경
+        val isEnabled = isPageValid && isMemoValid
+        binding.btnSubmit.isEnabled = isEnabled
 
-//        if(binding.btnSubmit.isEnabled) {
-//            binding.btnSubmit.setBackgroundResource(R.drawable.bg_round_20dp_black)
-//            binding.btnSubmit.setTextColor(resources.getColor(R.color.white, null))
-//        } else {
-//            binding.btnSubmit.setBackgroundResource(R.drawable.bg_round_20dp_gray200)
-//            binding.btnSubmit.setTextColor(resources.getColor(R.color.grey_500, null))
-//        }
+        // 2. 상태에 따른 디자인(배경색/글자색) 변경
+        if (isEnabled) {
+            // [활성화] 배경: Gray900, 글자: White
+            binding.btnSubmit.setBackgroundResource(R.drawable.bg_round_20dp_gray900)
+            binding.btnSubmit.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.white))
+        } else {
+            // [비활성화] 배경: Gray200, 글자: Grey500 (혹은 기존 비활성 색상)
+            binding.btnSubmit.setBackgroundResource(R.drawable.bg_round_20dp_gray200)
+            binding.btnSubmit.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.grey_500))
+        }
     }
 
     override fun onDestroyView() {

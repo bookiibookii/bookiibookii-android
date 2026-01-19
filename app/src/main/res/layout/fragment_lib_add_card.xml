@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/ui_bg">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_start"
@@ -103,7 +104,7 @@
         android:layout_width="0dp"
         android:layout_height="44dp"
         android:layout_marginTop="12dp"
-        android:background="@drawable/bg_round_20dp_white"
+        android:background="@drawable/bg_input_round_20dp_white"
         android:paddingHorizontal="12dp"
         android:inputType="number"
         app:layout_constraintTop_toBottomOf="@id/lib_add_page_tv"
@@ -127,7 +128,7 @@
         android:layout_width="0dp"
         android:layout_height="44dp"
         android:layout_marginTop="12dp"
-        android:background="@drawable/bg_round_20dp_white"
+        android:background="@drawable/bg_input_round_20dp_white"
         android:paddingHorizontal="12dp"
         android:inputType="text"
         app:layout_constraintTop_toBottomOf="@id/lib_add_memo_tv"
@@ -138,7 +139,7 @@
     <Button
         android:id="@+id/btnSubmit"
         android:layout_width="0dp"
-        android:layout_height="48dp"
+        android:layout_height="72dp"
         android:text="등록하기"
         android:enabled="false"
         android:background="@drawable/bg_round_20dp_gray200"

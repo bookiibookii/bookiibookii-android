@@ -21,7 +21,6 @@ class LibDetailGridDecoration (
         val column = position % spanCount // 현재 열 (0 또는 1)
 
         if (includeEdge) {
-            // 좌우 간격을 균등하게 배분
             outRect.left = spacingHorizontal - column * spacingHorizontal / spanCount
             outRect.right = (column + 1) * spacingHorizontal / spanCount
         } else {
@@ -29,9 +28,9 @@ class LibDetailGridDecoration (
             outRect.right = spacingHorizontal - (column + 1) * spacingHorizontal / spanCount
         }
 
+
         if (position >= spanCount) {
             outRect.top = spacingVertical
         }
-        outRect.bottom = spacingVertical
     }
 }

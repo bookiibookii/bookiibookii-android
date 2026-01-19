@@ -43,13 +43,19 @@ class LibraryBookDetailFragment : Fragment() {
         binding.libDetailBackIv.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
+        binding.libReviewAddBtn.setOnClickListener {
+            val addCardFragment = LibraryAddCardFragment()
+
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, addCardFragment)
+                .addToBackStack(null)
+                .commit()
+        }
     }
 
     private fun initRecyclerView() {
-        // [수정] 어댑터 생성 (LibReview 타입을 처리함)
         reviewAdapter = LibraryReviewAdapter { clickedItem ->
             // 아이템 클릭 시 다이얼로그 띄우기
-            // LibAddDialogFragment는 LibReview의 ID를 받습니다.
             val dialog = LibraryAddDialogFragment.newInstance(clickedItem.id)
             dialog.show(parentFragmentManager, "LibAddDialog")
         }
@@ -61,12 +67,13 @@ class LibraryBookDetailFragment : Fragment() {
             // 간격 데코레이션 (기존 코드와 동일하게 사용)
             val spacingHorizontal = dpToPx(10)
             val spacingVertical = dpToPx(12)
+            if (itemDecorationCount > 0) removeItemDecorationAt(0)
+
             addItemDecoration(LibDetailGridDecoration(2, spacingHorizontal, spacingVertical, false))
         }
     }
 
     private fun observeViewModel() {
-        // [수정] ViewModel의 reviewList(List<LibReview>)를 관찰
         viewModel.reviewList.observe(viewLifecycleOwner) { list ->
             // 어댑터에 데이터 전달
             reviewAdapter.submitList(list.toList())

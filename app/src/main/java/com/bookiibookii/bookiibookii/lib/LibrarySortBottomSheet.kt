@@ -40,7 +40,7 @@ class LibrarySortBottomSheet : BottomSheetDialogFragment() {
             val screenHeight = metrics.heightPixels
 
             val layoutParams = sheet.layoutParams
-            layoutParams.height = (screenHeight * 0.55).toInt()
+            layoutParams.height = (screenHeight * 0.45).toInt()
             sheet.layoutParams = layoutParams
 
             val behavior = BottomSheetBehavior.from(sheet)

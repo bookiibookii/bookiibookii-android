@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.Data.LibReview
 import com.bookiibookii.bookiibookii.databinding.ItemLibDetailReviewBinding
 import com.bumptech.glide.Glide
@@ -23,14 +24,14 @@ class LibraryReviewAdapter(
             binding.itemReviewTextTv.text = item.content
 
             if (item.reviewImageUri != null) {
-                binding.ivPhoto.visibility = View.VISIBLE
+                binding.itemReviewPhotoIv.visibility = View.VISIBLE
                 Glide.with(itemView.context)
                     .load(item.reviewImageUri)
-                    .into(binding.ivPhoto)
+                    .into(binding.itemReviewPhotoIv)
             } else {
-                // 이미지가 없으면 공간을 숨기거나 기본 이미지 처리
-                binding.ivPhoto.visibility = View.GONE
-                // 또는 binding.ivPhoto.setImageResource(R.drawable.bg_round_8dp_gray300)
+                binding.itemReviewPhotoIv.visibility = View.VISIBLE
+                binding.itemReviewPhotoIv.setImageResource(R.drawable.bg_round_8dp_gray300)
+
             }
 
             if (item.profileImage != null) {
