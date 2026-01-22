@@ -26,9 +26,9 @@ class FilterBottomSheetFragment(val itemClick: (String) -> Unit) : BottomSheetDi
 
         // 1. 카테고리 목록 데이터
         val categories = listOf(
-            "경제/경영", "기술/과학", "소설",
-            "시", "에세이", "예술/문화",
-            "인문학", "자기계발", "정치/사회"
+            "경제/경영", "과학IT", "소설/장르",
+            "시/에세이", "가정/취미", "예술/문화",
+            "인문/역사", "자기계발", "정치/사회"
         )
 
         // 2. 칩 동적 생성 및 추가
