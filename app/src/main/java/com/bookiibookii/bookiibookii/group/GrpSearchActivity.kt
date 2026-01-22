@@ -82,7 +82,6 @@ class GrpSearchActivity : AppCompatActivity() {
             }
         }
         // 칩 그룹에 추가
-        binding.chipGroupPopular.addView(chip)
     }
 
     private fun performSearch(query: String) {
