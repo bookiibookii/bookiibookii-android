@@ -1,5 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="regular10">
+        <item name="fontFamily">@font/pretendard_regular</item>
+        <item name="android:textSize">10sp</item>
+    </style>
+    <style name="regular11">
+        <item name="fontFamily">@font/pretendard_regular</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+    <style name="regular12">
+        <item name="fontFamily">@font/pretendard_regular</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="regular14">
+        <item name="fontFamily">@font/pretendard_regular</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="regular15">
+        <item name="fontFamily">@font/pretendard_regular</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+    <style name="regular16">
+        <item name="fontFamily">@font/pretendard_regular</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+    <style name="regular18">
+        <item name="fontFamily">@font/pretendard_regular</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+    <style name="regular20">
+        <item name="fontFamily">@font/pretendard_regular</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+    <style name="regular24">
+        <item name="fontFamily">@font/pretendard_regular</item>
+        <item name="android:textSize">24sp</item>
+    </style>
+
+    <style name="medium11">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+    <style name="medium12">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="medium14">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="medium15">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+    <style name="medium16">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+    <style name="medium18">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+    <style name="medium20">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+    <style name="medium24">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">24sp</item>
+    </style>
+    <style name="medium32">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">32sp</item>
+    </style>
+
+    <style name="semibold10">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">10sp</item>
+    </style>
+    <style name="semibold12">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="semibold14">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="semibold18">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+    <style name="semibold20">
+        <item name="fontFamily">@font/pretendard_medium</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
     <style name="large_title">
         <item name="android:fontFamily">@font/pretendard_variable</item>
         <item name="android:textSize">34sp</item>
