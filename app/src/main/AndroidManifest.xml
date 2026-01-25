@@ -41,7 +41,7 @@
         </activity>
 
         <activity
-            android:name=".group.GroupHostActivity"
+            android:name=".group.GroupDetailActivity"
             android:exported="false">
         </activity>
 

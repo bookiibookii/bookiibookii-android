@@ -63,7 +63,7 @@
             android:fontFamily="@font/pretendard_variable"
             android:textSize="20sp"
             android:textColor="@color/grey_900"
-            tools:text="괴테는 모든 것을 말했다"
+            android:text="괴테는 모든 것을 말했다"
             app:layout_constraintStart_toEndOf="@id/act_grp_ho_back_Iv"
             app:layout_constraintTop_toTopOf="@id/act_grp_ho_dashBoard_Iv"
             app:layout_constraintEnd_toStartOf="@id/act_grp_ho_more_Iv"
@@ -127,7 +127,7 @@
             app:layout_constraintEnd_toEndOf="@id/acr_grp_ho_intro_Iv"
             app:layout_constraintStart_toStartOf="@id/act_grp_ho_intro_title_Tv"
             app:layout_constraintTop_toBottomOf="@id/divider_line_intro"
-            tools:text="안녕하세요. 재미있게 책 완독하실 분 구해요^^책에 마음껏 메모하셔도 됩니다. 재미있는 코멘트 많이 남겨주세요~" />
+            android:text="안녕하세요. 재미있게 책 완독하실 분 구해요^^책에 마음껏 메모하셔도 됩니다. 재미있는 코멘트 많이 남겨주세요~" />
 
         <Space
             android:id="@+id/bottom_padding_space1"
@@ -244,7 +244,7 @@
             app:layout_constraintBottom_toBottomOf="@id/act_grp_ho_member_profile1_Iv"
             app:layout_constraintStart_toEndOf="@id/act_grp_ho_member_profile1_Iv"
             app:layout_constraintTop_toTopOf="@id/act_grp_ho_member_profile1_Iv"
-            tools:text="noshel" />
+            android:text="noshel" />
 
         <com.google.android.material.chip.Chip
             android:id="@+id/act_grp_ho_host_Cp"
@@ -277,7 +277,7 @@
             app:layout_constraintBottom_toBottomOf="@id/act_grp_ho_member_profile2_Iv"
             app:layout_constraintStart_toEndOf="@id/act_grp_ho_member_profile2_Iv"
             app:layout_constraintTop_toTopOf="@id/act_grp_ho_member_profile2_Iv"
-            tools:text="모집중" />
+            android:text="모집중" />
 
         <Space
             android:id="@+id/bottom_padding_space2"
@@ -294,9 +294,10 @@
         android:layout_height="600dp"
         android:background="@drawable/bg_bottom_sheet_top_round"
         android:elevation="10dp"
-        android:paddingBottom="16dp"
+        android:clickable="true"
+        android:focusable="true"
         app:behavior_hideable="false"
-        app:behavior_peekHeight="130dp"
+        app:behavior_peekHeight="170dp"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         app:layout_constraintBottom_toBottomOf="parent">
 
@@ -342,6 +343,7 @@
             android:layout_height="28dp"
             android:layout_marginEnd="24dp"
             android:src="@drawable/ic_reload"
+            android:alpha="0"
             app:layout_constraintBottom_toBottomOf="@id/grp_mg_bottom_sheet_title_Tv"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/grp_mg_bottom_sheet_title_Tv" />
@@ -364,7 +366,7 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="8dp"
             android:clipToPadding="false"
-            android:paddingBottom="90dp"
+            android:paddingBottom="100dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

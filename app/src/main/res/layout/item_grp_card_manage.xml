@@ -223,30 +223,36 @@
         app:layout_constraintStart_toStartOf="@id/virtual_mg_area_box"
         app:layout_constraintTop_toBottomOf="@id/grp_item_mg_hash1_Cp"/>
 
-    <TextView
-        android:id="@+id/grp_item_mg_btn_title_Tv"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/pretendard_variable"
-        android:text="참여 요청 관리"
-        android:textColor="@color/pre_main"
-        android:textSize="15sp"
-        app:layout_constraintStart_toStartOf="@id/grp_item_mg_manage_Btn"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         app:layout_constraintTop_toTopOf="@id/grp_item_mg_manage_Btn"
         app:layout_constraintBottom_toBottomOf="@id/grp_item_mg_manage_Btn"
-        app:layout_constraintEnd_toEndOf="@id/grp_item_mg_manage_Btn"/>
-    <TextView
-        android:id="@+id/grp_item_mg_btn_num_Tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/pretendard_variable"
-        android:text="(5)"
-        android:textColor="@color/pre_main"
-        android:textSize="15sp"
-        app:layout_constraintStart_toEndOf="@id/grp_item_mg_btn_title_Tv"
-        app:layout_constraintTop_toTopOf="@id/grp_item_mg_btn_title_Tv"
+        app:layout_constraintStart_toStartOf="@id/grp_item_mg_manage_Btn"
+        app:layout_constraintEnd_toEndOf="@id/grp_item_mg_manage_Btn">
 
-        />
+        <TextView
+            android:id="@+id/grp_item_mg_btn_title_Tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/pretendard_variable"
+            tools:text="참여 요청 관리"
+            android:textColor="@color/pre_main"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/grp_item_mg_btn_num_Tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:fontFamily="@font/pretendard_variable"
+            tools:text="(5)"
+            android:textColor="@color/pre_main"
+            android:textSize="15sp" />
+
+    </LinearLayout>
 
 
     <com.google.android.material.chip.Chip
