@@ -115,7 +115,7 @@ class GroupFragment : Fragment() {
         )
 
         val groupAdapter = GroupAdapter(groupList) { groupData ->
-            val intent = Intent(requireContext(), GroupHostActivity::class.java)
+            val intent = Intent(requireContext(), GroupDetailActivity::class.java)
             startActivity(intent)
         }
 
