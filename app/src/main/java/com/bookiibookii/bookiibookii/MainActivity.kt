@@ -11,7 +11,7 @@ import com.bookiibookii.bookiibookii.bookData.viewModel.BookViewModel
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
-import com.bookiibookii.bookiibookii.trkHost.TrkMainFragment
+import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.itemTracker).setOnClickListener {
-            selectTab(NavTab.TRACKER, TrkMainFragment())
+            selectTab(NavTab.TRACKER, TrkHostMainFragment())
         }
 
         findViewById<View>(R.id.itemLibrary).setOnClickListener {
