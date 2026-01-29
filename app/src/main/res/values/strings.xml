@@ -3,6 +3,13 @@
 
     <string name="splash_loading">로그인 중입니다...</string>
 
+    <string name="book_title">책 제목</string>
+    <string name="book_author">책 저자</string>
+
+    <string name="nickname">닉네임</string>
+
+    <string name="date">월. 일.</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

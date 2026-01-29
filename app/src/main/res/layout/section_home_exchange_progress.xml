@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/section_exchange_progress"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="8dp">
+
+    <!-- 헤더: 타이틀 -->
+    <TextView
+        android:id="@+id/tv_exchange_section_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="진행 중인 교환"
+        android:textSize="16sp"
+        android:letterSpacing="-0.02"
+        android:textColor="@color/grey_900"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 헤더 우측: 이전 / 페이지 / 다음 -->
+    <LinearLayout
+        android:id="@+id/layout_page_control"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_exchange_section_title"
+        app:layout_constraintBottom_toBottomOf="@id/tv_exchange_section_title">
+
+        <!-- 이전 버튼 -->
+        <ImageButton
+            android:id="@+id/btn_prev"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_left_button"
+            android:scaleType="center"
+            android:contentDescription="이전"
+            android:padding="6dp" />
+
+        <!-- 페이지 표시 - 1 -->
+        <TextView
+            android:id="@+id/tv_page_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="0"
+            android:textSize="12sp"
+            android:letterSpacing="-0.02"
+            android:textColor="@color/black" />
+
+        <!-- 페이지 표시 - 2 -->
+        <TextView
+            android:id="@+id/tv_page_indicator_total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="/0"
+            android:textSize="12sp"
+            android:letterSpacing="-0.02"
+            android:textColor="@color/grey_600" />
+
+        <!-- 다음 버튼 -->
+        <ImageButton
+            android:id="@+id/btn_next"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_right_button"
+            android:scaleType="center"
+            android:contentDescription="다음"
+            android:padding="6dp" />
+
+    </LinearLayout>
+
+    <!-- 데이터 있을 때: 가로 리스트 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_exchange_progress"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:clipToPadding="false"
+        android:paddingEnd="4dp"
+        android:overScrollMode="never"
+
+        android:visibility="gone"
+        tools:visibility="gone"
+
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintTop_toBottomOf="@id/tv_exchange_section_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 데이터 없을 때 -->
+    <include
+        android:id="@+id/include_exchange_empty"
+        layout="@layout/item_home_empty_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="그룹 둘러보기"
+
+        android:visibility="visible"
+        tools:visibility="visible"
+
+        android:theme="@style/ThemeOverlay.BookiiBookii.HomeButton.Dark"
+        app:layout_constraintTop_toBottomOf="@id/tv_exchange_section_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

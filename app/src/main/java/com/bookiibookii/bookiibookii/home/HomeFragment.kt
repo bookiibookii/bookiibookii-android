@@ -1,19 +1,131 @@
 package com.bookiibookii.bookiibookii.home
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.bookiibookii.bookiibookii.R
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
+import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
+import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
+import com.bookiibookii.bookiibookii.databinding.SectionHomeMateBinding
 
 class HomeFragment : Fragment() {
+
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
+
+    // section Binding
+    private lateinit var exchangeBinding: SectionHomeExchangeProgressBinding
+    private lateinit var groupBinding: SectionHomeGroupBinding
+    private lateinit var mateBinding: SectionHomeMateBinding
+
+    // TODO: 나중에 서버 데이터 연결 시 어댑터에 리스트 주입 로직 추가 필요
+    private val exchangeAdapter = ExchangeProgressAdapter()
+    private val groupAdapter = GroupRecommendAdapter()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
     }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // section binding
+        exchangeBinding = binding.sectionExchange
+        groupBinding = binding.sectionGroup
+        mateBinding = binding.sectionMate
+
+        // RecyclerView 세팅
+        exchangeBinding.rvExchangeProgress.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = exchangeAdapter
+        }
+
+        groupBinding.rvGroupCard.apply {
+            layoutManager = GridLayoutManager(requireContext(), 3)
+            adapter = groupAdapter
+        }
+
+        // empty 카드 문구 세팅
+        setExchangeEmptyTexts()
+        setGroupEmptyTexts()
+        setMateEmptyTexts()
+
+        // TODO: 나중에 서버 응답으로 교체
+        val exchangeHasData = false
+        val groupHasData = false
+        val mateHasData = false
+
+        applyExchangeState(exchangeHasData)
+        applyGroupState(groupHasData)
+        applyMateState(mateHasData)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    private fun applyExchangeState(hasData: Boolean) {
+        exchangeBinding.rvExchangeProgress.visibility = if (hasData) View.VISIBLE else View.GONE
+        exchangeBinding.includeExchangeEmpty.root.visibility = if (hasData) View.GONE else View.VISIBLE
+        exchangeBinding.layoutPageControl.visibility = if (hasData) View.VISIBLE else View.GONE
+    }
+
+    private fun applyGroupState(hasData: Boolean) {
+        groupBinding.rvGroupCard.visibility = if (hasData) View.VISIBLE else View.GONE
+        groupBinding.includeGroupEmpty.root.visibility = if (hasData) View.GONE else View.VISIBLE
+        groupBinding.btnRefresh.visibility = if (hasData) View.VISIBLE else View.GONE
+    }
+
+    private fun applyMateState(hasData: Boolean) {
+        mateBinding.includeMateCard.root.visibility = if (hasData) View.VISIBLE else View.GONE
+        mateBinding.includeMateEmpty.root.visibility = if (hasData) View.GONE else View.VISIBLE
+    }
+
+    private fun setExchangeEmptyTexts() {
+        val empty = exchangeBinding.includeExchangeEmpty
+        empty.tvEmptyTitle.text = "아직 진행 중인 교환이 없어요"
+        empty.tvEmptyDesc.text = "그룹에 참여하고 새로운 책을 만나보세요."
+        empty.btnHomeAction.text = "그룹 둘러보기"
+    }
+
+    private fun setGroupEmptyTexts() {
+        val empty = groupBinding.includeGroupEmpty
+        empty.tvEmptyTitle.text = "아직 추천할 그룹이 없어요"
+        empty.tvEmptyDesc.text = "읽고 싶은 책으로 그룹을 직접 만들어보세요."
+        empty.btnHomeAction.text = "그룹 만들기"
+    }
+
+    private fun setMateEmptyTexts() {
+        val empty = mateBinding.includeMateEmpty
+        empty.tvEmptyTitle.text = "추천할 부키메이트가 없어요"
+        empty.tvEmptyDesc.text = "책을 더 많이 읽고 활동하면 취향이 비슷한 메이트를 추천해드려요."
+        empty.btnHomeAction.text = "서재 채우기"
+    }
+
+    private fun bindEmptyActions() {
+        exchangeBinding.includeExchangeEmpty.btnHomeAction.setOnClickListener {
+            // TODO: GRP-001 이동
+        }
+
+        groupBinding.includeGroupEmpty.btnHomeAction.setOnClickListener {
+            // TODO: GRP-020 이동
+        }
+
+        mateBinding.includeMateEmpty.btnHomeAction.setOnClickListener {
+            // TODO: GRP-001 이동
+        }
+    }
+
+
 }

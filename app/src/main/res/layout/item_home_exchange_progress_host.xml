@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_exchange_progress"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_round_20dp_white"
+    app:cardElevation="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp">
+
+        <!-- 표지 프레임(회색+테두리) + 실제 표지 이미지 -->
+        <FrameLayout
+            android:id="@+id/frame_book_cover"
+            android:layout_width="56dp"
+            android:layout_height="72dp"
+            android:background="@drawable/bg_book_cover_frame"
+            android:clipToOutline="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/iv_book_cover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/bg_book_cover_frame" />
+        </FrameLayout>
+
+        <!-- 제목 -->
+        <TextView
+            android:id="@+id/tv_book_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="@string/book_title"
+            android:textSize="16sp"
+            android:letterSpacing="-0.02"
+            android:textColor="@color/grey_900"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintStart_toEndOf="@id/frame_book_cover"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/frame_book_cover" />
+
+        <!-- 저자 -->
+        <TextView
+            android:id="@+id/tv_book_author"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            android:text="@string/book_author"
+            android:textSize="12sp"
+            android:letterSpacing="-0.02"
+            android:textColor="@color/grey_600"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintStart_toEndOf="@id/frame_book_cover"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_book_title" />
+
+        <!-- with -->
+        <TextView
+            android:id="@+id/tv_with_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="8dp"
+            android:text="with"
+            android:textSize="12sp"
+            android:letterSpacing="-0.02"
+            android:textColor="@color/grey_500"
+            app:layout_constraintStart_toEndOf="@id/frame_book_cover"
+            app:layout_constraintTop_toBottomOf="@id/tv_book_author" />
+
+        <!-- 닉네임 -->
+        <TextView
+            android:id="@+id/tv_with_nickname"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="@string/nickname"
+            android:textSize="12sp"
+            android:letterSpacing="-0.02"
+            android:textColor="@color/grey_800"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintStart_toEndOf="@id/tv_with_label"
+            app:layout_constraintTop_toTopOf="@id/tv_with_label"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+
+        <!-- 구분선 -->
+        <View
+            android:id="@+id/view_divider"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="14dp"
+            android:background="@color/grey_100"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/frame_book_cover" />
+
+        <!-- tracker container -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_tracker"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:layout_constraintTop_toBottomOf="@id/view_divider"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- 4단계 위치 가이드(도트/라벨 기준) -->
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guide_step_1"
+                android:layout_height="0dp"
+                android:layout_width="0dp"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.07" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guide_step_2"
+                android:layout_height="0dp"
+                android:layout_width="0dp"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.36" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guide_step_3"
+                android:layout_height="0dp"
+                android:layout_width="0dp"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.66" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guide_step_4"
+                android:layout_height="0dp"
+                android:layout_width="0dp"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.93" />
+
+            <!-- 프로필: 트래커 상단에 떠있게 -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_user_profile"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/bg_user_profile"
+                android:layout_marginStart="2dp"
+                app:layout_constraintStart_toStartOf="@id/guide_step_1"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_1"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- 1단계 라벨: 프로필 아래로 -->
+            <TextView
+                android:id="@+id/tv_step_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="읽는 중"
+                android:textSize="10sp"
+                android:letterSpacing="-0.02"
+                android:textColor="@color/pre_main"
+                android:layout_marginTop="8dp"
+                app:layout_constraintStart_toStartOf="@id/guide_step_1"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_1"
+                app:layout_constraintTop_toBottomOf="@id/iv_user_profile" />
+
+            <TextView
+                android:id="@+id/tv_step_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="배송 중"
+                android:textSize="10sp"
+                android:letterSpacing="-0.02"
+                android:textColor="@color/grey_500"
+                app:layout_constraintTop_toTopOf="@id/tv_step_1"
+                app:layout_constraintStart_toStartOf="@id/guide_step_2"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_2" />
+
+            <TextView
+                android:id="@+id/tv_step_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="게스트 읽는 중"
+                android:textSize="10sp"
+                android:letterSpacing="-0.02"
+                android:textColor="@color/grey_500"
+                app:layout_constraintTop_toTopOf="@id/tv_step_1"
+                app:layout_constraintStart_toStartOf="@id/guide_step_3"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_3" />
+
+            <TextView
+                android:id="@+id/tv_step_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="회수 중"
+                android:textSize="10sp"
+                android:letterSpacing="-0.02"
+                android:textColor="@color/grey_500"
+                app:layout_constraintTop_toTopOf="@id/tv_step_1"
+                app:layout_constraintStart_toStartOf="@id/guide_step_4"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_4" />
+
+            <!-- 트랙(회색 바) -->
+            <View
+                android:id="@+id/view_track"
+                android:layout_width="0dp"
+                android:layout_height="8dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_progress_track"
+                app:layout_constraintTop_toBottomOf="@id/tv_step_1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- fill(검정 바): 길이만 단계에 따라 늘어남 -->
+            <View
+                android:id="@+id/view_fill"
+                android:layout_width="0dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="-4dp"
+                android:background="@drawable/bg_progress_thumb"
+                app:layout_constraintTop_toTopOf="@id/view_track"
+                app:layout_constraintBottom_toBottomOf="@id/view_track"
+                app:layout_constraintStart_toStartOf="@id/view_track"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_1" />
+
+            <!-- 고정 도트 4개 -->
+            <View
+                android:id="@+id/dot_1"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:background="@drawable/bg_circle_grey100"
+                app:layout_constraintTop_toTopOf="@id/view_track"
+                app:layout_constraintBottom_toBottomOf="@id/view_track"
+                app:layout_constraintStart_toStartOf="@id/guide_step_1"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_1" />
+
+            <View
+                android:id="@+id/dot_2"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:background="@drawable/bg_circle_grey100"
+                app:layout_constraintTop_toTopOf="@id/view_track"
+                app:layout_constraintBottom_toBottomOf="@id/view_track"
+                app:layout_constraintStart_toStartOf="@id/guide_step_2"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_2" />
+
+            <View
+                android:id="@+id/dot_3"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:background="@drawable/bg_circle_grey100"
+                app:layout_constraintTop_toTopOf="@id/view_track"
+                app:layout_constraintBottom_toBottomOf="@id/view_track"
+                app:layout_constraintStart_toStartOf="@id/guide_step_3"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_3" />
+
+            <View
+                android:id="@+id/dot_4"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:background="@drawable/bg_circle_grey100"
+                app:layout_constraintTop_toTopOf="@id/view_track"
+                app:layout_constraintBottom_toBottomOf="@id/view_track"
+                app:layout_constraintStart_toStartOf="@id/guide_step_4"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_4" />
+
+            <!-- 날짜 -->
+            <TextView
+                android:id="@+id/tv_step_date_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/date"
+                android:textSize="10sp"
+                android:letterSpacing="-0.02"
+                android:textColor="@color/grey_900"
+                android:visibility="visible"
+                android:layout_marginTop="10dp"
+                app:layout_constraintTop_toBottomOf="@id/view_track"
+                app:layout_constraintStart_toStartOf="@id/guide_step_1"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_1" />
+
+            <!-- 날짜 -->
+            <TextView
+                android:id="@+id/tv_step_date_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/date"
+                android:textSize="10sp"
+                android:letterSpacing="-0.02"
+                android:textColor="@color/grey_900"
+                android:visibility="invisible"
+                android:layout_marginTop="10dp"
+                app:layout_constraintTop_toBottomOf="@id/view_track"
+                app:layout_constraintStart_toStartOf="@id/guide_step_2"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_2" />
+
+            <!-- 날짜 -->
+            <TextView
+                android:id="@+id/tv_step_date_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/date"
+                android:textSize="10sp"
+                android:letterSpacing="-0.02"
+                android:textColor="@color/grey_900"
+                android:visibility="invisible"
+                android:layout_marginTop="10dp"
+                app:layout_constraintTop_toBottomOf="@id/view_track"
+                app:layout_constraintStart_toStartOf="@id/guide_step_3"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_3" />
+
+            <!-- 날짜 -->
+            <TextView
+                android:id="@+id/tv_step_date_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/date"
+                android:textSize="10sp"
+                android:letterSpacing="-0.02"
+                android:textColor="@color/grey_900"
+                android:visibility="invisible"
+                android:layout_marginTop="10dp"
+                app:layout_constraintTop_toBottomOf="@id/view_track"
+                app:layout_constraintStart_toStartOf="@id/guide_step_4"
+                app:layout_constraintEnd_toEndOf="@id/guide_step_4" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
