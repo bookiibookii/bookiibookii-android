@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_bookii_mate"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
+
+        <!-- 프로필 -->
+        <ImageView
+            android:id="@+id/iv_mate_profile"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_circle_grey100"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- 이름 -->
+        <TextView
+            android:id="@+id/tv_mate_name"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:text="닉네임"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/grey_900"
+            app:layout_constraintStart_toEndOf="@id/iv_mate_profile"
+            app:layout_constraintTop_toTopOf="@id/iv_mate_profile"
+            android:layout_marginStart="12dp"/>
+
+        <!-- 해시태그 칩 2개 (가로로) -->
+        <LinearLayout
+            android:id="@+id/layout_mate_tags"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@id/tv_mate_name"
+            app:layout_constraintTop_toTopOf="@id/tv_mate_name"
+            app:layout_constraintEnd_toStartOf="@id/iv_mate_arrow">
+
+            <TextView
+                android:id="@+id/tv_tag_1"
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                style="@style/BookiiChip"
+                android:text="#마로형" />
+
+            <TextView
+                android:id="@+id/tv_tag_2"
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                style="@style/BookiiChip"
+                android:layout_marginStart="6dp"
+                android:text="#인사이트" />
+        </LinearLayout>
+
+        <!-- 최근 책 텍스트 -->
+        <TextView
+            android:id="@+id/tv_recent_book"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="가장 최근에 완독한 책 제목"
+            android:textSize="12sp"
+            android:textColor="@color/grey_600"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintStart_toStartOf="@id/tv_mate_name"
+            app:layout_constraintTop_toBottomOf="@id/tv_mate_name"
+            app:layout_constraintEnd_toStartOf="@id/iv_mate_arrow" />
+
+        <!-- 오른쪽 화살표 -->
+        <ImageView
+            android:id="@+id/iv_mate_arrow"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_right_arrow"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
