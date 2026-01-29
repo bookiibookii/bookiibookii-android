@@ -6,12 +6,15 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.commit
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bookiibookii.bookiibookii.databinding.FragmentTrkMainBinding
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.databinding.FragmentTrkHostMainBinding
+import com.bookiibookii.bookiibookii.trkGuest.TrkGuestMainFragment
 
-class TrkMainFragment : Fragment() {
-    private var _binding: FragmentTrkMainBinding? = null
+class TrkHostMainFragment : Fragment() {
+    private var _binding: FragmentTrkHostMainBinding? = null
     private val binding get() = _binding!!
     private lateinit var trackerAdapter: TrackerAdapter
     private lateinit var footerAdapter: CreateGroupFooterAdapter
@@ -21,13 +24,12 @@ class TrkMainFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentTrkMainBinding.inflate(inflater, container, false)
+        _binding = FragmentTrkHostMainBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentTrkMainBinding.bind(view)
 
         setupToggleLogic()
         updateTabState(isMyGroup = true)
@@ -39,7 +41,8 @@ class TrkMainFragment : Fragment() {
         }
 
         footerAdapter = CreateGroupFooterAdapter(
-            onCreateGroupClick = {
+            mode = FooterMode.HOST_CREATE,
+            onActionClick = {
                 // TODO: 그룹 만들기 화면 이동
             }
         )
@@ -63,7 +66,10 @@ class TrkMainFragment : Fragment() {
         }
 
         binding.joinedGroupBt.setOnClickListener {
-            updateTabState(isMyGroup = false)
+            parentFragmentManager.commit {
+                replace(R.id.fragmentContainer, TrkGuestMainFragment())
+                addToBackStack(null)
+            }
         }
     }
 
@@ -116,5 +122,10 @@ class TrkMainFragment : Fragment() {
                 currentStep = TrackerStep.READING
             )
         )
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
