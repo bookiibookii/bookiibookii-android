@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.group
 
 import android.app.Dialog
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -12,8 +13,9 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpHostBinding
-import com.bookiibookii.bookiibookii.databinding.DialogGroupDeleteBinding
 import com.bookiibookii.bookiibookii.databinding.DialogGroupJoinBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
@@ -22,10 +24,10 @@ class GroupDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGrpHostBinding
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<View>
 
-    // 호스트 여부를 저장할 변수 (기본값: 게스트)
+    // 호스트 여부를 저장할 변수
     private var isHost: Boolean = false
 
-    // (예시) 현재 접속자 ID와 방장 ID
+    // 현재 접속자 ID와 방장 ID
     private val currentUserId = "user123"
     private val groupHostId = "user123" // 나중엔 DB에서 받아온 값
 
@@ -53,7 +55,9 @@ class GroupDetailActivity : AppCompatActivity() {
 
             // 버튼 클릭 시 관리 페이지로 이동
             itemBinding.grpItemMgManageBtn.setOnClickListener {
-                // 관리 페이지 이동 로직//
+                val intent = Intent(this, GroupJoinManagementActivity::class.java)
+
+                startActivity(intent)
             }
 
         } else {
@@ -93,7 +97,6 @@ class GroupDetailActivity : AppCompatActivity() {
 
     }
     private fun checkUserAuthority() {
-        // 실제로는 API 통신 후 비교하겠지만, 로직은 이렇습니다.
         isHost = (currentUserId == groupHostId)
 
         if (isHost) {
@@ -210,28 +213,18 @@ class GroupDetailActivity : AppCompatActivity() {
     }
 
     private fun showDeleteDialog() {
-        val dialog = Dialog(this)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val dialogBinding = DialogGroupDeleteBinding.inflate(layoutInflater)
-        dialog.setContentView(dialogBinding.root)
-
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.setLayout(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT
+        val dialog = CommonDialog(
+            context = this,
+            title = "그룹 삭제",
+            subtitle = "괴테는 모든 것을 말했다",
+            content = "그룹을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+            confirmBtnText = "삭제",
+            confirmBtnColor = R.color.ui_point_red,
+            onConfirmClick = {
+                // 삭제 API 호출 로직
+                Toast.makeText(this, "그룹이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+            }
         )
-        dialogBinding.dialogDeleteCancelBtn.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        dialogBinding.dialogDeleteEnterBtn.setOnClickListener {
-            // TODO: 실제 서버에 삭제 요청 보내기
-            Toast.makeText(this, "그룹이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
-            finish()
-        }
-
         dialog.show()
     }
 }

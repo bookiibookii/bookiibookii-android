@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_round_24dp_white"
+    android:padding="24dp"
+    android:layout_marginBottom="16dp">
+
+    <ImageView
+        android:id="@+id/item_grp_join_manage_profile_Iv"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_profile"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/item_grp_join_manage_nickname_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/pretendard_variable"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:layout_marginStart="12dp"
+       app:layout_constraintTop_toTopOf="@id/item_grp_join_manage_profile_Iv"
+        app:layout_constraintStart_toEndOf="@id/item_grp_join_manage_profile_Iv"
+        android:text="kanghunsim" />
+
+    <TextView
+        android:id="@+id/item_grp_join_manage_date_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/pretendard_variable"
+        android:textSize="12sp"
+        android:textColor="@color/grey_400"
+
+        app:layout_constraintTop_toBottomOf="@id/item_grp_join_manage_nickname_Tv"
+        app:layout_constraintStart_toStartOf="@id/item_grp_join_manage_nickname_Tv"
+        app:layout_constraintBottom_toBottomOf="@id/item_grp_join_manage_profile_Iv"
+        android:text="2025.12.05." />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_join_mg_hash1_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="16dp"
+        android:text="#메모환영"
+        app:layout_constraintStart_toStartOf="@id/item_grp_join_manage_profile_Iv"
+        app:layout_constraintTop_toBottomOf="@id/item_grp_join_manage_profile_Iv" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_join_mg_hash2_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginStart="8dp"
+        android:text="#인사이트"
+        app:layout_constraintStart_toEndOf="@id/grp_item_join_mg_hash1_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_item_join_mg_hash1_Cp" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_join_mg_hash3_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginStart="8dp"
+        android:text="#깔끔"
+        app:layout_constraintStart_toEndOf="@id/grp_item_join_mg_hash2_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_item_join_mg_hash1_Cp" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_join_mg_hash4_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginStart="8dp"
+        android:text="#태그"
+        app:layout_constraintStart_toEndOf="@id/grp_item_join_mg_hash3_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_item_join_mg_hash1_Cp" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_join_mg_hash5_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginStart="8dp"
+        android:text="#태그"
+        app:layout_constraintStart_toEndOf="@id/grp_item_join_mg_hash4_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_item_join_mg_hash1_Cp" />
+
+    <TextView
+        android:id="@+id/item_grp_join_manage_content_Tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/grey_600"
+        android:layout_marginTop="12dp"
+        android:textSize="14sp"
+        android:fontFamily="@font/pretendard_variable"
+        android:padding="12dp"
+        android:text="저 너무 참여하고 싶은데 혹시 3일만 이따가 시작해도 될까요 ~~ㅠㅠ??"
+        android:background="@drawable/bg_round_16dp_gray100"
+        app:layout_constraintStart_toStartOf="@id/item_grp_join_manage_profile_Iv"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_join_mg_hash1_Cp"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/item_grp_join_manage_no_btn"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:layout_marginTop="20dp"
+        android:text="거절"
+        android:textColor="@color/grey_900"
+        app:backgroundTint="@color/grey_200"
+        app:cornerRadius="16dp"
+        app:strokeColor="@color/grey_200"
+        app:strokeWidth="1dp"
+        app:layout_constraintTop_toBottomOf="@id/item_grp_join_manage_content_Tv"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="@id/item_grp_join_manage_content_Tv"
+        app:layout_constraintEnd_toStartOf="@id/item_grp_join_manage_yes_btn"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/item_grp_join_manage_yes_btn"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:layout_marginStart="12dp"
+        android:text="수락"
+        android:textColor="@color/grey_100"
+        app:backgroundTint="@color/grey_900"
+        app:cornerRadius="16dp"
+        app:layout_constraintTop_toTopOf="@id/item_grp_join_manage_no_btn"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toEndOf="@id/item_grp_join_manage_no_btn"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
