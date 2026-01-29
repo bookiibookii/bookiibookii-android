@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/myp_profile_iv"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:background="@drawable/bg_myp_profile"
+            android:layout_marginTop="32dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <ImageView
+            android:id="@+id/myp_edit_iv"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_edit"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/myp_name_ll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            app:layout_constraintTop_toBottomOf="@id/myp_profile_iv"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+            <TextView
+                android:id="@+id/myp_name_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="noshel"
+                android:textAppearance="@style/regular20"
+                android:textColor="@color/grey_900" />
+
+            <TextView
+                android:id="@+id/myp_temp_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="37.5°C"
+                android:textAppearance="@style/medium14"
+                android:textColor="@color/pre_main"
+                android:layout_marginStart="8dp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:background="@drawable/bg_round_10dp_gray300"
+                android:backgroundTint="@color/pre_main_pale"/>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/myp_tags_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/myp_name_ll"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="#인사이트"
+                android:textAppearance="@style/regular12"
+                android:textColor="@color/ui_main_sub"
+                android:background="@drawable/bg_round_8dp_gray300"
+                android:backgroundTint="@color/pre_sub_pale"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:layout_marginEnd="10dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="#깔끔"
+                android:textAppearance="@style/regular12"
+                android:textColor="@color/ui_main_sub"
+                android:background="@drawable/bg_round_8dp_gray300"
+                android:backgroundTint="@color/pre_sub_pale"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:layout_marginEnd="10dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="#메모환영"
+                android:textAppearance="@style/regular12"
+                android:textColor="@color/ui_main_sub"
+                android:background="@drawable/bg_round_8dp_gray300"
+                android:backgroundTint="@color/pre_sub_pale"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_round_10dp_gray300"
+            android:backgroundTint="@color/grey_100"
+            android:paddingVertical="8dp"
+            android:paddingHorizontal="12dp"
+            android:layout_marginHorizontal="33dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp"
+            android:weightSum="3"
+            app:layout_constraintTop_toBottomOf="@id/myp_tags_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="전체"
+                    android:textAppearance="@style/regular10"
+                    android:textColor="@color/grey_700"/>
+                <TextView
+                    android:id="@+id/myp_all_book_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="7"
+                    android:textAppearance="@style/medium24"
+                    android:textColor="@color/pre_main" />
+            </LinearLayout>
+            <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#DDDDDD"/>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="완독"
+                    android:textAppearance="@style/regular10"
+                    android:textColor="@color/grey_700"/>
+                <TextView
+                    android:id="@+id/myp_read_book_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5"
+                    android:textAppearance="@style/medium24"
+                    android:textColor="@color/pre_main" />
+            </LinearLayout>
+            <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#DDDDDD"/>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="독서카드"
+                    android:textAppearance="@style/regular10"
+                    android:textColor="@color/grey_700"/>
+                <TextView
+                    android:id="@+id/myp_book_card_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="16"
+                    android:textAppearance="@style/medium24"
+                    android:textColor="@color/pre_main" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

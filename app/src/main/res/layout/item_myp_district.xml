@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tv_district_name"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_input_round_20dp_white"
+    android:gravity="center"
+    android:paddingVertical="12dp"
+    android:paddingHorizontal="16dp"
+    android:text="구 이름"
+    android:textAppearance="@style/regular14"
+    android:textColor="@color/grey_900"
+    android:layout_marginEnd="8dp"/>

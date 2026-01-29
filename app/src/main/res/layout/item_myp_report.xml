@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    android:background="@drawable/bg_round_20dp_white"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/item_report_profile_iv"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/bg_round_5dp_gray300"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+    <TextView
+        android:id="@+id/item_report_name_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="noshel"
+        android:textAppearance="@style/medium11"
+        android:textColor="@color/grey_900"
+        app:layout_constraintStart_toEndOf="@id/item_report_profile_iv"
+        app:layout_constraintTop_toTopOf="@id/item_report_profile_iv"
+        app:layout_constraintBottom_toBottomOf="@id/item_report_profile_iv"/>
+
+    <TextView
+        android:id="@+id/item_report_date_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        tools:text="2024. 11. 29."
+        android:textAppearance="@style/regular11"
+        android:textColor="@color/grey_400"
+        app:layout_constraintStart_toEndOf="@id/item_report_name_tv"
+        app:layout_constraintBottom_toBottomOf="@id/item_report_name_tv"
+        app:layout_constraintTop_toTopOf="@id/item_report_name_tv"/>
+
+    <TextView
+        android:id="@+id/item_report_state_ing_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="답변 대기 중"
+        android:textAppearance="@style/regular11"
+        android:textColor="@color/pre_main"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
+        android:visibility="visible"
+        android:background="@drawable/bg_round_8dp_orange_stroke"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/item_report_state_ed_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="답변 완료"
+        android:textAppearance="@style/regular11"
+        android:textColor="@color/grey_500"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
+        android:visibility="gone"
+        android:background="@drawable/bg_round_8dp_white_stroke"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/item_report_title_tv"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="괴테는 모든 것을 말했다 (욕설/비방)"
+        android:textAppearance="@style/regular14"
+        android:textColor="@color/grey_900"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/item_report_profile_iv"/>
+
+    <ImageView
+        android:id="@+id/item_report_arrow_iv"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_arrow_right"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/item_report_title_tv"
+        app:layout_constraintBottom_toBottomOf="@id/item_report_title_tv"/>
+
+    <TextView
+        android:id="@+id/item_report_content_tv"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        tools:text="책 코멘트로 욕설을 너무 많이 달아서..."
+        android:textColor="@color/grey_700"
+        android:textAppearance="@style/regular12"
+        android:maxLines="2"
+        android:ellipsize="end"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/item_report_title_tv"/>
+
+    <TextView
+        android:id="@+id/item_report_answer_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_round_10dp_gray300_stroke"
+        android:backgroundTint="@color/grey_100"
+        android:gravity="center"
+        android:padding="12dp"
+        android:text="답변 대기 중입니다"
+        android:textAppearance="@style/regular12"
+        android:textColor="@color/grey_500"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/item_report_content_tv"
+        />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/item_report_answer_cl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_round_10dp_gray300_stroke"
+        android:backgroundTint="@color/grey_100"
+        android:padding="12dp"
+        android:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/item_report_content_tv">
+
+        <TextView
+            android:id="@+id/item_report_admin_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="부키부키 팀"
+            android:textAppearance="@style/regular12"
+            android:textColor="@color/pre_main"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <TextView
+            android:id="@+id/item_report_answer_date_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="2024. 11. 29."
+            android:textAppearance="@style/regular11"
+            android:textColor="@color/grey_400"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <TextView
+            android:id="@+id/item_report_answer_content_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            tools:text="noshel님의 신고가 접수되었습니다."
+            android:textAppearance="@style/regular14"
+            android:textColor="@color/grey_900"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/item_report_admin_tv"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
