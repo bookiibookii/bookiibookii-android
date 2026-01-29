@@ -1,23 +1,27 @@
-package com.bookiibookii.bookiibookii.trk
+package com.bookiibookii.bookiibookii.trkHost
 
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
-import com.bookiibookii.bookiibookii.databinding.FragmentHostExtendPeriodDialogBinding
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.databinding.FragmentHostSendConfirmBinding
+import com.bookiibookii.bookiibookii.databinding.FragmentHostShippingPhotoDialogBinding
 
 
-class HostExtendPeriodDialogFragment : DialogFragment() {
+class HostShippingPhotoDialogFragment : DialogFragment() {
 
-    private var _binding: FragmentHostExtendPeriodDialogBinding? = null
+    private var _binding: FragmentHostShippingPhotoDialogBinding? = null
     private val binding get() = _binding!!
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentHostExtendPeriodDialogBinding.inflate(inflater, container, false)
+        _binding = FragmentHostShippingPhotoDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -34,10 +38,8 @@ class HostExtendPeriodDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnClose.setOnClickListener{dismiss()}
-        binding.btnCancel.setOnClickListener{dismiss()}
-        binding.btnApply.setOnClickListener{
-            // 추가
+        binding.btnConfirm.setOnClickListener{
+            dismiss()
         }
     }
 
@@ -47,6 +49,6 @@ class HostExtendPeriodDialogFragment : DialogFragment() {
     }
 
     companion object {
-        const val TAG = "ExtendPeriodDialogFragment"
+        const val TAG = "ShippingPhotoFragment"
     }
 }

@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.trk
+package com.bookiibookii.bookiibookii.trkHost
 
 import android.net.Uri
 import android.os.Bundle
@@ -19,6 +19,8 @@ class HostShippingInputDialogFragment : DialogFragment() {
     private val binding get() = _binding!!
 
     private var cameraImageUri: Uri? = null
+    private var selectedCourier: String? = null
+    private var selectedPhotoUri: Uri? = null
 
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()){ uri: Uri? ->
@@ -71,8 +73,12 @@ class HostShippingInputDialogFragment : DialogFragment() {
         }
 
         binding.btnRegister.setOnClickListener{
-            (parentFragmentManager.findFragmentByTag(HostPhotoSelectionDialogFragment.TAG) as? DialogFragment)
-                ?.dismissAllowingStateLoss()
+            parentFragmentManager.setFragmentResult(
+                HostShippingInputDialogFragment.RESULT_KEY,
+                Bundle().apply {
+                    putString(HostShippingInputDialogFragment.BUNDLE_ACTION, "HOST_SHIPPED")
+                }
+            )
 
             (parentFragmentManager.findFragmentByTag(HostShippingBottomDialogFragment.TAG) as? DialogFragment)
                 ?.dismissAllowingStateLoss()
@@ -130,6 +136,8 @@ class HostShippingInputDialogFragment : DialogFragment() {
 
     companion object{
         const val TAG = "ShippingInputDialogFragment"
+        const val RESULT_KEY = "host_action"
+        const val BUNDLE_ACTION = "action"
     }
 
     private val courierList = listOf(
@@ -137,9 +145,6 @@ class HostShippingInputDialogFragment : DialogFragment() {
         "경동택배", "대신택배", "일양로지스", "천일택배", "건영택배",
         "GS25 편의점택배", "CU 편의점택배", "홈픽", "SLX택배", "우리한방택배"
     )
-
-    private var selectedCourier: String? = null
-    private var selectedPhotoUri: Uri? = null
 
     private fun setupCourierDropdown() {
         val adapter = ArrayAdapter(
