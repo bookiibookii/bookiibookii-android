@@ -11,7 +11,7 @@ import com.bookiibookii.bookiibookii.bookData.viewModel.BookViewModel
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
-import com.bookiibookii.bookiibookii.trk.TrkMainFragment
+import com.bookiibookii.bookiibookii.trkHost.TrkMainFragment
 
 class MainActivity : AppCompatActivity() {
 

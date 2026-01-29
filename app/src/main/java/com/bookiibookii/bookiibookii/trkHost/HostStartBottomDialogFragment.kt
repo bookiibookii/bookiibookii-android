@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.trk
+package com.bookiibookii.bookiibookii.trkHost
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -26,6 +26,13 @@ class HostStartBottomDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnStart.setOnClickListener{
+            parentFragmentManager.setFragmentResult(
+                HostStartBottomDialogFragment.RESULT_KEY,
+                Bundle().apply {
+                    putString(HostStartBottomDialogFragment.BUNDLE_ACTION, "START_READING")
+                }
+            )
+
             val next = HostReadingBottomDialogFragment()
             dismiss()
             next.show(parentFragmentManager, HostReadingBottomDialogFragment.TAG)
@@ -39,6 +46,8 @@ class HostStartBottomDialogFragment : BottomSheetDialogFragment() {
 
     companion object{
         const val TAG = "BookStartBottomSheetFragment"
+        const val RESULT_KEY = "host_action"
+        const val BUNDLE_ACTION = "action"
     }
 
     override fun getTheme(): Int {

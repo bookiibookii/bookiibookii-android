@@ -1,38 +1,31 @@
-package com.bookiibookii.bookiibookii.trk
+package com.bookiibookii.bookiibookii.trkHost
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.databinding.FragmentReadingBottomSheetDialogBinding
+import com.bookiibookii.bookiibookii.databinding.FragmentHostShippingStatusBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class HostReadingBottomDialogFragment : BottomSheetDialogFragment() {
-
-    private var _binding: FragmentReadingBottomSheetDialogBinding? = null
+class HostShippingStatusBottomDialogFragment : BottomSheetDialogFragment() {
+    private var _binding: FragmentHostShippingStatusBottomDialogBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentReadingBottomSheetDialogBinding.inflate(inflater, container, false)
+        _binding = FragmentHostShippingStatusBottomDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnExtendPeriod.setOnClickListener{
-            val dialog = HostExtendPeriodDialogFragment()
-            dialog.show(parentFragmentManager, HostExtendPeriodDialogFragment.TAG)
-        }
-
         binding.btnFinish.setOnClickListener{
-            val next = HostShippingBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, HostShippingBottomDialogFragment.TAG)
+            val dialog = HostSendConfirmFragment()
+            dialog.show(parentFragmentManager, HostSendConfirmFragment.TAG)
         }
     }
 
@@ -42,7 +35,7 @@ class HostReadingBottomDialogFragment : BottomSheetDialogFragment() {
     }
 
     companion object{
-        const val TAG = "ReadingBottomSheetDialogFragment"
+        const val TAG = "StatusBottomSheetDialogFragment"
     }
 
     override fun getTheme(): Int {

@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.trk
+package com.bookiibookii.bookiibookii.trkHost
 
 data class TrackerData(
     val id: Long,
