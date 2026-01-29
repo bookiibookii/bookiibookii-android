@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.group
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.inputmethod.EditorInfo
@@ -46,10 +47,11 @@ class GrpSearchActivity : AppCompatActivity() {
             addChip(keyword)
         }
 
-        // 5. 그룹 만들기 버튼 클릭 (XML ID: act_grp_next_btn)
+        // 그룹 만들기 버튼 클릭
         binding.actGrpNextBtn.setOnClickListener {
-            Toast.makeText(this, "그룹 만들기 화면으로 이동", Toast.LENGTH_SHORT).show()
-            // TODO: 그룹 생성 화면으로 이동하는 코드 작성
+            val intent = Intent(this, GroupGenerationActivity::class.java)
+
+            startActivity(intent)
         }
     }
 
@@ -60,21 +62,20 @@ class GrpSearchActivity : AppCompatActivity() {
             isClickable = true
             isFocusable = true
 
-            // 1. 스타일 먼저 적용 (폰트 크기 등 기본 설정)
+            // 스타일 먼저 적용 (폰트 크기 등 기본 설정)
             setTextAppearance(R.style.Widget_App_Chip_Tag)
 
-            // 2. 배경 설정 (흰색)
+            // 배경 설정
             setChipBackgroundColorResource(android.R.color.white)
 
-            // 3. 테두리 설정 (시스템 회색 사용)
+            // 테두리 설정
             setChipStrokeColorResource(android.R.color.darker_gray)
             chipStrokeWidth = dpToPx(1).toFloat()
             chipCornerRadius = dpToPx(30).toFloat()
 
-            // ▼▼▼ [수정된 부분] 요청하신 컬러(#858481) 적용 ▼▼▼
             setTextColor(Color.parseColor("#858481"))
 
-            // 4. 칩 클릭 시 해당 단어로 검색
+            // 칩 클릭 시 해당 단어로 검색
             setOnClickListener {
                 binding.actGrpSearchBar.setText(text)
                 binding.actGrpSearchBar.setSelection(text.length) // 커서 맨 뒤로

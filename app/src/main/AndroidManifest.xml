@@ -45,6 +45,14 @@
             android:exported="false">
         </activity>
 
+        <activity
+            android:name=".group.GroupGenerationActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"/>
+
+        <activity
+            android:name=".group.GroupJoinManagementActivity"
+            android:exported="false"/>
 
         <activity
             android:name=".trk.HostActivity"

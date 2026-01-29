@@ -141,6 +141,11 @@ class GroupFragment : Fragment() {
             }
             bottomSheet.show(parentFragmentManager, "FilterBottomSheet")
         }
+
+        binding.grpGroupListIv.setOnClickListener {
+            val intent = Intent(requireContext(), GroupGenerationActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     override fun onDestroyView() {
