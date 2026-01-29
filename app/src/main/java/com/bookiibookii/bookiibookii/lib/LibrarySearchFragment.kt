@@ -176,8 +176,21 @@ class LibrarySearchFragment : Fragment() {
         }, 100)
     }
 
+    override fun onResume() {
+        super.onResume()
+        hideBottomNavigation(true)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        hideBottomNavigation(false)
+        _binding = null // 기존 onDestroyView에 있던 코드
+    }
+
+    private fun hideBottomNavigation(shouldHide: Boolean) {
+        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
+        if (bottomNav != null) {
+            bottomNav.visibility = if (shouldHide) View.GONE else View.VISIBLE
+        }
     }
 }

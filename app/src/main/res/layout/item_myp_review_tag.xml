@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tv_review_tag"
+    android:background="@drawable/bg_round_20dp_white"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="12dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="친절하고 매너가 좋아요 8"
+    android:textAppearance="@style/regular12"
+    android:textColor="@color/grey_900"/>

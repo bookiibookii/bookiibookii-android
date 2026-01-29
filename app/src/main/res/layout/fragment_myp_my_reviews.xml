@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ui_bg">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_start"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintGuide_percent="0.08" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_end"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintGuide_percent="0.92" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:background="@color/white"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_start_inner"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintGuide_percent="0.08" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_end_inner"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintGuide_percent="0.92" />
+
+        <ImageView
+            android:id="@+id/myp_review_back_iv"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_back"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@id/guideline_start_inner"
+            app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="받은 후기"
+            android:textAppearance="@style/medium20"
+            android:textColor="@color/grey_900"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/myp_review_count_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="5 개"
+        android:textAppearance="@style/regular14"
+        android:textColor="@color/grey_700"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@id/topBar" />
+
+    <TextView
+        android:id="@+id/myp_review_time_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:text="시간순"
+        android:textAppearance="@style/medium14"
+        android:textColor="@color/grey_500"
+        app:layout_constraintTop_toTopOf="@id/myp_review_count_tv"
+        app:layout_constraintBottom_toBottomOf="@id/myp_review_count_tv"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"/>
+
+    <TextView
+        android:id="@+id/myp_review_guid_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:text="|"
+        android:textAppearance="@style/medium14"
+        android:textColor="@color/grey_500"
+        android:layout_marginStart="4dp"
+        app:layout_goneMarginEnd="4dp"
+        app:layout_constraintTop_toTopOf="@id/myp_review_count_tv"
+        app:layout_constraintBottom_toBottomOf="@id/myp_review_count_tv"
+        app:layout_constraintEnd_toStartOf="@id/myp_review_time_tv"/>
+
+    <TextView
+        android:id="@+id/myp_review_rate_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:text="최신순"
+        android:textAppearance="@style/medium14"
+        android:textColor="@color/grey_700"
+        app:layout_constraintTop_toTopOf="@id/myp_review_count_tv"
+        app:layout_constraintBottom_toBottomOf="@id/myp_review_count_tv"
+        app:layout_constraintEnd_toStartOf="@id/myp_review_guid_tv"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/myp_reviews_rv"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:paddingHorizontal="16dp"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/myp_review_count_tv"
+        tools:listitem="@layout/item_myp_my_review" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

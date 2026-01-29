@@ -12,6 +12,7 @@ import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
+import com.bookiibookii.bookiibookii.myPage.main.MypageFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -64,7 +65,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.itemMy).setOnClickListener {
-//            selectTab(NavTab.MY, MyPageFragment())
+            selectTab(NavTab.MY, MypageFragment())
         }
     }
 
