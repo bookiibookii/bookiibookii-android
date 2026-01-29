@@ -138,16 +138,12 @@
         android:id="@+id/grp_item_group_Iv"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:src="@drawable/ic_group_selected"
-        android:tint="@color/grey_500"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_book_author_Tv"
-        app:layout_constraintStart_toStartOf="@id/grp_item_book_author_Tv"
-        android:layout_marginTop="4dp"/>
-        android:layout_marginStart="4dp"
         android:src="@drawable/ic_group"
-        app:tint="@color/grey_500"
+        android:layout_marginStart="4dp"
         app:layout_constraintStart_toEndOf="@id/grp_item_vector_Iv"
-        app:layout_constraintTop_toTopOf="@id/grp_item_cal_Iv" />
+        app:layout_constraintTop_toTopOf="@id/grp_item_cal_Iv"
+        app:tint="@color/grey_500" />
+
 
     <TextView
         android:id="@+id/grp_item_mem_statusNo_Tv"
@@ -188,7 +184,7 @@
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:layout_marginTop="4dp"
-        android:background="@drawable/bg_round_10dp_gray500"
+        android:background="@drawable/ic_profile"
         app:layout_constraintStart_toStartOf="@id/grp_item_book_title_Tv"
         app:layout_constraintTop_toBottomOf="@id/grp_item_cal_Iv" />
 

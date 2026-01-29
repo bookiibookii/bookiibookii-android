@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/grp_item_mg_bg_card"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_round_20dp_white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="340:229"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/virtual_mg_area_box"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        android:visibility="invisible"
+        tools:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/grp_item_mg_bg_card"
+        app:layout_constraintEnd_toEndOf="@id/grp_item_mg_bg_card"
+        app:layout_constraintStart_toStartOf="@id/grp_item_mg_bg_card"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_bg_card" />
+
+    <ImageView
+        android:id="@+id/grp_item_mg_cover_Iv"
+        android:layout_width="74dp"
+        android:layout_height="94dp"
+        android:background="@drawable/bg_round_10dp_gray300"
+        app:layout_constraintStart_toStartOf="@id/virtual_mg_area_box"
+        app:layout_constraintTop_toTopOf="@id/virtual_mg_area_box" />
+
+    <TextView
+        android:id="@+id/grp_item_mg_book_title_Tv"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/pretendard_variable"
+        android:maxLines="1"
+        android:text="괴테는 모든 것을 말했다"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="@id/virtual_mg_area_box"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_cover_Iv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_cover_Iv" />
+
+    <TextView
+        android:id="@+id/grp_item_mg_book_author_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="스즈키 유이"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toStartOf="@id/grp_item_mg_book_title_Tv"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_mg_book_title_Tv" />
+
+    <TextView
+        android:id="@+id/grp_item_mg_book_sort_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="(소설)"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_book_author_Tv"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_mg_book_title_Tv" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_mg_status_Cp"
+        style="@style/Widget.App.Chip.Tag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:checked="true"
+        android:text="모집 중"
+        android:textSize="11sp"
+        app:layout_constraintEnd_toEndOf="@id/virtual_mg_area_box"
+        app:layout_constraintTop_toTopOf="@id/virtual_mg_area_box" />
+
+    <ImageView
+        android:id="@+id/grp_item_mg_cal_Iv"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginTop="12dp"
+        android:src="@drawable/ic_cal"
+        app:tint="@color/grey_500"
+        app:layout_constraintStart_toStartOf="@id/grp_item_mg_book_author_Tv"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_mg_book_author_Tv" />
+
+    <TextView
+        android:id="@+id/grp_item_mg_deadlineNo_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="7"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_cal_Iv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_cal_Iv" />
+
+    <TextView
+        android:id="@+id/grp_item_mg_deadlineTxt_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="일"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_deadlineNo_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_cal_Iv" />
+
+    <ImageView
+        android:id="@+id/grp_item_mg_vector_Iv"
+        android:layout_width="wrap_content"
+        android:layout_height="16dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="0.5dp"
+        android:src="@drawable/ic_vector_86"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_deadlineTxt_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_cal_Iv" />
+
+    <ImageView
+        android:id="@+id/grp_item_mg_group_Iv"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:src="@drawable/ic_group"
+        android:layout_marginStart="4dp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_vector_Iv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_cal_Iv"
+        app:tint="@color/grey_500" />
+
+    <TextView
+        android:id="@+id/grp_item_mg_mem_statusNo_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="5"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_group_Iv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_cal_Iv" />
+
+    <TextView
+        android:id="@+id/grp_item_mg_mem_statusTxt_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="명 대기 중"
+        android:textColor="@color/grey_500"
+        android:textSize="11sp"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_mem_statusNo_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_cal_Iv" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_mg_hot_Cp"
+        style="@style/Widget.App.Chip.hot"
+        android:layout_width="wrap_content"
+        android:layout_height="16dp"
+        android:layout_marginStart="4dp"
+        android:text="HOT"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_mem_statusTxt_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_mem_statusTxt_Tv"/>
+
+    <ImageView
+        android:id="@+id/grp_item_mg_profile_Iv"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/ic_profile"
+        app:layout_constraintStart_toStartOf="@id/grp_item_mg_book_title_Tv"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_mg_cal_Iv" />
+
+    <TextView
+        android:id="@+id/grp_item_mg_nickname_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="noshel"
+        android:textColor="@color/grey_700"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@id/grp_item_mg_profile_Iv"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_profile_Iv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_profile_Iv" />
+
+    <TextView
+        android:id="@+id/grp_item_mg_date_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="2025. 12. 16."
+        android:textColor="@color/grey_400"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toBottomOf="@id/grp_item_mg_profile_Iv"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_nickname_Tv"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_profile_Iv" />
+
+    <ImageView
+        android:id="@+id/grp_item_mg_manage_Btn"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_round_20dp_pale"
+        app:layout_constraintEnd_toEndOf="@id/virtual_mg_area_box"
+        app:layout_constraintStart_toStartOf="@id/virtual_mg_area_box"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_mg_hash1_Cp"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_manage_Btn"
+        app:layout_constraintBottom_toBottomOf="@id/grp_item_mg_manage_Btn"
+        app:layout_constraintStart_toStartOf="@id/grp_item_mg_manage_Btn"
+        app:layout_constraintEnd_toEndOf="@id/grp_item_mg_manage_Btn">
+
+        <TextView
+            android:id="@+id/grp_item_mg_btn_title_Tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/pretendard_variable"
+            tools:text="참여 요청 관리"
+            android:textColor="@color/pre_main"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/grp_item_mg_btn_num_Tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:fontFamily="@font/pretendard_variable"
+            tools:text="(5)"
+            android:textColor="@color/pre_main"
+            android:textSize="15sp" />
+
+    </LinearLayout>
+
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_mg_hash1_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="16dp"
+        android:text="#메모환영"
+        app:layout_constraintStart_toStartOf="@id/grp_item_mg_cover_Iv"
+        app:layout_constraintTop_toBottomOf="@id/grp_item_mg_profile_Iv" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_mg_hash2_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginStart="8dp"
+        android:text="#인사이트"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_hash1_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_hash1_Cp" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_mg_hash3_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginStart="8dp"
+        android:text="#깔끔"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_hash2_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_hash1_Cp" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_mg_hash4_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginStart="8dp"
+        android:text="#태그"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_hash3_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_hash1_Cp" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/grp_item_mg_hash5_Cp"
+        style="@style/Widget.App.Chip.hashtag"
+        android:layout_width="wrap_content"
+        android:layout_height="23dp"
+        android:layout_marginStart="8dp"
+        android:text="#태그"
+        app:layout_constraintStart_toEndOf="@id/grp_item_mg_hash4_Cp"
+        app:layout_constraintTop_toTopOf="@id/grp_item_mg_hash1_Cp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

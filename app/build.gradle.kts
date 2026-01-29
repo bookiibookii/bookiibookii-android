@@ -45,8 +45,8 @@ android {
     }
     buildFeatures {
         buildConfig = true
-        viewBinding = true
         dataBinding = true
+        viewBinding = true
     }
 }
 
@@ -75,11 +75,14 @@ dependencies {
     //viewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
 
+    implementation("com.google.android.material:material:1.13.0")
+
     //chip
     implementation("com.google.android.material:material:1.12.0")
 
     //glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("androidx.fragment:fragment-ktx:1.8.9")
 
-    implementation("androidx.fragment:fragment-ktx:1.6.2")
+    implementation("com.vanniktech:android-image-cropper:4.5.0")
 }

@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/ui_bg"
     android:fitsSystemWindows="true">
 
@@ -70,88 +71,247 @@
         android:fontFamily="@font/pretendard_variable"
         android:textSize="15dp"
         android:textColor="@color/grey_700"
-        android:text="인기 검색어"
+        android:text="최근 검색어"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintTop_toBottomOf="@id/act_grp_search_dashBoard_Iv"
         android:layout_marginTop="20dp"
         />
 
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chip_group_popular"
-        android:layout_width="0dp"
+    <HorizontalScrollView
+        android:id="@+id/act_grp_chip_Sv"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:clipToPadding="false"
+        android:paddingStart="32dp"
+        android:paddingEnd="20dp"
         android:layout_marginTop="12dp"
-        android:layout_marginEnd="20dp"
-        app:chipSpacingHorizontal="8dp"
-        app:chipSpacingVertical="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@id/act_grp_title_Tv"
-        app:layout_constraintTop_toBottomOf="@id/act_grp_title_Tv">
+        app:layout_constraintTop_toBottomOf="@id/act_grp_title_Tv"
+        app:layout_constraintStart_toStartOf="parent">
 
-    </com.google.android.material.chip.ChipGroup>
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_recent_search"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleLine="true"
+            app:chipSpacingHorizontal="8dp">
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/act_grd_card_promo"
+            <com.google.android.material.chip.Chip
+                android:id="@+id/no1_Cp"
+                style="@style/Widget.App.Chip.Entry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="인사이트" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/no2_Cp"
+                style="@style/Widget.App.Chip.Entry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="한강" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/no3_Cp"
+                style="@style/Widget.App.Chip.Entry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="트렌트코리아" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/no4_Cp"
+                style="@style/Widget.App.Chip.Entry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="천선란" />
+
+        </com.google.android.material.chip.ChipGroup>
+
+    </HorizontalScrollView>
+
+    <View
+        android:id="@+id/virtual_area_box1"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_margin="24dp"
+        android:visibility="invisible"
+        tools:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/act_search_grp_card"
+        app:layout_constraintEnd_toEndOf="@id/act_search_grp_card"
+        app:layout_constraintStart_toStartOf="@id/act_search_grp_card"
+        app:layout_constraintTop_toTopOf="@id/act_search_grp_card" />
+
+    <ImageView
+        android:id="@+id/act_search_hot_grp_card"
+        android:layout_width="0dp"
+        android:layout_height="162dp"
         android:layout_marginTop="20dp"
-        android:background="@drawable/bg_round_20dp_white"
+        android:src="@drawable/bg_round_20dp_white"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintTop_toBottomOf="@id/chip_group_popular">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingVertical="32dp"
-            android:paddingHorizontal="24dp">
-
-            <TextView
-                android:id="@+id/card_title_Tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="아직 그룹을 만들지 않았어요 😭"
-                android:textColor="@color/black"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/card_sub_title_Tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="읽고 싶은 책을 골라 그룹을 만들어볼까요?"
-                android:textColor="@color/grey_600"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/card_title_Tv" />
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/act_grp_next_Btn"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_marginTop="24dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="14dp"
-                android:background="@drawable/bg_round_10dp_gray900"
-                android:text="그룹 만들기"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:stateListAnimator="@null"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/card_sub_title_Tv" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </com.google.android.material.card.MaterialCardView>
+        app:layout_constraintTop_toBottomOf="@id/act_grp_chip_Sv"/>
 
 
+
+    <TextView
+        android:id="@+id/act_search_hot_grp_card_title_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="인기 검색어"
+        android:textColor="@color/grey_900"
+        android:textSize="16sp"
+        app:layout_constraintTop_toTopOf="@id/act_search_hot_grp_card"
+        app:layout_constraintStart_toStartOf="@id/virtual_area_box1"/>
+
+    <ImageView
+        android:id="@+id/act_search_hot_grp_card_arrow_down_Iv"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_chevron"
+        app:layout_constraintTop_toTopOf="@id/act_search_hot_grp_card_title_Tv"
+        app:layout_constraintEnd_toEndOf="@id/virtual_area_box1"/>
+
+    <TextView
+        android:id="@+id/act_search_hot_grp_card_num1_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="01 "
+        android:textColor="@color/pre_main"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/act_search_hot_grp_card_title_Tv"
+        app:layout_constraintStart_toStartOf="@id/virtual_area_box1"/>
+
+    <TextView
+        android:id="@+id/act_search_hot_grp_card_text1_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="한강"
+        android:textColor="@color/grey_900"
+        android:textSize="14sp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintTop_toBottomOf="@id/act_search_hot_grp_card_title_Tv"
+        app:layout_constraintStart_toEndOf="@id/act_search_hot_grp_card_num1_Tv"/>
+
+    <TextView
+        android:id="@+id/act_search_hot_grp_card_num2_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="02 "
+        android:textColor="@color/pre_main"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/act_search_hot_grp_card_num1_Tv"
+        app:layout_constraintStart_toStartOf="@id/virtual_area_box1"/>
+
+    <TextView
+        android:id="@+id/act_search_hot_grp_card_text2_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="자몽살구클럽"
+        android:textColor="@color/grey_900"
+        android:textSize="14sp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintTop_toBottomOf="@id/act_search_hot_grp_card_num1_Tv"
+        app:layout_constraintStart_toEndOf="@id/act_search_hot_grp_card_num1_Tv"/>
+
+    <TextView
+        android:id="@+id/act_search_hot_grp_card_num3_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="03 "
+        android:textColor="@color/pre_main"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/act_search_hot_grp_card_num2_Tv"
+        app:layout_constraintStart_toStartOf="@id/virtual_area_box1"/>
+
+    <TextView
+        android:id="@+id/act_search_hot_grp_card_text3_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="최강록"
+        android:textColor="@color/grey_900"
+        android:textSize="14sp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintTop_toBottomOf="@id/act_search_hot_grp_card_num2_Tv"
+        app:layout_constraintStart_toEndOf="@id/act_search_hot_grp_card_num3_Tv"/>
+
+
+
+
+    <View
+        android:id="@+id/virtual_area_box2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="24dp"
+        android:visibility="invisible"
+        tools:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/act_search_grp_card"
+        app:layout_constraintEnd_toEndOf="@id/act_search_grp_card"
+        app:layout_constraintStart_toStartOf="@id/act_search_grp_card"
+        app:layout_constraintTop_toTopOf="@id/act_search_grp_card" />
+
+    <ImageView
+        android:id="@+id/act_search_grp_card"
+        android:layout_width="0dp"
+        android:layout_height="174dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/bg_round_20dp_white"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@id/act_search_hot_grp_card"/>
+
+    <TextView
+        android:id="@+id/act_search_grp_card_title_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="아직 그룹을 만들지 않았어요 😭"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="@id/virtual_area_box2"
+        app:layout_constraintStart_toStartOf="@id/virtual_area_box2"
+        app:layout_constraintTop_toTopOf="@id/virtual_area_box2" />
+
+    <TextView
+        android:id="@+id/act_search_grp_card_sub_title_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="읽고 싶은 책을 골라 그룹을 만들어볼까요?"
+        android:textColor="@color/grey_600"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/act_search_grp_card_title_Tv" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/act_grp_next_Btn"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_round_10dp_gray900"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="그룹 만들기"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:stateListAnimator="@null"
+        app:layout_constraintEnd_toEndOf="@id/virtual_area_box2"
+        app:layout_constraintStart_toStartOf="@id/virtual_area_box2"
+        app:layout_constraintTop_toBottomOf="@id/act_search_grp_card_sub_title_Tv" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

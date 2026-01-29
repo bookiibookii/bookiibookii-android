@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_trade_finished_sheet"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="24dp">
+
+    <View
+        android:id="@+id/view_handle"
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="#E0E0E0" />
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="교환독서 종료"
+        android:textColor="#111111"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="교환독서가 종료되었어요. 따뜻한 후기를 남겨볼까요?"
+        android:textColor="#999999"
+        android:textSize="13sp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_write_review"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="18dp"
+        android:text="후기 남기기"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#222222"
+        app:cornerRadius="16dp" />
+
+</LinearLayout>
