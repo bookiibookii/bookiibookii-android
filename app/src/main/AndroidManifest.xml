@@ -35,8 +35,7 @@
         <activity
             android:name=".group.GrpSearchActivity"
             android:exported="false"></activity>
-        <activity
-            android:name=".group.GroupDetailActivity"
+
         <activity
             android:name=".group.GroupDetailActivity"
             android:exported="false" />
