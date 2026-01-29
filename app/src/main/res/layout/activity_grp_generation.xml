@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fitsSystemWindows="true">
+
+    <ImageView
+        android:id="@+id/act_grp_gen_dashBoard_Iv"
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:background="@drawable/bg_grp_dashboard_border"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/act_grp_gen_back_Iv"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_arrow"
+        android:padding="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/act_grp_gen_dashBoard_Iv"
+        app:layout_constraintBottom_toBottomOf="@id/act_grp_gen_dashBoard_Iv"
+        android:layout_marginStart="16dp"/>
+
+    <TextView
+        android:id="@+id/act_grp_gen_main_title_Tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="그룹 만들기"
+        android:textColor="@color/grey_900"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/act_grp_gen_dashBoard_Iv"
+        app:layout_constraintBottom_toBottomOf="@id/act_grp_gen_dashBoard_Iv" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/act_grp_gen_run_btn"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/bg_round_20dp_gray200"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="그룹 만들기"
+        android:textColor="@color/grey_500"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:stateListAnimator="@null"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/act_grp_gen_dashBoard_Iv"
+        app:layout_constraintBottom_toTopOf="@id/act_grp_gen_run_btn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="40dp">
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/act_grp_gen_guideline_start"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.08" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/act_grp_gen_guideline_end"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.92" />
+
+            <TextView
+                android:id="@+id/act_grp_gen_book_serach_Tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="도서 검색 *"
+                android:textColor="@color/grey_900"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <EditText
+                android:id="@+id/act_grp_gen_book_search_bar"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_grp_search_input"
+                android:drawableStart="@drawable/ic_search_simple"
+                android:drawablePadding="8dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:hint="검색하기"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:paddingStart="12dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/grey_400"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="@id/act_grp_gen_guideline_end"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_serach_Tv" />
+
+            <TextView
+                android:id="@+id/act_grp_gen_book_have_Tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="이 책의 실물을 가지고 계신가요? *"
+                android:textColor="@color/grey_900"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_search_bar"/>
+
+            <LinearLayout
+                android:id="@+id/act_grp_gen_btn_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:weightSum="2"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_have_Tv"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintEnd_toEndOf="@id/act_grp_gen_guideline_end">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/act_grp_gen_book_yes_btn"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:text="네"
+                    android:textColor="@color/grey_900"
+                    app:backgroundTint="@color/white"
+                    app:cornerRadius="20dp"
+                    app:strokeColor="@color/grey_200"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/act_grp_gen_book_no_btn"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:text="아니오"
+                    android:textColor="@color/grey_900"
+                    app:backgroundTint="@color/white"
+                    app:cornerRadius="20dp"
+                    app:strokeColor="@color/grey_200"
+                    app:strokeWidth="1dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/act_grp_gen_book_have_info_Tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="그룹을 생성하려면 실물 책이 필요합니다"
+                android:textColor="@color/grey_500"
+                android:textSize="12sp"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_btn_layout"/>
+
+            <TextView
+                android:id="@+id/act_grp_gen_book_date_label_Tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="시작 날짜 *"
+                android:textColor="@color/grey_900"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_have_info_Tv"/>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/act_grp_gen_book_date_container"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_grp_search_input"
+                android:paddingHorizontal="16dp"
+                app:layout_constraintEnd_toEndOf="@id/act_grp_gen_guideline_end"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_date_label_Tv">
+
+                <TextView
+                    android:id="@+id/act_grp_gen_book_select_date_Tv"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/pretendard_variable"
+                    android:maxLines="1"
+                    android:text=""
+                    tools:text="2026.01.01"
+                    android:textColor="@color/grey_900"
+                    android:textSize="14sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/act_grp_gen_book_date_Iv"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/act_grp_gen_book_date_Iv"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_cal"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/grey_500" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/act_grp_gen_book_limit_info_Tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="독서를 시작할 날짜를 선택해주세요 (익일부터 선택 가능)"
+                android:textColor="@color/grey_500"
+                android:textSize="12sp"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_date_container"/>
+
+            <TextView
+                android:id="@+id/act_grp_gen_book_limit_Tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="독서 기간 *"
+                android:textColor="@color/grey_900"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_limit_info_Tv"/>
+
+            <EditText
+                android:id="@+id/act_grp_gen_book_limit_bar"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_grp_search_input"
+                android:drawableStart="@drawable/ic_search_simple"
+                android:drawablePadding="8dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:hint="3~30"
+                android:imeOptions="actionDone"
+                android:inputType="number"
+                android:maxLines="1"
+                android:paddingStart="12dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/grey_400"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="@id/act_grp_gen_guideline_end"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_limit_Tv" />
+
+            <TextView
+                android:id="@+id/act_grp_gen_book_limit_day_Tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="일"
+                android:textColor="@color/grey_400"
+                android:textSize="14sp"
+                app:layout_constraintBottom_toBottomOf="@id/act_grp_gen_book_limit_bar"
+                app:layout_constraintEnd_toEndOf="@id/act_grp_gen_book_limit_bar"
+                app:layout_constraintTop_toTopOf="@id/act_grp_gen_book_limit_bar" />
+
+            <TextView
+                android:id="@+id/act_grp_gen_book_limit_day_info_Tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="3일에서 30일 사이로 입력해주세요"
+                android:textColor="@color/grey_500"
+                android:textSize="12sp"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_limit_bar"/>
+
+            <TextView
+                android:id="@+id/act_grp_gen_tag_Tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="독서 태그 *"
+                android:textColor="@color/grey_900"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_book_limit_day_info_Tv"/>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/act_grp_gen_chip_group"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp"
+                app:singleSelection="false"
+                app:layout_constraintEnd_toEndOf="@id/act_grp_gen_guideline_end"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_tag_Tv">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/act_grp_gen_tag_memo_cp"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="#메모환영"
+                    android:textColor="@color/selector_chip_category_stroke"
+                    app:chipBackgroundColor="@color/selector_chip_category_bg"
+                    app:chipStrokeColor="@color/selector_chip_category_stroke"
+                    app:chipStrokeWidth="1dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/act_grp_gen_tag_post_cp"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="#포스트잇"
+                    android:textColor="@color/selector_chip_category_stroke"
+                    app:chipBackgroundColor="@color/selector_chip_category_bg"
+                    app:chipStrokeColor="@color/selector_chip_category_stroke"
+                    app:chipStrokeWidth="1dp"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/act_grp_gen_tag_clean_cp"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="#깔끔"
+                    android:textColor="@color/selector_chip_category_stroke"
+                    app:chipBackgroundColor="@color/selector_chip_category_bg"
+                    app:chipStrokeColor="@color/selector_chip_category_stroke"
+                    app:chipStrokeWidth="1dp"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/act_grp_gen_tag_serious_cp"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="#진지함"
+                    android:textColor="@color/selector_chip_category_stroke"
+                    app:chipBackgroundColor="@color/selector_chip_category_bg"
+                    app:chipStrokeColor="@color/selector_chip_category_stroke"
+                    app:chipStrokeWidth="1dp"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/act_grp_gen_tag_fun_cp"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="#재미있게"
+                    android:textColor="@color/selector_chip_category_stroke"
+                    app:chipBackgroundColor="@color/selector_chip_category_bg"
+                    app:chipStrokeColor="@color/selector_chip_category_stroke"
+                    app:chipStrokeWidth="1dp"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/act_grp_gen_tag_insite_cp"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="#인사이트"
+                    android:textColor="@color/selector_chip_category_stroke"
+                    app:chipBackgroundColor="@color/selector_chip_category_bg"
+                    app:chipStrokeColor="@color/selector_chip_category_stroke"
+                    app:chipStrokeWidth="1dp"/>
+
+            </com.google.android.material.chip.ChipGroup>
+            <TextView
+                android:id="@+id/act_grp_gen_introduce_Tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="그룹 소개"
+                android:textColor="@color/grey_900"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_chip_group"/>
+
+            <EditText
+                android:id="@+id/act_grp_gen_introduce_bar"
+                android:layout_width="0dp"
+                android:layout_height="128dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_grp_search_input"
+                android:fontFamily="@font/pretendard_variable"
+                android:gravity="top|start"
+                android:hint="독서 성향 태그에서 추가적으로 설명이 필요한 대목을 적어라!!\n ex. 낙서 절대 금지"
+                android:inputType="textMultiLine"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/grey_400"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="@id/act_grp_gen_guideline_end"
+                app:layout_constraintStart_toStartOf="@id/act_grp_gen_guideline_start"
+                app:layout_constraintTop_toBottomOf="@id/act_grp_gen_introduce_Tv" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

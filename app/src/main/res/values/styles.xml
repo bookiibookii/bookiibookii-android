@@ -378,4 +378,35 @@
         <item name="android:textColor">@color/ui_point_red</item>
     </style>
 
+    <style name="Widget.App.Chip.Entry" parent="Base.App.Chip">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:checkable">false</item>
+        <item name="closeIconVisible">true</item>
+        <item name="closeIcon">@drawable/ic_close</item>
+        <item name="closeIconTint">@color/grey_400</item>
+        <item name="closeIconSize">16dp</item>
+        <item name="chipBackgroundColor">@color/white</item>
+        <item name="chipStrokeColor">@color/grey_200</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipEndPadding">12dp</item>
+        <item name="textEndPadding">4dp</item>
+    </style>
+
+    <style name="Widget.App.Chip.host" parent="Base.App.Chip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="chipStartPadding">0dp</item>
+        <item name="chipEndPadding">0dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAlignment">gravity</item>
+        <item name="chipCornerRadius">8dp</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipStrokeColor">@color/pre_main_pale</item>
+        <item name="android:checkable">false</item>
+        <item name="android:clickable">false</item>
+        <item name="chipBackgroundColor">@color/pre_main_pale</item>
+        <item name="android:textColor">@color/pre_main</item>
+    </style>
 </resources>

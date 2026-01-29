@@ -5,7 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/ui_bg"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="false">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_start"
@@ -25,7 +25,8 @@
     <ImageView
         android:id="@+id/grp_main_dashBoard_Iv"
         android:layout_width="match_parent"
-        android:layout_height="113dp"
+        android:layout_height="133dp"
+        android:layout_marginTop="24dp"
         android:background="@drawable/bg_grp_dashboard_border"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,6 +38,7 @@
         android:layout_height="34dp"
         android:text="그룹"
         android:textSize="24sp"
+        android:layout_marginTop="20dp"
         android:fontFamily="@font/pretendard_variable"
         android:textStyle="bold"
         android:textColor="@color/grey_700"
@@ -50,8 +52,9 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:src="@drawable/ic_search"
+        android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="@id/grp_main_dashBoard_Iv"/>
 
     <com.google.android.material.chip.Chip
         android:id="@+id/grp_recommend_Cp"
@@ -120,18 +123,17 @@
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
         android:clipToPadding="false"
-        android:paddingBottom="80dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintTop_toBottomOf="@id/grp_main_dashBoard_Iv"
         tools:listitem="@layout/item_grp_card" />
+
     <ImageView
         android:id="@+id/grp_group_list_Iv"
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:src="@drawable/ic_grouplist"
-        android:layout_marginBottom="20dp"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
         app:layout_constraintBottom_toBottomOf="parent" />
 
