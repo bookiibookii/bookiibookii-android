@@ -30,7 +30,7 @@
         </activity>
       
         <activity
-            android:name=".onboarding.LoginActivity"
+            android:name=".onboarding.login.LoginActivity"
             android:exported="false">
       </activity>
       
