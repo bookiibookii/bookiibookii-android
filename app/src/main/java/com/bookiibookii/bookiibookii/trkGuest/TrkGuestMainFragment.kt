@@ -85,14 +85,14 @@ class TrkGuestMainFragment : Fragment() {
     // 더미 데이터
     private fun createDummyTrackerList(): List<TrackerData> {
         return listOf(
-            TrackerData(
-                id = 1L,
-                bookTitle = "살인자의 기억법~~~~~~",
-                bookAuthor = "김영하",
-                withUserName = "noshel",
-                coverImageUrl = null,
-                currentStep = TrackerStep.DELIVERY
-            )
+//            TrackerData(
+//                id = 1L,
+//                bookTitle = "살인자의 기억법~~~~~~",
+//                bookAuthor = "김영하",
+//                withUserName = "noshel",
+//                coverImageUrl = null,
+//                currentStep = TrackerStep.DELIVERY
+//            )
         )
     }
 

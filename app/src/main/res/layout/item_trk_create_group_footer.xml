@@ -25,8 +25,8 @@
             android:layout_height="wrap_content"
             android:text="아직 그룹을 만들지 않았어요 😭"
             android:textColor="#222222"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:fontFamily="@font/pretendard_medium" />
 
         <TextView
             android:id="@+id/tv_empty_desc"
@@ -34,17 +34,15 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="읽고 싶은 책을 골라 그룹을 만들어볼까요?"
-            android:textColor="#999999"
-            android:textSize="13sp" />
+            android:fontFamily="@font/pretendard_regular"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_create_group"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="16dp"
-            android:text="그룹 만들기"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
+            android:text="그룹 둘러보기"
+            android:fontFamily="@font/pretendard_regular"
             android:backgroundTint="#222222"
             app:cornerRadius="16dp" />
     </LinearLayout>
