@@ -6,10 +6,11 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.databinding.ActivitySplashBinding
+import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.jvm.java
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : AppCompatActivity() {
@@ -42,8 +43,8 @@ class SplashActivity : AppCompatActivity() {
         // TODO [v1] TokenManager 도입 후 실제 토큰 여부로 교체
         // val hasValidToken = TokenManager.hasValidToken()
 
-        // 현재 단계에서는 항상 홈으로 이동
-        startActivity(Intent(this, MainActivity::class.java))
+        // 현재 단계에서는 항상 로그인화면으로 이동
+        startActivity(Intent(this, LoginActivity::class.java))
 
         // TODO [v1] 토큰 분기 로직 활성화 시 아래 코드 사용
         /*
