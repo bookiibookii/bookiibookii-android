@@ -1,6 +1,8 @@
 package com.bookiibookii.bookiibookii.bookData.viewModel
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.BuildConfig
@@ -14,19 +16,22 @@ private const val DUMMY_TITLE = "살인자의 기억법"
 
 class BookViewModel : ViewModel() {
 
+    private val _representativeBook = MutableLiveData<Book?>()
+    val representativeBook: LiveData<Book?> = _representativeBook
+
     init {
         Log.d("BOOK_API", "ViewModel init")
         fetchBooks()
     }
 
-    private fun fetchBooks() {
+    private fun fetchBooks(title: String = DUMMY_TITLE) {
         Log.d("BOOK_API", "fetchBooks called")
 
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.searchBooks(
                     ttbKey = BuildConfig.ALADIN_TTB_KEY,
-                    query = DUMMY_TITLE,
+                    query = title,
                     queryType = "Title"
                 )
 
@@ -34,18 +39,20 @@ class BookViewModel : ViewModel() {
 
                 val books = response.item.orEmpty()
                 if (books.isEmpty()) {
-                    Log.d("BOOK_API", "검색 결과 없음: $DUMMY_TITLE")
+                    Log.d("BOOK_API", "검색 결과 없음: $title")
                     return@launch
                 }
 
                 // 대표 1권 선택 -> 지금은 세트/~전 제외 단일 상품으로 지정 -> UI구현 후 대표 서적 관리 변경 필요
                 val representative = pickRepresentativeBook(
                     books = books,
-                    queryTitle = DUMMY_TITLE
+                    queryTitle = title
                 ) ?: run {
                     Log.d("BOOK_API", "대표 도서 없음")
                     return@launch
                 }
+
+                _representativeBook.value = representative
 
                 // 최종 분야(카테고리) 결정
                 val category = determineFinalCategory(representative)
@@ -64,6 +71,9 @@ class BookViewModel : ViewModel() {
         }
     }
 
+    fun searchByTitle(title: String) {
+        fetchBooks(title)
+    }
 
     // 대표 1권 선택 로직
     private fun isSetBook(title: String): Boolean {

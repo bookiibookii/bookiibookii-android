@@ -50,21 +50,25 @@ class CreateGroupFooterAdapter(
 
         fun bind(showEmptyText: Boolean) {
             card.visibility = View.VISIBLE
+            tvTitle.visibility = View.VISIBLE
             btnAction.visibility = View.VISIBLE
 
-            tvTitle.visibility = if (showEmptyText) View.VISIBLE else View.GONE
+            if (!showEmptyText) {
+                card.visibility = View.GONE
+                return
+            }
 
             when (mode) {
                 FooterMode.HOST_CREATE -> {
                     tvTitle.text = "아직 그룹을 만들지 않았어요 😭"
                     tvDesc.text = "읽고 싶은 책을 골라 그룹을 만들어볼까요?"
-                    btnAction.text = "그룹 만들기"
+                    btnAction.text = "그룹 둘러보기"
                 }
 
                 FooterMode.GUEST_JOIN -> {
                     tvTitle.text = "아직 참여한 그룹이 없어요 😭"
                     tvDesc.text = "독서 그룹에 참여하러 가볼까요?"
-                    btnAction.text = "그룹 참여하기"
+                    btnAction.text = "그룹 둘러보기"
                 }
             }
         }
