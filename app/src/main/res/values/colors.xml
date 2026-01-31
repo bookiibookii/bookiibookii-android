@@ -20,7 +20,11 @@
     <color name="ui_point_red_105">#FFF3F3</color>
     <color name="ui_point_red_pale">#FFBBBB</color>
     <color name="ui_point_red">#FF4D4D</color>
+    <color name="ui_point_green.pale">#E7FFEA</color>
+    <color name="ui_point_green150">#74D27F</color>
+    <color name="ui_point_green200">#3CCF4D</color>
     <color name="ui_main_105">#FFC9A4</color>
+    <color name="pre_main">#FF7618</color>
 
     <!--신규 추가-->
     <color name="page">#FDFBF7</color>
@@ -31,7 +35,6 @@
     <color name="kakao">#FEE500</color>
 
     <!--이전 UI 색상 -> 미사용 시 추후 삭제 필요-->
-    <color name="pre_main">#FF7618</color>
     <color name="pre_main_pale">#FFEADB</color>
 
     <color name="pre_sub">#37AAFF</color>

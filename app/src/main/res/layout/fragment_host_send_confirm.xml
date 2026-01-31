@@ -15,9 +15,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="수령 인증"
-        android:textColor="#111111"
-        android:textSize="16sp"
-        android:textStyle="bold"
+        android:textColor="@color/grey_900"
+        android:textSize="20sp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -43,12 +42,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
-            android:id="@+id/ivCheck"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:contentDescription="@null"
-            android:src="@android:drawable/checkbox_on_background" />
+        <CheckBox
+            android:id="@+id/cb_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:buttonTint="#222222"
+            android:textColor="#222222"
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/tvInfo"
@@ -56,8 +56,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="책의 상태를 확인했습니다"
-            android:textColor="#B0B0B0"
-            android:textSize="12sp" />
+            android:textColor="@color/grey_900"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -71,7 +71,9 @@
         app:layout_constraintTop_toBottomOf="@id/infoRow"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:backgroundTint="#EDEDED"
-        android:textColor="#9E9E9E" />
+        app:strokeColor="@color/grey_200"
+        app:strokeWidth="1dp"
+        app:backgroundTint="@color/grey_100"
+        android:textColor="@color/grey_600" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
