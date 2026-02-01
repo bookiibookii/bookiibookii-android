@@ -9,10 +9,11 @@
     android:padding="24dp">
 
     <View
+        android:id="@+id/view_handle"
         android:layout_width="40dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:background="#E0E0E0" />
+        android:background="@color/grey_200" />
 
     <TextView
         android:id="@+id/tv_title"
@@ -20,20 +21,20 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="게스트가 기간 연장을 신청했어요"
-        android:textColor="#111111"
+        android:textColor="@color/grey_900"
         android:textSize="20sp"
-        android:textStyle="bold" />
+        android:fontFamily="@font/pretendard_medium"/>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_period_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:cardBackgroundColor="#F5F5F5"
-        app:cardCornerRadius="14dp"
+        android:layout_marginTop="24dp"
+        app:cardBackgroundColor="@color/grey_100"
+        app:cardCornerRadius="12dp"
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
-        app:strokeColor="#E6E6E6">
+        app:strokeColor="@color/grey_200">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -49,42 +50,48 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="기존 예정 종료일"
-                    android:textColor="#666666"
-                    android:textSize="14sp" />
+                    android:text="기존 예정 종료일   "
+                    android:textColor="@color/grey_900"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/pretendard_regular"
+                    android:includeFontPadding="false" />
 
                 <TextView
                     android:id="@+id/tv_old_end_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
                     android:text="2025. 12. 25."
-                    android:textColor="#666666"
-                    android:textSize="14sp" />
+                    android:textColor="@color/grey_900"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/pretendard_regular"
+                    android:includeFontPadding="false" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="연장 후 예정 종료일"
-                    android:textColor="#666666"
-                    android:textSize="14sp" />
+                    android:text="연장 후 예정 종료일   "
+                    android:textColor="@color/grey_900"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/pretendard_regular"
+                    android:includeFontPadding="false" />
 
                 <TextView
                     android:id="@+id/tv_new_end_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
                     android:text="2025. 12. 28."
-                    android:textColor="#FF8C00"
+                    android:textColor="@color/pre_main"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:fontFamily="@font/pretendard_medium"
+                    android:includeFontPadding="false" />
             </LinearLayout>
 
         </LinearLayout>
@@ -94,12 +101,13 @@
         android:id="@+id/btn_confirm"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="16dp"
         android:text="확인"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:textColor="@android:color/white"
-        android:backgroundTint="#222222"
-        app:cornerRadius="16dp" />
+        android:textColor="@color/grey_100"
+        android:backgroundTint="@color/grey_900"
+        app:cornerRadius="16dp"
+        android:fontFamily="@font/pretendard_medium" />
 
 </LinearLayout>

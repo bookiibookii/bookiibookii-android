@@ -11,9 +11,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="배송 정보 입력"
-        android:textColor="#222222"
+        android:textColor="@color/grey_900"
         android:textSize="20sp"
         android:textStyle="bold"
+        android:fontFamily="@font/pretendard_medium"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -31,8 +32,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:text="택배사 *"
-        android:textColor="#222222"
+        android:textColor="@color/grey_700"
         android:textSize="14sp"
+        android:fontFamily="@font/pretendard_regular"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_title" />
 
@@ -42,7 +44,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        app:boxBackgroundColor="#F5F5F5"
+        app:boxBackgroundColor="@color/grey_100"
+        app:boxStrokeColor="@color/grey_200"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeWidthFocused="1dp"
         app:boxCornerRadiusTopStart="14dp"
         app:boxCornerRadiusTopEnd="14dp"
         app:boxCornerRadiusBottomStart="14dp"
@@ -60,8 +65,8 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:hint=""
-            android:inputType="none"
-            android:textColor="#222222"
+            android:textColor="@color/grey_800"
+            android:fontFamily="@font/pretendard_regular"
             android:textSize="14sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -71,7 +76,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="운송장 번호 *"
-        android:textColor="#222222"
+        android:textColor="@color/grey_700"
+        android:fontFamily="@font/pretendard_regular"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/til_courier" />
@@ -81,7 +87,9 @@
         android:layout_width="0dp"
         android:layout_height="54dp"
         android:layout_marginTop="8dp"
-        app:cardBackgroundColor="#F5F5F5"
+        app:cardBackgroundColor="@color/grey_100"
+        app:strokeColor="@color/grey_200"
+        app:boxStrokeWidth="1dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
@@ -94,7 +102,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
-            android:hint="운송장 번호 입력"
             android:inputType="number"
             android:paddingHorizontal="16dp"
             android:textSize="15sp" />
@@ -106,8 +113,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="배송 인증 사진 *"
-        android:textColor="#222222"
+        android:textColor="@color/grey_700"
         android:textSize="14sp"
+        android:fontFamily="@font/pretendard_regular"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/card_tracking" />
 
@@ -116,7 +124,8 @@
         android:layout_width="0dp"
         android:layout_height="140dp"
         android:layout_marginTop="8dp"
-        app:cardBackgroundColor="#F5F5F5"
+        app:cardBackgroundColor="@color/grey_100"
+        app:strokeColor="@color/grey_200"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -126,7 +135,9 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layout_upload_trigger"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            app:strokeColor="@color/grey_200"
+            app:boxStrokeWidth="1dp">
 
             <ImageView
                 android:id="@+id/iv_upload_icon"
@@ -137,8 +148,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_chainStyle="packed"
-                app:tint="#666666" />
+                app:layout_constraintVertical_chainStyle="packed"/>
 
             <TextView
                 android:id="@+id/tv_upload_hint"
@@ -146,8 +156,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="배송 인증 사진을 업로드해주세요"
-                android:textColor="#999999"
-                android:textSize="13sp"
+                android:textColor="@color/grey_800"
+                android:textSize="14sp"
+                android:fontFamily="@font/pretendard_regular"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -167,11 +178,11 @@
         android:layout_width="0dp"
         android:layout_height="60dp"
         android:layout_marginTop="32dp"
-        android:backgroundTint="#222222"
+        android:backgroundTint="@color/grey_900"
         android:text="등록하기"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"
-        app:cornerRadius="16dp"
+        android:textColor="@color/grey_100"
+        android:fontFamily="@font/pretendard_regular"
+        app:cornerRadius="14dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

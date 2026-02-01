@@ -13,7 +13,7 @@
         android:layout_width="40dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:background="#E0E0E0" />
+        android:background="@color/grey_200" />
 
     <TextView
         android:id="@+id/tv_title"
@@ -21,9 +21,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="게스트가 책을 발송했어요!"
-        android:textColor="#111111"
+        android:textColor="@color/grey_900"
         android:textSize="20sp"
-        android:textStyle="bold" />
+        android:fontFamily="@font/pretendard_medium" />
 
     <TextView
         android:id="@+id/tv_subtitle"
@@ -31,25 +31,24 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="책을 받은 후 수령 인증을 진행해주세요."
-        android:textColor="#999999"
-        android:textSize="13sp" />
+        android:textColor="@color/grey_500"
+        android:textSize="14sp"
+        android:fontFamily="@font/pretendard_regular" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_tracking"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        app:cardBackgroundColor="#F5F5F5"
+        app:cardBackgroundColor="@color/grey_100"
         app:cardCornerRadius="14dp"
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
-        app:strokeColor="#E6E6E6">
+        app:strokeColor="@color/grey_200">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="14dp"
@@ -60,20 +59,30 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="CJ대한통운"
-                android:textColor="#666666"
-                android:textSize="14sp" />
+                android:textColor="@color/grey_900"
+                android:textSize="14sp"
+                android:fontFamily="@font/pretendard_regular"
+                android:includeFontPadding="false"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <TextView
                 android:id="@+id/tv_tracking_num"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="8dp"
                 android:text="1234123412"
-                android:textColor="#FF8C00"
+                android:textColor="@color/pre_main"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:fontFamily="@font/pretendard_medium"
+                android:includeFontPadding="false"
+                app:layout_constraintStart_toEndOf="@id/tv_courier"
+                app:layout_constraintTop_toTopOf="@id/tv_courier"
+                app:layout_constraintBottom_toBottomOf="@id/tv_courier" />
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.button.MaterialButton
@@ -82,13 +91,13 @@
         android:layout_height="56dp"
         android:layout_marginTop="12dp"
         android:text="배송 인증 사진 보기"
-        android:textColor="#111111"
-        android:textSize="16sp"
-        android:textStyle="bold"
+        android:textColor="@color/grey_900"
+        android:textSize="15sp"
+        android:fontFamily="@font/pretendard_medium"
         app:cornerRadius="16dp"
         app:backgroundTint="@android:color/white"
         app:strokeWidth="1dp"
-        app:strokeColor="#E6E6E6" />
+        app:strokeColor="@color/grey_200" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_do_receive_confirm"
@@ -96,10 +105,10 @@
         android:layout_height="56dp"
         android:layout_marginTop="12dp"
         android:text="수령 인증하기"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:backgroundTint="#222222"
+        android:textColor="@color/grey_100"
+        android:textSize="15sp"
+        android:fontFamily="@font/pretendard_medium"
+        android:backgroundTint="@color/grey_900"
         app:cornerRadius="16dp" />
 
 </LinearLayout>
