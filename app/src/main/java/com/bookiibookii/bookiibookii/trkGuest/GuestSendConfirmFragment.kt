@@ -1,23 +1,22 @@
-package com.bookiibookii.bookiibookii.trkHost
+package com.bookiibookii.bookiibookii.trkGuest
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
-import com.bookiibookii.bookiibookii.databinding.FragmentHostShippingPhotoDialogBinding
+import com.bookiibookii.bookiibookii.databinding.FragmentGuestSendConfirmBinding
 
+class GuestSendConfirmFragment : DialogFragment() {
 
-class HostShippingPhotoDialogFragment : DialogFragment() {
-
-    private var _binding: FragmentHostShippingPhotoDialogBinding? = null
+    private var _binding: FragmentGuestSendConfirmBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentHostShippingPhotoDialogBinding.inflate(inflater, container, false)
+        _binding = FragmentGuestSendConfirmBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -35,7 +34,12 @@ class HostShippingPhotoDialogFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnConfirm.setOnClickListener{
+            val next = GuestTradeFinishBottomDialogFragment()
+            val prevBottomSheet = parentFragmentManager.findFragmentByTag(
+                GuestShippingStatusBottomDialogFragment.TAG) as? DialogFragment
             dismiss()
+            prevBottomSheet?.dismiss()
+            next.show(parentFragmentManager, GuestTradeFinishBottomDialogFragment.TAG)
         }
     }
 
@@ -45,6 +49,6 @@ class HostShippingPhotoDialogFragment : DialogFragment() {
     }
 
     companion object {
-        const val TAG = "ShippingPhotoFragment"
+        const val TAG = "GuestSendConfirmFragment"
     }
 }

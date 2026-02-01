@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="게스트에게 책을 발송했어요!"
+        android:text="호스트에게 책을 발송했어요!"
         android:textColor="@color/grey_900"
         android:textSize="20sp"
         android:textStyle="bold"/>
@@ -30,7 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="게스트가 책을 수령하면 상태가 업데이트됩니다."
+        android:text="호스트가 책을 수령하면 상태가 업데이트됩니다."
         android:textColor="@color/grey_500"
         android:textSize="14sp" />
 
@@ -71,7 +71,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="1234123412"
-                android:textColor="@color/pre_main"
+                android:textColor="@color/pre_sub"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:fontFamily="@font/pretendard_regular"
@@ -96,8 +96,8 @@
                 android:focusable="false"
                 android:enabled="false"
                 app:cornerRadius="12dp"
-                app:backgroundTint="@color/pre_main_pale"
-                android:textColor="@color/pre_main"
+                app:backgroundTint="@color/pre_sub_pale"
+                android:textColor="@color/pre_sub"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />

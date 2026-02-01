@@ -5,30 +5,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.databinding.FragmentGuestExtendRequestBottomDialogBinding
+import com.bookiibookii.bookiibookii.databinding.FragmentGuestTradeFinishBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class GuestExtendRequestBottomDialogFragment : BottomSheetDialogFragment() {
-
-    private var _binding: FragmentGuestExtendRequestBottomDialogBinding? = null
+class GuestTradeFinishBottomDialogFragment : BottomSheetDialogFragment() {
+    private var _binding: FragmentGuestTradeFinishBottomDialogBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentGuestExtendRequestBottomDialogBinding.inflate(inflater, container, false)
+        _binding = FragmentGuestTradeFinishBottomDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnConfirm.setOnClickListener{
-            val next = GuestReadingDoneBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, GuestReadingDoneBottomDialogFragment.TAG)
-        }
     }
 
     override fun onDestroyView() {
@@ -37,11 +31,10 @@ class GuestExtendRequestBottomDialogFragment : BottomSheetDialogFragment() {
     }
 
     companion object {
-        const val TAG = "GuestExtendRequestFragment"
+        const val TAG = "GuestTradeFinishFragment"
     }
 
     override fun getTheme(): Int {
         return R.style.Theme_Bookii_BottomSheet_NoDim
     }
-
 }
