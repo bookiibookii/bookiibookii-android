@@ -10,7 +10,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.bookiibookii.bookiibookii"
+        applicationId = "com.bookiibookii.bookiibookii_d"
         minSdk = 28
         targetSdk = 36
         versionCode = 1

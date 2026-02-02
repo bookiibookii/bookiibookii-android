@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.Group
 import androidx.credentials.CredentialManager
@@ -16,14 +15,15 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.lifecycleScope
-import com.bookiibookii.bookiibookii.data.model.LoginRequest
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.LoginRequest
 import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.launch
+
 
 class LoginActivity : AppCompatActivity() {
 
@@ -49,7 +49,7 @@ class LoginActivity : AppCompatActivity() {
     private fun setupLoginButtons() {
         val kakaoButton = findViewById<View>(R.id.btn_kakao_login)
         setupButtonUI(kakaoButton, "카카오로 시작하기", R.drawable.ic_kakao, R.color.kakao, R.color.grey_900) {
-            Toast.makeText(this, "카카오 로그인은 아직 구현되지 않았습니다.", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(this, "카카오 로그인은 아직 구현되지 않았습니다.", Toast.LENGTH_SHORT).show()
         }
 
         val googleButton = findViewById<View>(R.id.btn_google_login)
@@ -115,6 +115,15 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun sendTokenToBackend(idToken: String) {
+
+        // ▼▼▼▼▼ 로그 출력 코드 추가 ▼▼▼▼▼
+        Log.e("CheckToken", "=========================================")
+        Log.e("CheckToken", "[내가 보내는 SocialType]: GOOGLE")
+        Log.e("CheckToken", "[내가 보내는 Token 값]: $idToken")
+        Log.e("CheckToken", "[Token 길이]: ${idToken.length}") // 길이가 0이면 뭔가 잘못된 것
+        Log.e("CheckToken", "=========================================")
+        // ▲▲▲▲▲ 로그 출력 코드 끝 ▲▲▲▲▲
+
         lifecycleScope.launch {
             try {
                 val request = LoginRequest(socialType = "GOOGLE", token = idToken)
