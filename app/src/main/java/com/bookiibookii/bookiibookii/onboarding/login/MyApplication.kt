@@ -13,5 +13,8 @@ class MyApplication : Application() {
 
         val keyHash = Utility.getKeyHash(this)
         Log.e("KAKAO_KEYHASH", keyHash)
+
+
+
     }
 }
