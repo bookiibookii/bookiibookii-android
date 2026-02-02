@@ -24,10 +24,10 @@ data class LibReview(
     val date: String,
     val profileImage: Int? = null,
     val reviewImageUri: String? = null,
-    val isMine: Boolean = false
+    val isMine: Boolean = false,
+    var isBookmarked : Boolean ?= false,
 )
 
-// MypDataModels.kt
 
 // 1. 후기 데이터
 data class MypReview(
@@ -80,29 +80,13 @@ data class MyReviewData(
     var isExpanded: Boolean = false
 )
 
-data class City(
-    val name: String,
-    val districts: List<String>
-)
-
-// 기존 클래스들과 함께 관리
-data class MypProfileData(
-    val nickname: String,
-    val name: String,
-    val phone: String,
-    val address: String,
-    val addressDetail: String,
-    val regionInfo: String // 직접 교환 정보 (시/도 시/군/구)
-)
-
-data class MyReceivedReview(
+data class LibBookmarkItem(
     val id: Long,
-    val writerName: String,
-    val bookTitle: String,
-    val bookAuthor: String,
-    val datePeriod: String, // "2025. 12. 18 ~ 2026. 01. 12"
-    val tags: List<String>,
-    val content: String,
-    val partnerContent: String, // 파트너의 한줄평
-    val timestamp: Long // 정렬용 시간
+    val title: String,      // 책 제목
+    val page: Int,          // 페이지
+    val content: String,    // 메모 내용
+    val date: String,       // 날짜 (정렬용)
+    val userName: String,
+    val userProfile: Int?,
+    val imageRes: Int?      // 첨부 이미지
 )

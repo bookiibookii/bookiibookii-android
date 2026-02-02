@@ -10,9 +10,6 @@ class ReviewModel : ViewModel() {
     private val _reviewList = MutableLiveData<MutableList<LibReview>>(mutableListOf())
     val reviewList: LiveData<MutableList<LibReview>> get() = _reviewList
 
-    // 선택된 리뷰 (수정/다이얼로그 조회용)를 잠시 저장할 변수 (선택 사항)
-    // 혹은 리스트에서 find로 직접 찾습니다.
-
     init {
         // 더미 데이터
         val dummy = mutableListOf(

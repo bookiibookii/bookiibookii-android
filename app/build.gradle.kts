@@ -85,4 +85,6 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.9")
 
     implementation("com.vanniktech:android-image-cropper:4.5.0")
+
+    implementation("com.google.android.flexbox:flexbox:3.0.0")
 }

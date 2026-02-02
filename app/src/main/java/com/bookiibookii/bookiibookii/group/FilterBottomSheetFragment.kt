@@ -48,6 +48,7 @@ class FilterBottomSheetFragment(val itemClick: (String) -> Unit) : BottomSheetDi
                 setEnsureMinTouchTargetSize(false) // 칩 위아래 여백 최소화
                 chipCornerRadius = dpToPx(30).toFloat()
 
+
                 // 칩 클릭 시 동작
                 setOnCheckedChangeListener { buttonView, isChecked ->
                     if (isChecked) {

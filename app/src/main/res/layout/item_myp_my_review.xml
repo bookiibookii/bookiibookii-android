@@ -152,7 +152,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:layout_marginStart="14dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/item_myp_review_review_tv">
             <ImageView
@@ -201,22 +200,21 @@
             android:layout_marginTop="12dp"
             app:layout_constraintTop_toBottomOf="@id/item_myp_my_review_tv" />
 
-
-            <TextView
-                android:id="@+id/partner_tag1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_round_8dp_gray300"
-                android:backgroundTint="@color/pre_sub_pale"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                android:layout_marginTop="8dp"
-                tools:text="#글씨가 예뻐요"
-                android:textAppearance="@style/regular12"
-                android:textColor="@color/ui_main_sub"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/item_myp_partner_review_tv"/>
+        <TextView
+            android:id="@+id/partner_tag1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_round_8dp_gray300"
+            android:backgroundTint="@color/pre_sub_pale"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:layout_marginTop="8dp"
+            tools:text="#글씨가 예뻐요"
+            android:textAppearance="@style/regular12"
+            android:textColor="@color/ui_main_sub"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/item_myp_partner_review_tv"/>
 
         <TextView
             android:id="@+id/partner_tag2"
@@ -227,12 +225,11 @@
             android:backgroundTint="@color/pre_sub_pale"
             android:paddingHorizontal="8dp"
             android:paddingVertical="4dp"
-            android:layout_marginTop="8dp"
             tools:text="#코멘트가 다정해요"
             android:textAppearance="@style/regular12"
             android:textColor="@color/ui_main_sub"
             app:layout_constraintStart_toEndOf="@id/partner_tag1"
-            app:layout_constraintTop_toBottomOf="@id/item_myp_partner_review_tv"/>
+            app:layout_constraintTop_toTopOf="@id/partner_tag1"/>
 
         <TextView
             android:id="@+id/partner_tag3"
@@ -243,21 +240,19 @@
             android:backgroundTint="@color/pre_sub_pale"
             android:paddingHorizontal="8dp"
             android:paddingVertical="4dp"
-            android:layout_marginTop="8dp"
             tools:text="#코멘트가 재미있어요"
             android:textAppearance="@style/regular12"
             android:textColor="@color/ui_main_sub"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/partner_tag1"/>
+            app:layout_constraintStart_toEndOf="@id/partner_tag2"
+            app:layout_constraintTop_toTopOf="@id/partner_tag1"/>
 
         <LinearLayout
             android:id="@+id/item_myp_partner_review_rate_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:layout_marginStart="14dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/partner_tag3">
+            app:layout_constraintTop_toBottomOf="@id/partner_tag1">
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
