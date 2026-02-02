@@ -1,23 +1,22 @@
-package com.bookiibookii.bookiibookii.trkHost
+package com.bookiibookii.bookiibookii.trkGuest
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
-import com.bookiibookii.bookiibookii.databinding.FragmentHostShippingPhotoDialogBinding
+import com.bookiibookii.bookiibookii.databinding.FragmentGuestShippingPhotoDialogBinding
 
+class GuestShippingPhotoDialogFragment : DialogFragment() {
 
-class HostShippingPhotoDialogFragment : DialogFragment() {
-
-    private var _binding: FragmentHostShippingPhotoDialogBinding? = null
+    private var _binding: FragmentGuestShippingPhotoDialogBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentHostShippingPhotoDialogBinding.inflate(inflater, container, false)
+        _binding = FragmentGuestShippingPhotoDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -45,6 +44,6 @@ class HostShippingPhotoDialogFragment : DialogFragment() {
     }
 
     companion object {
-        const val TAG = "ShippingPhotoFragment"
+        const val TAG = "GuestShippingPhotoFragment"
     }
 }
