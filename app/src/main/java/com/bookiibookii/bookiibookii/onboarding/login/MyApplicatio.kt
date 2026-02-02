@@ -1,0 +1,17 @@
+package com.bookiibookii.bookiibookii.onboarding.login
+import android.app.Application
+import android.util.Log
+import com.bookiibookii.bookiibookii.BuildConfig
+import com.kakao.sdk.common.KakaoSdk
+import com.kakao.sdk.common.util.Utility
+
+class MyApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+
+        KakaoSdk.init(this, BuildConfig.KAKAO_API_KEY)
+        val keyHash = Utility.getKeyHash(this)
+        Log.e("KAKAO_KEYHASH", keyHash)
+    }
+}

@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.onboarding.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -12,6 +13,10 @@ import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.material.card.MaterialCardView
+import com.kakao.sdk.auth.model.OAuthToken
+import com.kakao.sdk.common.model.ClientError
+import com.kakao.sdk.common.model.ClientErrorCause
+import com.kakao.sdk.user.UserApiClient
 
 class LoginActivity : AppCompatActivity() {
 
@@ -22,7 +27,15 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        setupLoginButtons()
+        Log.e("APP_CHECK", "MyApplication onCreate called")
+
+
+//        setupLoginButtons()
+
+        findViewById<View>(R.id.btn_kakao_login).setOnClickListener {
+            loginToKakao()
+        }
+
     }
 
     // 로그인 버튼 UI 및 클릭 동작 설정
@@ -95,5 +108,50 @@ class LoginActivity : AppCompatActivity() {
             startActivity(Intent(this, OnbProfileActivity::class.java))
             finish()
         }, 1200L)
+    }
+
+    // 여기부터 ~~~~~
+
+    private fun loginToKakao() {
+        // 로그인 결과 콜백 (성공 시 처리)
+        val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
+            if (error != null) {
+                Log.e("KakaoLogin", "로그인 실패", error)
+            } else if (token != null) {
+                Log.i("KakaoLogin", "로그인 성공")
+                moveToMain()
+            }
+        }
+
+        // 카카오톡 설치 여부 확인 후 로그인 시도
+        if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
+            UserApiClient.instance.loginWithKakaoTalk(this) { token, error ->
+                if (error != null) {
+                    Log.e("KakaoLogin", "카카오톡 로그인 실패", error)
+
+                    // 사용자가 뒤로가기 등으로 취소한 경우
+                    if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
+                        return@loginWithKakaoTalk
+                    }
+
+                    // 카카오톡 연결 실패 시, 웹(계정)으로 로그인 시도
+                    UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
+                } else if (token != null) {
+                    Log.i("KakaoLogin", "카카오톡 로그인 성공")
+                    moveToMain()
+                }
+            }
+        } else {
+            // 카카오톡이 없으면 웹으로 로그인
+            UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
+        }
+    }
+
+    // 메인 화면으로 이동하는 함수
+    private fun moveToMain() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }

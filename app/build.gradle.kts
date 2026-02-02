@@ -23,6 +23,13 @@ android {
             "ALADIN_TTB_KEY",
             "\"${project.findProperty("ALADIN_TTB_KEY") ?: ""}\""
         )
+
+        defaultConfig {
+            val kakaoKey = project.findProperty("KAKAO_NATIVE_APP_KEY") as? String ?: ""
+
+            buildConfigField("String", "KAKAO_API_KEY", "\"$kakaoKey\"")
+            manifestPlaceholders["kakaoApiKey"] = kakaoKey
+        }
     }
 
     buildTypes {
@@ -87,4 +94,6 @@ dependencies {
     implementation("com.vanniktech:android-image-cropper:4.5.0")
 
     implementation("com.google.android.flexbox:flexbox:3.0.0")
+
+    implementation("com.kakao.sdk:v2-all:2.20.1")
 }
