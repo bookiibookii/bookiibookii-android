@@ -12,4 +12,6 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="web_client_id">B3:3D:E3:27:52:A4:4B:09:F2:35:3F:CC:4A:08:EE:48:F1:7B:5D:21</string>
 </resources>

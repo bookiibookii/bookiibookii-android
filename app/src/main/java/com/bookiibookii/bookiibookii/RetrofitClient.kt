@@ -1,5 +1,6 @@
-package com.bookiibookii.bookiibookii.data.network
+package com.bookiibookii.bookiibookii
 
+import com.bookiibookii.bookiibookii.data.api.ApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -24,4 +25,6 @@ object RetrofitClient {
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
+
+    val apiService : ApiService = retrofit.create(ApiService::class.java)
 }
