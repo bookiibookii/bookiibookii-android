@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.Group
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.material.card.MaterialCardView
 
 class LoginActivity : AppCompatActivity() {
@@ -91,7 +92,7 @@ class LoginActivity : AppCompatActivity() {
 
         // 잠깐 보여준 뒤 메인으로 이동
         completeText.postDelayed({
-            startActivity(Intent(this, MainActivity::class.java))
+            startActivity(Intent(this, OnbProfileActivity::class.java))
             finish()
         }, 1200L)
     }
