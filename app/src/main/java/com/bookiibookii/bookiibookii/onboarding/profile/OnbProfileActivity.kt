@@ -13,6 +13,7 @@ import androidx.core.widget.addTextChangedListener
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityOnbProfileBinding
+import com.bookiibookii.bookiibookii.onboarding.steps.OnbStepActivity
 import java.io.File
 
 class OnbProfileActivity : AppCompatActivity() {
@@ -129,10 +130,7 @@ class OnbProfileActivity : AppCompatActivity() {
         binding.includeFooterButton.btnFooter.setOnClickListener {
             if (!isNicknameChecked) return@setOnClickListener
 
-            // TODO: 다음 온보딩 화면(ONB-003)로 이동
-            // 우선 MainActivity로 이동
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
+            startActivity(Intent(this, OnbStepActivity::class.java))
         }
     }
 

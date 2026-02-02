@@ -32,6 +32,7 @@
     <color name="point1">#FFB800</color>
     <color name="point2">#FF6B6B</color>
 
+    <color name="sub_105">#9CD5FF</color>
     <color name="kakao">#FEE500</color>
 
     <!--이전 UI 색상 -> 미사용 시 추후 삭제 필요-->
