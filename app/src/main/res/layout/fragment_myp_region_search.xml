@@ -4,42 +4,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/ui_bg">
+    android:background="@color/white">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_start"
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintGuide_percent="0.08" />
+        app:layout_constraintGuide_percent="0.04" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_end"
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintGuide_percent="0.92" />
+        app:layout_constraintGuide_percent="0.96" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_split"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintGuide_percent="0.28" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/top_bar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@color/white"
         app:layout_constraintTop_toTopOf="parent">
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline_start_inner"
-            android:orientation="vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintGuide_percent="0.08" />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline_end_inner"
-            android:orientation="vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintGuide_percent="0.92" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -48,58 +40,66 @@
             android:textAppearance="@style/medium20"
             android:textColor="@color/grey_900"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="@id/guideline_start_inner"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/myp_search_close_iv"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:layout_marginEnd="16dp"
+            android:src="@drawable/ic_close"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@id/guideline_end_inner"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:tint="@color/grey_500" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey_200"
+        app:layout_constraintTop_toBottomOf="@id/top_bar"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_left_city"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintTop_toBottomOf="@id/top_bar"
-        app:layout_constraintEnd_toStartOf="@id/rv_right_district"
+        android:layout_height="0dp"
+        android:background="#F8F8F8"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline_split"
+        app:layout_constraintTop_toBottomOf="@id/divider"
+        app:layout_constraintBottom_toTopOf="@id/myp_search_search_btn"
         tools:listitem="@layout/item_myp_city"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_right_district"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="4"
-        android:padding="16dp"
+        android:layout_height="0dp"
+        android:padding="8dp"
         android:clipToPadding="false"
-        android:layout_marginStart="16dp"
         app:layout_constraintStart_toEndOf="@id/rv_left_city"
-        app:layout_constraintTop_toBottomOf="@id/top_bar"
-        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider"
+        app:layout_constraintBottom_toTopOf="@id/myp_search_search_btn"
         tools:listitem="@layout/item_myp_district"/>
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/myp_search_search_btn"
         android:layout_width="0dp"
-        android:layout_height="72dp"
+        android:layout_height="56dp"
         android:text="완료"
         android:enabled="true"
         android:textAppearance="@style/medium18"
         android:textColor="@color/white"
-        android:background="@drawable/bg_round_20dp_gray200"
-        android:backgroundTint="@color/grey_900"
+        android:background="@drawable/bg_round_20dp_gray900"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
         android:layout_marginBottom="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"/>
+        android:layout_marginTop="16dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

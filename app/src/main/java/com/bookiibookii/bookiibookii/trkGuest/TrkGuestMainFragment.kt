@@ -2,16 +2,17 @@ package com.bookiibookii.bookiibookii.trkGuest
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.databinding.FragmentTrkGuestMainBinding
+import com.bookiibookii.bookiibookii.trkDirectGuest.DirectGuestActivity
 import com.bookiibookii.bookiibookii.trkHost.CreateGroupFooterAdapter
+import com.bookiibookii.bookiibookii.trkHost.ExchangeType
 import com.bookiibookii.bookiibookii.trkHost.FooterMode
-import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrackerAdapter
 import com.bookiibookii.bookiibookii.trkHost.TrackerData
 import com.bookiibookii.bookiibookii.trkHost.TrackerStep
@@ -42,15 +43,23 @@ class TrkGuestMainFragment : Fragment() {
         updateTabState(isMyGroup = false)
 
         trackerAdapter = TrackerAdapter { item ->
-            // 클릭 로직 추가, 나중에 수정
-            val intent = Intent(requireContext(), GuestActivity::class.java)
+            val target = when (item.exchangeType) {
+                ExchangeType.SHIPPING -> GuestActivity::class.java
+                ExchangeType.DIRECT -> DirectGuestActivity::class.java
+            }
+
+            val intent = Intent(requireContext(), target).apply {
+                putExtra("tracker_id", item.id)
+                putExtra("exchange_type", item.exchangeType.name)
+            }
+
             startActivity(intent)
         }
 
         footerAdapter = CreateGroupFooterAdapter(
             mode = FooterMode.GUEST_JOIN,
             onActionClick = {
-                // TODO: 초대코드 입력 / 그룹 참여 화면 이동
+                // TODO: 그룹 참여 화면 이동
             }
         )
 
@@ -85,14 +94,24 @@ class TrkGuestMainFragment : Fragment() {
     // 더미 데이터
     private fun createDummyTrackerList(): List<TrackerData> {
         return listOf(
-//            TrackerData(
-//                id = 1L,
-//                bookTitle = "살인자의 기억법~~~~~~",
-//                bookAuthor = "김영하",
-//                withUserName = "noshel",
-//                coverImageUrl = null,
-//                currentStep = TrackerStep.DELIVERY
-//            )
+            TrackerData(
+                id = 1L,
+                bookTitle = "살인자의 기억법",
+                bookAuthor = "김영하",
+                withUserName = "noshel",
+                coverImageUrl = null,
+                currentStep = TrackerStep.DELIVERY,
+                exchangeType = ExchangeType.SHIPPING
+            ),
+            TrackerData(
+                id = 2L,
+                bookTitle = "아몬드",
+                bookAuthor = "손원평",
+                withUserName = null,
+                coverImageUrl = null,
+                currentStep = TrackerStep.READING,
+                exchangeType = ExchangeType.DIRECT
+            )
         )
     }
 

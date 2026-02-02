@@ -4,23 +4,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.bookData.Data.City
 import com.bookiibookii.bookiibookii.databinding.FragmentMypRegionSearchBinding
 
 class MypRegionSearchFragment : Fragment() {
-
+    // ... (기본 코드 동일) ...
     private var _binding: FragmentMypRegionSearchBinding? = null
     private val binding get() = _binding!!
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    // 현재 선택된 정보 저장
+    private var currentCity = ""
+    private var currentDistrict = ""
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMypRegionSearchBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -28,50 +29,64 @@ class MypRegionSearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. 데이터 준비 (이전과 동일)
         val mockData = listOf(
-            City("서울", listOf("강남구", "강동구", "강북구", "강서구", "관악구")),
-            City("경기", listOf("수원시", "성남시", "의정부시", "안양시", "부천시")),
-            City("인천", listOf("전체", "계양구", "남동구", "동구", "미추홀구", "부평구", "서구", "연수구", "옹진군", "중구")),
-            City("강원", listOf("춘천시", "원주시", "강릉시"))
-            
+            City("서울", listOf("강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구", "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구", "성동구", "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구")),
+            City("경기", listOf("수원시", "성남시", "의정부시", "안양시", "부천시", "광명시", "평택시", "동두천시", "안산시", "고양시", "과천시", "구리시", "남양주시", "오산시", "시흥시", "군포시", "의왕시", "하남시", "용인시", "파주시", "이천시", "안성시", "김포시", "화성시", "광주시", "양주시", "포천시", "여주시", "연천군", "가평군", "양평군")),
+            City("인천", listOf("계양구", "미추홀구", "남동구", "동구", "부평구", "서구", "연수구", "중구", "강화군", "옹진군")),
+            City("대전", listOf("대덕구", "동구", "서구", "유성구", "중구")),
+            City("대구", listOf("남구", "달서구", "동구", "북구", "서구", "수성구", "중구", "달성군", "군위군")),
+            City("광주", listOf("광산구", "남구", "동구", "북구", "서구")),
+            City("울산", listOf("남구", "동구", "북구", "중구", "울주군")),
+            City("부산", listOf("강서구", "금정구", "남구", "동구", "동래구", "부산진구", "북구", "사상구", "사하구", "서구", "수영구", "연제구", "영도구", "중구", "해운대구", "기장군")),
+            City("세종", listOf("세종특별자치시")),
+            City("강원", listOf("춘천시", "원주시", "강릉시", "동해시", "태백시", "속초시", "삼척시", "홍천군", "횡성군", "영월군", "평창군", "정선군", "철원군", "화천군", "양구군", "인제군", "고성군", "양양군")),
+            City("충북", listOf("청주시", "충주시", "제천시", "보은군", "옥천군", "영동군", "증평군", "진천군", "괴산군", "음성군", "단양군")),
+            City("충남", listOf("천안시", "공주시", "보령시", "아산시", "서산시", "논산시", "계룡시", "당진시", "금산군", "부여군", "서천군", "청양군", "홍성군", "예산군", "태안군")),
+            City("전북", listOf("전주시", "군산시", "익산시", "정읍시", "남원시", "김제시", "완주군", "진안군", "무주군", "장수군", "임실군", "순창군", "고창군", "부안군")),
+            City("전남", listOf("목포시", "여수시", "순천시", "나주시", "광양시", "담양군", "곡성군", "구례군", "고흥군", "보성군", "화순군", "장흥군", "강진군", "해남군", "영암군", "무안군", "함평군", "영광군", "장성군", "완도군", "진도군", "신안군")),
+            City("경북", listOf("포항시", "경주시", "김천시", "안동시", "구미시", "영주시", "영천시", "상주시", "문경시", "경산시", "의성군", "청송군", "영양군", "영덕군", "청도군", "고령군", "성주군", "칠곡군", "예천군", "봉화군", "울진군", "울릉군")),
+            City("경남", listOf("창원시", "진주시", "통영시", "사천시", "김해시", "밀양시", "거제시", "양산시", "의령군", "함안군", "창녕군", "고성군", "남해군", "하동군", "산청군", "함양군", "거창군", "합천군")),
+            City("제주", listOf("제주시", "서귀포시"))
         )
 
-        // 2. 어댑터 생성
-        val rightAdapter = MypDistrictAdapter()
-        val leftAdapter = MypCityAdapter(mockData) { selectedCity ->
-            rightAdapter.submitList(selectedCity.districts)
+        // 오른쪽 어댑터 (구/군)
+        val rightAdapter = MypDistrictAdapter { selectedDistrict ->
+            currentDistrict = selectedDistrict
+            // 선택 시 UI 효과(배경색 등)는 어댑터 내부에서 처리 필요
         }
 
-        // 3. RecyclerView 설정
-        binding.rvLeftCity.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = leftAdapter
+        // 왼쪽 어댑터 (시/도)
+        val leftAdapter = MypCityAdapter(mockData) { city ->
+            currentCity = city.name
+            currentDistrict = "" // 시가 바뀌면 구 초기화
+            rightAdapter.submitList(city.districts)
         }
 
-        binding.rvRightDistrict.apply {
-            layoutManager = GridLayoutManager(requireContext(), 3)
-            adapter = rightAdapter
-        }
+        binding.rvLeftCity.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvLeftCity.adapter = leftAdapter
 
-        // 4. 초기값 설정
+        binding.rvRightDistrict.layoutManager = GridLayoutManager(requireContext(), 3)
+        binding.rvRightDistrict.adapter = rightAdapter
+
+        // 초기값
         if (mockData.isNotEmpty()) {
+            currentCity = mockData[0].name
             rightAdapter.submitList(mockData[0].districts)
         }
 
-        // 5. 버튼 이벤트 처리
-        binding.mypSearchCloseIv.setOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
+        binding.mypSearchCloseIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
+        // [완료 버튼] 선택 결과 반환
         binding.mypSearchSearchBtn.setOnClickListener {
-            // 완료 로직
-            Toast.makeText(requireContext(), "설정 완료", Toast.LENGTH_SHORT).show()
+            if(currentDistrict.isNotEmpty()) {
+                val result = "$currentCity $currentDistrict"
+                // 결과 전달
+                setFragmentResult("requestKeyRegion", bundleOf("regionResult" to result))
+                parentFragmentManager.popBackStack()
+            } else {
+                // 구/군을 선택하지 않았을 때 처리
+            }
         }
     }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
+    // ... onDestroyView, onResume(하단바 숨김) ...
 }

@@ -8,7 +8,7 @@ class LibDetailGridDecoration (
     private val spanCount: Int, // 열 개수
     private val spacingHorizontal: Int, // 좌우 간격
     private val spacingVertical: Int, // 상하 간격
-    private val includeEdge: Boolean // 가장자리 포함 여부
+    private val includeEdge: Boolean // 가장자리 포함 여부h
 ) : RecyclerView.ItemDecoration() {
 
     override fun getItemOffsets(

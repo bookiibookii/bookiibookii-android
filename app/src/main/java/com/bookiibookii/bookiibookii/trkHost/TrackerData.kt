@@ -6,7 +6,8 @@ data class TrackerData(
     val bookAuthor: String,
     val withUserName: String?,
     val coverImageUrl: String?,
-    val currentStep: TrackerStep
+    val currentStep: TrackerStep,
+    val exchangeType: ExchangeType
 )
 
 enum class TrackerStep {
@@ -15,5 +16,11 @@ enum class TrackerStep {
     GUEST_READING,
     RETURN
 }
+
+enum class ExchangeType {
+    SHIPPING,
+    DIRECT
+}
+
 
 

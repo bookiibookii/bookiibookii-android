@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".onboarding.login.MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,6 +14,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BookiiBookii">
+      
+        <activity
+            android:name=".trkDirectGuest.DirectGuestActivity"
+            android:exported="false" />
+      
+        <activity
+            android:name=".trkDirectHost.DirectHostActivity"
+            android:exported="false" />
       
         <activity
             android:name=".trkGuest.GuestActivity"
@@ -31,32 +40,51 @@
       
         <activity
             android:name=".onboarding.login.LoginActivity"
-            android:exported="false">
-      </activity>
+            android:exported="false" />
       
         <activity
             android:name=".MainActivity"
-            android:exported="false"></activity>
+            android:exported="false">
+        </activity>
+
+        <activity
+            android:name=".onboarding.profile.OnbProfileActivity"
+            android:exported="false">
+        </activity>
+
         <activity
             android:name=".group.GrpSearchActivity"
-            android:exported="false"></activity>
-
+            android:exported="false">
+        </activity>
+      
         <activity
             android:name=".group.GroupDetailActivity"
             android:exported="false" />
-
+      
         <activity
-           android:name=".group.GroupGenerationActivity"
-           android:screenOrientation="portrait"
-           android:windowSoftInputMode="adjustResize"/>
-
+            android:name=".group.GroupGenerationActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+      
         <activity
             android:name=".group.GroupJoinManagementActivity"
             android:exported="false" />
-          
+      
         <activity
             android:name=".trkHost.HostActivity"
-            android:exported="false">
+            android:exported="false" />
+
+        <activity
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:host="oauth"
+                    android:scheme="kakao${KAKAO_APP_KEY}" />
+            </intent-filter>
         </activity>
 
         <provider
@@ -64,10 +92,12 @@
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
+
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
     </application>
 
 </manifest>

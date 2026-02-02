@@ -27,11 +27,11 @@ class MypCityAdapter(
             if (isSelected) {
                 // [선택 상태]
                 binding.cityNameTv.setTextColor(ContextCompat.getColor(context, R.color.pre_main))
-                binding.viewDivider.setBackgroundColor(ContextCompat.getColor(context, R.color.pre_main))
+                binding.viewIndicator.setBackgroundColor(ContextCompat.getColor(context, R.color.pre_main))
             } else {
                 // [비선택 상태]
                 binding.cityNameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_900))
-                binding.viewDivider.setBackgroundColor(ContextCompat.getColor(context, R.color.grey_200))
+                binding.viewIndicator.setBackgroundColor(ContextCompat.getColor(context, R.color.grey_200))
             }
 
             binding.root.setOnClickListener {

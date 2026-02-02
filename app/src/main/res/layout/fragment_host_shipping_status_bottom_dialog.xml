@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="게스트가 책을 발송했어요!"
+        android:text="게스트에게 책을 발송했어요!"
         android:textColor="@color/grey_900"
         android:textSize="20sp"
         android:textStyle="bold"/>
@@ -30,7 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="책을 받은 후 수령 인증을 진행해주세요."
+        android:text="게스트가 책을 수령하면 상태가 업데이트됩니다."
         android:textColor="@color/grey_500"
         android:textSize="14sp" />
 

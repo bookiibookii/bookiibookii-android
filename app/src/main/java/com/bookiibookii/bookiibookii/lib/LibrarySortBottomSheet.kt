@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import com.bookiibookii.bookiibookii.bookData.viewModel.LibraryViewModel
+import com.bookiibookii.bookiibookii.bookData.viewModel.SortType
 import com.bookiibookii.bookiibookii.databinding.FragmentLibSortDialogBinding
 import com.google.android.material.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -14,6 +17,8 @@ class LibrarySortBottomSheet : BottomSheetDialogFragment() {
 
     private var _binding: FragmentLibSortDialogBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: LibraryViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,6 +32,26 @@ class LibrarySortBottomSheet : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // 각 정렬 구현
+        binding.libDialogCriteriaTitleTv.setOnClickListener {
+            viewModel.setSortType(SortType.TITLE)
+            dismiss()
+        }
+        binding.libDialogCriteriaHighRateTv.setOnClickListener {
+            viewModel.setSortType(SortType.RATING_HIGH)
+            dismiss()
+        }
+        binding.libDialogCriteriaLowRateTv.setOnClickListener {
+            viewModel.setSortType(SortType.RATING_LOW)
+            dismiss()
+        }
+        binding.libDialogCriteriaLatelyReadTv.setOnClickListener {
+            viewModel.setSortType(SortType.RECENT)
+            dismiss()
+        }
+        binding.libDialogCriteriaOldestReadTv.setOnClickListener {
+            viewModel.setSortType(SortType.OLD)
+            dismiss()
+        }
     }
 
     override fun onStart() {
