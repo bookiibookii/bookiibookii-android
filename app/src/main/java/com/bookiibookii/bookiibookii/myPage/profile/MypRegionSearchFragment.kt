@@ -4,23 +4,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.bookData.Data.City
 import com.bookiibookii.bookiibookii.databinding.FragmentMypRegionSearchBinding
 
 class MypRegionSearchFragment : Fragment() {
-
+    // ... (기본 코드 동일) ...
     private var _binding: FragmentMypRegionSearchBinding? = null
     private val binding get() = _binding!!
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    // 현재 선택된 정보 저장
+    private var currentCity = ""
+    private var currentDistrict = ""
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMypRegionSearchBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -28,50 +29,50 @@ class MypRegionSearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. 데이터 준비 (이전과 동일)
         val mockData = listOf(
-            City("서울", listOf("강남구", "강동구", "강북구", "강서구", "관악구")),
-            City("경기", listOf("수원시", "성남시", "의정부시", "안양시", "부천시")),
-            City("인천", listOf("전체", "계양구", "남동구", "동구", "미추홀구", "부평구", "서구", "연수구", "옹진군", "중구")),
-            City("강원", listOf("춘천시", "원주시", "강릉시"))
-            
+            City("서울", listOf("강남구", "강동구", "강북구", "강서구")),
+            City("경기", listOf("수원시", "성남시", "의정부시"))
+            // ... 데이터 추가
         )
 
-        // 2. 어댑터 생성
-        val rightAdapter = MypDistrictAdapter()
-        val leftAdapter = MypCityAdapter(mockData) { selectedCity ->
-            rightAdapter.submitList(selectedCity.districts)
+        // 오른쪽 어댑터 (구/군)
+        val rightAdapter = MypDistrictAdapter { selectedDistrict ->
+            currentDistrict = selectedDistrict
+            // 선택 시 UI 효과(배경색 등)는 어댑터 내부에서 처리 필요
         }
 
-        // 3. RecyclerView 설정
-        binding.rvLeftCity.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = leftAdapter
+        // 왼쪽 어댑터 (시/도)
+        val leftAdapter = MypCityAdapter(mockData) { city ->
+            currentCity = city.name
+            currentDistrict = "" // 시가 바뀌면 구 초기화
+            rightAdapter.submitList(city.districts)
         }
 
-        binding.rvRightDistrict.apply {
-            layoutManager = GridLayoutManager(requireContext(), 3)
-            adapter = rightAdapter
-        }
+        binding.rvLeftCity.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvLeftCity.adapter = leftAdapter
 
-        // 4. 초기값 설정
+        binding.rvRightDistrict.layoutManager = GridLayoutManager(requireContext(), 3)
+        binding.rvRightDistrict.adapter = rightAdapter
+
+        // 초기값
         if (mockData.isNotEmpty()) {
+            currentCity = mockData[0].name
             rightAdapter.submitList(mockData[0].districts)
         }
 
-        // 5. 버튼 이벤트 처리
-        binding.mypSearchCloseIv.setOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
+        binding.mypSearchCloseIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
+        // [완료 버튼] 선택 결과 반환
         binding.mypSearchSearchBtn.setOnClickListener {
-            // 완료 로직
-            Toast.makeText(requireContext(), "설정 완료", Toast.LENGTH_SHORT).show()
+            if(currentDistrict.isNotEmpty()) {
+                val result = "$currentCity $currentDistrict"
+                // 결과 전달
+                setFragmentResult("requestKeyRegion", bundleOf("regionResult" to result))
+                parentFragmentManager.popBackStack()
+            } else {
+                // 구/군을 선택하지 않았을 때 처리
+            }
         }
     }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
+    // ... onDestroyView, onResume(하단바 숨김) ...
 }

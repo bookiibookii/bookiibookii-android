@@ -33,6 +33,10 @@ class MypMyReviewFragment : Fragment() {
         initData()
         initRecyclerView()
         initListeners()
+        binding.mypReviewBackIv.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+
     }
 
     private fun initData() {
@@ -40,7 +44,7 @@ class MypMyReviewFragment : Fragment() {
             MyReceivedReview(1, "noshel", "괴테는 모든 것을 말했다", "스즈키 유이", "2025.12.18~2026.01.12",
                 listOf("#글씨가 예뻐요", "#코멘트가 다정해요"), "이동진 평론가도 추천한...", "파트너의 한줄평 내용...", System.currentTimeMillis()),
             MyReceivedReview(2, "kanghun", "총 균 쇠", "제러드", "2025.11.01~2025.11.20",
-                listOf("#칼답", "#약속철저"), "정말 좋은 책이었습니다.", "재밌었어요!", System.currentTimeMillis() - 1000000)
+                listOf("#글씨가 예뻐요", "#코멘트가 다정해요", "#코멘트가 재미있어요"), "정말 좋은 책이었습니다.", "재밌었어요!", System.currentTimeMillis() - 1000000)
         )
         binding.mypReviewCountTv.text = "${reviewList.size} 개"
     }

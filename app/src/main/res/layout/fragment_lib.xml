@@ -67,15 +67,15 @@
                 android:layout_height="40dp"
                 android:layout_marginEnd="8dp"
                 android:src="@drawable/ic_search"
-                app:layout_constraintEnd_toStartOf="@id/lib_sort_iv"
+                app:layout_constraintEnd_toStartOf="@id/lib_book_iv"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
             <ImageView
-                android:id="@+id/lib_sort_iv"
+                android:id="@+id/lib_book_iv"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_sort"
+                android:src="@drawable/ic_book"
                 app:layout_constraintEnd_toEndOf="@id/guideline_end_inner"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
@@ -115,23 +115,33 @@
             android:background="@drawable/bg_toggle_white10" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/lib_total_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="9권"
-        android:textColor="@color/grey_900"
-        android:textAppearance="@style/regular14"
-        app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintTop_toBottomOf="@id/lib_btns_ll" />
-
     <ImageView
-        android:id="@+id/lib_list_iv"
+        android:id="@+id/lib_grid_iv"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginTop="16dp"
         android:src="@drawable/ic_grid"
+        app:layout_constraintTop_toBottomOf="@id/lib_btns_ll"
+        app:layout_constraintStart_toStartOf="@id/guideline_start" />
+
+    <TextView
+        android:id="@+id/lib_total_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:text="9권"
+        android:textColor="@color/grey_900"
+        android:textAppearance="@style/regular14"
+        app:layout_constraintStart_toEndOf="@id/lib_grid_iv"
+        app:layout_constraintTop_toTopOf="@id/lib_grid_iv"
+        app:layout_constraintBottom_toBottomOf="@id/lib_grid_iv"/>
+
+    <ImageView
+        android:id="@+id/lib_sort_iv"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/ic_sort"
         app:layout_constraintTop_toBottomOf="@id/lib_btns_ll"
         app:layout_constraintEnd_toEndOf="@id/guideline_end" />
 
@@ -140,11 +150,10 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingBottom="80dp"
+        android:layout_marginTop="12dp"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
-        app:layout_constraintTop_toBottomOf="@id/lib_list_iv"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:listitem="@layout/item_lib_book" />
+        app:layout_constraintTop_toBottomOf="@id/lib_sort_iv"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

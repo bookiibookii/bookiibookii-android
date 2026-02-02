@@ -8,22 +8,24 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bookiibookii.bookiibookii.MypMyReviewFragment
+import com.bookiibookii.bookiibookii.MypMyReviewFragment // 패키지 경로 확인 필요
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.Data.MypGroup
 import com.bookiibookii.bookiibookii.bookData.Data.MypLateBook
 import com.bookiibookii.bookiibookii.bookData.Data.MypReview
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentMypBinding
-import com.bookiibookii.bookiibookii.databinding.FragmentMypSetBinding
-import com.bookiibookii.bookiibookii.myPage.profile.MypSetFragment
+import com.bookiibookii.bookiibookii.myPage.profile.MypProfileEditFragment
+import com.bookiibookii.bookiibookii.myPage.set.MypSetFragment
 
 class MypageFragment : Fragment() {
 
     private var _binding: FragmentMypBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel : MyPageViewModel by activityViewModels()
+    // Shared ViewModel 연결 (Activity 범위)
+    private val viewModel: MyPageViewModel by activityViewModels()
+
     // 그룹 리스트가 펼쳐져 있는지 확인하는 변수
     private var isGroupExpanded = true
 
@@ -42,17 +44,9 @@ class MypageFragment : Fragment() {
         initGroupRecyclerView()     // 2. 주최한 그룹
         initLateBookRecyclerView()  // 3. 최근 읽은 책
 
-        // 접기/펴기 기능 초기화
-        initGroupToggle()
-        initNavigation()
-        observeViewModel()
-//        with(binding.layoutProfile) {
-//            mypNameTv.text = "noshel"
-//            mypTempTv.text = "37.5°C"
-//            mypAllBookTv.text = "7"
-//            mypReadBookTv.text = "5"
-//            mypBookCardTv.text = "16"
-//        }
+        initGroupToggle()           // 접기/펴기 기능
+        initNavigation()            // 화면 이동 기능 (수정됨)
+        observeViewModel()          // 데이터 관찰 (프로필 업데이트 반영)
     }
 
     override fun onResume() {
@@ -60,32 +54,49 @@ class MypageFragment : Fragment() {
         setBottomNavVisibility(true)
     }
 
-    private fun initNavigation(){
-        binding.mypTopLayout.findViewById<View>(R.id.myp_setting_iv).setOnClickListener {
+    // [수정됨] 네비게이션 초기화
+    private fun initNavigation() {
+        // 1. 설정 화면 이동 (톱니바퀴)
+        // findViewById 없이 binding으로 바로 접근 가능합니다.
+        binding.mypSettingIv.setOnClickListener {
             navigateToFragment(MypSetFragment())
         }
-        binding.mypMyReviewIv.findViewById<View>(R.id.myp_my_review_iv).setOnClickListener {
+
+        // 2. 받은 후기 화면 이동 (화살표)
+        binding.mypMyReviewIv.setOnClickListener {
             navigateToFragment(MypMyReviewFragment())
+        }
+
+        // 3. [추가됨] 프로필 수정 화면 이동 (연필 아이콘)
+        // include 태그에 id="layout_profile"을 주었으므로 아래와 같이 접근합니다.
+        binding.layoutProfile.mypEditIv.setOnClickListener {
+            navigateToFragment(MypProfileEditFragment())
+        }
+    }
+
+    // [수정됨] 뷰모델 관찰 (수정 후 돌아오면 닉네임 자동 갱신)
+    private fun observeViewModel() {
+        viewModel.profileData.observe(viewLifecycleOwner) { data ->
+            // include된 레이아웃 안의 텍스트뷰 업데이트
+            binding.layoutProfile.mypNameTv.text = data.nickname
+
+            // 필요하다면 지역 정보 등 다른 정보도 여기서 업데이트
+            // binding.layoutProfile.someTextView.text = data.regionInfo
         }
     }
 
     // 접기/펴기 로직 함수
     private fun initGroupToggle() {
         binding.mypGroupIv.setOnClickListener {
-            // 1. 상태 반전 (true -> false, false -> true)
             isGroupExpanded = !isGroupExpanded
 
             if (isGroupExpanded) {
-                // 펼치기 상태
+                // 펼치기
                 binding.mypGroupsRv.visibility = View.VISIBLE
-
-                // 화살표 원상복구 (0도 회전)
                 binding.mypGroupIv.animate().rotation(0f).setDuration(200).start()
             } else {
-                // 접기 상태
+                // 접기
                 binding.mypGroupsRv.visibility = View.GONE
-
-                // 화살표 뒤집기 (180도 회전)
                 binding.mypGroupIv.animate().rotation(180f).setDuration(200).start()
             }
         }
@@ -103,14 +114,7 @@ class MypageFragment : Fragment() {
         bottomNav?.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
-    private fun observeViewModel() {
-        viewModel.profileData.observe(viewLifecycleOwner) { data ->
-            binding.layoutProfile.mypNameTv.text = data.nickname
-        }
-    }
-
-
-    // 1. 획득한 후기
+    // 1. 획득한 후기 리사이클러뷰
     private fun initReviewRecyclerView() {
         val reviewList = listOf(
             MypReview("친절하고 매너가 좋아요", 8),
@@ -130,7 +134,7 @@ class MypageFragment : Fragment() {
         }
     }
 
-    // 2. 주최한 그룹
+    // 2. 주최한 그룹 리사이클러뷰
     private fun initGroupRecyclerView() {
         val groupList = listOf(
             MypGroup("괴테는 모든 것을 말했다", "스즈키 유이", true, listOf("인사이트", "메모환영")),
@@ -145,7 +149,7 @@ class MypageFragment : Fragment() {
         }
     }
 
-    // 3. 최근 읽은 책
+    // 3. 최근 읽은 책 리사이클러뷰
     private fun initLateBookRecyclerView() {
         val bookList = listOf(
             MypLateBook("해리포터와 마법사의 돌", 5),

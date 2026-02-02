@@ -5,7 +5,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ItemTrkBinding
+import com.bumptech.glide.Glide
 
 class TrackerAdapter(
     private val onItemClicked: (TrackerData) -> Unit
@@ -31,9 +33,15 @@ class TrackerAdapter(
             item: TrackerData,
             onItemClicked: (TrackerData) -> Unit
         ) {
-            binding.tvTitle.text = item.bookTitle
-            binding.tvAuthor.text = item.bookAuthor
-            binding.tvWithUser.text = item.withUserName
+            binding.tvBookTitle.text = item.bookTitle
+            binding.tvBookAuthor.text = item.bookAuthor
+            binding.tvWithUser.text = item.withUserName?.let { "with  $it" } ?: ""
+
+            Glide.with(binding.ivBookCover)
+                .load(item.coverImageUrl)
+                .placeholder(R.color.grey_200)
+                .error(R.color.grey_200)
+                .into(binding.ivBookCover)
 
             binding.updateStepUI(item.currentStep)
 
