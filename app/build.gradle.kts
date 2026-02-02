@@ -87,4 +87,8 @@ dependencies {
     implementation("com.vanniktech:android-image-cropper:4.5.0")
 
     implementation("com.google.android.flexbox:flexbox:3.0.0")
+
+    // 2. OkHttp (통신 로그 확인용)
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+    implementation("com.squareup.okhttp3:okhttp")
 }
