@@ -14,11 +14,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BookiiBookii">
-      
+        <activity
+            android:name=".trkDirectGuest.DirectGuestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".trkDirectHost.DirectHostActivity"
+            android:exported="false" />
         <activity
             android:name=".trkGuest.GuestActivity"
             android:exported="false" />
-      
         <activity
             android:name=".common.SplashActivity"
             android:exported="true"
@@ -29,36 +33,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-      
         <activity
             android:name=".onboarding.login.LoginActivity"
-            android:exported="false">
-      </activity>
-      
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".group.GrpSearchActivity"
-            android:exported="false"></activity>
-
+            android:exported="false" />
         <activity
             android:name=".group.GroupDetailActivity"
             android:exported="false" />
-
         <activity
-           android:name=".group.GroupGenerationActivity"
-           android:screenOrientation="portrait"
-           android:windowSoftInputMode="adjustResize"/>
-
+            android:name=".group.GroupGenerationActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".group.GroupJoinManagementActivity"
             android:exported="false" />
-          
         <activity
             android:name=".trkHost.HostActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

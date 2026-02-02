@@ -1,12 +1,10 @@
 package com.bookiibookii.bookiibookii.trkHost
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
-import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentHostSendConfirmBinding
 
 class HostSendConfirmFragment : DialogFragment() {
@@ -25,6 +23,9 @@ class HostSendConfirmFragment : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
+
+        dialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
         dialog?.window?.apply {
             setLayout(
                 (resources.displayMetrics.widthPixels * 0.90).toInt(),
