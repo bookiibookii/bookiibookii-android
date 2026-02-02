@@ -137,6 +137,7 @@
         <item name="lineHeight">28dp</item>
         <item name="android:letterSpacing">-0.012</item>
     </style>
+
     <style name="title2_bold">
         <item name="android:fontFamily">@font/pretendard_variable</item>
         <item name="android:textSize">22sp</item>
@@ -376,6 +377,56 @@
         <item name="android:clickable">false</item>
         <item name="chipBackgroundColor">@color/ui_point_red_105</item>
         <item name="android:textColor">@color/ui_point_red</item>
+    </style>
+
+    <!-- home: 공통 버튼 -->
+    <style name="Widget.BookiiBookii.HomeButton" parent="Widget.Material3.Button">
+        <item name="android:minHeight">52dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="cornerRadius">14dp</item>
+    </style>
+
+    <!-- home: 버튼 색상 (pre) -->
+    <style name="Widget.BookiiBookii.HomeButton.Pre" parent="Widget.BookiiBookii.HomeButton">
+        <item name="backgroundTint">@color/pre_main_pale</item>
+        <item name="android:textColor">@color/pre_main</item>
+    </style>
+
+    <!-- home: 버튼 색상 (dark) -->
+    <style name="Widget.BookiiBookii.HomeButton.Dark" parent="Widget.BookiiBookii.HomeButton">
+        <item name="backgroundTint">@color/grey_900</item>
+        <item name="android:textColor">@color/grey_100</item>
+    </style>
+
+    <!-- home: 공통 버튼 오버레이 (기본) -->
+    <style name="ThemeOverlay.BookiiBookii.HomeButton" parent="">
+        <item name="home_button_style">@style/Widget.BookiiBookii.HomeButton</item>
+    </style>
+
+    <!-- home: 공통 버튼 오버레이 (Dark) -->
+    <style name="ThemeOverlay.BookiiBookii.HomeButton.Dark" parent="ThemeOverlay.BookiiBookii.HomeButton">
+        <item name="home_button_style">@style/Widget.BookiiBookii.HomeButton.Dark</item>
+    </style>
+
+    <!-- home: 공통 버튼 오버레이 (Pre) -->
+    <style name="ThemeOverlay.BookiiBookii.HomeButton.Pre" parent="ThemeOverlay.BookiiBookii.HomeButton">
+        <item name="home_button_style">@style/Widget.BookiiBookii.HomeButton.Pre</item>
+    </style>
+
+    <style name="BookiiChip">
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/pre_main</item>
+        <item name="android:background">@drawable/bg_home_chip_pale</item>
     </style>
 
     <style name="Widget.App.Chip.Entry" parent="Base.App.Chip">

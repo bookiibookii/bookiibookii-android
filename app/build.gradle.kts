@@ -64,7 +64,7 @@ dependencies {
     // splash screen
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    // TODO: 주석 추가
+    // KTX
     implementation("androidx.activity:activity-ktx:1.9.0")
 
     //API 연결 간 의존성 추가

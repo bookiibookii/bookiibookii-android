@@ -8,6 +8,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityGuestBinding
 import com.bookiibookii.bookiibookii.databinding.ActivityHostBinding
+import com.bookiibookii.bookiibookii.trkHost.HostStartBottomDialogFragment
 
 class GuestActivity : AppCompatActivity() {
 
@@ -22,6 +23,21 @@ class GuestActivity : AppCompatActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+
+        binding.btnBack.setOnClickListener { finish() }
+
+        binding.cardWidget.setOnClickListener{
+            GuestReadingStatusBottomDialogFragment()
+                .show(
+                    supportFragmentManager,
+                    GuestReadingStatusBottomDialogFragment.TAG
+                )
+        }
+
+        if (savedInstanceState == null) {
+            val bottomSheet = GuestReadingStatusBottomDialogFragment()
+            bottomSheet.show(supportFragmentManager, GuestReadingStatusBottomDialogFragment.TAG)
         }
     }
 }

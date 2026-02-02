@@ -1,194 +1,265 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
     app:cardCornerRadius="24dp"
-    app:cardElevation="2dp"
-    app:strokeWidth="0dp">
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="@android:color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:paddingBottom="24dp">
 
-        <ImageView
-            android:id="@+id/iv_cover"
-            android:layout_width="72dp"
-            android:layout_height="92dp"
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_book_cover"
+            android:layout_width="80dp"
+            android:layout_height="110dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/frame_71"
+            android:src="@android:color/darker_gray"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tv_title"
-            android:layout_width="wrap_content"
+            android:id="@+id/tv_book_title"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="24dp"
+            android:ellipsize="end"
+            android:maxLines="2"
             android:text="책 제목"
-            android:textSize="20sp"
-            app:layout_constraintStart_toEndOf="@id/iv_cover"
-            app:layout_constraintTop_toTopOf="@id/iv_cover"/>
+            android:textColor="@color/grey_800"
+            android:textSize="16sp"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/iv_book_cover"
+            app:layout_constraintTop_toTopOf="@id/iv_book_cover" />
 
         <TextView
-            android:id="@+id/tv_author"
+            android:id="@+id/tv_book_author"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="저자 (책 종류)"
+            android:textColor="@color/grey_600"
+            android:textSize="12sp"
+            android:fontFamily="@font/pretendard_regular"
+            app:layout_constraintEnd_toEndOf="@id/tv_book_title"
+            app:layout_constraintStart_toStartOf="@id/tv_book_title"
+            app:layout_constraintTop_toBottomOf="@id/tv_book_title" />
+
+        <TextView
+            android:id="@+id/tv_with"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="작가"
-            android:textSize="20sp"
-            app:layout_constraintStart_toEndOf="@id/tv_title"
-            app:layout_constraintTop_toBottomOf="@id/tv_title"/>
+            android:layout_marginTop="16dp"
+            android:text="with"
+            android:textColor="@color/grey_500"
+            android:textSize="12sp"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintStart_toStartOf="@id/tv_book_title"
+            app:layout_constraintTop_toBottomOf="@id/tv_book_author" />
 
         <TextView
             android:id="@+id/tv_with_user"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="유저"
-            android:textSize="20sp"
-            app:layout_constraintStart_toEndOf="@id/tv_author"
-            app:layout_constraintTop_toBottomOf="@id/tv_author"/>
-
-
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="6dp"
+            android:text="noshel"
+            android:textColor="@color/grey_800"
+            android:textSize="12sp"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintStart_toEndOf="@id/tv_with"
+            app:layout_constraintTop_toBottomOf="@id/tv_book_author" />
 
         <View
-            android:id="@+id/v_line"
+            android:id="@+id/divider"
             android:layout_width="0dp"
-            android:layout_height="2dp"
-            android:layout_marginTop="18dp"
-            android:background="#E6E6E6"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="24dp"
+            android:background="@color/grey_100"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/layout_tracker"/>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/layout_tracker"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            app:layout_constraintTop_toBottomOf="@id/iv_cover"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/iv_book_cover" />
 
-            <FrameLayout
-                android:id="@+id/step1"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/circle"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-                <ImageView
-                    android:id="@+id/iv_step1"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_trk_step_request"/>
-            </FrameLayout>
+        <View
+            android:id="@+id/view_progress_track_bg"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginTop="50dp"
+            android:background="@color/grey_200"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/divider" />
 
-            <TextView
-                android:id="@+id/tv_step1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="배송 중"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:layout_constraintTop_toBottomOf="@id/step1"
-                app:layout_constraintStart_toStartOf="@id/step1"
-                app:layout_constraintEnd_toEndOf="@id/step1"/>
+        <View
+            android:id="@+id/view_progress_track_active"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            android:background="@color/grey_900"
+            app:layout_constraintBottom_toBottomOf="@id/view_progress_track_bg"
+            app:layout_constraintStart_toStartOf="@id/view_progress_track_bg"
+            app:layout_constraintTop_toTopOf="@id/view_progress_track_bg"
+            app:layout_constraintEnd_toEndOf="@id/dot_step3" />
 
-            <FrameLayout
-                android:id="@+id/step2"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/circle"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.33">
-                <ImageView
-                    android:id="@+id/iv_step2"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_trk_step_delivery"/>
-            </FrameLayout>
+        <ImageView
+            android:id="@+id/dot_step1"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginStart="12dp"
+            app:srcCompat="@drawable/bg_circle_grey100"
+            app:layout_constraintBottom_toBottomOf="@id/view_progress_track_bg"
+            app:layout_constraintEnd_toStartOf="@id/dot_step2"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="@id/view_progress_track_bg"
+            app:layout_constraintTop_toTopOf="@id/view_progress_track_bg" />
 
-            <TextView
-                android:id="@+id/tv_step2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="배송 중"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:layout_constraintTop_toBottomOf="@id/step2"
-                app:layout_constraintStart_toStartOf="@id/step2"
-                app:layout_constraintEnd_toEndOf="@id/step2"/>
+        <ImageView
+            android:id="@+id/dot_step2"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            app:srcCompat="@drawable/bg_circle_grey100"
+            app:layout_constraintBottom_toBottomOf="@id/view_progress_track_bg"
+            app:layout_constraintEnd_toStartOf="@id/dot_step3"
+            app:layout_constraintStart_toEndOf="@id/dot_step1"
+            app:layout_constraintTop_toTopOf="@id/view_progress_track_bg" />
 
-            <FrameLayout
-                android:id="@+id/step3"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/circle"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.66">
-                <ImageView
-                    android:id="@+id/iv_step3"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_trk_step_reading"/>
-            </FrameLayout>
+        <ImageView
+            android:id="@+id/dot_step3"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            app:srcCompat="@drawable/bg_circle_grey100"
+            app:layout_constraintBottom_toBottomOf="@id/view_progress_track_bg"
+            app:layout_constraintEnd_toStartOf="@id/dot_step4"
+            app:layout_constraintStart_toEndOf="@id/dot_step2"
+            app:layout_constraintTop_toTopOf="@id/view_progress_track_bg" />
 
-            <TextView
-                android:id="@+id/tv_step3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="게스트 읽는 중"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:layout_constraintTop_toBottomOf="@id/step3"
-                app:layout_constraintStart_toStartOf="@id/step3"
-                app:layout_constraintEnd_toEndOf="@id/step3"/>
+        <ImageView
+            android:id="@+id/dot_step4"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginEnd="12dp"
+            app:srcCompat="@drawable/bg_circle_grey100"
+            app:layout_constraintBottom_toBottomOf="@id/view_progress_track_bg"
+            app:layout_constraintEnd_toEndOf="@id/view_progress_track_bg"
+            app:layout_constraintStart_toEndOf="@id/dot_step3"
+            app:layout_constraintTop_toTopOf="@id/view_progress_track_bg" />
 
-            <FrameLayout
-                android:id="@+id/step4"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/circle"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-                <ImageView
-                    android:id="@+id/iv_step4"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_trk_step_return"/>
-            </FrameLayout>
+        <TextView
+            android:id="@+id/tv_label_step1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="호스트 읽는 중"
+            android:textSize="11sp"
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintBottom_toTopOf="@id/dot_step1"
+            app:layout_constraintStart_toStartOf="@id/dot_step1"
+            app:layout_constraintEnd_toEndOf="@id/dot_step1" />
 
-            <TextView
-                android:id="@+id/tv_step4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="회수 중"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:layout_constraintTop_toBottomOf="@id/step4"
-                app:layout_constraintStart_toStartOf="@id/step4"
-                app:layout_constraintEnd_toEndOf="@id/step4"/>
+        <TextView
+            android:id="@+id/tv_date_step1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="12. 16."
+            android:textSize="11sp"
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintTop_toBottomOf="@id/dot_step1"
+            app:layout_constraintStart_toStartOf="@id/dot_step1"
+            app:layout_constraintEnd_toEndOf="@id/dot_step1" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/tv_label_step2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="배송 중"
+            android:textSize="11sp"
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintBottom_toTopOf="@id/dot_step2"
+            app:layout_constraintStart_toStartOf="@id/dot_step2"
+            app:layout_constraintEnd_toEndOf="@id/dot_step2" />
+
+        <TextView
+            android:id="@+id/tv_date_step2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="12. 20."
+            android:textSize="11sp"
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintTop_toBottomOf="@id/dot_step2"
+            app:layout_constraintStart_toStartOf="@id/dot_step2"
+            app:layout_constraintEnd_toEndOf="@id/dot_step2" />
+
+        <TextView
+            android:id="@+id/tv_label_step3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="게스트 읽는 중"
+            android:textSize="11sp"
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintBottom_toTopOf="@id/dot_step3"
+            app:layout_constraintStart_toStartOf="@id/dot_step3"
+            app:layout_constraintEnd_toEndOf="@id/dot_step3" />
+
+        <TextView
+            android:id="@+id/tv_date_step3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="12. 23."
+            android:textSize="11sp"
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintTop_toBottomOf="@id/dot_step3"
+            app:layout_constraintStart_toStartOf="@id/dot_step3"
+            app:layout_constraintEnd_toEndOf="@id/dot_step3" />
+
+        <TextView
+            android:id="@+id/tv_label_step4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="회수 중"
+            android:textSize="11sp"
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintBottom_toTopOf="@id/dot_step4"
+            app:layout_constraintStart_toStartOf="@id/dot_step4"
+            app:layout_constraintEnd_toEndOf="@id/dot_step4" />
+
+        <TextView
+            android:id="@+id/tv_date_step4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="12. 25."
+            android:textSize="11sp"
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintTop_toBottomOf="@id/dot_step4"
+            app:layout_constraintStart_toStartOf="@id/dot_step4"
+            app:layout_constraintEnd_toEndOf="@id/dot_step4"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>
