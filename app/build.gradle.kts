@@ -1,5 +1,13 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+import java.util.Properties
+
+val properties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    properties.load(localPropertiesFile.inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -23,6 +31,9 @@ android {
             "ALADIN_TTB_KEY",
             "\"${project.findProperty("ALADIN_TTB_KEY") ?: ""}\""
         )
+
+        buildConfigField("String", "KAKAO_APP_KEY", "\"${properties["kakao_native_app_key"]}\"")
+        manifestPlaceholders["KAKAO_APP_KEY"] = properties["kakao_native_app_key"] as String
     }
 
     buildTypes {
@@ -96,4 +107,6 @@ dependencies {
     implementation("androidx.credentials:credentials:1.5.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    implementation("com.kakao.sdk:v2-all:2.20.1")
 }

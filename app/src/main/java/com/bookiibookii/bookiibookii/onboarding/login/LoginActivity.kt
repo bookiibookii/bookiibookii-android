@@ -15,6 +15,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.LoginRequest
@@ -24,6 +25,11 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.launch
 
+import com.kakao.sdk.auth.model.OAuthToken
+import com.kakao.sdk.common.KakaoSdk.keyHash
+import com.kakao.sdk.common.model.ClientError
+import com.kakao.sdk.common.model.ClientErrorCause
+import com.kakao.sdk.user.UserApiClient
 
 class LoginActivity : AppCompatActivity() {
 
@@ -44,6 +50,17 @@ class LoginActivity : AppCompatActivity() {
         credentialManager = CredentialManager.create(this)
 
         setupLoginButtons()
+        Log.e("APP_CHECK", "MyApplication onCreate called")
+
+
+        Log.e("KeyHash_Check", "내 앱의 현재 키 해시: $keyHash")
+
+//        setupLoginButtons()
+
+        findViewById<View>(R.id.btn_kakao_login).setOnClickListener {
+            loginToKakao()
+        }
+
     }
 
     private fun setupLoginButtons() {
@@ -160,13 +177,6 @@ class LoginActivity : AppCompatActivity() {
         moveToMain()
     }
 
-    private fun moveToMain() {
-        val intent = Intent(this, OnbProfileActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
-    }
-
     private fun showLoadingState(isLoading: Boolean) {
         val buttonsGroup = findViewById<Group>(R.id.group_login_buttons)
 
@@ -207,5 +217,50 @@ class LoginActivity : AppCompatActivity() {
     private fun hasAccessToken(): Boolean {
         val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         return !prefs.getString("access_token", null).isNullOrEmpty()
+    }
+
+    // 여기부터 ~~~~~
+
+    private fun loginToKakao() {
+        // 로그인 결과 콜백 (성공 시 처리)
+        val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
+            if (error != null) {
+                Log.e("KakaoLogin", "로그인 실패", error)
+            } else if (token != null) {
+                Log.i("KakaoLogin", "로그인 성공")
+                moveToMain()
+            }
+        }
+
+        // 카카오톡 설치 여부 확인 후 로그인 시도
+        if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
+            UserApiClient.instance.loginWithKakaoTalk(this) { token, error ->
+                if (error != null) {
+                    Log.e("KakaoLogin", "카카오톡 로그인 실패", error)
+
+                    // 사용자가 뒤로가기 등으로 취소한 경우
+                    if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
+                        return@loginWithKakaoTalk
+                    }
+
+                    // 카카오톡 연결 실패 시, 웹(계정)으로 로그인 시도
+                    UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
+                } else if (token != null) {
+                    Log.i("KakaoLogin", "카카오톡 로그인 성공")
+                    moveToMain()
+                }
+            }
+        } else {
+            // 카카오톡이 없으면 웹으로 로그인
+            UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
+        }
+    }
+
+    // 메인 화면으로 이동하는 함수
+    private fun moveToMain() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }
