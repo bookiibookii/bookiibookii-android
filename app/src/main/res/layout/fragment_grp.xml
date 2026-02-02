@@ -203,7 +203,7 @@
             android:clickable="true"
             android:elevation="0dp"
             android:focusable="true"
-            android:src="@drawable/ic_share"
+            android:src="@drawable/ic_share_read"
             android:stateListAnimator="@null" />
 
         <ImageView
