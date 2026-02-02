@@ -108,4 +108,6 @@ class LibraryBookAdapter(
 
             itemView.setOnClickListener { itemClickListener(item) }
         }
+
+
     }}
