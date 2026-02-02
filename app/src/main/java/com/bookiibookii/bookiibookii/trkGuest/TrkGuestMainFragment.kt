@@ -9,7 +9,9 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.databinding.FragmentTrkGuestMainBinding
+import com.bookiibookii.bookiibookii.trkDirectGuest.DirectGuestActivity
 import com.bookiibookii.bookiibookii.trkHost.CreateGroupFooterAdapter
+import com.bookiibookii.bookiibookii.trkHost.ExchangeType
 import com.bookiibookii.bookiibookii.trkHost.FooterMode
 import com.bookiibookii.bookiibookii.trkHost.TrackerAdapter
 import com.bookiibookii.bookiibookii.trkHost.TrackerData
@@ -41,8 +43,16 @@ class TrkGuestMainFragment : Fragment() {
         updateTabState(isMyGroup = false)
 
         trackerAdapter = TrackerAdapter { item ->
-            // 클릭 로직 추가, 나중에 수정
-            val intent = Intent(requireContext(), GuestActivity::class.java)
+            val target = when (item.exchangeType) {
+                ExchangeType.SHIPPING -> GuestActivity::class.java
+                ExchangeType.DIRECT -> DirectGuestActivity::class.java
+            }
+
+            val intent = Intent(requireContext(), target).apply {
+                putExtra("tracker_id", item.id)
+                putExtra("exchange_type", item.exchangeType.name)
+            }
+
             startActivity(intent)
         }
 
@@ -90,7 +100,17 @@ class TrkGuestMainFragment : Fragment() {
                 bookAuthor = "김영하",
                 withUserName = "noshel",
                 coverImageUrl = null,
-                currentStep = TrackerStep.DELIVERY
+                currentStep = TrackerStep.DELIVERY,
+                exchangeType = ExchangeType.SHIPPING
+            ),
+            TrackerData(
+                id = 2L,
+                bookTitle = "아몬드",
+                bookAuthor = "손원평",
+                withUserName = null,
+                coverImageUrl = null,
+                currentStep = TrackerStep.READING,
+                exchangeType = ExchangeType.DIRECT
             )
         )
     }

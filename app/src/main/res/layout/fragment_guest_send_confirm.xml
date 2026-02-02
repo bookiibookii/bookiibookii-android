@@ -4,7 +4,7 @@
     android:id="@+id/dialogRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@android:color/white"
+    android:background="@drawable/bg_round_24dp_white"
     android:paddingStart="18dp"
     android:paddingEnd="18dp"
     android:paddingTop="18dp"
