@@ -1,5 +1,13 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+import java.util.Properties
+
+val properties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    properties.load(localPropertiesFile.inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -10,7 +18,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.bookiibookii.bookiibookii"
+        applicationId = "com.bookiibookii.bookiibookii_d"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
@@ -23,6 +31,9 @@ android {
             "ALADIN_TTB_KEY",
             "\"${project.findProperty("ALADIN_TTB_KEY") ?: ""}\""
         )
+
+        buildConfigField("String", "KAKAO_APP_KEY", "\"${properties["kakao_native_app_key"]}\"")
+        manifestPlaceholders["KAKAO_APP_KEY"] = properties["kakao_native_app_key"] as String
     }
 
     buildTypes {
@@ -87,4 +98,15 @@ dependencies {
     implementation("com.vanniktech:android-image-cropper:4.5.0")
 
     implementation("com.google.android.flexbox:flexbox:3.0.0")
+
+    // 2. OkHttp (통신 로그 확인용)
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+    implementation("com.squareup.okhttp3:okhttp")
+
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    implementation("com.kakao.sdk:v2-all:2.20.1")
 }

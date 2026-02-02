@@ -52,7 +52,6 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.libReviewAddBtn.visibility = View.GONE
     }
 
-    // [핵심 기능] 프로그레스 바 점 위치 이동 로직
     private fun updateProgressDots() {
         if (_binding == null) return
 
@@ -60,18 +59,20 @@ class LibraryBookDetailIngFragment : Fragment() {
         val width = progressBar.width.toFloat() // 바 전체 너비
         val max = progressBar.max.toFloat()     // 최대값 (100)
 
-        // 1. 나의 독서율 점 이동 (Progress)
+        val marginPixel = dpToPx(1).toFloat()
+
         val myProgress = progressBar.progress.toFloat()
         val myDot = binding.myProgressDot
-        // 위치 계산: (전체너비 * 비율) - (점 너비의 절반) -> 점의 중심이 끝에 오도록
-        val myX = (width * (myProgress / max)) - (myDot.width / 2f)
-        myDot.translationX = myX
 
-        // 2. 그룹 평균 독서율 점 이동 (Secondary Progress)
+        val myX = (width * (myProgress / max)) - marginPixel - myDot.width
+
+        myDot.translationX = myX.coerceAtLeast(0f)
+
         val groupProgress = progressBar.secondaryProgress.toFloat()
         val groupDot = binding.groupAvgDot
-        val groupX = (width * (groupProgress / max)) - (groupDot.width / 2f)
-        groupDot.translationX = groupX
+
+        val groupX = (width * (groupProgress / max)) - marginPixel - groupDot.width
+        groupDot.translationX = groupX.coerceAtLeast(0f)
     }
 
     private fun initRecyclerView() {
