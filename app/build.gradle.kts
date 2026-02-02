@@ -97,6 +97,10 @@ dependencies {
 
     implementation("com.vanniktech:android-image-cropper:4.5.0")
 
+    //안드로이드 표준 SwipeRefreshLayout
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
+
     implementation("com.google.android.flexbox:flexbox:3.0.0")
 
     // 2. OkHttp (통신 로그 확인용)
@@ -109,4 +113,5 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     implementation("com.kakao.sdk:v2-all:2.20.1")
+
 }

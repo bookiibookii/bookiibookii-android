@@ -33,6 +33,8 @@
         android:id="@+id/grp_item_mg_cover_Iv"
         android:layout_width="74dp"
         android:layout_height="94dp"
+        android:scaleType="centerCrop"
+        android:clipToOutline="true"
         android:background="@drawable/bg_round_10dp_gray300"
         app:layout_constraintStart_toStartOf="@id/virtual_mg_area_box"
         app:layout_constraintTop_toTopOf="@id/virtual_mg_area_box" />
@@ -184,6 +186,8 @@
         android:layout_height="20dp"
         android:layout_marginTop="4dp"
         android:background="@drawable/ic_profile"
+        android:scaleType="centerCrop"
+        android:clipToOutline="true"
         app:layout_constraintStart_toStartOf="@id/grp_item_mg_book_title_Tv"
         app:layout_constraintTop_toBottomOf="@id/grp_item_mg_cal_Iv" />
 
