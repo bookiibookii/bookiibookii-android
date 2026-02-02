@@ -2,20 +2,19 @@ package com.bookiibookii.bookiibookii.trkHost
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.BuildConfig
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.API.RetrofitClient
-import com.bookiibookii.bookiibookii.bookData.viewModel.BookViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentTrkHostMainBinding
+import com.bookiibookii.bookiibookii.trkDirectHost.DirectHostActivity
 import com.bookiibookii.bookiibookii.trkGuest.TrkGuestMainFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -43,8 +42,16 @@ class TrkHostMainFragment : Fragment() {
         updateTabState(isMyGroup = true)
 
         trackerAdapter = TrackerAdapter { item ->
-            // 클릭 로직 추가, 나중에 수정
-            val intent = Intent(requireContext(), HostActivity::class.java)
+            val target = when (item.exchangeType) {
+                ExchangeType.SHIPPING -> HostActivity::class.java
+                ExchangeType.DIRECT -> DirectHostActivity::class.java
+            }
+
+            val intent = Intent(requireContext(), target).apply {
+                putExtra("tracker_id", item.id)
+                putExtra("exchange_type", item.exchangeType.name)
+            }
+
             startActivity(intent)
         }
 
@@ -150,7 +157,8 @@ class TrkHostMainFragment : Fragment() {
                 bookAuthor = "김영하",
                 withUserName = "noshel",
                 coverImageUrl = null,
-                currentStep = TrackerStep.DELIVERY
+                currentStep = TrackerStep.DELIVERY,
+                exchangeType = ExchangeType.SHIPPING
             ),
             TrackerData(
                 id = 2L,
@@ -158,7 +166,8 @@ class TrkHostMainFragment : Fragment() {
                 bookAuthor = "손원평",
                 withUserName = null,
                 coverImageUrl = null,
-                currentStep = TrackerStep.READING
+                currentStep = TrackerStep.READING,
+                exchangeType = ExchangeType.DIRECT
             ),
             TrackerData(
                 id = 3L,
@@ -166,7 +175,8 @@ class TrkHostMainFragment : Fragment() {
                 bookAuthor = "김영하",
                 withUserName = "noshel",
                 coverImageUrl = null,
-                currentStep = TrackerStep.DELIVERY
+                currentStep = TrackerStep.DELIVERY,
+                exchangeType = ExchangeType.SHIPPING
             ),
             TrackerData(
                 id = 4L,
@@ -174,7 +184,8 @@ class TrkHostMainFragment : Fragment() {
                 bookAuthor = "손원평",
                 withUserName = null,
                 coverImageUrl = null,
-                currentStep = TrackerStep.READING
+                currentStep = TrackerStep.READING,
+                exchangeType = ExchangeType.SHIPPING
             ),
             TrackerData(
                 id = 5L,
@@ -182,7 +193,8 @@ class TrkHostMainFragment : Fragment() {
                 bookAuthor = "손원평",
                 withUserName = null,
                 coverImageUrl = null,
-                currentStep = TrackerStep.READING
+                currentStep = TrackerStep.READING,
+                exchangeType = ExchangeType.SHIPPING
             )
         )
     }

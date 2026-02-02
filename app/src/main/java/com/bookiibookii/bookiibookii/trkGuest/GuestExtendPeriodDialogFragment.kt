@@ -26,6 +26,9 @@ class GuestExtendPeriodDialogFragment : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
+
+        dialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
         dialog?.window?.apply {
             setLayout(
                 (resources.displayMetrics.widthPixels * 0.90).toInt(),
