@@ -5,7 +5,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.databinding.ItemMypDistrictBinding
 
-class MypDistrictAdapter  : RecyclerView.Adapter<MypDistrictAdapter.DistrictViewHolder>() {
+class MypDistrictAdapter(
+    private val onClick : (String)->Unit
+) : RecyclerView.Adapter<MypDistrictAdapter.DistrictViewHolder>() {
 
     private var districtList: List<String> = emptyList()
 
@@ -18,6 +20,10 @@ class MypDistrictAdapter  : RecyclerView.Adapter<MypDistrictAdapter.DistrictView
     inner class DistrictViewHolder(val binding: ItemMypDistrictBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(name: String) {
             binding.tvDistrictName.text = name
+            binding.root.setOnClickListener {
+                onClick(name)
+
+            }
         }
     }
 
