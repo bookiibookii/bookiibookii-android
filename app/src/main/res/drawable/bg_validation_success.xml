@@ -1,0 +1,6 @@
+<!-- bg_validation_error.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#E7FFEA"/>
+    <corners android:radius="20dp"/>
+    <stroke android:width="2dp" android:color="#74D27F"/>
+</shape>
