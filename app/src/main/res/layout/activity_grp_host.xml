@@ -230,6 +230,8 @@
             android:layout_height="40dp"
             android:layout_marginTop="12dp"
             android:src="@drawable/ic_profile"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true"
             app:layout_constraintStart_toStartOf="@id/act_grp_ho_member_title_Tv"
             app:layout_constraintTop_toBottomOf="@id/divider_line_member" />
 
@@ -253,6 +255,7 @@
             android:layout_height="23dp"
             android:layout_marginStart="8dp"
             android:text="HOST"
+            android:visibility="gone"
             app:layout_constraintStart_toEndOf="@id/act_grp_ho_member_nickname1_Tv"
             app:layout_constraintTop_toTopOf="@id/act_grp_ho_member_nickname1_Tv" />
 
@@ -263,6 +266,8 @@
             android:layout_marginTop="12dp"
             android:src="@drawable/ic_profile"
             app:tint="@color/grey_200"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true"
             app:layout_constraintStart_toStartOf="@id/act_grp_ho_member_title_Tv"
             app:layout_constraintTop_toBottomOf="@id/act_grp_ho_member_profile1_Iv" />
 

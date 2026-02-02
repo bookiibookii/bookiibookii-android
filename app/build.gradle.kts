@@ -85,4 +85,6 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.9")
 
     implementation("com.vanniktech:android-image-cropper:4.5.0")
+    //안드로이드 표준 SwipeRefreshLayout
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 }

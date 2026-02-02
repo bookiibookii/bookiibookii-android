@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_input_round_20dp_white_and_200"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="12dp"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/toast_icon_iv"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:src="@drawable/ic_check"
+        android:layout_marginEnd="8dp" />
+    <TextView
+        android:id="@+id/toast_message_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/grey_700"
+        android:textSize="14sp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="토스트 메시지입니다." />
+
+</LinearLayout>
