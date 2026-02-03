@@ -149,7 +149,7 @@ class LoginActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
                     if (result != null) {
-                        Log.d("Login", "백엔드 로그인 성공! UserID: ${result.userId}")
+                        Log.d("구글", "백엔드 로그인 성공! UserID: ${result.userId}")
 
                         // 토큰 저장
                         saveTokens(result.accessToken, result.refreshToken, result.userId)
