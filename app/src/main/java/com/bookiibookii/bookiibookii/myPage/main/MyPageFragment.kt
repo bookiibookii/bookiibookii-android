@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.RetrofitClient
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.bookData.Data.MypLateBook
 import com.bookiibookii.bookiibookii.bookData.Data.MypReview
 import com.bookiibookii.bookiibookii.databinding.FragmentMypBinding
@@ -19,6 +19,7 @@ import com.bookiibookii.bookiibookii.databinding.LayoutMypProfileCardBinding
 import com.bookiibookii.bookiibookii.myPage.main.MypGroupAdapter
 import com.bookiibookii.bookiibookii.myPage.main.MypLateBookAdapter
 import com.bookiibookii.bookiibookii.myPage.main.MypReviewAdapter
+import com.bookiibookii.bookiibookii.myPage.set.MypSetFragment
 import kotlinx.coroutines.launch
 
 class MypageFragment : Fragment() {
@@ -44,7 +45,14 @@ class MypageFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerViews()
-        fetchMypageData()
+        //fetchMypageData() //삭제권장
+
+        binding.mypSettingIv.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, MypSetFragment())
+                .addToBackStack(null) // 뒤로가기 하면 다시 마이페이지로 오기 위해 필수
+                .commit()
+        }
     }
 
     private fun setupRecyclerViews() {
@@ -56,12 +64,17 @@ class MypageFragment : Fragment() {
     private fun fetchMypageData() {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.apiService.getMypage()
+                // [수정 전] 옛날 방식 (토큰 없음)
+                // val response = RetrofitClient.apiService.getMypage()
+
+                // [수정 후] ★★★ requireContext()를 넣어서 토큰 기능 활성화! ★★★
+                val response = RetrofitClient.getInstance(requireContext()).getMypage()
+
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result
                     updateUI(result)
                 } else {
-                    Log.e("Mypage", "API Error: ${response.code()}")
+                    Log.e("Mypage", "API Error: ${response.code()}") // 이제 200이 뜰 겁니다!
                 }
             } catch (e: Exception) {
                 Log.e("Mypage", "Network Error", e)
@@ -127,4 +140,12 @@ class MypageFragment : Fragment() {
         _binding = null
         _profileBinding = null
     }
+
+    override fun onResume() {
+        super.onResume()
+        fetchMypageData() // 데이터 갱신
+
+        // 설정 화면에서 숨겼던 하단바를, 마이페이지 돌아오면 다시 보이게!
+        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav) // 혹은 R.id.bottomNav
+        bottomNav?.visibility = View.VISIBLE}
 }

@@ -22,5 +22,30 @@ data class LoginResponse(
 data class LoginResult(
     val accessToken: String,
     val refreshToken: String,
-    val userId: Int
+    val userId: Int,
+    val nickname: String // 임시 닉네임 -> 추후 삭제 필요
+)
+
+data class UserUpdateRequest(
+    val nickname: String,
+    val receiverName: String = "",
+    val phone: String = "",
+    val zipCode: String = "",
+    val address: String = "",
+    val addressDetail: String = "",
+    val meetPlace: String = ""
+)
+
+data class UserUpdateResponse(
+    val isSuccess: Boolean,
+    val code: String,
+    val message: String,
+    val result: String
+)
+
+data class LogoutResponse(
+    val isSuccess: Boolean,
+    val code: String,
+    val message: String,
+    val result: String
 )
