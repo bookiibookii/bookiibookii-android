@@ -76,7 +76,7 @@ class MypSetFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 // 1. 서버에 로그아웃 요청 (토큰은 자동으로 헤더에 실려감)
-                val response = RetrofitClient.getInstance(requireContext()).logout()
+                val response = RetrofitClient.api().logout()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     // 2. 서버 응답 성공 시 -> 앱 내부 데이터 삭제 및 이동

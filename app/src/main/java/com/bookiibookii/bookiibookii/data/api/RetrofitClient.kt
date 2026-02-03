@@ -33,28 +33,36 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 
 object RetrofitClient {
     private const val BASE_URL = "https://bookii.gyeonseo.com/"
-    private var retrofit: Retrofit? = null
 
-    fun getInstance(context: Context): ApiService {
-        if (retrofit == null) {
+    @Volatile private var apiService: ApiService? = null
+
+    fun init(context: Context) {
+        if (apiService != null) return
+
+        synchronized(this) {
+            if (apiService != null) return
+
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
             val client = OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
-                // ★ 수정 포인트: 여기서도 applicationContext로 넘겨줌
                 .addInterceptor(AuthInterceptor(context.applicationContext))
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build()
 
-            retrofit = Retrofit.Builder()
+            val retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
+
+            apiService = retrofit.create(ApiService::class.java)
         }
-        return retrofit!!.create(ApiService::class.java)
     }
+
+    fun api(): ApiService =
+        apiService ?: error("RetrofitClient.init(context) 먼저 호출해야 함")
 }
