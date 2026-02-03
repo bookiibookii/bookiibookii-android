@@ -88,6 +88,7 @@ class GroupFragment : Fragment() {
         }
 
         // 3. 결과 반영 (로딩 딜레이 시뮬레이션)
+        // 여기서 NPE 에러 발생하는 거 같음. 일단 수정은 안함
         Handler(Looper.getMainLooper()).postDelayed({
             val groupAdapter = GroupAdapter(ArrayList(filteredData)) { groupData ->
                 moveToDetail(groupData)
