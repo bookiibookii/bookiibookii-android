@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.trkDirectHost
+package com.bookiibookii.bookiibookii.trkDirectGuest
 
 import android.content.res.ColorStateList
 import android.os.Bundle
@@ -9,22 +9,20 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.databinding.FragmentDirectHostSetAppointmentBinding
-import com.bookiibookii.bookiibookii.trkDirectGuest.DirectGuestAppointmentBottomDialogFragment
+import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestSetAppointmentDialogBinding
 
-class DirectHostSetAppointmentDialogFragment : DialogFragment() {
+class DirectGuestSetAppointmentDialogFragment : DialogFragment() {
 
-    private var _binding: FragmentDirectHostSetAppointmentBinding? = null
+    private var _binding: FragmentDirectGuestSetAppointmentDialogBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentDirectHostSetAppointmentBinding.inflate(inflater, container, false)
+        _binding = FragmentDirectGuestSetAppointmentDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
-
 
     override fun onStart() {
         super.onStart()
@@ -60,8 +58,8 @@ class DirectHostSetAppointmentDialogFragment : DialogFragment() {
 
             dismissAllowingStateLoss()
 
-            DirectHostAppointmentEditBottomDialogFragment()
-                .show(parentFragmentManager, DirectHostAppointmentEditBottomDialogFragment.TAG)
+            DirectGuestAppointmentEditBottomDialogFragment()
+                .show(parentFragmentManager, DirectGuestAppointmentEditBottomDialogFragment.TAG)
         }
     }
 
@@ -91,6 +89,6 @@ class DirectHostSetAppointmentDialogFragment : DialogFragment() {
     }
 
     companion object {
-        const val TAG = "DirectSetAppointmentDialogFragment"
+        const val TAG = "DirectGuestSetAppointmentDialogFragment"
     }
 }
