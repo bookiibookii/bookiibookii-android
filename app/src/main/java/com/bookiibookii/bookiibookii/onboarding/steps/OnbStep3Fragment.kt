@@ -10,9 +10,6 @@ class OnbStep3Fragment : Fragment(R.layout.fragment_onb_step3) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 최초 진입 시 완료 버튼 비활성
-        (activity as? OnbStepHost)?.setNextEnabled(false)
-
         // TODO
         // Step3 선택 로직 구현
         // 선택 완료 시 아래 호출
