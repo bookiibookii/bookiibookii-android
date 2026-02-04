@@ -102,6 +102,9 @@ class TrkHostMainFragment : Fragment() {
             for (i in currentList.indices) {
                 val title = currentList[i].bookTitle
 
+                val myKey = BuildConfig.ALADIN_TTB_KEY
+                android.util.Log.d("BOOK_API", "전송되는 키값: [$myKey]")
+
                 try {
                     val response = withContext(Dispatchers.IO) {
                         RetrofitClient.api.searchBooks(
