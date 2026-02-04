@@ -20,6 +20,7 @@ class GroupFragment : Fragment() {
     private var _binding: FragmentGrpBinding? = null
     private val binding get() = _binding!!
 
+    private var isLoading = false
     private var isFabOpen = false
 
     // 필터 상태 관리 변수 (기본값: 전체)
@@ -60,6 +61,12 @@ class GroupFragment : Fragment() {
     }
 
     private fun loadGroupData() {
+
+        if (isLoading) return
+
+        // [2] 로딩 시작! 깃발 들기
+        isLoading = true
+
         val allData = getDummyData()
 
         // 1. 그룹 유형 필터링
@@ -87,14 +94,22 @@ class GroupFragment : Fragment() {
             }
         }
 
-        // 3. 결과 반영 (로딩 딜레이 시뮬레이션)
-        // 여기서 NPE 에러 발생하는 거 같음. 일단 수정은 안함
         Handler(Looper.getMainLooper()).postDelayed({
+            // ★ 0.5초 뒤에 눈을 떴는데 화면이 죽어있다면?
+            if (_binding == null) {
+                isLoading = false
+                return@postDelayed
+            }
+            // 어댑터 연결 및 UI 업데이트
             val groupAdapter = GroupAdapter(ArrayList(filteredData)) { groupData ->
                 moveToDetail(groupData)
             }
             binding.groupRecyclerview.adapter = groupAdapter
+            // 새로고침 아이콘 끄기
             binding.grpSwipeRefreshLayout.isRefreshing = false
+            // [4] 작업 끝! 로딩 상태 해제 (이제 다시 클릭 가능)
+            isLoading = false
+
         }, 500)
     }
 
