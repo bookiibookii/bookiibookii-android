@@ -1,9 +1,10 @@
 package com.bookiibookii.bookiibookii.onboarding.login
 import android.app.Application
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
+import com.bookiibookii.bookiibookii.BuildConfig
 import com.kakao.sdk.common.KakaoSdk
 import com.kakao.sdk.common.util.Utility
-import com.bookiibookii.bookiibookii.BuildConfig
 
 class MyApplication : Application() {
 
@@ -14,5 +15,8 @@ class MyApplication : Application() {
         val keyHash = Utility.getKeyHash(this)
         Log.e("KAKAO_KEYHASH", keyHash)
 
+        AppCompatDelegate.setDefaultNightMode(
+            AppCompatDelegate.MODE_NIGHT_NO
+        )
     }
 }
