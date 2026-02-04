@@ -9,17 +9,17 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.bookData.Data.MypLateBook
 import com.bookiibookii.bookiibookii.bookData.Data.MypReview
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypBinding
 import com.bookiibookii.bookiibookii.databinding.LayoutMypProfileCardBinding
 import com.bookiibookii.bookiibookii.myPage.main.MypGroupAdapter
 import com.bookiibookii.bookiibookii.myPage.main.MypLateBookAdapter
 import com.bookiibookii.bookiibookii.myPage.main.MypReviewAdapter
 import com.bookiibookii.bookiibookii.myPage.set.MypSetFragment
+import com.bumptech.glide.Glide
 import kotlinx.coroutines.launch
 
 class MypageFragment : Fragment() {
@@ -68,7 +68,7 @@ class MypageFragment : Fragment() {
                 // val response = RetrofitClient.apiService.getMypage()
 
                 // [수정 후] ★★★ requireContext()를 넣어서 토큰 기능 활성화! ★★★
-                val response = RetrofitClient.getInstance(requireContext()).getMypage()
+                val response = RetrofitClient.api().getMypage()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result

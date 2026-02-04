@@ -29,7 +29,7 @@ android {
         buildConfigField(
             "String",
             "ALADIN_TTB_KEY",
-            "\"${project.findProperty("ALADIN_TTB_KEY") ?: ""}\""
+            "\"${properties["ALADIN_TTB_KEY"] ?: ""}\""
         )
 
         buildConfigField("String", "KAKAO_APP_KEY", "\"${properties["kakao_native_app_key"]}\"")
