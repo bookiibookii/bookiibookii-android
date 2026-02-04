@@ -127,6 +127,7 @@ class MypSetFragment : Fragment() {
 
                     // (선택) 만약 서버 에러가 나더라도 앱에서는 강제로 내보내고 싶다면
                     // 여기서 handleLogoutSuccess()를 호출해버려도 됩니다.
+                    handleLogoutSuccess()
                 }
             } catch (e: Exception) {
                 Log.e("Logout", "네트워크 오류", e)
