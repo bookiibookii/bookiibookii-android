@@ -83,6 +83,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@color/ui_bg"
+            android:layout_marginTop="16dp"
             app:layout_constraintTop_toBottomOf="@id/myp_top_layout"
             app:layout_constraintStart_toStartOf="@id/guideline_start"
             app:layout_constraintEnd_toEndOf="@id/guideline_end">

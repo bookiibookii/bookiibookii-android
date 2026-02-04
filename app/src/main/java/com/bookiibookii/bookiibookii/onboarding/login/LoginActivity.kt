@@ -147,6 +147,7 @@ class LoginActivity : AppCompatActivity() {
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
+                    Log.d("Login", "로그인 메시지 : $response")
                     if (result != null) {
                         Log.d("Login", "$socialType 로그인 성공! UserID: ${result.userId}")
 
