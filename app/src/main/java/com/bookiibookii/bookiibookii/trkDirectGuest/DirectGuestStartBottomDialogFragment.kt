@@ -5,33 +5,28 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestAppointmentStatusBottomDialogBinding
+import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestStartBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class DirectGuestAppointmentStatusBottomDialogFragment : BottomSheetDialogFragment() {
-
-    private var _binding: FragmentDirectGuestAppointmentStatusBottomDialogBinding? = null
+class DirectGuestStartBottomDialogFragment : BottomSheetDialogFragment() {
+    private var _binding: FragmentDirectGuestStartBottomDialogBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentDirectGuestAppointmentStatusBottomDialogBinding.inflate(
-            inflater,
-            container,
-            false
-        )
+        _binding = FragmentDirectGuestStartBottomDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnGoChat.setOnClickListener{
-            val next = DirectGuestReceiveBottomDialogFragment()
+        binding.btnStart.setOnClickListener{
+            val next = DirectGuestReadingBottomDialogFragment()
             dismiss()
-            next.show(parentFragmentManager, DirectGuestReceiveBottomDialogFragment.TAG)
+            next.show(parentFragmentManager, DirectGuestReadingBottomDialogFragment.TAG)
         }
     }
 
@@ -40,13 +35,11 @@ class DirectGuestAppointmentStatusBottomDialogFragment : BottomSheetDialogFragme
         _binding = null
     }
 
-    companion object {
-        const val TAG = "DirectGusetAppointmentStatusFragment"
+    companion object{
+        const val TAG = "DirectGuestStartBottomSheetFragment"
     }
 
     override fun getTheme(): Int {
         return R.style.Theme_Bookii_BottomSheet_NoDim
     }
 }
-
-

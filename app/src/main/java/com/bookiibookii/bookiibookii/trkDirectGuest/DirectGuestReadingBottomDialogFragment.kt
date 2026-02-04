@@ -5,34 +5,34 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestReceiveBottomDialogBinding
+import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestReadingBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class DirectGuestReceiveBottomDialogFragment : BottomSheetDialogFragment() {
+class DirectGuestReadingBottomDialogFragment : BottomSheetDialogFragment() {
 
-    private var _binding: FragmentDirectGuestReceiveBottomDialogBinding? = null
+    private var _binding: FragmentDirectGuestReadingBottomDialogBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentDirectGuestReceiveBottomDialogBinding.inflate(inflater, container, false)
+        _binding = FragmentDirectGuestReadingBottomDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnNoReceive.setOnClickListener{
-            val dialog = DirectGuestReceiveIssueDialogFragment()
-            dialog.show(parentFragmentManager, DirectGuestReceiveIssueDialogFragment.TAG)
+        binding.btnExtendPeriod.setOnClickListener{
+            val dialog = DirectGuestExtendPeriodDialogFragment()
+            dialog.show(parentFragmentManager, DirectGuestExtendPeriodDialogFragment.TAG)
         }
 
-        binding.btnReceive.setOnClickListener{
-            val next = DirectGuestStartBottomDialogFragment()
+        binding.btnFinish.setOnClickListener{
+            val next = DirectGuestAppointmentBottomDialogFragment()
             dismiss()
-            next.show(parentFragmentManager, DirectGuestStartBottomDialogFragment.TAG)
+            next.show(parentFragmentManager, DirectGuestAppointmentBottomDialogFragment.TAG)
         }
     }
 
@@ -41,13 +41,11 @@ class DirectGuestReceiveBottomDialogFragment : BottomSheetDialogFragment() {
         _binding = null
     }
 
-    companion object {
-        const val TAG = "DirectGuestReceiveFragment"
+    companion object{
+        const val TAG = "DirectGuestReadingBottomSheetDialogFragment"
     }
 
     override fun getTheme(): Int {
         return R.style.Theme_Bookii_BottomSheet_NoDim
     }
 }
-
-

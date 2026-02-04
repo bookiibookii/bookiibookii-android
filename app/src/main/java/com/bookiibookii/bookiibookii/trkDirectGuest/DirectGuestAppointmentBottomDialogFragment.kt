@@ -5,33 +5,28 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestAppointmentStatusBottomDialogBinding
+import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestAppointmentBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class DirectGuestAppointmentStatusBottomDialogFragment : BottomSheetDialogFragment() {
+class DirectGuestAppointmentBottomDialogFragment : BottomSheetDialogFragment() {
 
-    private var _binding: FragmentDirectGuestAppointmentStatusBottomDialogBinding? = null
+    private var _binding: FragmentDirectGuestAppointmentBottomDialogBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentDirectGuestAppointmentStatusBottomDialogBinding.inflate(
-            inflater,
-            container,
-            false
-        )
+        _binding = FragmentDirectGuestAppointmentBottomDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnGoChat.setOnClickListener{
-            val next = DirectGuestReceiveBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, DirectGuestReceiveBottomDialogFragment.TAG)
+        binding.btnRegisterMeet.setOnClickListener{
+            val dialog = DirectGuestSetAppointmentDialogFragment()
+            dialog.show(parentFragmentManager, DirectGuestSetAppointmentDialogFragment.TAG)
         }
     }
 
@@ -41,12 +36,11 @@ class DirectGuestAppointmentStatusBottomDialogFragment : BottomSheetDialogFragme
     }
 
     companion object {
-        const val TAG = "DirectGusetAppointmentStatusFragment"
+        const val TAG = "DirectGuestAppointmentFragment"
     }
 
     override fun getTheme(): Int {
         return R.style.Theme_Bookii_BottomSheet_NoDim
     }
+
 }
-
-
