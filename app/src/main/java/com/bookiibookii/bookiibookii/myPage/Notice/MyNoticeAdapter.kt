@@ -1,35 +1,46 @@
 package com.bookiibookii.bookiibookii.myPage.Notice
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bookiibookii.bookiibookii.bookData.Data.MypNotice
-import com.bookiibookii.bookiibookii.databinding.ItemMypNoticeBinding
+import com.bookiibookii.bookiibookii.data.model.NoticeSummary
+import com.bookiibookii.bookiibookii.databinding.ItemMypNoticeBinding // 제공해주신 XML 바인딩
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class MypNoticeAdapter(
-    private val onClick: (MypNotice) -> Unit
+    private var items: List<NoticeSummary>,
+    private val onItemClick: (Int) -> Unit // 클릭 시 ID 전달
 ) : RecyclerView.Adapter<MypNoticeAdapter.ViewHolder>() {
 
-    private var items: List<MypNotice> = emptyList()
-
-    fun submitList(list: List<MypNotice>) {
-        items = list
+    fun submitList(newItems: List<NoticeSummary>) {
+        items = newItems
         notifyDataSetChanged()
     }
 
     inner class ViewHolder(val binding: ItemMypNoticeBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: MypNotice) {
+        fun bind(item: NoticeSummary) {
             binding.itemNoticeTitleTv.text = item.title
-            binding.itemNoticeContent.text = item.content
-            binding.itemNoticeDateTv.text = item.date
+            binding.itemNoticeContent.text = item.summary // XML ID: item_notice_content
 
-            // 'N' 배지 표시 여부
-            binding.itemNoticeNoticeV.visibility = if (item.isNew) View.VISIBLE else View.INVISIBLE
+            // 날짜 포맷팅 (2026-02-03T... -> 2026.02.03)
+            binding.itemNoticeDateTv.text = formatDate(item.createdAt)
 
-            // 클릭 리스너 연결
-            binding.root.setOnClickListener { onClick(item) }
-            binding.itemNoticeArrowIv.setOnClickListener { onClick(item) }
+            // 아이템 클릭 시 상세 화면으로 이동
+            binding.root.setOnClickListener {
+                onItemClick(item.id)
+            }
+        }
+
+        private fun formatDate(dateString: String): String {
+            return try {
+                val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                val formatter = SimpleDateFormat("yyyy. MM. dd", Locale.getDefault())
+                val date = parser.parse(dateString)
+                formatter.format(date ?: return dateString)
+            } catch (e: Exception) {
+                dateString // 변환 실패 시 원본 그대로
+            }
         }
     }
 
@@ -42,5 +53,5 @@ class MypNoticeAdapter(
         holder.bind(items[position])
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount() = items.size
 }

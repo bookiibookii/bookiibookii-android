@@ -22,5 +22,21 @@ class DirectGuestActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        binding.btnBack.setOnClickListener { finish() }
+
+        binding.cardWidget.setOnClickListener{
+            DirectGuestReadingStatusBottomDialogFragment()
+                .show(
+                    supportFragmentManager,
+                    DirectGuestReadingStatusBottomDialogFragment.TAG
+                )
+        }
+
+        // 일단 액티비티 실행되면 바로 나오도록
+        if (savedInstanceState == null) {
+            val bottomSheet = DirectGuestReadingStatusBottomDialogFragment()
+            bottomSheet.show(supportFragmentManager, DirectGuestReadingStatusBottomDialogFragment.TAG)
+        }
     }
 }

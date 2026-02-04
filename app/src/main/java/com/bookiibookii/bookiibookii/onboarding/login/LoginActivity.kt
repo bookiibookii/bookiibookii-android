@@ -17,8 +17,9 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.RetrofitClient
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.LoginRequest
+import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -52,10 +53,7 @@ class LoginActivity : AppCompatActivity() {
         setupLoginButtons()
         Log.e("APP_CHECK", "MyApplication onCreate called")
 
-
         Log.e("KeyHash_Check", "내 앱의 현재 키 해시: $keyHash")
-
-//        setupLoginButtons()
 
         findViewById<View>(R.id.btn_kakao_login).setOnClickListener {
             loginToKakao()
@@ -65,10 +63,13 @@ class LoginActivity : AppCompatActivity() {
 
     private fun setupLoginButtons() {
         val kakaoButton = findViewById<View>(R.id.btn_kakao_login)
+
+        // [수정] 람다 안에서 함수 호출
         setupButtonUI(kakaoButton, "카카오로 시작하기", R.drawable.ic_kakao, R.color.kakao, R.color.grey_900) {
-            //Toast.makeText(this, "카카오 로그인은 아직 구현되지 않았습니다.", Toast.LENGTH_SHORT).show()
+            loginToKakao()
         }
 
+        // 구글 버튼은 기존 그대로 둠
         val googleButton = findViewById<View>(R.id.btn_google_login)
         setupButtonUI(googleButton, "구글로 시작하기", R.drawable.ic_google, R.color.grey_100, R.color.grey_900) {
             showLoadingState(true)
@@ -119,8 +120,10 @@ class LoginActivity : AppCompatActivity() {
 
                 Log.d("Login", "Google ID Token 획득 성공: $idToken")
 
-                // 백엔드로 전송
-                sendTokenToBackend(idToken)
+                //백엔드로 정보 전달
+                // [수정 전] sendTokenToBackend(idToken)
+                // [수정 후] "GOOGLE" 이라고 명찰을 달아서 보냄
+                sendTokenToBackend("GOOGLE", idToken)
             } catch (e: Exception) {
                 Log.e("Login", "인증 정보 파싱 실패", e)
                 showLoadingState(false)
@@ -131,31 +134,30 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendTokenToBackend(idToken: String) {
+    // [수정] socialType 파라미터 추가
+    private fun sendTokenToBackend(socialType: String, token: String) {
 
-        // ▼▼▼▼▼ 로그 출력 코드 추가 ▼▼▼▼▼
         Log.e("CheckToken", "=========================================")
-        Log.e("CheckToken", "[내가 보내는 SocialType]: GOOGLE")
-        Log.e("CheckToken", "[내가 보내는 Token 값]: $idToken")
-        Log.e("CheckToken", "[Token 길이]: ${idToken.length}") // 길이가 0이면 뭔가 잘못된 것
+        Log.e("CheckToken", "[보내는 타입]: $socialType") // 여기가 GOOGLE 또는 KAKAO로 찍힘
+        Log.e("CheckToken", "[보내는 토큰]: $token")
         Log.e("CheckToken", "=========================================")
-        // ▲▲▲▲▲ 로그 출력 코드 끝 ▲▲▲▲▲
 
         lifecycleScope.launch {
             try {
-                val request = LoginRequest(socialType = "GOOGLE", token = idToken)
-                val response = RetrofitClient.apiService.postLogin(request)
+                // "GOOGLE" 대신 받아온 socialType 변수를 넣습니다.
+                val request = LoginRequest(socialType = socialType, token = token)
+                val response = RetrofitClient.getInstance(this@LoginActivity).postLogin(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
                     if (result != null) {
+                        Log.d("Login", "$socialType 로그인 성공! UserID: ${result.userId}")
                         Log.d("구글", "백엔드 로그인 성공! UserID: ${result.userId}")
 
-                        // 토큰 저장
                         saveTokens(result.accessToken, result.refreshToken, result.userId)
 
-                        // 화면 이동
-                        onLoginSuccess()
+                       onLoginSuccess()
+
                     } else {
                         showLoadingState(false)
                     }
@@ -222,36 +224,42 @@ class LoginActivity : AppCompatActivity() {
     // 여기부터 ~~~~~
 
     private fun loginToKakao() {
-        // 로그인 결과 콜백 (성공 시 처리)
+        showLoadingState(true) // 로딩 시작
+
+        // 공통 콜백 함수
         val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
             if (error != null) {
-                Log.e("KakaoLogin", "로그인 실패", error)
+                Log.e("KakaoLogin", "카카오 로그인 실패", error)
+                showLoadingState(false)
             } else if (token != null) {
-                Log.i("KakaoLogin", "로그인 성공")
-                moveToMain()
+                Log.i("KakaoLogin", "카카오 로그인 성공 -> 서버 전송")
+
+                // ★★★ 여기가 핵심! 카카오 토큰을 서버로 보냄 ★★★
+                sendTokenToBackend("KAKAO", token.accessToken)
             }
         }
 
-        // 카카오톡 설치 여부 확인 후 로그인 시도
+        // 카카오톡 앱이 있으면 앱으로, 없으면 웹으로 로그인
         if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
             UserApiClient.instance.loginWithKakaoTalk(this) { token, error ->
                 if (error != null) {
-                    Log.e("KakaoLogin", "카카오톡 로그인 실패", error)
+                    Log.e("KakaoLogin", "카카오톡 앱 로그인 실패", error)
 
-                    // 사용자가 뒤로가기 등으로 취소한 경우
+                    // 사용자가 취소했을 때
                     if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
+                        showLoadingState(false)
                         return@loginWithKakaoTalk
                     }
-
-                    // 카카오톡 연결 실패 시, 웹(계정)으로 로그인 시도
+                    // 실패하면 웹으로 재시도
                     UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
                 } else if (token != null) {
-                    Log.i("KakaoLogin", "카카오톡 로그인 성공")
-                    moveToMain()
+                    Log.i("KakaoLogin", "카카오톡 앱 로그인 성공")
+
+                    // ★★★ 앱 로그인 성공 시 서버 전송 ★★★
+                    sendTokenToBackend("KAKAO", token.accessToken)
                 }
             }
         } else {
-            // 카카오톡이 없으면 웹으로 로그인
             UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
         }
     }

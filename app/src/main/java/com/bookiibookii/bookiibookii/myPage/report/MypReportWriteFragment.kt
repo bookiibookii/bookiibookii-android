@@ -1,108 +1,86 @@
 package com.bookiibookii.bookiibookii.myPage.report
 
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.PopupWindow
-import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.Data.MypReport
-import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
-import com.bookiibookii.bookiibookii.databinding.FragmentMypReportWriteBinding
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.ReportRequest
+import com.bookiibookii.bookiibookii.databinding.FragmentMypReportWriteBinding // XML 이름 확인 필요
+import kotlinx.coroutines.launch
 
 class MypReportWriteFragment : Fragment() {
-    private var _binding: FragmentMypReportWriteBinding? = null
+    private var _binding: FragmentMypReportWriteBinding? = null // 제공된 XML 파일 이름에 맞게 수정
     private val binding get() = _binding!!
-    private val viewModel: MyPageViewModel by activityViewModels()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        // XML 이름이 fragment_myp_report_write.xml 이라면 -> FragmentMypReportWriteBinding
+        // 제공해주신 XML 파일 내용을 바탕으로 추론했습니다.
         _binding = FragmentMypReportWriteBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         binding.mypReportBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
-        // 1. 그룹 선택 (+ 버튼 클릭 시 팝업)
-        binding.mypReportGroupPlusIv.setOnClickListener {
-            showGroupPopup(it)
-        }
-
-        // 2. 멤버 선택 (+ 버튼 클릭 시 팝업)
-        binding.mypReportMemberPlusIv.setOnClickListener {
-            showMemberPopup(it)
-        }
-
-        // 3. 신고 전송 버튼
         binding.mypWriteBtn.setOnClickListener {
-            val group = binding.mypReportGroupEt.text.toString()
-            val member = binding.mypReportMemberEt.text.toString()
-            val content = binding.mypReportContentEt.text.toString()
+            val groupName = binding.mypReportGroupEt.text.toString().trim()
+            val memberName = binding.mypReportMemberEt.text.toString().trim()
+            val content = binding.mypReportContentEt.text.toString().trim()
 
-            val typeId = binding.mypReportTypeRg.checkedRadioButtonId
-            val typeText = if(typeId != -1) "신고 유형 선택됨" else ""
+            // 라디오 버튼 선택 확인 및 타입 변환
+            val reportType = getSelectedReportType()
 
-            if (group.isNotEmpty() && member.isNotEmpty() && content.isNotEmpty() && typeText.isNotEmpty()) {
-                val today = SimpleDateFormat("yyyy.MM.dd.", Locale.getDefault()).format(Date())
+            if (groupName.isEmpty() || memberName.isEmpty() || content.isEmpty()) {
+                Toast.makeText(context, "모든 내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-                viewModel.addReport(
-                    MypReport(
-                        id = System.currentTimeMillis(),
-                        targetName = member,
-                        title = "$group ($typeText)",
-                        content = content,
-                        date = today,
-                        state = "답변 대기 중"
-                    )
-                )
-                Toast.makeText(context, "신고가 접수되었습니다.", Toast.LENGTH_SHORT).show()
-                parentFragmentManager.popBackStack()
-            } else {
-                Toast.makeText(context, "모든 항목을 입력해주세요.", Toast.LENGTH_SHORT).show()
+            if (reportType == null) {
+                Toast.makeText(context, "신고 유형을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            sendReport(groupName, memberName, reportType, content)
+        }
+    }
+
+    private fun getSelectedReportType(): String? {
+        return when (binding.mypReportTypeRg.checkedRadioButtonId) {
+            binding.mypReportType1Rb.id -> "ABUSE"  // 욕설/비방
+            binding.mypReportType2Rb.id -> "SPAM"   // 스팸/광고
+            binding.mypReportType3Rb.id -> "NOSHOW" // 미발송/노쇼
+            binding.mypReportType4Rb.id -> "DAMAGE" // 파손/낙서
+            binding.mypReportType5Rb.id -> "OTHER"  // 기타(텍스트)
+            else -> null
+        }
+    }
+
+    private fun sendReport(group: String, member: String, type: String, content: String) {
+        lifecycleScope.launch {
+            try {
+                val request = ReportRequest(group, member, type, content)
+                val response = RetrofitClient.getInstance(requireContext()).postReport(request)
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    Toast.makeText(context, "신고가 접수되었습니다.", Toast.LENGTH_SHORT).show()
+                    parentFragmentManager.popBackStack()
+                } else {
+                    Log.e("ReportWrite", "전송 실패: ${response.code()}")
+                    Toast.makeText(context, "신고 전송에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("ReportWrite", "네트워크 오류", e)
+                Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    private fun showGroupPopup(anchorView: View) {
-        val popupView = layoutInflater.inflate(R.layout.fragment_myp_report_group, null)
-
-        val density = resources.displayMetrics.density
-        val width = (340 * density).toInt()
-        val height = (178 * density).toInt()
-
-        val popupWindow = PopupWindow(popupView, width, height, true)
-        popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popupWindow.isOutsideTouchable = true
-
-
-        popupWindow.showAsDropDown(binding.mypReportGroupEt, 0, 10)
-    }
-
-    // 멤버 선택 팝업
-    private fun showMemberPopup(anchorView: View) {
-        val popupView = layoutInflater.inflate(R.layout.fragment_myp_report_member, null)
-
-        val density = resources.displayMetrics.density
-        val width = (340 * density).toInt()
-        val height = (178 * density).toInt()
-
-        val popupWindow = PopupWindow(popupView, width, height, true)
-        popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popupWindow.isOutsideTouchable = true
-
-        // EditText 바로 아래에 표시
-        popupWindow.showAsDropDown(binding.mypReportMemberEt, 0, 10)
     }
 
     override fun onResume() {
