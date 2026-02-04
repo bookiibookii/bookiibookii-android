@@ -95,6 +95,11 @@ class OnbViewModel : ViewModel() {
         updateState(cur.copy(readingPace = pace))
     }
 
+    fun clearReadingPace() {
+        val cur = currentState()
+        updateState(cur.copy(readingPace = null))
+    }
+
     // 버튼 활성화 조건들 (Activity에서 사용)
     fun canGoStep2Next(): Boolean = currentState().readingPreferences.isNotEmpty()
     fun canGoStep3Next(): Boolean = currentState().recordMethods.isNotEmpty() || step2Unknown

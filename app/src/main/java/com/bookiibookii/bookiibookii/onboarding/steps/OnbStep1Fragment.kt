@@ -15,15 +15,17 @@ import com.bookiibookii.bookiibookii.onboarding.steps.data.ReadingPreference
 
 class OnbStep1Fragment : Fragment(R.layout.fragment_onb_step1) {
 
+    // 온보딩 전체 상태를 공유하는 ViewModel
     private val vm: OnbViewModel by activityViewModels()
 
+    // Chip들을 담는 부모 레이아웃
     private lateinit var chipArea: ConstraintLayout
     private lateinit var flow: Flow
 
-    // ReadingPreference -> Chip View
+    // ReadingPreference ↔ Chip View 매핑 (선택 상태 반영용)
     private val chipViewMap = linkedMapOf<ReadingPreference, TextView>()
 
-    // 표시 순서 고정
+    // 칩 표시 순서를 고정하기 위한 리스트
     private val chipItems = listOf(
         ReadingPreference.ECONOMY,
         ReadingPreference.SCIENCE_IT,
@@ -40,14 +42,17 @@ class OnbStep1Fragment : Fragment(R.layout.fragment_onb_step1) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 질문 카드(타이틀/설명) 텍스트 바인딩
         bindQuestionCard(view)
 
+        // Chip 영역 및 Flow 초기화
         chipArea = view.findViewById(R.id.chipArea)
         flow = view.findViewById(R.id.flowChips)
 
+        // ReadingPreference 기반으로 Chip 동적 생성
         buildChips()
 
-        // 상태 관찰 → 선택 UI + 다음 버튼 활성화 갱신
+        // 상태 변화 감지 → 선택된 취향에 따라 Chip UI 갱신
         vm.state.observe(viewLifecycleOwner) { state ->
             chipViewMap.forEach { (pref, chipView) ->
                 chipView.isSelected = state.readingPreferences.contains(pref)
@@ -55,16 +60,18 @@ class OnbStep1Fragment : Fragment(R.layout.fragment_onb_step1) {
         }
     }
 
+    // Step1 질문 카드 문구 설정
     private fun bindQuestionCard(root: View) {
         val card = root.findViewById<View>(R.id.includeQuestionCard)
 
         val tvTitle = card.findViewById<TextView>(R.id.tvQuestionTitle)
         val tvDesc = card.findViewById<TextView>(R.id.tvQuestionDesc)
 
-        tvTitle.text = "어떤 책을 펼칠 때\n가장 설레나요?"
-        tvDesc.text = "좋아하는 분야를 3가지까지 골라주세요."
+        tvTitle.setText(R.string.onb_step1_title)
+        tvDesc.setText(R.string.onb_step1_desc)
     }
 
+    // Chip 목록 생성 및 Flow에 연결
     private fun buildChips() {
         val chipIds = ArrayList<Int>()
 
@@ -76,9 +83,11 @@ class OnbStep1Fragment : Fragment(R.layout.fragment_onb_step1) {
             chipIds.add(chip.id)
         }
 
+        // Flow가 관리할 Chip id 목록 설정
         flow.referencedIds = chipIds.toIntArray()
     }
 
+    // 개별 ReadingPreference에 대응하는 Chip 생성
     @SuppressLint("UseCompatLoadingForDrawables")
     private fun createChip(pref: ReadingPreference): TextView {
         return TextView(requireContext()).apply {
@@ -86,6 +95,7 @@ class OnbStep1Fragment : Fragment(R.layout.fragment_onb_step1) {
             text = pref.displayName
             tag = pref
 
+            // 높이를 고정해 Chip 형태 유지
             layoutParams = LayoutParams(
                 LayoutParams.WRAP_CONTENT,
                 dp(44)
@@ -95,18 +105,21 @@ class OnbStep1Fragment : Fragment(R.layout.fragment_onb_step1) {
             setPadding(dp(22), 0, dp(22), 0)
 
             textSize = 14f
-            setTextColor(requireContext().getColorStateList(R.color.selector_onb_step1_chip))
+            setTextColor(requireContext().getColorStateList(R.color.selector_onb_step_text))
             background = requireContext().getDrawable(R.drawable.bg_onb_chip_selector)
 
+            // 선택 가능한 UI 요소로 동작하도록 설정
             isClickable = true
             isFocusable = true
 
+            // 클릭 시 ViewModel에 선택/해제 요청
             setOnClickListener {
                 vm.togglePreference(tag as ReadingPreference)
             }
         }
     }
 
+    // dp → px 변환 유틸
     private fun dp(value: Int): Int {
         return (value * resources.displayMetrics.density).toInt()
     }
