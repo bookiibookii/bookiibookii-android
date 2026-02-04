@@ -37,7 +37,7 @@ class MypNoticeFragment : Fragment() {
     private fun fetchNoticeList() {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.getInstance(requireContext()).getNoticeList()
+                val response = RetrofitClient.api().getNoticeList()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val noticeList = response.body()!!.result
 

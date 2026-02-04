@@ -49,7 +49,7 @@ class MypQuestionFragment : Fragment() {
     private fun fetchInquiryList() {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.getInstance(requireContext()).getInquiryList()
+                val response = RetrofitClient.api().getInquiryList()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = response.body()!!.result

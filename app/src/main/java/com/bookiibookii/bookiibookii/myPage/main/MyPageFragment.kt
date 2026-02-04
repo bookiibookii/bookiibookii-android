@@ -14,10 +14,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.MypMyReviewFragment
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.bookData.Data.MypLateBook
 import com.bookiibookii.bookiibookii.bookData.Data.MypReview
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypBinding
 import com.bookiibookii.bookiibookii.databinding.LayoutMypProfileCardBinding
 import com.bookiibookii.bookiibookii.myPage.main.MypGroupAdapter
@@ -103,7 +103,6 @@ class MypageFragment : Fragment() {
         binding.rvBooks.isNestedScrollingEnabled = false // 스크롤 중첩 방지
     }
 
-    // 4. 데이터 UI 반영 (바인딩 사용)
     private fun updateUI(data: com.bookiibookii.bookiibookii.data.model.MypageResult) {
         // 프로필 카드 업데이트
         with(profileBinding) {
@@ -148,11 +147,16 @@ class MypageFragment : Fragment() {
     private fun fetchMypageData() {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.getInstance(requireContext()).getMypage()
+                val response = RetrofitClient.api().getMypage()
+
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    updateUI(response.body()!!.result)
+                    val result = response.body()!!.result
+                    // 데이터가 null이 아닐 때 UI 업데이트
+                    if (result != null) {
+                        updateUI(result)
+                    }
                 } else {
-                    Log.e("Mypage", "API Error: ${response.code()}")
+                    Log.e("Mypage", "API Error: ${response.code()} - ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 Log.e("Mypage", "Network Error", e)

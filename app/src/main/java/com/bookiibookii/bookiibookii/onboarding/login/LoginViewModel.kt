@@ -21,7 +21,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val request = LoginRequest(socialType = "KAKAO", token = kakaoAccessToken)
 
-                val response = RetrofitClient.getInstance(getApplication()).postLogin(request)
+                val response = RetrofitClient.api().postLogin(request)
 
                 if (response.isSuccessful) {
                     _loginResult.value = response.body()

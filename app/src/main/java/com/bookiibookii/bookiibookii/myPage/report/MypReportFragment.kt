@@ -46,7 +46,7 @@ class MypReportFragment : Fragment() {
     private fun fetchReportList() {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.getInstance(requireContext()).getReportList()
+                val response = RetrofitClient.api().getReportList()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = response.body()!!.result

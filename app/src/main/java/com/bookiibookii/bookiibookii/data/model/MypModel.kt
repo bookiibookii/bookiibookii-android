@@ -98,3 +98,25 @@ data class ReportCreateResponse(
     val message: String,
     val result: String
 )
+
+// 내 그룹 조회 응답
+data class MyGroupResponse(
+    val isSuccess: Boolean,
+    val result: List<GroupSummary>
+)
+
+data class GroupSummary(
+    val groupId: Int,
+    val name: String
+)
+
+// 그룹 멤버 조회 응답
+data class GroupMemberResponse(
+    val isSuccess: Boolean,
+    val result: List<MemberSummary>
+)
+
+data class MemberSummary(
+    val userId: Int,
+    val nickname: String // 멤버 닉네임
+)

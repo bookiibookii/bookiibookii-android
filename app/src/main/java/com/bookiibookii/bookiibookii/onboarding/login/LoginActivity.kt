@@ -19,18 +19,15 @@ import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.LoginRequest
-import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
-import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.material.card.MaterialCardView
-import kotlinx.coroutines.launch
-
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.KakaoSdk.keyHash
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
@@ -146,13 +143,13 @@ class LoginActivity : AppCompatActivity() {
             try {
                 // "GOOGLE" 대신 받아온 socialType 변수를 넣습니다.
                 val request = LoginRequest(socialType = socialType, token = token)
-                val response = RetrofitClient.getInstance(this@LoginActivity).postLogin(request)
+                val response = RetrofitClient.api().postLogin(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
+                    Log.d("Login", "로그인 메시지 : $response")
                     if (result != null) {
                         Log.d("Login", "$socialType 로그인 성공! UserID: ${result.userId}")
-                        Log.d("구글", "백엔드 로그인 성공! UserID: ${result.userId}")
 
                         saveTokens(result.accessToken, result.refreshToken, result.userId)
 

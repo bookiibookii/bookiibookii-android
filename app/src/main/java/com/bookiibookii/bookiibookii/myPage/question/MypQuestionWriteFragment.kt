@@ -50,7 +50,7 @@ class MypQuestionWriteFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val request = InquiryRequest(title, content)
-                val response = RetrofitClient.getInstance(requireContext()).postInquiry(request)
+                val response = RetrofitClient.api().postInquiry(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "문의가 접수되었습니다.", Toast.LENGTH_SHORT).show()

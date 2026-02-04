@@ -51,7 +51,7 @@ class MypNoticeDetailFragment : Fragment() {
     private fun fetchNoticeDetail(id: Int) {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.getInstance(requireContext()).getNoticeDetail(id)
+                val response = RetrofitClient.api().getNoticeDetail(id)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val detail = response.body()!!.result
