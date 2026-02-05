@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardQuestion"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_round_20dp_white"
+    android:paddingStart="18dp"
+    android:paddingEnd="18dp"
+    android:paddingTop="18dp"
+    android:paddingBottom="18dp">
+
+    <TextView
+        android:id="@+id/tvQuestionTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="24sp"
+        android:textColor="@color/grey_900"
+        android:letterSpacing="-0.02"
+        android:lineSpacingExtra="6sp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="질문 타이틀"/>
+
+    <TextView
+        android:id="@+id/tvQuestionDesc"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textSize="14sp"
+        android:textColor="@color/grey_500"
+        android:letterSpacing="-0.02"
+        app:layout_constraintTop_toBottomOf="@id/tvQuestionTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="질문 설명"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
