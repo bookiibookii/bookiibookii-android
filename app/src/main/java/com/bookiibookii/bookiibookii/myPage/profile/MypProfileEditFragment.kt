@@ -47,7 +47,13 @@ class MypProfileEditFragment : Fragment() {
 
         // 중복 확인, 우편번호 검색 (더미 로직)
         binding.mypEditNickCheckEt.setOnClickListener { Toast.makeText(context, "사용 가능한 닉네임입니다.", Toast.LENGTH_SHORT).show() }
-        binding.mypEditPostCheckEt.setOnClickListener { Toast.makeText(context, "우편번호 검색 기능", Toast.LENGTH_SHORT).show() }
+
+        binding.mypEditPostCheckEt.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, MypPostcodeSearchFragment()) // 검색 화면으로 이동
+                .addToBackStack(null)
+                .commit()
+        }
 
         // [중요] 지역 검색 화면 이동
         binding.mypEditChangeInfoSearchEt.setOnClickListener {
@@ -81,6 +87,19 @@ class MypProfileEditFragment : Fragment() {
         setFragmentResultListener("requestKeyRegion") { _, bundle ->
             val selectedRegion = bundle.getString("regionResult")
             binding.mypEditChangeInfoEt.setText(selectedRegion)
+        }
+
+        setFragmentResultListener("requestKeyPostcode") { _, bundle ->
+            val zonecode = bundle.getString("zonecode") // 우편번호
+            val address = bundle.getString("address")   // 기본 주소
+
+            // 받아온 데이터를 EditText에 반영
+            binding.mypEditPostEt.setText(zonecode)
+            binding.mypEditAddressEt.setText(address)
+
+            // 상세주소 입력창을 비우고 포커스 주기 (편의성)
+            binding.mypEditAddressDetailEt.setText("")
+            binding.mypEditAddressDetailEt.requestFocus()
         }
     }
 

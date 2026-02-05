@@ -6,16 +6,37 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.databinding.ActivityDirectGuestBinding
 
 class DirectGuestActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityDirectGuestBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        binding = ActivityDirectGuestBinding.inflate(layoutInflater)
         setContentView(R.layout.activity_direct_guest)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+
+        binding.btnBack.setOnClickListener { finish() }
+
+        binding.cardWidget.setOnClickListener{
+            DirectGuestReadingStatusBottomDialogFragment()
+                .show(
+                    supportFragmentManager,
+                    DirectGuestReadingStatusBottomDialogFragment.TAG
+                )
+        }
+
+        // 일단 액티비티 실행되면 바로 나오도록
+        if (savedInstanceState == null) {
+            val bottomSheet = DirectGuestReadingStatusBottomDialogFragment()
+            bottomSheet.show(supportFragmentManager, DirectGuestReadingStatusBottomDialogFragment.TAG)
         }
     }
 }

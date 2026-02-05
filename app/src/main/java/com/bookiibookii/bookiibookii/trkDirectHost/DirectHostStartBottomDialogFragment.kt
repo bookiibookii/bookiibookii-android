@@ -25,7 +25,6 @@ class DirectHostStartBottomDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnStart.setOnClickListener{
-
             val next = DirectHostReadingBottomDialogFragment()
             dismiss()
             next.show(parentFragmentManager, DirectHostReadingBottomDialogFragment.TAG)

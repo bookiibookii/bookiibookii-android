@@ -34,4 +34,7 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="web_client_id">521863648387-va6lnj141f5vea7r9vqcf6kiivnoi1n4.apps.googleusercontent.com</string>
+    <string name="base_url">https://bookii.gyeonseo.com/</string>
 </resources>

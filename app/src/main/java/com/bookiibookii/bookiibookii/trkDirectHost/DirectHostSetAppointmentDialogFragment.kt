@@ -10,6 +10,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectHostSetAppointmentBinding
+import com.bookiibookii.bookiibookii.trkDirectGuest.DirectGuestAppointmentBottomDialogFragment
 
 class DirectHostSetAppointmentDialogFragment : DialogFragment() {
 
@@ -54,7 +55,7 @@ class DirectHostSetAppointmentDialogFragment : DialogFragment() {
             val date = binding.etDate.text?.toString()?.trim().orEmpty()
             val place = binding.etPlace.text?.toString()?.trim().orEmpty()
 
-            (parentFragmentManager.findFragmentByTag(DirectHostAppointmentBottomDialogFragment.TAG) as? DialogFragment)
+            (parentFragmentManager.findFragmentByTag(DirectGuestAppointmentBottomDialogFragment.TAG) as? DialogFragment)
                 ?.dismissAllowingStateLoss()
 
             dismissAllowingStateLoss()

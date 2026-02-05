@@ -322,9 +322,16 @@
     </style>
 
     <style name="Widget.App.Chip.Filter" parent="Base.App.Chip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="chipStartPadding">20dp</item>
+        <item name="chipEndPadding">20dp</item>
         <item name="android:checkable">true</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
+        <item name="chipStrokeWidth">1dp</item>
         <item name="chipBackgroundColor">@color/selector_chip_background</item>
         <item name="android:textColor">@color/selector_chip_text</item>
         <item name="chipStrokeColor">@color/selector_chip_stroke</item>
@@ -433,15 +440,24 @@
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:checkable">false</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="chipCornerRadius">50dp</item>
+        <item name="android:textColor">#858481</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.Chip</item>
+        <item name="chipBackgroundColor">@color/white</item>
+        <item name="chipStrokeColor">@color/grey_200</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="rippleColor">@color/grey_200</item>
         <item name="closeIconVisible">true</item>
         <item name="closeIcon">@drawable/ic_close</item>
         <item name="closeIconTint">@color/grey_400</item>
         <item name="closeIconSize">16dp</item>
-        <item name="chipBackgroundColor">@color/white</item>
-        <item name="chipStrokeColor">@color/grey_200</item>
-        <item name="chipStrokeWidth">1dp</item>
-        <item name="chipEndPadding">12dp</item>
-        <item name="textEndPadding">4dp</item>
+        <item name="chipStartPadding">12dp</item>
+        <item name="textStartPadding">0dp</item>
+        <item name="textEndPadding">2dp</item>
+        <item name="closeIconStartPadding">4dp</item>
+        <item name="closeIconEndPadding">8dp</item>
+        <item name="chipEndPadding">8dp</item>
     </style>
 
     <style name="Widget.App.Chip.host" parent="Base.App.Chip">
@@ -459,5 +475,68 @@
         <item name="android:clickable">false</item>
         <item name="chipBackgroundColor">@color/pre_main_pale</item>
         <item name="android:textColor">@color/pre_main</item>
+    </style>
+
+    <style name="Widget.App.Chip.GroupGen.Choice" parent="Base.App.Chip">
+        <item name="android:checkable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="chipStartPadding">20dp</item>
+        <item name="chipEndPadding">20dp</item>
+        <item name="android:textColor">@color/selector_chip_tag_set_text</item>
+        <item name="chipBackgroundColor">@color/selector_chip_category_bg</item>
+        <item name="chipStrokeColor">@color/selector_chip_category_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+    </style>
+
+    <style name="Widget.App.Chip.GroupGen.Action" parent="Base.App.Chip">
+        <item name="android:checkable">false</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="chipStartPadding">20dp</item>
+        <item name="chipEndPadding">20dp</item>
+        <item name="android:textColor">@color/grey_500</item>
+        <item name="chipBackgroundColor">@color/grey_100</item>
+        <item name="chipStrokeColor">@color/grey_100</item>
+        <item name="chipStrokeWidth">1dp</item>
+    </style>
+
+    <style name="Widget.App.Chip.Category.Choice" parent="Base.App.Chip">
+        <item name="android:checkable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="chipCornerRadius">30dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/selector_chip_category_text</item>
+        <item name="chipBackgroundColor">@color/selector_chip_category_bg</item>
+        <item name="chipStrokeColor">@color/selector_chip_category_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+    </style>
+
+
+    <style name="CustomDatePickerTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorPrimary">@color/pre_main</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="android:windowBackground">@color/white</item>
+        <item name="shapeAppearanceMediumComponent">@style/DatePickerShape</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DatePickerButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DatePickerButtonStyle</item>
+    </style>
+    <style name="DatePickerButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/grey_900</item>
+    </style>
+    <style name="DatePickerShape" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
     </style>
 </resources>

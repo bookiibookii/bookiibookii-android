@@ -12,5 +12,6 @@ data class GroupData(
     val profileImgUrl: String,    // 프로필 이미지 URL
     val nickname: String,         // 닉네임
     val date: String,             // 등록 날짜
-    val tags: List<String>        // 해시태그 리스트
+    val tags: List<String>,        // 해시태그 리스트
+    val groupType: String
 )
