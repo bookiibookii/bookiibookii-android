@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.trkData.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class HostTrackerListItemDto(
     val groupId: Long,
     val groupType: String,
@@ -23,4 +25,25 @@ data class HostTrackerTogetherDetailDto(
     val participantCount: Int?,
     val myReadingRate: Int?,
     val groupReadingRate: Int?
+)
+
+data class TrackerDetailDto(
+    val trackerId: Long,
+    val trackerStatus: String,
+    val currentMatchedMemberId: Long?,
+
+    val endDate: String?,
+
+    @SerializedName("extension_count")
+    val extensionCount: Int?,
+
+    @SerializedName("extension_days")
+    val extensionDays: Int?
+)
+
+data class ApiResponse<T>(
+    val isSuccess: Boolean,
+    val code: String,
+    val message: String,
+    val result: T?
 )

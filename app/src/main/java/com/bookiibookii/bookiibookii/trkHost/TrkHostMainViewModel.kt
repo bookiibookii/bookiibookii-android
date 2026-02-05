@@ -25,8 +25,11 @@ class TrkHostMainViewModel : ViewModel() {
                 if (!response.isSuccessful) return@launch
 
                 val body = response.body() ?: return@launch
+                if (!body.isSuccess) return@launch
 
-                _trackers.value = body.map { dto ->
+                val list = body.result.orEmpty()
+
+                _trackers.value = list.map { dto ->
                     val stepDates = normalizeStepDates(dto.relayDetail?.stepDates)
                     val currentStep = computeCurrentStep(stepDates)
 
@@ -49,7 +52,9 @@ class TrkHostMainViewModel : ViewModel() {
                         guestProfileImageUrl = guestImg
                     )
                 }
+
             } catch (_: Exception) {
+                // 필요하면 에러 상태 Flow 추가
             }
         }
     }
@@ -71,7 +76,6 @@ class TrkHostMainViewModel : ViewModel() {
     }
 
     private fun mapExchangeType(groupType: String): ExchangeType {
-        // 나중에 groupType 실제 값 맞춰서 수정
         return when (groupType.uppercase()) {
             "DIRECT" -> ExchangeType.DIRECT
             "SHIPPING" -> ExchangeType.SHIPPING
