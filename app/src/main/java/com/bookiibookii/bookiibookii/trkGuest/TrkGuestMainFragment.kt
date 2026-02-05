@@ -98,19 +98,31 @@ class TrkGuestMainFragment : Fragment() {
                 id = 1L,
                 bookTitle = "살인자의 기억법",
                 bookAuthor = "김영하",
+                bookCategory = "소설",
                 withUserName = "noshel",
                 coverImageUrl = null,
-                currentStep = TrackerStep.DELIVERY,
-                exchangeType = ExchangeType.SHIPPING
+                exchangeType = ExchangeType.SHIPPING,
+
+                stepDates = listOf("2024.01.01", null, null),
+                currentStep = TrackerStep.HOST_READING,
+
+                hostProfileImageUrl = null,
+                guestProfileImageUrl = null
             ),
             TrackerData(
                 id = 2L,
                 bookTitle = "아몬드",
                 bookAuthor = "손원평",
+                bookCategory = "청소년 문학",
                 withUserName = null,
                 coverImageUrl = null,
-                currentStep = TrackerStep.READING,
-                exchangeType = ExchangeType.DIRECT
+                exchangeType = ExchangeType.DIRECT,
+
+                stepDates = listOf("2024.02.10", "2024.02.15"),
+                currentStep = TrackerStep.GUEST_READING,
+
+                hostProfileImageUrl = null,
+                guestProfileImageUrl = null
             )
         )
     }

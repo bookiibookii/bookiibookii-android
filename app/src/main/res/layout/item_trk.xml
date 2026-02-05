@@ -45,16 +45,28 @@
 
         <TextView
             android:id="@+id/tv_book_author"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="저자 (책 종류)"
+            android:text="저자"
             android:textColor="@color/grey_600"
             android:textSize="12sp"
             android:fontFamily="@font/pretendard_regular"
-            app:layout_constraintEnd_toEndOf="@id/tv_book_title"
             app:layout_constraintStart_toStartOf="@id/tv_book_title"
             app:layout_constraintTop_toBottomOf="@id/tv_book_title" />
+
+        <TextView
+            android:id="@+id/tv_book_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="4dp"
+            android:text="카테고리"
+            android:textColor="@color/grey_600"
+            android:textSize="12sp"
+            android:fontFamily="@font/pretendard_regular"
+            app:layout_constraintStart_toEndOf="@id/tv_book_author"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_book_author" />
 
         <TextView
             android:id="@+id/tv_with"
@@ -110,7 +122,10 @@
             app:layout_constraintBottom_toBottomOf="@id/view_progress_track_bg"
             app:layout_constraintStart_toStartOf="@id/view_progress_track_bg"
             app:layout_constraintTop_toTopOf="@id/view_progress_track_bg"
-            app:layout_constraintEnd_toEndOf="@id/dot_step3" />
+            app:layout_constraintEnd_toEndOf="@id/view_progress_track_bg"
+            app:layout_constraintWidth_default="percent"
+            app:layout_constraintWidth_percent="0.0"
+            app:layout_constraintHorizontal_bias="0.0" />
 
         <ImageView
             android:id="@+id/dot_step1"
@@ -155,6 +170,17 @@
             app:layout_constraintStart_toEndOf="@id/dot_step3"
             app:layout_constraintTop_toTopOf="@id/view_progress_track_bg" />
 
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_step1_profile"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:visibility="invisible"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toTopOf="@id/tv_label_step1"
+            app:layout_constraintStart_toStartOf="@id/dot_step1"
+            app:layout_constraintEnd_toEndOf="@id/dot_step1"
+            android:layout_marginBottom="6dp" />
+
         <TextView
             android:id="@+id/tv_label_step1"
             android:layout_width="wrap_content"
@@ -180,6 +206,17 @@
             app:layout_constraintTop_toBottomOf="@id/dot_step1"
             app:layout_constraintStart_toStartOf="@id/dot_step1"
             app:layout_constraintEnd_toEndOf="@id/dot_step1" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_step2_profile"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:visibility="invisible"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toTopOf="@id/tv_label_step2"
+            app:layout_constraintStart_toStartOf="@id/dot_step2"
+            app:layout_constraintEnd_toEndOf="@id/dot_step2"
+            android:layout_marginBottom="6dp" />
 
         <TextView
             android:id="@+id/tv_label_step2"
@@ -207,6 +244,17 @@
             app:layout_constraintStart_toStartOf="@id/dot_step2"
             app:layout_constraintEnd_toEndOf="@id/dot_step2" />
 
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_step3_profile"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:visibility="invisible"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toTopOf="@id/tv_label_step3"
+            app:layout_constraintStart_toStartOf="@id/dot_step3"
+            app:layout_constraintEnd_toEndOf="@id/dot_step3"
+            android:layout_marginBottom="6dp" />
+
         <TextView
             android:id="@+id/tv_label_step3"
             android:layout_width="wrap_content"
@@ -232,6 +280,17 @@
             app:layout_constraintTop_toBottomOf="@id/dot_step3"
             app:layout_constraintStart_toStartOf="@id/dot_step3"
             app:layout_constraintEnd_toEndOf="@id/dot_step3" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_step4_profile"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:visibility="visible"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toTopOf="@id/tv_label_step4"
+            app:layout_constraintStart_toStartOf="@id/dot_step4"
+            app:layout_constraintEnd_toEndOf="@id/dot_step4"
+            android:layout_marginBottom="6dp" />
 
         <TextView
             android:id="@+id/tv_label_step4"
@@ -259,7 +318,6 @@
             app:layout_constraintStart_toStartOf="@id/dot_step4"
             app:layout_constraintEnd_toEndOf="@id/dot_step4"
             app:layout_constraintBottom_toBottomOf="parent" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

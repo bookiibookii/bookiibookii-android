@@ -6,13 +6,14 @@ import com.bookiibookii.bookiibookii.data.model.LogoutResponse
 import com.bookiibookii.bookiibookii.data.model.MypageResponse
 import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.data.model.UserUpdateResponse
+import com.bookiibookii.bookiibookii.trkData.api.TrkApi
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 
-interface ApiService {
+interface ApiService: TrkApi {
 
     @POST("api/auth/login")
     suspend fun postLogin(
