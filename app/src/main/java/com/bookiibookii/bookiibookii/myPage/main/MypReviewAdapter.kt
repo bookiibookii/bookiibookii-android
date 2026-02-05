@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.Data.MypReview
+import com.bookiibookii.bookiibookii.bookData.Data.MypReview // 기존 데이터 클래스 유지한다고 가정
 import com.bookiibookii.bookiibookii.databinding.ItemMypReviewTagBinding
 
 class MypReviewAdapter(private val items: List<MypReview>) :
@@ -16,22 +16,23 @@ class MypReviewAdapter(private val items: List<MypReview>) :
 
     inner class ViewHolder(val binding: ItemMypReviewTagBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: MypReview) {
-            // 텍스트 합치기 (예: "친절하고 매너가 좋아요 8")
-            val fullText = "${item.content} ${item.count}"
+            val countStr = item.count.toString()
+            val fullText = "${item.content} $countStr" // 공백 명시적 추가
             val spannable = SpannableString(fullText)
 
-            // 숫자 부분만 색상 변경 (pre_main)
             val color = ContextCompat.getColor(itemView.context, R.color.pre_main)
-            val start = fullText.length - item.count.toString().length
-            val end = fullText.length
 
-            spannable.setSpan(
-                ForegroundColorSpan(color),
-                start,
-                end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
+            // 뒤에서부터 숫자 위치 찾기 (안전한 방식)
+            val start = fullText.lastIndexOf(countStr)
 
+            if (start != -1) {
+                spannable.setSpan(
+                    ForegroundColorSpan(color),
+                    start,
+                    fullText.length,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
             binding.tvReviewTag.text = spannable
         }
     }

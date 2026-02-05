@@ -5,8 +5,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -104,45 +106,67 @@ class MypageFragment : Fragment() {
     }
 
     private fun updateUI(data: com.bookiibookii.bookiibookii.data.model.MypageResult) {
-        // 프로필 카드 업데이트
+        // [Profile Layout Binding]
         with(profileBinding) {
             mypNameTv.text = data.nickname
             mypTempTv.text = "${data.manner}°C"
-            mypReadBookTv.text = data.completeBook.toString()
-            mypAllBookTv.text = data.books.size.toString()
-            mypBookCardTv.text = "0"
 
+            // 이미지 로드
             if (!data.userImage?.s3Key.isNullOrEmpty()) {
                 Glide.with(root.context).load(data.userImage?.s3Key).circleCrop().into(mypProfileIv)
             } else {
                 mypProfileIv.setImageResource(R.drawable.bg_myp_profile)
             }
 
-            // 태그 매핑
-            val tagsLayout = mypTagsLayout
-            val userTags = data.userImage?.user?.userTags ?: emptyList()
+            mypAllBookTv.text = data.completeBook.toString()
+            mypReadBookTv.text = data.relayGroup.toString()
+            mypBookCardTv.text = data.togetherGroup.toString()
 
-            for (i in 0 until tagsLayout.childCount) {
-                val tagView = tagsLayout.getChildAt(i) as? TextView
-                if (i < userTags.size) {
-                    tagView?.text = "#${userTags[i].tag?.code ?: ""}"
-                    tagView?.visibility = View.VISIBLE
-                } else {
-                    tagView?.visibility = View.GONE
+            // 프로필 태그 (topTags -> myp_tags_layout) 동적 추가
+            mypTagsLayout.removeAllViews() // 기존 뷰 제거
+            data.topTags.forEach { tagText ->
+                val textView = TextView(root.context).apply {
+                    text = "#$tagText"
+
+                    textSize = 12f
+                    setTextColor(ContextCompat.getColor(context, R.color.grey_900))
+
+                    // 배경 설정
+                    setBackgroundResource(R.drawable.bg_round_20dp_white)
+
+                    // 패딩
+                    setPadding(dpToPx(20), dpToPx(12), dpToPx(20), dpToPx(12))
+
+                    // 마진
+                    val params = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        marginEnd = dpToPx(12)
+                    }
+                    layoutParams = params
                 }
+                mypTagsLayout.addView(textView)
             }
         }
 
-        // 리스트 업데이트
-        val reviewList = data.topTags.map { MypReview(content = it, count = 0) }
-        binding.mypReviewsRv.adapter = MypReviewAdapter(reviewList)
+        // 4. 획득한 후기 리스트 (userBadges 사용)
+        val badgeList = data.userBadge?.map {
+            // MypReview 객체로 변환 (기존 Adapter 사용을 위해)
+            MypReview(content = it.userBadge, count = it.count)
+        } ?: emptyList()
 
+        binding.mypReviewsRv.adapter = MypReviewAdapter(badgeList)
+
+        // 5. 주최한 그룹 & 최근 읽은 책
         binding.mypGroupsRv.adapter = MypGroupAdapter(data.groups)
-
-        val bookList = data.books.map { MypLateBook(title = it.bookTitle, rating = it.rating.toInt()) }
-        binding.rvBooks.adapter = MypLateBookAdapter(bookList)
+        binding.rvBooks.adapter = MypLateBookAdapter(data.books)
     }
 
+    // dp -> px 변환 유틸 함수 (Fragment 내에 추가하거나 유틸 클래스 사용)
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
+    }
     // 5. API 호출
     private fun fetchMypageData() {
         lifecycleScope.launch {

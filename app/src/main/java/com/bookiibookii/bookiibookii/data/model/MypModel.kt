@@ -120,3 +120,43 @@ data class MemberSummary(
     val userId: Int,
     val nickname: String // 멤버 닉네임
 )
+
+// 닉네임 중복 확인 요청/응답
+data class NicknameCheckRequest(
+    val nickname: String
+)
+
+data class NicknameCheckResponse(
+    val isSuccess: Boolean,
+    val code: String,
+    val message: String
+    // result
+)
+
+// Presigned URL 요청/응답
+data class PresignedUrlResponse(
+    val isSuccess: Boolean,
+    val result: PresignedUrlResult
+)
+
+data class PresignedUrlResult(
+    val s3Key: String,
+    val presignedPutUrl: String
+)
+
+// 프로필 수정 요청
+data class UserUpdateRequest(
+    val nickname: String,
+    val receiverName: String,
+    val phone: String,
+    val zipCode: String,
+    val address: String,
+    val addressDetail: String,
+    val meetPlace: String,
+    val userImage: String?
+)
+
+data class UserUpdateResponse(
+    val isSuccess: Boolean,
+    val message: String
+)
