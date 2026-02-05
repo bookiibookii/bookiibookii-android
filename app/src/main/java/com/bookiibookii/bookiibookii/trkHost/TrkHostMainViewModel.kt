@@ -54,10 +54,43 @@ class TrkHostMainViewModel : ViewModel() {
                 }
 
             } catch (_: Exception) {
-                // 필요하면 에러 상태 Flow 추가
+
             }
         }
     }
+
+    // 더미데이터
+    fun loadHostTrackersDummy() {
+        _trackers.value = listOf(
+            TrackerData(
+                id = 1L,
+                bookTitle = "살인자의 기억법",
+                bookAuthor = "김영하",
+                bookCategory = "소설",
+                withUserName = "noshel",
+                coverImageUrl = null,
+                exchangeType = ExchangeType.SHIPPING,
+                stepDates = listOf("2024.01.01", null, null, null),
+                currentStep = TrackerStep.HOST_READING,
+                hostProfileImageUrl = null,
+                guestProfileImageUrl = null
+            ),
+            TrackerData(
+                id = 2L,
+                bookTitle = "아몬드",
+                bookAuthor = "손원평",
+                bookCategory = "청소년 문학",
+                withUserName = "guest1",
+                coverImageUrl = null,
+                exchangeType = ExchangeType.SHIPPING,
+                stepDates = listOf("2024.01.01", "2024.01.05", null, null),
+                currentStep = TrackerStep.SHIPPING,
+                hostProfileImageUrl = null,
+                guestProfileImageUrl = null
+            )
+        )
+    }
+
 
     private fun normalizeStepDates(raw: List<String?>?): List<String?> {
         val list = raw.orEmpty()

@@ -20,22 +20,13 @@ import kotlinx.coroutines.launch
 class HostActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHostBinding
-
     private val vm: HostViewModel by viewModels()
-
-    private val detailVm: HostTrackerDetailViewModel by viewModels()
-
-    private val groupId: Long by lazy {
-        intent.getLongExtra("tracker_id", -1L)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         binding = ActivityHostBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -44,33 +35,37 @@ class HostActivity : AppCompatActivity() {
 
         binding.btnBack.setOnClickListener { finish() }
 
-        binding.cardWidget.setOnClickListener {
-            if (groupId != -1L) {
-                detailVm.load(groupId)
-                showTrackerBottomSheetIfNotShown()
+        supportFragmentManager.setFragmentResultListener(
+            HostStartBottomDialogFragment.RESULT_KEY,
+            this
+        ) { _, bundle ->
+            when (bundle.getString(HostStartBottomDialogFragment.BUNDLE_ACTION)) {
+                "START_READING" -> vm.onAction(HostAction.SET_HOST_READING)
+                "HOST_SHIPPING_READY" -> vm.onAction(HostAction.SET_HOST_SHIPPING_READY)
+                "HOST_SHIPPED" -> vm.onAction(HostAction.SET_HOST_SHIPPED)
+                "GUEST_READING" -> vm.onAction(HostAction.SET_GUEST_READING)
+                "GUEST_SHIPPING_READY" -> vm.onAction(HostAction.SET_GUEST_SHIPPING_READY)
+                "GUEST_SHIPPED" -> vm.onAction(HostAction.SET_GUEST_SHIPPED)
+                "FINISHED" -> vm.onAction(HostAction.SET_FINISHED)
             }
         }
 
-        if (savedInstanceState == null && groupId != -1L) {
-            detailVm.load(groupId)
+        binding.cardWidget.setOnClickListener{
+            HostStartBottomDialogFragment()
+                .show(
+                    supportFragmentManager,
+                    HostStartBottomDialogFragment.TAG
+                )
+        }
+
+        // 일단 액티비티 실행되면 바로 나오도록
+        if (savedInstanceState == null) {
+            val bottomSheet = HostStartBottomDialogFragment()
+            bottomSheet.show(supportFragmentManager, HostStartBottomDialogFragment.TAG)
         }
 
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                detailVm.state.collect { state ->
-                    when (state) {
-                        is TrackerDetailUiState.Success -> {
-                            // 여기서 state.data.status / layoutRes가 결정됨
-                            showTrackerBottomSheetIfNotShown()
-                        }
-                        else -> Unit
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
                 vm.steps.collectLatest { steps ->
                     updateStatusList(steps)
                 }
@@ -78,15 +73,9 @@ class HostActivity : AppCompatActivity() {
         }
     }
 
-    private fun showTrackerBottomSheetIfNotShown() {
-        if (supportFragmentManager.findFragmentByTag(TrackerContainerBottomSheetFragment.TAG) != null) return
-
-        TrackerContainerBottomSheetFragment()
-            .show(supportFragmentManager, TrackerContainerBottomSheetFragment.TAG)
-    }
-
-    private fun updateStatusList(steps: List<TradeStatusItem>) {
+    private fun updateStatusList(steps: List<TradeStatusItem>){
         binding.stepContainer.removeAllViews()
+
         val inflater = LayoutInflater.from(this)
 
         steps.forEachIndexed { index, item ->

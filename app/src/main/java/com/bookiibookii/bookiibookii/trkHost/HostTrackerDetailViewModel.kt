@@ -60,4 +60,26 @@ class HostTrackerDetailViewModel : ViewModel() {
             }
         }
     }
+
+    fun loadDummy(status: TrackerStatus) {
+        val ui = TrackerDetailUiModel(
+            trackerId = -1L,
+            status = status,
+            layoutRes = when (status) {
+                TrackerStatus.READY -> com.bookiibookii.bookiibookii.R.layout.fragment_start_bottom_sheet_dialog
+                TrackerStatus.HOST_READING -> com.bookiibookii.bookiibookii.R.layout.fragment_reading_bottom_sheet_dialog
+                TrackerStatus.HOST_DONE -> com.bookiibookii.bookiibookii.R.layout.fragment_host_shipping_bottom_dialog
+                TrackerStatus.SHIPPING_TO_GUEST -> com.bookiibookii.bookiibookii.R.layout.fragment_host_shipped_bottom_dialog
+                TrackerStatus.RECEIVED, TrackerStatus.GUEST_READING ->
+                    com.bookiibookii.bookiibookii.R.layout.fragment_host_reading_status_bottom_dialog
+                TrackerStatus.GUEST_DONE ->
+                    com.bookiibookii.bookiibookii.R.layout.fragment_host_reading_done_bottom_dialog
+                TrackerStatus.SHIPPING_TO_HOST ->
+                    com.bookiibookii.bookiibookii.R.layout.fragment_host_shipped_bottom_dialog
+                else ->
+                    com.bookiibookii.bookiibookii.R.layout.fragment_host_trade_finish_bottom_dialog
+            }
+        )
+        _state.value = TrackerDetailUiState.Success(ui)
+    }
 }
