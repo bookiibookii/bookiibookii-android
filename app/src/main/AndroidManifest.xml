@@ -57,6 +57,10 @@
             android:name=".group.GrpSearchActivity"
             android:exported="false">
         </activity>
+
+        <activity
+            android:name=".onboarding.steps.OnbStepActivity"
+            android:exported="false" />
       
         <activity
             android:name=".group.GroupDetailActivity"
