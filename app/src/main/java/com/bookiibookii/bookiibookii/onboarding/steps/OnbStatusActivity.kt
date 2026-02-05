@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.onboarding.steps
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
@@ -84,9 +85,23 @@ class OnbStatusActivity : AppCompatActivity() {
 
         // 완료 화면에서 하단 버튼 클릭 시 메인 화면으로 이동
         btnFooter.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
+            setOnboardingDone()
+
+            // TODO: 온보딩까지 구현 후 삭제
+            Log.d("ONB_FLOW", "saved onboarding_done=true")
+
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
             finish()
         }
+    }
+
+    private fun setOnboardingDone() {
+        val prefs = getSharedPreferences("auth_prefs", MODE_PRIVATE)
+        prefs.edit()
+            .putBoolean("onboarding_done", true)
+            .apply()
     }
 
     // 현재 상태에 따라 로딩 화면 / 완료 화면 분기 처리

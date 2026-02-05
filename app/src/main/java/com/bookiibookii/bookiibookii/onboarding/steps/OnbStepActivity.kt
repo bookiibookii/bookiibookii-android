@@ -147,6 +147,13 @@ class OnbStepActivity : AppCompatActivity() {
         btnNext.text = "다음"
     }
 
+    private fun setOnboardingDone() {
+        val prefs = getSharedPreferences("auth_prefs", MODE_PRIVATE)
+        prefs.edit()
+            .putBoolean("onboarding_done", true)
+            .apply()
+    }
+
     // 현재 단계에서 "다음" 버튼을 활성화할 수 있는지 판단
     private fun updateNextButtonState() {
         btnNext.isEnabled = when (currentStep) {

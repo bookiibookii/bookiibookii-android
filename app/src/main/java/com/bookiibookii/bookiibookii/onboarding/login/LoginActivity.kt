@@ -19,6 +19,7 @@ import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.LoginRequest
+import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.material.card.MaterialCardView
@@ -36,11 +37,19 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // TODO: 온보딩까지 구현 후 삭제
+        Log.d("ONB_FLOW", "token=${hasAccessToken()} done=${isOnboardingDone()}")
+
         setContentView(R.layout.activity_login)
 
         // 1. 자동 로그인 체크 (토큰이 이미 있으면 메인으로)
         if (hasAccessToken()) {
-            moveToMain()
+            if (isOnboardingDone()) {
+                moveToMain()
+            } else {
+                moveToOnboarding()
+            }
             return
         }
 
@@ -51,11 +60,6 @@ class LoginActivity : AppCompatActivity() {
         Log.e("APP_CHECK", "MyApplication onCreate called")
 
         Log.e("KeyHash_Check", "내 앱의 현재 키 해시: $keyHash")
-
-        findViewById<View>(R.id.btn_kakao_login).setOnClickListener {
-            loginToKakao()
-        }
-
     }
 
     private fun setupLoginButtons() {
@@ -172,8 +176,11 @@ class LoginActivity : AppCompatActivity() {
     // --- 유틸리티 함수들 ---
 
     private fun onLoginSuccess() {
-
-        moveToMain()
+        if (isOnboardingDone()) {
+            moveToMain()
+        } else {
+            moveToOnboarding()
+        }
     }
 
     private fun showLoadingState(isLoading: Boolean) {
@@ -211,6 +218,11 @@ class LoginActivity : AppCompatActivity() {
             putInt("user_id", userId)
             apply()
         }
+    }
+
+    private fun isOnboardingDone(): Boolean {
+        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        return prefs.getBoolean("onboarding_done", false)
     }
 
     private fun hasAccessToken(): Boolean {
@@ -264,6 +276,13 @@ class LoginActivity : AppCompatActivity() {
     // 메인 화면으로 이동하는 함수
     private fun moveToMain() {
         val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+
+    private fun moveToOnboarding() {
+        val intent = Intent(this, OnbProfileActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
