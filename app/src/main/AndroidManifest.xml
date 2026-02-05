@@ -61,6 +61,10 @@
         <activity
             android:name=".onboarding.steps.OnbStepActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".onboarding.steps.OnbStatusActivity"
+            android:exported="false" />
       
         <activity
             android:name=".group.GroupDetailActivity"

@@ -119,9 +119,12 @@ class OnbStepActivity : AppCompatActivity() {
             .commit()
     }
 
-    // 온보딩 완료 후 메인 화면으로 이동
+    // 온보딩 완료 후 로딩 화면으로 이동
     private fun finishOnboarding() {
-        startActivity(Intent(this, MainActivity::class.java))
+        startActivity(
+            Intent(this, OnbStatusActivity::class.java)
+                .putExtra(OnbStatusActivity.EXTRA_STATUS, "LOADING")
+        )
         finish()
     }
 
