@@ -1,7 +1,9 @@
 package com.bookiibookii.bookiibookii.trkHost
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
@@ -47,13 +49,13 @@ class TrackerAdapter(
             binding.tvBookCategory.text = item.bookCategory.orEmpty()
 
             Glide.with(binding.ivBookCover)
-                .load(item.coverImageUrl)
+                    .load(item.coverImageUrl)
                 .placeholder(R.color.grey_200)
                 .error(R.color.grey_200)
                 .into(binding.ivBookCover)
 
             binding.updateStepUI(
-                step = item.currentStep,
+                step = progressStatusFromDates(item.stepDates),
                 stepDates = item.stepDates,
                 hostProfileUrl = item.hostProfileImageUrl,
                 guestProfileUrl = item.guestProfileImageUrl
@@ -64,8 +66,19 @@ class TrackerAdapter(
             }
         }
 
+        private fun progressStatusFromDates(stepDates: List<String?>): TrackerStatus {
+            val lastFilled = stepDates.indexOfLast { !it.isNullOrBlank() }
+            return when (lastFilled) {
+                0 -> TrackerStatus.HOST_READING
+                1 -> TrackerStatus.SHIPPING_TO_GUEST
+                2 -> TrackerStatus.GUEST_READING
+                3 -> TrackerStatus.SHIPPING_TO_HOST
+                else -> TrackerStatus.READY
+            }
+        }
+
         private fun ItemTrkBinding.updateStepUI(
-            step: TrackerStep,
+            step: TrackerStatus,
             stepDates: List<String?>,
             hostProfileUrl: String?,
             guestProfileUrl: String?
@@ -92,26 +105,41 @@ class TrackerAdapter(
             }
             setWidthPercent(viewProgressTrackActive, percent)
 
-            // 기본은 inactive, 현재만 accent
             tvLabelStep1.setTextColor(if (idx == 0) accentColor else inactiveColor)
             tvLabelStep2.setTextColor(if (idx == 1) accentColor else inactiveColor)
             tvLabelStep3.setTextColor(if (idx == 2) accentColor else inactiveColor)
             tvLabelStep4.setTextColor(if (idx == 3) accentColor else inactiveColor)
 
-            // 완료(현재보다 이전) = active, 현재 = accent, 이후 = inactive
             setDot(dotStep1, dotColorForStep(0, idx, activeColor, accentColor, inactiveColor))
             setDot(dotStep2, dotColorForStep(1, idx, activeColor, accentColor, inactiveColor))
             setDot(dotStep3, dotColorForStep(2, idx, activeColor, accentColor, inactiveColor))
             setDot(dotStep4, dotColorForStep(3, idx, activeColor, accentColor, inactiveColor))
 
-            bindStepProfiles(hostProfileUrl, guestProfileUrl)
+            bindStepProfiles(hostProfileUrl, guestProfileUrl, idx)
         }
 
-        private fun stepIndex(step: TrackerStep): Int = when (step) {
-            TrackerStep.HOST_READING -> 0
-            TrackerStep.SHIPPING -> 1
-            TrackerStep.GUEST_READING -> 2
-            TrackerStep.RETURNING -> 3
+        // 이 부분 나중에 확인
+        private fun stepIndex(status: TrackerStatus): Int = when (status) {
+            // 1단계: 호스트 독서
+            TrackerStatus.READY,
+            TrackerStatus.HOST_READING,
+            TrackerStatus.HOST_DONE -> 0
+
+            // 2단계: 호스트 발송 ~ 게스트 수령 전
+            TrackerStatus.SHIPPING_TO_GUEST,
+            TrackerStatus.RECEIVED -> 1
+
+            // 3단계: 게스트 독서
+            TrackerStatus.GUEST_READING,
+            TrackerStatus.GUEST_DONE -> 2
+
+            // 4단계: 게스트 발송 ~ 종료
+            TrackerStatus.SHIPPING_TO_HOST,
+            TrackerStatus.RETURNED,
+            TrackerStatus.COMPLETED -> 3
+
+            // 예외
+            TrackerStatus.UNKNOWN -> 0
         }
 
         private fun dotColorForStep(
@@ -152,25 +180,28 @@ class TrackerAdapter(
             }
         }
 
-        private fun ItemTrkBinding.bindStepProfiles(hostUrl: String?, guestUrl: String?) {
-            setProfile(ivStep1Profile, hostUrl)
-            setProfile(ivStep2Profile, hostUrl)
-
-            setProfile(ivStep3Profile, guestUrl)
-            setProfile(ivStep4Profile, guestUrl)
+        private fun ItemTrkBinding.bindStepProfiles(hostUrl: String?, guestUrl: String?, currentIndex: Int) {
+            setProfile(ivStep1Profile, hostUrl, isVisible = (currentIndex == 0))
+            setProfile(ivStep2Profile, hostUrl, isVisible = (currentIndex == 1))
+            setProfile(ivStep3Profile, guestUrl, isVisible = (currentIndex == 2))
+            setProfile(ivStep4Profile, guestUrl, isVisible = (currentIndex == 3))
         }
 
-        private fun ItemTrkBinding.setProfile(view: com.google.android.material.imageview.ShapeableImageView, url: String?) {
-            if (url.isNullOrBlank()) {
-                view.visibility = android.view.View.GONE
-                return
+        private fun ItemTrkBinding.setProfile(
+            view: ImageView,
+            url: String?,
+            isVisible: Boolean
+        ) {
+            if (!url.isNullOrBlank() && isVisible) {
+                view.visibility = View.VISIBLE
+                Glide.with(view)
+                    .load(url)
+                    .placeholder(R.color.grey_200)
+                    .error(R.color.grey_200)
+                    .into(view)
+            } else {
+                view.visibility = View.INVISIBLE
             }
-            view.visibility = android.view.View.VISIBLE
-            Glide.with(view)
-                .load(url)
-                .placeholder(R.color.grey_200)
-                .error(R.color.grey_200)
-                .into(view)
         }
     }
 

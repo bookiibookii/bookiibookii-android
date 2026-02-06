@@ -17,6 +17,7 @@ data class HostTrackerRelayDetailDto(
     val partnerNickname: String?,
     val hostProfileImage: String?,
     val guestProfileImages: List<String>?,
+    val trackerStatus: String?,
     val stepDates: List<String?>?
 )
 
@@ -46,21 +47,5 @@ data class ApiResponse<T>(
     val code: String,
     val message: String,
     val result: T?
-)
-
-data class PresignedUrlResult(
-    val s3Key: String,
-    val presignedPutUrl: String
-)
-
-data class PresignedUrlRequest(
-    val imageType: String,
-    val contentType: String
-)
-
-data class StartShippingRequest(
-    val deliveryCompany: String,
-    val trackingNumber: String,
-    val s3Key: String
 )
 

@@ -46,13 +46,15 @@ class TrkHostMainFragment : Fragment() {
 
         trackerAdapter = TrackerAdapter { item ->
             val target = when (item.exchangeType) {
-                ExchangeType.SHIPPING -> HostActivity::class.java
+                ExchangeType.DELIVERY -> HostActivity::class.java
                 ExchangeType.DIRECT -> DirectHostActivity::class.java
+                ExchangeType.NONE -> TODO()
             }
 
             val intent = Intent(requireContext(), target).apply {
                 putExtra("tracker_id", item.id)
                 putExtra("exchange_type", item.exchangeType.name)
+                putExtra("tracker_status", item.currentStatus.name)
             }
             startActivity(intent)
         }

@@ -3,6 +3,8 @@ package com.bookiibookii.bookiibookii.trkHost
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.trkData.dto.HostTrackerListItemDto
+import com.bookiibookii.bookiibookii.trkData.dto.HostTrackerRelayDetailDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,11 +15,65 @@ class TrkHostMainViewModel : ViewModel() {
     private val _trackers = MutableStateFlow<List<TrackerData>>(emptyList())
     val trackers: StateFlow<List<TrackerData>> = _trackers.asStateFlow()
 
-    // 더미 테스트용
-    fun setInitialList(list: List<TrackerData>) {
-        _trackers.value = list
+    // 더미데이터
+    fun loadHostTrackersDummy() {
+        val dummyDtos = listOf(
+            HostTrackerListItemDto(
+                groupId = 1L,
+                groupType = "RELAY",
+                bookTitle = "살인자의 기억법",
+                image = null,
+                author = "김영하",
+                category = "소설",
+                relayDetail = HostTrackerRelayDetailDto(
+                    partnerNickname = "noshel",
+                    hostProfileImage = null,
+                    guestProfileImages = listOf("guest_img_url"),
+                    trackerStatus = "SHIPPING_TO_HOST", // ✅ 예: HOST_DONE으로 강제
+                    stepDates = listOf("2024.01.01", null, null, null)
+                ),
+                togetherDetail = null
+            ),
+
+            HostTrackerListItemDto(
+                groupId = 2L,
+                groupType = "RELAY",
+                bookTitle = "아몬드",
+                image = null,
+                author = "손원평",
+                category = "청소년 문학",
+                relayDetail = HostTrackerRelayDetailDto(
+                    partnerNickname = "guest1",
+                    hostProfileImage = null,
+                    guestProfileImages = null,
+                    trackerStatus = "RETURNED", // ✅ 예
+                    stepDates = listOf("2024.01.01", "2024.01.05", "2024.01.05", "2024.01.05")
+                ),
+                togetherDetail = null
+            ),
+
+            // 같이 독서
+//            HostTrackerListItemDto(
+//                groupId = 3L,
+//                groupType = "TOGETHER",
+//                bookTitle = "클린 아키텍처",
+//                image = null,
+//                author = "로버트 C. 마틴",
+//                category = "IT/개발",
+//                relayDetail = null,
+//                togetherDetail = HostTrackerTogetherDetailDto(
+//                    hostNickname = "DevMaster",
+//                    participantCount = 5,
+//                    myReadingRate = 30,
+//                    groupReadingRate = 45
+//                )
+//            )
+        )
+
+        _trackers.value = dummyDtos.map { dto -> dto.toTrackerData() }
     }
 
+    // 실제 API 호출 부분 나중에 수정하고 주석 해제
     fun loadHostTrackers() {
         viewModelScope.launch {
             try {
@@ -25,70 +81,63 @@ class TrkHostMainViewModel : ViewModel() {
                 if (!response.isSuccessful) return@launch
 
                 val body = response.body() ?: return@launch
-                if (!body.isSuccess) return@launch
 
                 val list = body.result.orEmpty()
+                _trackers.value = list.map { dto -> dto.toTrackerData() }
 
-                _trackers.value = list.map { dto ->
-                    val stepDates = normalizeStepDates(dto.relayDetail?.stepDates)
-                    val currentStep = computeCurrentStep(stepDates)
-
-                    val hostImg = dto.relayDetail?.hostProfileImage
-                    val guestImg = dto.relayDetail?.guestProfileImages?.firstOrNull()
-
-                    TrackerData(
-                        id = dto.groupId,
-                        bookTitle = dto.bookTitle,
-                        bookAuthor = dto.author.orEmpty(),
-                        bookCategory = dto.category,
-                        withUserName = dto.relayDetail?.partnerNickname,
-                        coverImageUrl = dto.image,
-                        exchangeType = mapExchangeType(dto.groupType),
-
-                        stepDates = stepDates,
-                        currentStep = currentStep,
-
-                        hostProfileImageUrl = hostImg,
-                        guestProfileImageUrl = guestImg
-                    )
-                }
-
-            } catch (_: Exception) {
-
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
 
-    // 더미데이터
-    fun loadHostTrackersDummy() {
-        _trackers.value = listOf(
-            TrackerData(
-                id = 1L,
-                bookTitle = "살인자의 기억법",
-                bookAuthor = "김영하",
-                bookCategory = "소설",
-                withUserName = "noshel",
-                coverImageUrl = null,
-                exchangeType = ExchangeType.SHIPPING,
-                stepDates = listOf("2024.01.01", null, null, null),
-                currentStep = TrackerStep.HOST_READING,
-                hostProfileImageUrl = null,
-                guestProfileImageUrl = null
-            ),
-            TrackerData(
-                id = 2L,
-                bookTitle = "아몬드",
-                bookAuthor = "손원평",
-                bookCategory = "청소년 문학",
-                withUserName = "guest1",
-                coverImageUrl = null,
-                exchangeType = ExchangeType.SHIPPING,
-                stepDates = listOf("2024.01.01", "2024.01.05", null, null),
-                currentStep = TrackerStep.SHIPPING,
-                hostProfileImageUrl = null,
-                guestProfileImageUrl = null
-            )
+
+    private fun HostTrackerListItemDto.toTrackerData(): TrackerData {
+        val exchangeType = mapExchangeType(this.groupType)
+
+        val baseData = TrackerData(
+            id = this.groupId,
+            bookTitle = this.bookTitle,
+            bookAuthor = this.author.orEmpty(),
+            bookCategory = this.category,
+            coverImageUrl = this.image,
+            exchangeType = exchangeType,
+
+            withUserName = null,
+            stepDates = emptyList(),
+            currentStatus = TrackerStatus.UNKNOWN,
+            hostProfileImageUrl = null,
+            guestProfileImageUrl = null
         )
+
+        return when (exchangeType) {
+            ExchangeType.DELIVERY,
+            ExchangeType.DIRECT -> {
+                val detail = this.relayDetail
+                val normalizedDates = normalizeStepDates(detail?.stepDates)
+
+                val status = detail?.trackerStatus?.let {
+                    TrackerStatus.from(it)
+                } ?: calculateRelayStatus(normalizedDates)
+
+                baseData.copy(
+                    withUserName = detail?.partnerNickname,
+                    hostProfileImageUrl = detail?.hostProfileImage,
+                    guestProfileImageUrl = detail?.guestProfileImages?.firstOrNull(),
+                    stepDates = normalizedDates,
+
+                    currentStatus = status
+                )
+            }
+            // 얘는 나중에 생각
+            ExchangeType.NONE -> {
+                val detail = this.togetherDetail
+                baseData.copy(
+                    withUserName = detail?.hostNickname,
+                    currentStatus = TrackerStatus.HOST_READING
+                )
+            }
+        }
     }
 
 
@@ -97,24 +146,24 @@ class TrkHostMainViewModel : ViewModel() {
         return List(4) { idx -> list.getOrNull(idx) }
     }
 
-    private fun computeCurrentStep(stepDates: List<String?>): TrackerStep {
+    private fun calculateRelayStatus(stepDates: List<String?>): TrackerStatus {
         val lastFilled = stepDates.indexOfLast { !it.isNullOrBlank() }
+
         return when (lastFilled) {
-            0 -> TrackerStep.HOST_READING
-            1 -> TrackerStep.SHIPPING
-            2 -> TrackerStep.GUEST_READING
-            3 -> TrackerStep.RETURNING
-            else -> TrackerStep.HOST_READING
+            0 -> TrackerStatus.HOST_READING
+            1 -> TrackerStatus.SHIPPING_TO_GUEST
+            2 -> TrackerStatus.GUEST_READING
+            3 -> TrackerStatus.SHIPPING_TO_HOST
+            else -> TrackerStatus.READY
         }
     }
 
     private fun mapExchangeType(groupType: String): ExchangeType {
         return when (groupType.uppercase()) {
+            "SHIPPING" -> ExchangeType.DELIVERY
             "DIRECT" -> ExchangeType.DIRECT
-            "SHIPPING" -> ExchangeType.SHIPPING
-            "RELAY" -> ExchangeType.SHIPPING
-            "TOGETHER" -> ExchangeType.DIRECT
-            else -> ExchangeType.SHIPPING
+            "TOGETHER" -> ExchangeType.NONE
+            else -> ExchangeType.DELIVERY
         }
     }
 }

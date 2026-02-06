@@ -15,7 +15,7 @@ import com.bookiibookii.bookiibookii.trkHost.ExchangeType
 import com.bookiibookii.bookiibookii.trkHost.FooterMode
 import com.bookiibookii.bookiibookii.trkHost.TrackerAdapter
 import com.bookiibookii.bookiibookii.trkHost.TrackerData
-import com.bookiibookii.bookiibookii.trkHost.TrackerStep
+import com.bookiibookii.bookiibookii.trkHost.TrackerStatus
 
 
 class TrkGuestMainFragment : Fragment() {
@@ -44,8 +44,9 @@ class TrkGuestMainFragment : Fragment() {
 
         trackerAdapter = TrackerAdapter { item ->
             val target = when (item.exchangeType) {
-                ExchangeType.SHIPPING -> GuestActivity::class.java
+                ExchangeType.DELIVERY -> GuestActivity::class.java
                 ExchangeType.DIRECT -> DirectGuestActivity::class.java
+                ExchangeType.NONE -> TODO()
             }
 
             val intent = Intent(requireContext(), target).apply {
@@ -101,10 +102,14 @@ class TrkGuestMainFragment : Fragment() {
                 bookCategory = "소설",
                 withUserName = "noshel",
                 coverImageUrl = null,
-                exchangeType = ExchangeType.SHIPPING,
 
-                stepDates = listOf("2024.01.01", null, null),
-                currentStep = TrackerStep.HOST_READING,
+                // 1. SHIPPING -> DELIVERY 변경
+                exchangeType = ExchangeType.DELIVERY,
+
+                stepDates = listOf("2024.01.01", null, null, null),
+
+                // 2. currentStep(TrackerStep) -> currentStatus(TrackerStatus) 변경
+                currentStatus = TrackerStatus.HOST_READING,
 
                 hostProfileImageUrl = null,
                 guestProfileImageUrl = null
@@ -118,8 +123,10 @@ class TrkGuestMainFragment : Fragment() {
                 coverImageUrl = null,
                 exchangeType = ExchangeType.DIRECT,
 
-                stepDates = listOf("2024.02.10", "2024.02.15"),
-                currentStep = TrackerStep.GUEST_READING,
+                stepDates = listOf("2024.02.10", "2024.02.15", null, null),
+
+                // 3. 변경된 Enum 사용
+                currentStatus = TrackerStatus.GUEST_READING,
 
                 hostProfileImageUrl = null,
                 guestProfileImageUrl = null

@@ -1,5 +1,11 @@
 package com.bookiibookii.bookiibookii.trkHost
 
+enum class ExchangeType {
+    DELIVERY,
+    DIRECT,
+    NONE
+}
+
 data class TrackerData(
     val id: Long,
     val bookTitle: String,
@@ -10,24 +16,9 @@ data class TrackerData(
     val exchangeType: ExchangeType,
 
     val stepDates: List<String?>,
-    val currentStep: TrackerStep,
+
+    val currentStatus: TrackerStatus,
 
     val hostProfileImageUrl: String?,
     val guestProfileImageUrl: String?
 )
-
-
-enum class TrackerStep {
-    HOST_READING,
-    SHIPPING,
-    GUEST_READING,
-    RETURNING
-}
-
-enum class ExchangeType {
-    SHIPPING,
-    DIRECT
-}
-
-
-

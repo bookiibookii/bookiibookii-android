@@ -29,18 +29,46 @@ class HostViewModel : ViewModel() {
     }
 
     private fun nextPhase(current: Phase, action: HostAction): Phase {
-        return when (action) {
-            HostAction.SET_GUEST_SHIPPING_READY -> Phase.GUEST_SHIPPING_READY
-            HostAction.SET_GUEST_SHIPPED -> Phase.GUEST_SHIPPED
-            HostAction.SET_GUEST_READING -> Phase.GUEST_READING
+        return when (current) {
+            Phase.INIT -> when (action) {
+                HostAction.SET_HOST_READING -> Phase.HOST_READING
+                else -> current
+            }
 
-            HostAction.SET_HOST_SHIPPING_READY -> Phase.HOST_SHIPPING_READY
-            HostAction.SET_HOST_SHIPPED -> Phase.HOST_SHIPPED
-            HostAction.SET_HOST_READING -> Phase.HOST_READING
+            Phase.HOST_READING -> when (action) {
+                HostAction.SET_HOST_SHIPPING_READY -> Phase.HOST_SHIPPING_READY
+                else -> current
+            }
 
-            HostAction.SET_FINISHED -> Phase.FINISHED
+            Phase.HOST_SHIPPING_READY -> when (action) {
+                HostAction.SET_HOST_SHIPPED -> Phase.HOST_SHIPPED
+                else -> current
+            }
+
+            Phase.HOST_SHIPPED -> when (action) {
+                HostAction.SET_GUEST_READING -> Phase.GUEST_READING
+                else -> current
+            }
+
+            Phase.GUEST_READING -> when (action) {
+                HostAction.SET_GUEST_SHIPPING_READY -> Phase.GUEST_SHIPPING_READY
+                else -> current
+            }
+
+            Phase.GUEST_SHIPPING_READY -> when (action) {
+                HostAction.SET_GUEST_SHIPPED -> Phase.GUEST_SHIPPED
+                else -> current
+            }
+
+            Phase.GUEST_SHIPPED -> when (action) {
+                HostAction.SET_FINISHED -> Phase.FINISHED
+                else -> current
+            }
+
+            Phase.FINISHED -> current
         }
     }
+
 
     private fun buildSteps(role: Role, phase: Phase): List<TradeStatusItem> {
         val list = mutableListOf<TradeStatusItem>()

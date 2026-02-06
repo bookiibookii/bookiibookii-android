@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityHostBinding
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -21,6 +22,11 @@ class HostActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHostBinding
     private val vm: HostViewModel by viewModels()
+
+    // intent 전달 초기 status
+    private val initialStatus: TrackerStatus by lazy {
+        TrackerStatus.from(intent.getStringExtra("tracker_status"))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,18 +56,15 @@ class HostActivity : AppCompatActivity() {
             }
         }
 
-        binding.cardWidget.setOnClickListener{
-            HostStartBottomDialogFragment()
-                .show(
-                    supportFragmentManager,
-                    HostStartBottomDialogFragment.TAG
-                )
+        binding.cardWidget.setOnClickListener {
+            showSheetOnceForStatus(initialStatus)
         }
 
-        // 일단 액티비티 실행되면 바로 나오도록
+        // 액티비티 실행 시 각 status 따라 bottomDialog
         if (savedInstanceState == null) {
-            val bottomSheet = HostStartBottomDialogFragment()
-            bottomSheet.show(supportFragmentManager, HostStartBottomDialogFragment.TAG)
+            binding.root.post {
+                showSheetOnceForStatus(initialStatus)
+            }
         }
 
         lifecycleScope.launch {
@@ -91,4 +94,32 @@ class HostActivity : AppCompatActivity() {
             binding.stepContainer.addView(row)
         }
     }
+
+    private fun createSheetForStatus(status: TrackerStatus): BottomSheetDialogFragment {
+        return when (status) {
+            TrackerStatus.READY -> HostStartBottomDialogFragment()
+            TrackerStatus.HOST_READING -> HostReadingBottomDialogFragment()
+            TrackerStatus.HOST_DONE -> HostShippingBottomDialogFragment()
+            TrackerStatus.SHIPPING_TO_GUEST -> HostShippedBottomDialogFragment()
+
+            TrackerStatus.RECEIVED,
+            TrackerStatus.GUEST_READING -> HostReadingStatusBottomDialogFragment()
+
+            TrackerStatus.GUEST_DONE -> HostReadingDoneBottomDialogFragment()
+            TrackerStatus.SHIPPING_TO_HOST -> HostShippedBottomDialogFragment()
+
+            TrackerStatus.RETURNED,
+            TrackerStatus.COMPLETED,
+            TrackerStatus.UNKNOWN -> HostTradeFinishBottomDialogFragment()
+        }
+    }
+
+    private fun showSheetOnceForStatus(status: TrackerStatus) {
+        val tag = "tracker_sheet"
+        if (supportFragmentManager.findFragmentByTag(tag) != null) return
+
+        val sheet = createSheetForStatus(status)
+        sheet.show(supportFragmentManager, tag)
+    }
+
 }
