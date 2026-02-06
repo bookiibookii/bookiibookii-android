@@ -16,21 +16,21 @@ enum class RecordMethod(
         tagLabel = "#메모환영",
         iconRes = R.drawable.ic_onb_record_pen
     ),
-    POST_IT(
+    POSTIT(
         titleResId = R.string.onb_step2_record_postit,
-        serverValue = "POST_IT",
+        serverValue = "POSTIT",
         tagLabel = "#포스트잇",
         iconRes = R.drawable.ic_onb_record_postit
     ),
     PHOTO(
         titleResId = R.string.onb_step2_record_photo,
-        serverValue = "PHOTO",
+        serverValue = "CLEAN",
         tagLabel = "#깔끔",
         iconRes = R.drawable.ic_onb_record_camera
     ),
     FOCUS(
         titleResId = R.string.onb_step2_record_focus,
-        serverValue = "FOCUS",
+        serverValue = "CLEAN",
         tagLabel = "#깔끔",
         iconRes = R.drawable.ic_onb_record_focus
     );

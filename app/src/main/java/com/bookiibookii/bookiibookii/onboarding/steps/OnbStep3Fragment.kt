@@ -33,8 +33,8 @@ class OnbStep3Fragment : Fragment(R.layout.fragment_onb_step3) {
 
         // 독서 페이스 옵션을 화면에 동적으로 생성
         addChipOption(paceList, ReadingPace.FAST, topMarginDp = 0)
-        addChipOption(paceList, ReadingPace.WEEKLY, topMarginDp = 10)
-        addChipOption(paceList, ReadingPace.MONTHLY, topMarginDp = 10)
+        addChipOption(paceList, ReadingPace.NORMAL, topMarginDp = 10)
+        addChipOption(paceList, ReadingPace.SLOW, topMarginDp = 10)
         addTextOnlyOption(paceList, ReadingPace.UNKNOWN, topMarginDp = 10)
 
         // 상태 변화 감지 → 선택된 페이스에 따라 UI 자동 갱신
