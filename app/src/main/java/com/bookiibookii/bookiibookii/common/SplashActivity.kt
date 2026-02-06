@@ -44,7 +44,7 @@ class SplashActivity : AppCompatActivity() {
         // val hasValidToken = TokenManager.hasValidToken()
 
         // 현재 단계에서는 항상 로그인화면으로 이동
-        startActivity(Intent(this, LoginActivity::class.java))
+        startActivity(Intent(this, ComErrorTestActivity::class.java))
 
         // TODO [v1] 토큰 분기 로직 활성화 시 아래 코드 사용
         /*
