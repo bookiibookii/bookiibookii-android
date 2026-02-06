@@ -3,7 +3,6 @@ package com.bookiibookii.bookiibookii.group
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -58,7 +57,7 @@ class GroupJoinManagementActivity : AppCompatActivity() {
     // 커스텀 토스트 띄우기 함수
     private fun showCustomToast(message: String) {
         val inflater = LayoutInflater.from(this)
-        val layout = inflater.inflate(R.layout.toast_costom, null)
+        val layout = inflater.inflate(R.layout.toast_custom, null)
 
         // 텍스트 설정
         val textView = layout.findViewById<TextView>(R.id.toast_message_tv)

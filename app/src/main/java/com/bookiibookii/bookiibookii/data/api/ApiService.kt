@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.data.api
 
+import com.bookiibookii.bookiibookii.data.model.CommonResponse
 import com.bookiibookii.bookiibookii.data.model.GroupMemberResponse
 import com.bookiibookii.bookiibookii.data.model.InquiryCreateResponse
 import com.bookiibookii.bookiibookii.data.model.InquiryListResponse
@@ -9,8 +10,11 @@ import com.bookiibookii.bookiibookii.data.model.LoginResponse
 import com.bookiibookii.bookiibookii.data.model.LogoutResponse
 import com.bookiibookii.bookiibookii.data.model.MyGroupResponse
 import com.bookiibookii.bookiibookii.data.model.MypageResponse
+import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
+import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
+import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
 import com.bookiibookii.bookiibookii.data.model.ReportCreateResponse
 import com.bookiibookii.bookiibookii.data.model.ReportListResponse
 import com.bookiibookii.bookiibookii.data.model.ReportRequest
@@ -27,6 +31,7 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService: TrkApi {
 
@@ -81,6 +86,22 @@ interface ApiService: TrkApi {
     suspend fun getGroupMembers(
         @Path("groupId") groupId: Int
     ): Response<GroupMemberResponse>
+
+    // 닉네임 중복 검증
+    @POST("api/users/name-validation")
+    suspend fun postNicknameValidation(
+        @Query("nickname") nickname: String
+    ): Response<NicknameValidationResponse>
+
+    // 사용자 이미지 업로드용 Presigned URL 발급
+    @POST("api/users/me/image/presigned-url")
+    suspend fun postPresignedUrl(): Response<PresignedUrlResponse>
+
+    // 온보딩 기능 API
+    @POST("/api/onboarding")
+    suspend fun postOnboarding(
+        @Body body: OnboardingRequest
+    ): retrofit2.Response<CommonResponse<String>>
 }
 
 

@@ -23,7 +23,6 @@ data class LoginResult(
     val accessToken: String,
     val refreshToken: String,
     val userId: Int,
-    val nickname: String // 임시 닉네임 -> 추후 삭제 필요
 )
 
 data class UserUpdateRequest(
