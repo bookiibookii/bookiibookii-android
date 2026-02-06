@@ -49,3 +49,22 @@ data class LogoutResponse(
     val message: String,
     val result: String
 )
+
+data class WithdrawResponse(
+    val isSuccess: Boolean,
+    val code: String,
+    val message: String,
+    val result: String
+)
+
+data class TokenRefreshRequest(
+    @SerializedName("refreshToken")
+    val refreshToken: String
+)
+
+data class TokenRefreshResponse(
+    val isSuccess: Boolean,
+    val code: String,
+    val message: String,
+    val result: LoginResult?
+)

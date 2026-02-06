@@ -37,17 +37,17 @@ class MypSetFragment : Fragment() {
         binding.mypSettingBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
         // 1. 공지사항 이동
-        binding.mypSetNoticeNextIv.setOnClickListener {
+        binding.layoutNotice.setOnClickListener {
             navigateTo(MypNoticeFragment())
         }
 
         // 2. 문의하기 이동
-        binding.mypSetQuestionNextIv.setOnClickListener {
+        binding.layoutQuestion.setOnClickListener {
             navigateTo(MypQuestionFragment())
         }
 
         // 3. 신고하기 이동
-        binding.mypSetReportNextIv.setOnClickListener {
+        binding.layoutReport.setOnClickListener {
             navigateTo(MypReportFragment())
         }
 
@@ -64,6 +64,45 @@ class MypSetFragment : Fragment() {
         binding.mypSetLogoutTv.setOnClickListener {
             performLogout()
         }
+
+        binding.mypSetQuitTv.setOnClickListener {
+            performWithdraw()
+        }
+    }
+
+    private fun performWithdraw() {
+        lifecycleScope.launch {
+            try {
+                // API 호출
+                val response = RetrofitClient.api().withdraw()
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    Log.d("Setting", "회원 탈퇴 성공")
+                    clearLocalDataAndMoveToLogin()
+                } else {
+                    Log.e("Setting", "탈퇴 실패: ${response.code()}")
+                    Toast.makeText(context, "탈퇴 처리에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("Setting", "탈퇴 통신 오류", e)
+                Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun clearLocalDataAndMoveToLogin() {
+        val context = requireContext()
+
+        // 1. SharedPreferences 토큰 삭제
+        val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+
+        // 2. 로그인 화면으로 이동 (Activity 스택 초기화)
+        val intent = Intent(context, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+
+        activity?.finish()
     }
 
     private fun navigateTo(fragment: Fragment) {
@@ -88,6 +127,7 @@ class MypSetFragment : Fragment() {
 
                     // (선택) 만약 서버 에러가 나더라도 앱에서는 강제로 내보내고 싶다면
                     // 여기서 handleLogoutSuccess()를 호출해버려도 됩니다.
+                    handleLogoutSuccess()
                 }
             } catch (e: Exception) {
                 Log.e("Logout", "네트워크 오류", e)

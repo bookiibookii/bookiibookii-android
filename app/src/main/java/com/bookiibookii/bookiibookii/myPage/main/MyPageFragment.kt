@@ -6,20 +6,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bookiibookii.bookiibookii.MypMyReviewFragment
+import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.Data.MypLateBook
 import com.bookiibookii.bookiibookii.bookData.Data.MypReview
+import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypBinding
 import com.bookiibookii.bookiibookii.databinding.LayoutMypProfileCardBinding
 import com.bookiibookii.bookiibookii.myPage.main.MypGroupAdapter
 import com.bookiibookii.bookiibookii.myPage.main.MypLateBookAdapter
 import com.bookiibookii.bookiibookii.myPage.main.MypReviewAdapter
+import com.bookiibookii.bookiibookii.myPage.profile.MypProfileEditFragment
 import com.bookiibookii.bookiibookii.myPage.set.MypSetFragment
-import com.bumptech.glide.Glide
+
 import kotlinx.coroutines.launch
 
 class MypageFragment : Fragment() {
@@ -27,17 +33,20 @@ class MypageFragment : Fragment() {
     private var _binding: FragmentMypBinding? = null
     private val binding get() = _binding!!
 
-    // 프로필 카드 바인딩
     private var _profileBinding: LayoutMypProfileCardBinding? = null
     private val profileBinding get() = _profileBinding!!
+
+    private val viewModel: MyPageViewModel by activityViewModels()
+    private var isGroupExpanded = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMypBinding.inflate(inflater, container, false)
-        // include 레이아웃 바인딩 연결
+
         _profileBinding = LayoutMypProfileCardBinding.bind(binding.layoutProfile.root)
+
         return binding.root
     }
 
@@ -45,36 +54,109 @@ class MypageFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerViews()
-        //fetchMypageData() //삭제권장
+        initNavigation()    // 버튼 클릭 리스너
+        initGroupToggle()   // 접기/펴기 로직
+        observeViewModel()  // 뷰모델 관찰
+        fetchMypageData()   // 서버 데이터 요청
+    }
 
+    private fun initNavigation() {
         binding.mypSettingIv.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, MypSetFragment())
-                .addToBackStack(null) // 뒤로가기 하면 다시 마이페이지로 오기 위해 필수
-                .commit()
+            navigateToFragment(MypSetFragment())
+        }
+
+        binding.mypMyReviewIv.setOnClickListener {
+            navigateToFragment(MypMyReviewFragment())
+        }
+
+        profileBinding.mypEditIv.setOnClickListener {
+            navigateToFragment(MypProfileEditFragment())
+        }
+
+        // [그룹 더보기] (화살표는 initGroupToggle에서 처리)
+        // 만약 화살표 말고 '주최한 그룹' 글자 클릭 시 이동이라면 여기에 추가
+    }
+
+    // 2. 그룹 리스트 접기/펴기
+    private fun initGroupToggle() {
+        binding.mypGroupIv.setOnClickListener {
+            isGroupExpanded = !isGroupExpanded
+
+            if (isGroupExpanded) {
+                binding.mypGroupsRv.visibility = View.VISIBLE
+                binding.mypGroupIv.animate().rotation(0f).setDuration(200).start()
+            } else {
+                binding.mypGroupsRv.visibility = View.GONE
+                binding.mypGroupIv.animate().rotation(180f).setDuration(200).start()
+            }
         }
     }
 
+    // 3. 리사이클러뷰 설정
     private fun setupRecyclerViews() {
         binding.mypReviewsRv.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+
         binding.mypGroupsRv.layoutManager = LinearLayoutManager(context)
+        binding.mypGroupsRv.isNestedScrollingEnabled = false // 스크롤 중첩 방지
+
         binding.rvBooks.layoutManager = LinearLayoutManager(context)
+        binding.rvBooks.isNestedScrollingEnabled = false // 스크롤 중첩 방지
     }
 
+    private fun updateUI(data: com.bookiibookii.bookiibookii.data.model.MypageResult) {
+        // 프로필 카드 업데이트
+        with(profileBinding) {
+            mypNameTv.text = data.nickname
+            mypTempTv.text = "${data.manner}°C"
+            mypReadBookTv.text = data.completeBook.toString()
+            mypAllBookTv.text = data.books.size.toString()
+            mypBookCardTv.text = "0"
+
+            if (!data.userImage?.s3Key.isNullOrEmpty()) {
+                Glide.with(root.context).load(data.userImage?.s3Key).circleCrop().into(mypProfileIv)
+            } else {
+                mypProfileIv.setImageResource(R.drawable.bg_myp_profile)
+            }
+
+            // 태그 매핑
+            val tagsLayout = mypTagsLayout
+            val userTags = data.userImage?.user?.userTags ?: emptyList()
+
+            for (i in 0 until tagsLayout.childCount) {
+                val tagView = tagsLayout.getChildAt(i) as? TextView
+                if (i < userTags.size) {
+                    tagView?.text = "#${userTags[i].tag?.code ?: ""}"
+                    tagView?.visibility = View.VISIBLE
+                } else {
+                    tagView?.visibility = View.GONE
+                }
+            }
+        }
+
+        // 리스트 업데이트
+        val reviewList = data.topTags.map { MypReview(content = it, count = 0) }
+        binding.mypReviewsRv.adapter = MypReviewAdapter(reviewList)
+
+        binding.mypGroupsRv.adapter = MypGroupAdapter(data.groups)
+
+        val bookList = data.books.map { MypLateBook(title = it.bookTitle, rating = it.rating.toInt()) }
+        binding.rvBooks.adapter = MypLateBookAdapter(bookList)
+    }
+
+    // 5. API 호출
     private fun fetchMypageData() {
         lifecycleScope.launch {
             try {
-                // [수정 전] 옛날 방식 (토큰 없음)
-                // val response = RetrofitClient.apiService.getMypage()
-
-                // [수정 후] ★★★ requireContext()를 넣어서 토큰 기능 활성화! ★★★
                 val response = RetrofitClient.api().getMypage()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result
-                    updateUI(result)
+                    // 데이터가 null이 아닐 때 UI 업데이트
+                    if (result != null) {
+                        updateUI(result)
+                    }
                 } else {
-                    Log.e("Mypage", "API Error: ${response.code()}") // 이제 200이 뜰 겁니다!
+                    Log.e("Mypage", "API Error: ${response.code()} - ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 Log.e("Mypage", "Network Error", e)
@@ -82,57 +164,23 @@ class MypageFragment : Fragment() {
         }
     }
 
-    private fun updateUI(data: com.bookiibookii.bookiibookii.data.model.MypageResult) {
-        // 1. 프로필 카드 설정 (제공해주신 XML ID 사용)
-        with(profileBinding) {
-            // 닉네임 & 매너온도
-            mypNameTv.text = data.nickname
-            mypTempTv.text = "${data.manner}°C"
-
-            // 통계 (전체, 완독, 독서카드)
-            // API에 '전체', '독서카드' 데이터가 명확하지 않아 '완독'만 매핑하고 나머지는 임시 처리
-            mypReadBookTv.text = data.completeBook.toString() // 완독
-
-            // '전체'는 최근 읽은 책 개수 혹은 0으로 표시 (필요시 로직 변경)
-            mypAllBookTv.text = data.books.size.toString()
-
-            // '독서카드'는 데이터가 없어 0으로 표시 (필요시 로직 변경)
-            mypBookCardTv.text = "0"
-
-            // 프로필 이미지 (Glide)
-            if (!data.userImage?.s3Key.isNullOrEmpty()) {
-                Glide.with(root.context)
-                    .load(data.userImage?.s3Key)
-                    .circleCrop()
-                    .into(mypProfileIv)
-            }
-
-            // 프로필 하단 태그 (#인사이트, #깔끔 등)
-            val tagsLayout = mypTagsLayout
-            val userTags = data.userImage?.user?.userTags ?: emptyList()
-
-            // XML에 있는 3개의 TextView를 순회하며 태그 입력
-            for (i in 0 until tagsLayout.childCount) {
-                val tagView = tagsLayout.getChildAt(i) as? TextView
-                if (i < userTags.size) {
-                    tagView?.text = "#${userTags[i].tag?.code ?: ""}"
-                    tagView?.visibility = View.VISIBLE
-                } else {
-                    tagView?.visibility = View.GONE // 데이터 없으면 숨김
-                }
-            }
+    private fun observeViewModel() {
+        viewModel.profileData.observe(viewLifecycleOwner) { data ->
+            profileBinding.mypNameTv.text = data.nickname
         }
+    }
 
-        // 2. 획득한 후기 리스트
-        val reviewList = data.topTags.map { MypReview(content = it, count = 0) }
-        binding.mypReviewsRv.adapter = MypReviewAdapter(reviewList)
+    private fun navigateToFragment(fragment: Fragment) {
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
 
-        // 3. 주최한 그룹 리스트
-        binding.mypGroupsRv.adapter = MypGroupAdapter(data.groups)
-
-        // 4. 최근 읽은 책 리스트
-        val bookList = data.books.map { MypLateBook(title = it.bookTitle, rating = it.rating.toInt()) }
-        binding.rvBooks.adapter = MypLateBookAdapter(bookList)
+    override fun onResume() {
+        super.onResume()
+        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
+        fetchMypageData()
     }
 
     override fun onDestroyView() {
@@ -140,12 +188,4 @@ class MypageFragment : Fragment() {
         _binding = null
         _profileBinding = null
     }
-
-    override fun onResume() {
-        super.onResume()
-        fetchMypageData() // 데이터 갱신
-
-        // 설정 화면에서 숨겼던 하단바를, 마이페이지 돌아오면 다시 보이게!
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav) // 혹은 R.id.bottomNav
-        bottomNav?.visibility = View.VISIBLE}
 }
