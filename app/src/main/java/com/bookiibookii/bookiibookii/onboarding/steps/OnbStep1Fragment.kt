@@ -27,16 +27,16 @@ class OnbStep1Fragment : Fragment(R.layout.fragment_onb_step1) {
 
     // 칩 표시 순서를 고정하기 위한 리스트
     private val chipItems = listOf(
-        ReadingPreference.ECONOMY,
-        ReadingPreference.SCIENCE_IT,
+        ReadingPreference.ECON_BIZ,
+        ReadingPreference.SCI_IT,
         ReadingPreference.NOVEL_GENRE,
         ReadingPreference.POEM_ESSAY,
         ReadingPreference.HOME_HOBBY,
         ReadingPreference.ART_CULTURE,
-        ReadingPreference.HUMANITIES_HISTORY,
-        ReadingPreference.SELF_HELP,
-        ReadingPreference.POLITICS_SOCIETY,
-        ReadingPreference.ETC
+        ReadingPreference.HUMAN_HISTORY,
+        ReadingPreference.SELF_DEV,
+        ReadingPreference.POL_SOC,
+        ReadingPreference.ESC
     )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
