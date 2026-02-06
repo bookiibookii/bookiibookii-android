@@ -25,6 +25,7 @@ class HostShippingStatusBottomDialogFragment : BottomSheetDialogFragment() {
 
         binding.btnFinish.setOnClickListener{
             val dialog = HostSendConfirmFragment()
+            dismiss()
             dialog.show(parentFragmentManager, HostSendConfirmFragment.TAG)
         }
     }

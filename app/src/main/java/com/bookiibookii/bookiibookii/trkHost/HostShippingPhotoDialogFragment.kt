@@ -8,7 +8,7 @@ import androidx.fragment.app.DialogFragment
 import com.bookiibookii.bookiibookii.databinding.FragmentHostShippingPhotoDialogBinding
 
 
-class HostShippingPhotoDialogFragment : DialogFragment() {
+class   HostShippingPhotoDialogFragment : DialogFragment() {
 
     private var _binding: FragmentHostShippingPhotoDialogBinding? = null
     private val binding get() = _binding!!

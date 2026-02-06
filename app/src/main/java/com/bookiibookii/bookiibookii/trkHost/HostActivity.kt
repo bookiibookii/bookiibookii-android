@@ -22,6 +22,7 @@ class HostActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHostBinding
     private val vm: HostViewModel by viewModels()
+    private var currentStatus: TrackerStatus = TrackerStatus.UNKNOWN
 
     // intent 전달 초기 status
     private val initialStatus: TrackerStatus by lazy {
@@ -46,25 +47,46 @@ class HostActivity : AppCompatActivity() {
             this
         ) { _, bundle ->
             when (bundle.getString(HostStartBottomDialogFragment.BUNDLE_ACTION)) {
-                "START_READING" -> vm.onAction(HostAction.SET_HOST_READING)
-                "HOST_SHIPPING_READY" -> vm.onAction(HostAction.SET_HOST_SHIPPING_READY)
-                "HOST_SHIPPED" -> vm.onAction(HostAction.SET_HOST_SHIPPED)
-                "GUEST_READING" -> vm.onAction(HostAction.SET_GUEST_READING)
-                "GUEST_SHIPPING_READY" -> vm.onAction(HostAction.SET_GUEST_SHIPPING_READY)
-                "GUEST_SHIPPED" -> vm.onAction(HostAction.SET_GUEST_SHIPPED)
-                "FINISHED" -> vm.onAction(HostAction.SET_FINISHED)
+                "START_READING" -> {
+                    vm.onAction(HostAction.SET_HOST_READING)
+                    currentStatus = TrackerStatus.HOST_READING
+                }
+                "HOST_SHIPPING_READY" -> {
+                    vm.onAction(HostAction.SET_HOST_SHIPPING_READY)
+                    currentStatus = TrackerStatus.HOST_DONE
+                }
+                "HOST_SHIPPED" -> {
+                    vm.onAction(HostAction.SET_HOST_SHIPPED)
+                    currentStatus = TrackerStatus.SHIPPING_TO_GUEST
+                }
+                "GUEST_READING" -> {
+                    vm.onAction(HostAction.SET_GUEST_READING)
+                    currentStatus = TrackerStatus.GUEST_READING
+                }
+                "GUEST_SHIPPING_READY" -> {
+                    vm.onAction(HostAction.SET_GUEST_SHIPPING_READY)
+                    currentStatus = TrackerStatus.GUEST_DONE
+                }
+                "GUEST_SHIPPED" -> {
+                    vm.onAction(HostAction.SET_GUEST_SHIPPED)
+                    currentStatus = TrackerStatus.SHIPPING_TO_HOST
+                }
+                "FINISHED" -> {
+                    vm.onAction(HostAction.SET_FINISHED)
+                    currentStatus = TrackerStatus.COMPLETED
+                }
             }
         }
 
+        currentStatus = initialStatus
         binding.cardWidget.setOnClickListener {
-            showSheetOnceForStatus(initialStatus)
+            showSheetOnceForStatus(currentStatus)
         }
 
         // 액티비티 실행 시 각 status 따라 bottomDialog
         if (savedInstanceState == null) {
-            binding.root.post {
-                showSheetOnceForStatus(initialStatus)
-            }
+            vm.setPhaseForDummy(phaseFromStatus(initialStatus))
+            binding.root.post { showSheetOnceForStatus(initialStatus) }
         }
 
         lifecycleScope.launch {
@@ -74,6 +96,17 @@ class HostActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun phaseFromStatus(status: TrackerStatus): Phase = when (status) {
+        TrackerStatus.READY -> Phase.INIT
+        TrackerStatus.HOST_READING -> Phase.HOST_READING
+        TrackerStatus.HOST_DONE -> Phase.HOST_SHIPPING_READY
+        TrackerStatus.SHIPPING_TO_GUEST -> Phase.HOST_SHIPPED
+        TrackerStatus.RECEIVED, TrackerStatus.GUEST_READING -> Phase.GUEST_READING
+        TrackerStatus.GUEST_DONE -> Phase.GUEST_SHIPPING_READY
+        TrackerStatus.SHIPPING_TO_HOST -> Phase.GUEST_SHIPPED
+        TrackerStatus.RETURNED, TrackerStatus.COMPLETED, TrackerStatus.UNKNOWN -> Phase.FINISHED
     }
 
     private fun updateStatusList(steps: List<TradeStatusItem>){
@@ -100,7 +133,7 @@ class HostActivity : AppCompatActivity() {
             TrackerStatus.READY -> HostStartBottomDialogFragment()
             TrackerStatus.HOST_READING -> HostReadingBottomDialogFragment()
             TrackerStatus.HOST_DONE -> HostShippingBottomDialogFragment()
-            TrackerStatus.SHIPPING_TO_GUEST -> HostShippedBottomDialogFragment()
+            TrackerStatus.SHIPPING_TO_GUEST -> HostShippingStatusBottomDialogFragment()
 
             TrackerStatus.RECEIVED,
             TrackerStatus.GUEST_READING -> HostReadingStatusBottomDialogFragment()

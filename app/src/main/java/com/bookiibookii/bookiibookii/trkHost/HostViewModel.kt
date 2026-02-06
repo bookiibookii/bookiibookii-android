@@ -171,6 +171,11 @@ class HostViewModel : ViewModel() {
         if (phase.ordinal >= Phase.GUEST_SHIPPED.ordinal) "완료" else "예정"
     private fun receiveRegisterBadge(phase: Phase): String =
         if (phase.ordinal >= Phase.FINISHED.ordinal) "완료" else "예정"
+
+    fun setPhaseForDummy(phase: Phase) {
+        _phase.value = phase
+        recomputeSteps()
+    }
 }
 
 enum class HostAction {

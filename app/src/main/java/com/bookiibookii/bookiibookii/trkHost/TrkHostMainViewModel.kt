@@ -29,8 +29,8 @@ class TrkHostMainViewModel : ViewModel() {
                     partnerNickname = "noshel",
                     hostProfileImage = null,
                     guestProfileImages = listOf("guest_img_url"),
-                    trackerStatus = "SHIPPING_TO_HOST", // ✅ 예: HOST_DONE으로 강제
-                    stepDates = listOf("2024.01.01", null, null, null)
+                    trackerStatus = "READY",
+                    stepDates = listOf(null, null, null, null)
                 ),
                 togetherDetail = null
             ),
@@ -46,7 +46,7 @@ class TrkHostMainViewModel : ViewModel() {
                     partnerNickname = "guest1",
                     hostProfileImage = null,
                     guestProfileImages = null,
-                    trackerStatus = "RETURNED", // ✅ 예
+                    trackerStatus = "COMPLETED",
                     stepDates = listOf("2024.01.01", "2024.01.05", "2024.01.05", "2024.01.05")
                 ),
                 togetherDetail = null
