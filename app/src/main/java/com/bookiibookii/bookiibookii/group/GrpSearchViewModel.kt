@@ -1,25 +1,19 @@
 package com.bookiibookii.bookiibookii.group
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import kotlinx.coroutines.launch
 
 data class PopularSearchItem(val rank: Int, val keyword: String)
 
 class GrpSearchViewModel : ViewModel() {
 
-    private val _fullList = listOf(
-        PopularSearchItem(1, "한강"),
-        PopularSearchItem(2, "자몽살구클럽"),
-        PopularSearchItem(3, "최강록"),
-        PopularSearchItem(4, "채사장"),
-        PopularSearchItem(5, "지적대화를위한넓고얕은지식"),
-        PopularSearchItem(6, "트렌드코리아 2026"),
-        PopularSearchItem(7, "김영하"),
-        PopularSearchItem(8, "천선란"),
-        PopularSearchItem(9, "물고기는 존재하지 않는다"),
-        PopularSearchItem(10, "소년이 온다")
-    )
+    // 1. 인기 검색어 관련 변수
+    private var popularFullList: List<PopularSearchItem> = emptyList()
 
     private val _displayList = MutableLiveData<List<PopularSearchItem>>()
     val displayList: LiveData<List<PopularSearchItem>> get() = _displayList
@@ -27,20 +21,85 @@ class GrpSearchViewModel : ViewModel() {
     private val _isExpanded = MutableLiveData(false)
     val isExpanded: LiveData<Boolean> get() = _isExpanded
 
+    // 2. ★ 그룹 검색 결과 변수 (UI에서 쓸 GroupData 리스트)
+    private val _searchResult = MutableLiveData<List<GroupData>>()
+    val searchResult: LiveData<List<GroupData>> get() = _searchResult
+
     init {
-        updateList()
+        loadPopularKeywords()
+    }
+
+    // --- [기능 1] 인기 검색어 가져오기 ---
+    private fun loadPopularKeywords() {
+        viewModelScope.launch {
+            try {
+                // .api() 인지 .api 인지 RetrofitClient 설정에 따라 맞춰주세요
+                val response = RetrofitClient.api().getPopularKeywords()
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val rawResult = response.body()?.result ?: emptyList()
+
+                    // String -> PopularSearchItem 변환
+                    popularFullList = rawResult.mapIndexed { index, keyword ->
+                        PopularSearchItem(rank = index + 1, keyword = keyword)
+                    }
+                    updatePopularList()
+                } else {
+                    Log.e("GrpSearchViewModel", "인기검색어 실패: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("GrpSearchViewModel", "인기검색어 에러", e)
+            }
+        }
     }
 
     fun toggleExpansion() {
         _isExpanded.value = !(_isExpanded.value ?: false)
-        updateList()
+        updatePopularList()
     }
 
-    private fun updateList() {
+    private fun updatePopularList() {
         if (_isExpanded.value == true) {
-            _displayList.value = _fullList
+            _displayList.value = popularFullList
         } else {
-            _displayList.value = _fullList.take(3)
+            _displayList.value = popularFullList.take(3)
+        }
+    }
+
+
+    // --- [기능 2] 그룹 검색하기 (NEW) ---
+    fun searchGroups(query: String, sortType: String) {
+        viewModelScope.launch {
+            try {
+                // API 호출
+                val response = RetrofitClient.api().searchGroups(
+                    keyword = query,
+                    sort = sortType
+                )
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val resultDto = response.body()?.result
+
+                    // DTO 리스트 가져오기
+                    val dtoList = resultDto?.groupList ?: emptyList()
+
+                    // ★ 핵심: DTO -> UI Model(GroupData) 변환
+                    val uiList = dtoList.map { dto ->
+                        dto.toUiModel()
+                    }
+
+                    // LiveData 업데이트 -> Activity가 감지해서 화면 갱신
+                    _searchResult.value = uiList
+
+                    Log.d("GrpSearchViewModel", "검색 성공: ${uiList.size}건")
+                } else {
+                    Log.e("GrpSearchViewModel", "검색 실패: ${response.code()}")
+                    _searchResult.value = emptyList() // 실패 시 빈 리스트
+                }
+            } catch (e: Exception) {
+                Log.e("GrpSearchViewModel", "검색 네트워크 오류", e)
+                _searchResult.value = emptyList()
+            }
         }
     }
 }

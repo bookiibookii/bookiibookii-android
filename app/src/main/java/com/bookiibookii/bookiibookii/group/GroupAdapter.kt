@@ -14,7 +14,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.chip.Chip
 
 class GroupAdapter(
-    private val itemList: List<GroupData>,
+    private var itemList: List<GroupData>,
     private val itemClick: (GroupData) -> Unit
 ) : RecyclerView.Adapter<GroupAdapter.GroupViewHolder>() {
 
@@ -71,6 +71,11 @@ class GroupAdapter(
 
     override fun getItemCount(): Int = itemList.size
 
+    // [수정 2] 외부(Activity)에서 검색 결과를 새로 넣어주는 함수 추가
+    fun updateList(newList: List<GroupData>) {
+        this.itemList = newList
+        notifyDataSetChanged() // 리스트 뷰 새로고침
+    }
     inner class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivCover: ImageView = itemView.findViewById(R.id.grp_item_cover_Iv)
         val tvTitle: TextView = itemView.findViewById(R.id.grp_item_book_title_Tv)

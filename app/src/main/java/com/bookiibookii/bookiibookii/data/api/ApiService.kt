@@ -4,6 +4,7 @@ import com.bookiibookii.bookiibookii.data.model.CommonResponse
 import com.bookiibookii.bookiibookii.data.model.BookSearchResponse
 import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
 import com.bookiibookii.bookiibookii.data.model.GroupCreateResponse
+import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.data.model.GroupListRequest
 import com.bookiibookii.bookiibookii.data.model.GroupListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupMemberResponse
@@ -135,4 +136,14 @@ interface ApiService: TrkApi {
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<GroupListResponse>
+
+    //인기 검색어
+    @GET("api/groups/popular-keywords")
+    suspend fun getPopularKeywords(): Response<GroupItemDto.PopularSearchResponse>
+
+    @GET("/api/groups/search")
+    suspend fun searchGroups(
+        @Query("keyword") keyword: String,
+        @Query("sort") sort: String = "latest" // 정렬 옵션 (필요시)
+    ): Response<GroupItemDto.GroupSearchResponse>
 }

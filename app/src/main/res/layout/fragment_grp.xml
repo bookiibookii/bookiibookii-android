@@ -111,7 +111,6 @@
         android:text="추천순"
         android:textColor="@color/grey_700"
         android:textSize="14sp"
-        android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@id/grp_main_sort_division1_Tv"
         app:layout_constraintTop_toBottomOf="@id/grp_chip_scroll_view" />
 
@@ -125,11 +124,11 @@
         android:text="|"
         android:textColor="@color/grey_500"
         android:textSize="14sp"
-        app:layout_constraintEnd_toStartOf="@id/grp_main_sort_recent_Tv"
+        app:layout_constraintEnd_toStartOf="@id/grp_main_sort_latest_Tv"
         app:layout_constraintTop_toTopOf="@id/grp_main_sort_recommend_Tv" />
 
     <TextView
-        android:id="@+id/grp_main_sort_recent_Tv"
+        android:id="@+id/grp_main_sort_latest_Tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="4dp"
@@ -150,11 +149,11 @@
         android:text="|"
         android:textColor="@color/grey_700"
         android:textSize="14sp"
-        app:layout_constraintEnd_toStartOf="@id/grp_main_sort_hot_Tv"
+        app:layout_constraintEnd_toStartOf="@id/grp_main_sort_popular_Tv"
         app:layout_constraintTop_toTopOf="@id/grp_main_sort_recommend_Tv" />
 
     <TextView
-        android:id="@+id/grp_main_sort_hot_Tv"
+        android:id="@+id/grp_main_sort_popular_Tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/pretendard_variable"
