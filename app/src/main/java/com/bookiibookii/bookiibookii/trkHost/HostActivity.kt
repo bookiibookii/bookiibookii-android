@@ -14,17 +14,20 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityHostBinding
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
-import com.bookiibookii.bookiibookii.trkHost.HostAction
-import com.bookiibookii.bookiibookii.trkHost.HostViewModel
-import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 
 class HostActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHostBinding
     private val vm: HostViewModel by viewModels()
+    private var currentStatus: TrackerStatus = TrackerStatus.UNKNOWN
+
+    // intent 전달 초기 status
+    private val initialStatus: TrackerStatus by lazy {
+        TrackerStatus.from(intent.getStringExtra("tracker_status"))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,28 +47,46 @@ class HostActivity : AppCompatActivity() {
             this
         ) { _, bundle ->
             when (bundle.getString(HostStartBottomDialogFragment.BUNDLE_ACTION)) {
-                "START_READING" -> vm.onAction(HostAction.SET_HOST_READING)
-                "HOST_SHIPPING_READY" -> vm.onAction(HostAction.SET_HOST_SHIPPING_READY)
-                "HOST_SHIPPED" -> vm.onAction(HostAction.SET_HOST_SHIPPED)
-                "GUEST_READING" -> vm.onAction(HostAction.SET_GUEST_READING)
-                "GUEST_SHIPPING_READY" -> vm.onAction(HostAction.SET_GUEST_SHIPPING_READY)
-                "GUEST_SHIPPED" -> vm.onAction(HostAction.SET_GUEST_SHIPPED)
-                "FINISHED" -> vm.onAction(HostAction.SET_FINISHED)
+                "START_READING" -> {
+                    vm.onAction(HostAction.SET_HOST_READING)
+                    currentStatus = TrackerStatus.HOST_READING
+                }
+                "HOST_SHIPPING_READY" -> {
+                    vm.onAction(HostAction.SET_HOST_SHIPPING_READY)
+                    currentStatus = TrackerStatus.HOST_DONE
+                }
+                "HOST_SHIPPED" -> {
+                    vm.onAction(HostAction.SET_HOST_SHIPPED)
+                    currentStatus = TrackerStatus.SHIPPING_TO_GUEST
+                }
+                "GUEST_READING" -> {
+                    vm.onAction(HostAction.SET_GUEST_READING)
+                    currentStatus = TrackerStatus.GUEST_READING
+                }
+                "GUEST_SHIPPING_READY" -> {
+                    vm.onAction(HostAction.SET_GUEST_SHIPPING_READY)
+                    currentStatus = TrackerStatus.GUEST_DONE
+                }
+                "GUEST_SHIPPED" -> {
+                    vm.onAction(HostAction.SET_GUEST_SHIPPED)
+                    currentStatus = TrackerStatus.SHIPPING_TO_HOST
+                }
+                "FINISHED" -> {
+                    vm.onAction(HostAction.SET_FINISHED)
+                    currentStatus = TrackerStatus.COMPLETED
+                }
             }
         }
 
-        binding.cardWidget.setOnClickListener{
-            HostStartBottomDialogFragment()
-                .show(
-                    supportFragmentManager,
-                    HostStartBottomDialogFragment.TAG
-                )
+        currentStatus = initialStatus
+        binding.cardWidget.setOnClickListener {
+            showSheetOnceForStatus(currentStatus)
         }
 
-        // 일단 액티비티 실행되면 바로 나오도록
+        // 액티비티 실행 시 각 status 따라 bottomDialog
         if (savedInstanceState == null) {
-            val bottomSheet = HostStartBottomDialogFragment()
-            bottomSheet.show(supportFragmentManager, HostStartBottomDialogFragment.TAG)
+            vm.setPhaseForDummy(phaseFromStatus(initialStatus))
+            binding.root.post { showSheetOnceForStatus(initialStatus) }
         }
 
         lifecycleScope.launch {
@@ -75,6 +96,17 @@ class HostActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun phaseFromStatus(status: TrackerStatus): Phase = when (status) {
+        TrackerStatus.READY -> Phase.INIT
+        TrackerStatus.HOST_READING -> Phase.HOST_READING
+        TrackerStatus.HOST_DONE -> Phase.HOST_SHIPPING_READY
+        TrackerStatus.SHIPPING_TO_GUEST -> Phase.HOST_SHIPPED
+        TrackerStatus.RECEIVED, TrackerStatus.GUEST_READING -> Phase.GUEST_READING
+        TrackerStatus.GUEST_DONE -> Phase.GUEST_SHIPPING_READY
+        TrackerStatus.SHIPPING_TO_HOST -> Phase.GUEST_SHIPPED
+        TrackerStatus.RETURNED, TrackerStatus.COMPLETED, TrackerStatus.UNKNOWN -> Phase.FINISHED
     }
 
     private fun updateStatusList(steps: List<TradeStatusItem>){
@@ -95,4 +127,32 @@ class HostActivity : AppCompatActivity() {
             binding.stepContainer.addView(row)
         }
     }
+
+    private fun createSheetForStatus(status: TrackerStatus): BottomSheetDialogFragment {
+        return when (status) {
+            TrackerStatus.READY -> HostStartBottomDialogFragment()
+            TrackerStatus.HOST_READING -> HostReadingBottomDialogFragment()
+            TrackerStatus.HOST_DONE -> HostShippingBottomDialogFragment()
+            TrackerStatus.SHIPPING_TO_GUEST -> HostShippingStatusBottomDialogFragment()
+
+            TrackerStatus.RECEIVED,
+            TrackerStatus.GUEST_READING -> HostReadingStatusBottomDialogFragment()
+
+            TrackerStatus.GUEST_DONE -> HostReadingDoneBottomDialogFragment()
+            TrackerStatus.SHIPPING_TO_HOST -> HostShippedBottomDialogFragment()
+
+            TrackerStatus.RETURNED,
+            TrackerStatus.COMPLETED,
+            TrackerStatus.UNKNOWN -> HostTradeFinishBottomDialogFragment()
+        }
+    }
+
+    private fun showSheetOnceForStatus(status: TrackerStatus) {
+        val tag = "tracker_sheet"
+        if (supportFragmentManager.findFragmentByTag(tag) != null) return
+
+        val sheet = createSheetForStatus(status)
+        sheet.show(supportFragmentManager, tag)
+    }
+
 }

@@ -97,11 +97,14 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
                 }
             )
 
-            val next = HostTradeFinishBottomDialogFragment()
-            val prevBottomSheet = parentFragmentManager.findFragmentByTag(HostShippedBottomDialogFragment.TAG) as? DialogFragment
-            dismiss()
-            prevBottomSheet?.dismiss()
-            next.show(parentFragmentManager, HostTradeFinishBottomDialogFragment.TAG)
+            (parentFragmentManager
+                .findFragmentByTag(HostShippedBottomDialogFragment.TAG) as? DialogFragment)
+                ?.dismissAllowingStateLoss()
+
+            dismissAllowingStateLoss()
+
+            HostTradeFinishBottomDialogFragment()
+                .show(parentFragmentManager, HostTradeFinishBottomDialogFragment.TAG)
         }
 
         binding.btnClose.setOnClickListener { dismiss() }

@@ -28,6 +28,7 @@ import com.bookiibookii.bookiibookii.data.model.TokenRefreshResponse
 import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.data.model.UserUpdateResponse
 import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
+import com.bookiibookii.bookiibookii.trkData.api.TrkApi
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -39,7 +40,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface ApiService {
+interface ApiService: TrkApi {
 
     @POST("api/auth/login")
     suspend fun postLogin(
