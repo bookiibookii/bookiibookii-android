@@ -46,6 +46,13 @@ class TrkGuestMainViewModel : ViewModel() {
                     return@launch
                 }
 
+                list.forEach {
+                    android.util.Log.d(
+                        "GUEST_LIST",
+                        "server groupId=${it.groupId}"
+                    )
+                }
+
                 _trackers.value = list.map { it.toTrackerData() }
 
             } catch (e: Exception) {

@@ -54,9 +54,7 @@ class TrkGuestMainFragment : Fragment() {
             }
 
             val intent = Intent(requireContext(), target).apply {
-                putExtra("tracker_id", item.id)
-                putExtra("exchange_type", item.exchangeType.name)
-                putExtra("tracker_status", item.currentStatus.name)
+                putExtra("group_id", item.groupId)
             }
 
             startActivity(intent)

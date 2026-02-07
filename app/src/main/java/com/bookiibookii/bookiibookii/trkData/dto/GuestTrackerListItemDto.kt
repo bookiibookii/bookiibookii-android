@@ -15,8 +15,8 @@ data class GuestTrackerListItemDto(
     val category: String?,
 
     val tradeType: String?,
-    val relayDetail: HostTrackerRelayDetailDto?,
-    val togetherDetail: HostTrackerTogetherDetailDto?
+    val relayDetail: GuestTrackerRelayDetailDto?,
+    val togetherDetail: GuestTrackerTogetherDetailDto?
 )
 
 

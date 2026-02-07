@@ -123,6 +123,7 @@ class TrackerAdapter(
             // 1단계: 호스트 독서
             TrackerStatus.READY,
             TrackerStatus.HOST_READING,
+            TrackerStatus.HOST_EXTENSION,
             TrackerStatus.HOST_DONE -> 0
 
             // 2단계: 호스트 발송 ~ 게스트 수령 전
@@ -131,6 +132,7 @@ class TrackerAdapter(
 
             // 3단계: 게스트 독서
             TrackerStatus.GUEST_READING,
+            TrackerStatus.GUEST_EXTENSION,
             TrackerStatus.GUEST_DONE -> 2
 
             // 4단계: 게스트 발송 ~ 종료

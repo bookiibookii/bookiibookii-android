@@ -71,7 +71,7 @@
                 android:layout_height="wrap_content"
                 android:text="2025. 12. 25."
                 android:fontFamily="@font/pretendard_regular"
-                android:textColor="@color/pre_main"
+                android:textColor="@color/pre_sub"
                 android:textSize="14sp"
                 android:includeFontPadding="false" />
 
