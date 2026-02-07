@@ -114,4 +114,6 @@ dependencies {
 
     implementation("com.kakao.sdk:v2-all:2.20.1")
 
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 }

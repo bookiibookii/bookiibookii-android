@@ -1,6 +1,11 @@
 package com.bookiibookii.bookiibookii.data.api
 
 import com.bookiibookii.bookiibookii.data.model.CommonResponse
+import com.bookiibookii.bookiibookii.data.model.BookSearchResponse
+import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
+import com.bookiibookii.bookiibookii.data.model.GroupCreateResponse
+import com.bookiibookii.bookiibookii.data.model.GroupListRequest
+import com.bookiibookii.bookiibookii.data.model.GroupListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupMemberResponse
 import com.bookiibookii.bookiibookii.data.model.InquiryCreateResponse
 import com.bookiibookii.bookiibookii.data.model.InquiryListResponse
@@ -24,10 +29,12 @@ import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.data.model.UserUpdateResponse
 import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
 import com.bookiibookii.bookiibookii.trkData.api.TrkApi
+import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -77,7 +84,7 @@ interface ApiService: TrkApi {
     @POST("api/auth/refresh")
     fun refreshToken(
         @Body request: TokenRefreshRequest
-    ) : retrofit2.Call<TokenRefreshResponse>
+    ): retrofit2.Call<TokenRefreshResponse>
 
     @GET("api/groups/my")
     suspend fun getMyGroups(): Response<MyGroupResponse>
@@ -97,11 +104,35 @@ interface ApiService: TrkApi {
     @POST("api/users/me/image/presigned-url")
     suspend fun postPresignedUrl(): Response<PresignedUrlResponse>
 
-    // 온보딩 기능 API
+    // 온보딩
     @POST("/api/onboarding")
     suspend fun postOnboarding(
         @Body body: OnboardingRequest
-    ): retrofit2.Response<CommonResponse<String>>
+    ): Response<CommonResponse<String>>
+
+    // 그룹 생성
+    @POST("api/groups")
+    suspend fun createGroup(
+        @Body request: GroupCreateRequest
+    ): Response<GroupCreateResponse>
+
+    // 도서 검색
+    @GET("api/books/search")
+    suspend fun searchBooks(
+        @Query("keyword") query: String,
+        @Query("page") page: Int = 1,
+        @Query("size") size: Int = 10
+    ): Response<BookSearchResponse>
+
+    // 그룹 목록 조회
+    @GET("/api/groups")
+    suspend fun getGroupList(
+        @Query("groupTypes") groupTypes: List<String>?,
+        @Query("tradeTypes") tradeTypes: List<String>?,
+        @Query("meetPlace") meetPlace: List<String>?,
+        @Query("categories") categories: List<String>?,
+        @Query("sort") sort: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<GroupListResponse>
 }
-
-
