@@ -6,6 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.databinding.FragmentTrkGuestMainBinding
@@ -14,14 +18,15 @@ import com.bookiibookii.bookiibookii.trkHost.CreateGroupFooterAdapter
 import com.bookiibookii.bookiibookii.trkHost.ExchangeType
 import com.bookiibookii.bookiibookii.trkHost.FooterMode
 import com.bookiibookii.bookiibookii.trkHost.TrackerAdapter
-import com.bookiibookii.bookiibookii.trkHost.TrackerData
-import com.bookiibookii.bookiibookii.trkHost.TrackerStatus
+import kotlinx.coroutines.launch
 
 
 class TrkGuestMainFragment : Fragment() {
 
     private var _binding: FragmentTrkGuestMainBinding? = null
     private val binding get() = _binding!!
+
+    private val vm: TrkGuestMainViewModel by viewModels()
 
     private lateinit var trackerAdapter: TrackerAdapter
     private lateinit var footerAdapter: CreateGroupFooterAdapter
@@ -37,7 +42,6 @@ class TrkGuestMainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentTrkGuestMainBinding.bind(view)
 
         setupToggleLogic()
         updateTabState(isMyGroup = false)
@@ -52,6 +56,7 @@ class TrkGuestMainFragment : Fragment() {
             val intent = Intent(requireContext(), target).apply {
                 putExtra("tracker_id", item.id)
                 putExtra("exchange_type", item.exchangeType.name)
+                putExtra("tracker_status", item.currentStatus.name)
             }
 
             startActivity(intent)
@@ -71,10 +76,18 @@ class TrkGuestMainFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             setHasFixedSize(true)
         }
-        trackerAdapter.submitList(createDummyTrackerList()) {
-            footerAdapter.setShowEmptyText(trackerAdapter.itemCount == 0)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.trackers.collect { list ->
+                    trackerAdapter.submitList(list) {
+                        footerAdapter.setShowEmptyText(trackerAdapter.itemCount == 0)
+                    }
+                }
+            }
         }
 
+        vm.loadGuestTrackers()
     }
 
     private fun setupToggleLogic() {
@@ -92,47 +105,6 @@ class TrkGuestMainFragment : Fragment() {
         binding.joinedGroupBt.isSelected = !isMyGroup
     }
 
-    // 더미 데이터
-    private fun createDummyTrackerList(): List<TrackerData> {
-        return listOf(
-            TrackerData(
-                id = 1L,
-                bookTitle = "살인자의 기억법",
-                bookAuthor = "김영하",
-                bookCategory = "소설",
-                withUserName = "noshel",
-                coverImageUrl = null,
-
-                // 1. SHIPPING -> DELIVERY 변경
-                exchangeType = ExchangeType.DELIVERY,
-
-                stepDates = listOf("2024.01.01", null, null, null),
-
-                // 2. currentStep(TrackerStep) -> currentStatus(TrackerStatus) 변경
-                currentStatus = TrackerStatus.HOST_READING,
-
-                hostProfileImageUrl = null,
-                guestProfileImageUrl = null
-            ),
-            TrackerData(
-                id = 2L,
-                bookTitle = "아몬드",
-                bookAuthor = "손원평",
-                bookCategory = "청소년 문학",
-                withUserName = null,
-                coverImageUrl = null,
-                exchangeType = ExchangeType.DIRECT,
-
-                stepDates = listOf("2024.02.10", "2024.02.15", null, null),
-
-                // 3. 변경된 Enum 사용
-                currentStatus = TrackerStatus.GUEST_READING,
-
-                hostProfileImageUrl = null,
-                guestProfileImageUrl = null
-            )
-        )
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

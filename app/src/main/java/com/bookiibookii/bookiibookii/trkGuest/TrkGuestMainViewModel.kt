@@ -1,106 +1,47 @@
-package com.bookiibookii.bookiibookii.trkHost
+package com.bookiibookii.bookiibookii.trkGuest
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.trkData.dto.HostTrackerListItemDto
-import com.bookiibookii.bookiibookii.trkData.dto.HostTrackerRelayDetailDto
+import com.bookiibookii.bookiibookii.trkData.dto.GuestTrackerListItemDto
+import com.bookiibookii.bookiibookii.trkHost.ExchangeType
+import com.bookiibookii.bookiibookii.trkHost.TrackerData
+import com.bookiibookii.bookiibookii.trkHost.TrackerStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class TrkHostMainViewModel : ViewModel() {
+class TrkGuestMainViewModel : ViewModel() {
 
     private val _trackers = MutableStateFlow<List<TrackerData>>(emptyList())
     val trackers: StateFlow<List<TrackerData>> = _trackers.asStateFlow()
 
-    // 더미데이터
-    fun loadHostTrackersDummy() {
-        val dummyDtos = listOf(
-            HostTrackerListItemDto(
-                groupId = 1L,
-                groupType = "RELAY",
-                bookTitle = "살인자의 기억법",
-                image = null,
-                author = "김영하",
-                category = "소설",
-                tradeType = "DELIVERY",
-                relayDetail = HostTrackerRelayDetailDto(
-                    partnerNickname = "noshel",
-                    hostProfileImage = null,
-                    guestProfileImages = listOf("guest_img_url"),
-                    trackerStatus = "READY",
-                    stepDates = listOf(null, null, null, null)
-                ),
-                togetherDetail = null
-            ),
-
-            HostTrackerListItemDto(
-                groupId = 2L,
-                groupType = "RELAY",
-                bookTitle = "아몬드",
-                image = null,
-                author = "손원평",
-                category = "청소년 문학",
-                tradeType = "DELIVERY",
-                relayDetail = HostTrackerRelayDetailDto(
-                    partnerNickname = "guest1",
-                    hostProfileImage = null,
-                    guestProfileImages = null,
-                    trackerStatus = "COMPLETED",
-                    stepDates = listOf("2024.01.01", "2024.01.05", "2024.01.05", "2024.01.05")
-                ),
-                togetherDetail = null
-            ),
-
-            // 같이 독서
-//            HostTrackerListItemDto(
-//                groupId = 3L,
-//                groupType = "TOGETHER",
-//                bookTitle = "클린 아키텍처",
-//                image = null,
-//                author = "로버트 C. 마틴",
-//                category = "IT/개발",
-//                relayDetail = null,
-//                togetherDetail = HostTrackerTogetherDetailDto(
-//                    hostNickname = "DevMaster",
-//                    participantCount = 5,
-//                    myReadingRate = 30,
-//                    groupReadingRate = 45
-//                )
-//            )
-        )
-
-        _trackers.value = dummyDtos.map { dto -> dto.toTrackerData() }
-    }
-
-    // 실제 API 호출 부분 나중에 수정하고 주석 해제
-    fun loadHostTrackers() {
+    fun loadGuestTrackers() {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.api().getHostTrackers()
+                val response = RetrofitClient.api().getGuestTrackers()
 
                 if (!response.isSuccessful) {
-                    android.util.Log.e("HOST", "HTTP ${response.code()} ${response.message()}")
-                    android.util.Log.e("HOST", "errorBody=${response.errorBody()?.string()}")
+                    android.util.Log.e("GUEST", "HTTP ${response.code()} ${response.message()}")
+                    android.util.Log.e("GUEST", "errorBody=${response.errorBody()?.string()}")
                     return@launch
                 }
 
                 val body = response.body()
                 if (body == null) {
-                    android.util.Log.e("HOST", "body is null")
+                    android.util.Log.e("GUEST", "body is null")
                     return@launch
                 }
 
                 if (!body.isSuccess) {
-                    android.util.Log.e("HOST", "API fail code=${body.code} msg=${body.message}")
+                    android.util.Log.e("GUEST", "API fail code=${body.code} msg=${body.message}")
                     return@launch
                 }
 
                 val list = body.result
                 if (list == null) {
-                    android.util.Log.e("HOST", "result is null (unexpected)")
+                    android.util.Log.e("GUEST", "result is null (unexpected)")
                     _trackers.value = emptyList()
                     return@launch
                 }
@@ -108,14 +49,12 @@ class TrkHostMainViewModel : ViewModel() {
                 _trackers.value = list.map { it.toTrackerData() }
 
             } catch (e: Exception) {
-                android.util.Log.e("HOST", "exception", e)
+                android.util.Log.e("GUEST", "exception", e)
             }
         }
     }
 
-
-
-    private fun HostTrackerListItemDto.toTrackerData(): TrackerData {
+    private fun GuestTrackerListItemDto.toTrackerData(): TrackerData {
         val exchangeType = mapExchangeType(this.tradeType)
 
         val baseData = TrackerData(
@@ -149,21 +88,19 @@ class TrkHostMainViewModel : ViewModel() {
                     hostProfileImageUrl = detail?.hostProfileImage,
                     guestProfileImageUrl = detail?.guestProfileImages?.firstOrNull(),
                     stepDates = normalizedDates,
-
                     currentStatus = status
                 )
             }
-            // 얘는 나중에 생각
+            // 같이 읽기
             ExchangeType.NONE -> {
                 val detail = this.togetherDetail
                 baseData.copy(
                     withUserName = detail?.hostNickname,
-                    currentStatus = TrackerStatus.HOST_READING
+                    currentStatus = TrackerStatus.GUEST_READING
                 )
             }
         }
     }
-
 
     private fun normalizeStepDates(raw: List<String?>?): List<String?> {
         val list = raw.orEmpty()
