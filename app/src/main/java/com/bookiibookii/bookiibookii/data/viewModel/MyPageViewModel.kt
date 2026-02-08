@@ -18,17 +18,16 @@ import java.io.File
 
 class MyPageViewModel : ViewModel() {
 
-    // 1. 프로필 데이터 (마이페이지 & 수정화면 공유)
+    // 1. 프로필 데이터
     private val _profileData = MutableLiveData<MypageResult>()
     val profileData: LiveData<MypageResult> get() = _profileData
 
-    // 2. 이벤트 처리 (토스트 메시지, 화면 이동 등) - SharedFlow 사용 추천
+    // 2. 이벤트 처리
     private val _eventFlow = MutableSharedFlow<Event>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    // 이벤트 정의
     sealed class Event {
-        object NavigateBack : Event() // 수정 성공 시 뒤로가기
+        object NavigateBack : Event()
         data class ShowToast(val message: String) : Event()
         data class NicknameCheckResult(val isAvailable: Boolean) : Event()
     }
@@ -65,42 +64,39 @@ class MyPageViewModel : ViewModel() {
         }
     }
 
-    // 3. 프로필 수정 (이미지 포함 로직 통합)
+    // 3. 프로필 수정 (이미지 로직 수정됨)
     fun updateProfile(
-        request: UserUpdateRequest, // 텍스트 정보들
-        imageFile: File? // 변경할 이미지 파일 (없으면 null)
+        request: UserUpdateRequest, // 텍스트 정보
+        imageFile: File?            // 변경할 이미지 파일 (없으면 null)
     ) {
         viewModelScope.launch {
             try {
-                var finalS3Key = request.userImage // 기본적으로 기존 키 사용
-
-                // 3-1. 이미지가 변경되었다면 S3 업로드 진행
+                // 3-1. 이미지가 있다면 S3 업로드 진행
                 if (imageFile != null) {
                     val presignedRes = RetrofitClient.api().getPresignedUrl()
                     if (presignedRes.isSuccessful && presignedRes.body()?.isSuccess == true) {
                         val result = presignedRes.body()!!.result
                         val uploadUrl = result.presignedPutUrl
+                        // val newS3Key = result.s3Key  <- 명세에 없어서 전송 안 함 (백엔드 자동 처리 가정)
 
                         // S3 업로드
                         val requestBody = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
                         val uploadRes = RetrofitClient.api().uploadImageToS3(uploadUrl, requestBody)
 
-                        if (uploadRes.isSuccessful) {
-                            finalS3Key = result.s3Key // 업로드 성공 시 새 키로 교체
-                        } else {
+                        if (!uploadRes.isSuccessful) {
                             _eventFlow.emit(Event.ShowToast("이미지 업로드 실패"))
                             return@launch
                         }
+                        // 업로드 성공! (키 전송 없이 업로드만 완료)
                     }
                 }
 
-                // 3-2. 최종 프로필 수정 요청 (새로운 키 or 기존 키 포함)
-                val finalRequest = request.copy(userImage = finalS3Key)
-                val updateRes = RetrofitClient.api().updateProfile(finalRequest)
+                // 3-2. 프로필 텍스트 정보 수정 요청 (이미지 키 제외)
+                val updateRes = RetrofitClient.api().updateProfile(request)
 
                 if (updateRes.isSuccessful && updateRes.body()?.isSuccess == true) {
                     _eventFlow.emit(Event.ShowToast("프로필이 수정되었습니다."))
-                    fetchMypageData() // ★ 중요: 수정 후 데이터를 다시 불러와서 마이페이지 갱신
+                    fetchMypageData() // 데이터 갱신
                     _eventFlow.emit(Event.NavigateBack)
                 } else {
                     _eventFlow.emit(Event.ShowToast(updateRes.body()?.message ?: "수정 실패"))

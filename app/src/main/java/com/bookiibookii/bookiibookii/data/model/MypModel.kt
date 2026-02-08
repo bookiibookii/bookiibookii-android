@@ -129,8 +129,8 @@ data class NicknameCheckRequest(
 data class NicknameCheckResponse(
     val isSuccess: Boolean,
     val code: String,
-    val message: String
-    // result
+    val message: String,
+    val result: Map<String, Boolean>?
 )
 
 // Presigned URL 요청/응답
@@ -153,10 +153,11 @@ data class UserUpdateRequest(
     val address: String,
     val addressDetail: String,
     val meetPlace: String,
-    val userImage: String?
 )
 
 data class UserUpdateResponse(
     val isSuccess: Boolean,
-    val message: String
+    val code: String,
+    val message: String,
+    val result: String?
 )

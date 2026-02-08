@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,11 +30,11 @@ class MypProfileEditFragment : Fragment() {
     private var _binding: FragmentMypProfileEditBinding? = null
     private val binding get() = _binding!!
 
-    // Activity Scope ViewModel 사용 (데이터 공유)
+    // Activity Scope ViewModel (데이터 공유)
     private val viewModel: MyPageViewModel by activityViewModels()
 
     private var selectedImageFile: File? = null // 업로드할 이미지 파일
-    private var isNicknameChecked = true // 닉네임 중복 확인 완료 여부 (초기값 true)
+    private var isNicknameChecked = true // 닉네임 중복 확인 완료 여부
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMypProfileEditBinding.inflate(inflater, container, false)
@@ -45,55 +44,50 @@ class MypProfileEditFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. 초기 UI 상태 설정
         initUI()
-
-        // 2. ViewModel 관찰 (데이터 로드 및 이벤트 처리)
         observeViewModel()
-
-        // 3. 버튼 리스너 및 기능 설정
         initListeners()
-
-        // 4. 결과 수신 (주소 검색 등)
         initResultListener()
     }
 
     private fun initUI() {
-        // 처음 들어왔을 때는 닉네임이 변경되지 않았으므로 버튼 비활성화 상태로 시작
         updateNicknameButtonState(isEnabled = false)
     }
 
     private fun observeViewModel() {
-        // 프로필 데이터 로드
         viewModel.profileData.observe(viewLifecycleOwner) { data ->
-            // EditText가 비어있을 때만 세팅 (사용자 입력 중 덮어쓰기 방지)
+            // EditText가 비어있을 때만 값 채우기 (사용자 입력 유지)
             if (binding.mypEditNickEt.text.isEmpty()) {
 
-                // 1. 닉네임 (최상위)
+                // 1. 기본 닉네임 (최상위)
                 binding.mypEditNickEt.setText(data.nickname)
 
-                // 2. 유저 상세 정보 꺼내기
-                // JSON 구조: result -> userImage -> user 안에 정보가 있다고 가정
+                // 2. 중첩된 User 데이터 꺼내기
                 val userDetail = data.userImage?.user
 
-                // 3. 데이터 바인딩 (데이터가 없으면 "" 빈 문자열 처리)
-                binding.mypEditNameEt.setText(userDetail?.name ?: "")
-                binding.mypEditChangeInfoEt.setText(userDetail?.meetPlace ?: "")
+                // 3. 있는 데이터 바인딩
+                binding.mypEditChangeInfoEt.setText(userDetail?.meetPlace ?: "") // 교환 장소
+                binding.mypEditHopeAddressEt.setText(userDetail?.region ?: "")   // 희망 장소
 
-                // ★ [최초 등록 로직]
-                // 서버에서 값이 안 오면(null) -> 빈 칸으로 뜸 -> 사용자가 입력 -> 저장
-                binding.mypEditNumEt.setText(userDetail?.phone ?: "")
-                binding.mypEditPostEt.setText(userDetail?.zipCode ?: "")
-                binding.mypEditAddressEt.setText(userDetail?.address ?: "")
-                binding.mypEditAddressDetailEt.setText(userDetail?.addressDetail ?: "")
+                // 4. 없는 데이터 빈값 처리 (서버 GET에 필드가 없으므로 빈 문자열)
+                binding.mypEditNameEt.setText("")           // 이름
+                binding.mypEditNumEt.setText("")            // 전화번호
+                binding.mypEditPostEt.setText("")           // 우편번호
+                binding.mypEditAddressEt.setText("")        // 주소
+                binding.mypEditAddressDetailEt.setText("")  // 상세주소
 
-                // 4. 이미지 세팅
-                if (!data.userImage?.s3Key.isNullOrEmpty()) {
-                    Glide.with(this).load(data.userImage.s3Key).circleCrop().into(binding.mypEditProfileIv)
+                // 5. 이미지 세팅
+                val imageUrl = data.userImage?.s3Key
+                if (!imageUrl.isNullOrEmpty()) {
+                    Glide.with(this)
+                        .load(imageUrl)
+                        .circleCrop()
+                        .into(binding.mypEditProfileIv)
                 }
             }
         }
-        // 이벤트 관찰 (토스트 메시지, 뒤로가기 등)
+
+        // 이벤트 처리
         lifecycleScope.launch {
             viewModel.eventFlow.collect { event ->
                 when(event) {
@@ -107,7 +101,7 @@ class MypProfileEditFragment : Fragment() {
                         if (event.isAvailable) {
                             isNicknameChecked = true
                             Toast.makeText(context, "사용 가능한 닉네임입니다.", Toast.LENGTH_SHORT).show()
-                            // 사용 가능하면 버튼을 다시 비활성화하거나, '확인 완료' 상태로 둘 수 있음 (여기선 그대로 둠)
+                            updateNicknameButtonState(isEnabled = false)
                         } else {
                             isNicknameChecked = false
                             Toast.makeText(context, "이미 사용 중인 닉네임입니다.", Toast.LENGTH_SHORT).show()
@@ -119,31 +113,27 @@ class MypProfileEditFragment : Fragment() {
     }
 
     private fun initListeners() {
-        // 뒤로가기
         binding.mypEditBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
-        // [기능 추가] 닉네임 변경 감지 (TextWatcher)
+        // 닉네임 변경 감지
         binding.mypEditNickEt.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun afterTextChanged(s: Editable?) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val currentNick = s.toString()
                 val originNick = viewModel.profileData.value?.nickname ?: ""
 
                 if (currentNick == originNick) {
-                    // 원래 닉네임과 같음 -> 중복확인 버튼 비활성화 (grey_300)
-                    isNicknameChecked = true // 원래 닉네임이니 검증된 것으로 간주
+                    isNicknameChecked = true
                     updateNicknameButtonState(isEnabled = false)
                 } else {
-                    // 닉네임 변경됨 -> 중복확인 버튼 활성화 (grey_900)
-                    isNicknameChecked = false // 검증 필요함
+                    isNicknameChecked = false
                     updateNicknameButtonState(isEnabled = true)
                 }
             }
         })
 
-        // 닉네임 중복 확인 버튼 클릭
+        // 닉네임 중복 확인
         binding.mypEditNickCheckEt.setOnClickListener {
             val nickname = binding.mypEditNickEt.text.toString()
             if (nickname.isBlank()) {
@@ -158,7 +148,7 @@ class MypProfileEditFragment : Fragment() {
             pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
 
-        // 우편번호 검색 (화면 이동)
+        // 우편번호 검색 이동
         binding.mypEditPostCheckEt.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, MypPostcodeSearchFragment())
@@ -166,7 +156,7 @@ class MypProfileEditFragment : Fragment() {
                 .commit()
         }
 
-        // 지역 검색 (화면 이동)
+        // 지역 검색 이동
         binding.mypEditChangeInfoSearchEt.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, MypRegionSearchFragment())
@@ -176,7 +166,6 @@ class MypProfileEditFragment : Fragment() {
 
         // 수정하기 버튼 (최종 저장)
         binding.mypEditEditBtn.setOnClickListener {
-            // 닉네임 변경되었는데 중복확인 안했으면 막기
             val currentNick = binding.mypEditNickEt.text.toString()
             val originNick = viewModel.profileData.value?.nickname
 
@@ -185,7 +174,6 @@ class MypProfileEditFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // 요청 데이터 생성
             val request = UserUpdateRequest(
                 nickname = currentNick,
                 receiverName = binding.mypEditNameEt.text.toString(),
@@ -194,40 +182,33 @@ class MypProfileEditFragment : Fragment() {
                 address = binding.mypEditAddressEt.text.toString(),
                 addressDetail = binding.mypEditAddressDetailEt.text.toString(),
                 meetPlace = binding.mypEditChangeInfoEt.text.toString(),
-                userImage = viewModel.profileData.value?.userImage?.s3Key // 기존 이미지 키 (변경 시 VM에서 처리)
             )
 
-            // ViewModel에 요청 (이미지 파일이 있으면 업로드 후 저장, 없으면 바로 저장)
             viewModel.updateProfile(request, selectedImageFile)
         }
     }
 
-    // [핵심 기능] 닉네임 버튼 상태 변경 함수
     private fun updateNicknameButtonState(isEnabled: Boolean) {
         val context = requireContext()
         with(binding.mypEditNickCheckEt) {
             this.isEnabled = isEnabled
             if (isEnabled) {
-                // 변경됨 -> 활성화 (Grey 900 / White)
                 backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.grey_900))
                 setTextColor(ContextCompat.getColor(context, R.color.white))
             } else {
-                // 변경안됨 -> 비활성화 (Grey 300 / Grey 100)
                 backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.grey_300))
                 setTextColor(ContextCompat.getColor(context, R.color.grey_100))
             }
         }
     }
 
-    // 갤러리 선택 결과 핸들러
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             Glide.with(this).load(uri).circleCrop().into(binding.mypEditProfileIv)
-            selectedImageFile = uriToFile(uri) // 파일로 변환
+            selectedImageFile = uriToFile(uri)
         }
     }
 
-    // 결과 수신 리스너 (주소, 지역)
     private fun initResultListener() {
         setFragmentResultListener("requestKeyRegion") { _, bundle ->
             val selectedRegion = bundle.getString("regionResult")
@@ -244,29 +225,18 @@ class MypProfileEditFragment : Fragment() {
         }
     }
 
-    // Uri -> File 변환 유틸
     private fun uriToFile(uri: Uri): File? {
         return try {
             val contentResolver = requireContext().contentResolver
             val inputStream = contentResolver.openInputStream(uri) ?: return null
             val tempFile = File.createTempFile("upload", ".jpg", requireContext().cacheDir)
             val outputStream = FileOutputStream(tempFile)
-            inputStream.use { input ->
-                outputStream.use { output ->
-                    input.copyTo(output)
-                }
-            }
+            inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
             tempFile
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // 하단 탭바 숨기기
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {

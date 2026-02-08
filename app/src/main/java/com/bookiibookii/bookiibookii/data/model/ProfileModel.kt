@@ -28,30 +28,15 @@ data class MypageResult(
 // 프로필 이미지 및 유저 상세
 data class UserImageInfo(
     val s3Key: String?,
-    val user: UserDetail?
+    val user: MypageUserDetail?
 )
 
-data class UserDetail(
+data class MypageUserDetail(
     val id: Int,
-    val name: String?,       // 이름
-    val meetPlace: String?,  // 활동 지역
-    val region: String?,
-    val userTags: List<UserTagWrapper>?,
-
-    // ▼ [추가] 조회 시 없으면 null로 처리됨
-    // 서버가 나중에 이 필드들을 내려주면 그때 자동으로 매핑됨
-    val phone: String? = null,
-    val zipCode: String? = null,
-    val address: String? = null,
-    val addressDetail: String? = null
-)
-
-data class UserTagWrapper(
-    val tag: TagDetail?
-)
-
-data class TagDetail(
-    val code: String // 태그 이름 (ex: "인사이트")
+    @SerializedName("nickName") val nickName: String?, // 내부 닉네임 (JSON 키: nickName)
+    val meetPlace: String?, // 직접 교환 장소
+    val region: String?     // 희망 지역
+    // 현재 JSON에 phone, address, zipCode 등이 없음 -> 매핑 제외 (코드에서 null 처리)
 )
 
 // 그룹 정보

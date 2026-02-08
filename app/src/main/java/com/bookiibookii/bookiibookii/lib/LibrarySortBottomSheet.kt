@@ -5,8 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import com.bookiibookii.bookiibookii.bookData.viewModel.LibraryViewModel
-import com.bookiibookii.bookiibookii.bookData.viewModel.SortType
+import com.bookiibookii.bookiibookii.data.viewModel.LibraryViewModel
+import com.bookiibookii.bookiibookii.data.viewModel.SortType
 import com.bookiibookii.bookiibookii.databinding.FragmentLibSortDialogBinding
 import com.google.android.material.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior

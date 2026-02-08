@@ -1,9 +1,14 @@
 package com.bookiibookii.bookiibookii.data.api
 
+import com.bookiibookii.bookiibookii.data.model.CardDetailResponse
+import com.bookiibookii.bookiibookii.data.model.CardOperationResponse
+import com.bookiibookii.bookiibookii.data.model.CommentListResponse
+import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
 import com.bookiibookii.bookiibookii.data.model.GroupMemberResponse
 import com.bookiibookii.bookiibookii.data.model.InquiryCreateResponse
 import com.bookiibookii.bookiibookii.data.model.InquiryListResponse
 import com.bookiibookii.bookiibookii.data.model.InquiryRequest
+import com.bookiibookii.bookiibookii.data.model.LibraryResponse
 import com.bookiibookii.bookiibookii.data.model.LoginRequest
 import com.bookiibookii.bookiibookii.data.model.LoginResponse
 import com.bookiibookii.bookiibookii.data.model.LogoutResponse
@@ -19,6 +24,7 @@ import com.bookiibookii.bookiibookii.data.model.ReportListResponse
 import com.bookiibookii.bookiibookii.data.model.ReportRequest
 import com.bookiibookii.bookiibookii.data.model.TokenRefreshRequest
 import com.bookiibookii.bookiibookii.data.model.TokenRefreshResponse
+import com.bookiibookii.bookiibookii.data.model.UpdateCardRequest
 import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.data.model.UserUpdateResponse
 import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
@@ -102,6 +108,39 @@ interface ApiService {
         @Body image: RequestBody
     ): Response<Unit>
 
+    @GET("api/library/books")
+    suspend fun getLibraryBooks() : Response<LibraryResponse>
+
+    @GET("api/card/detail/{cardId}")
+    suspend fun getCardDetail(
+        @Path("cardId") cardId: Long
+    ): Response<CardDetailResponse>
+
+    // 댓글 목록 조회
+    @GET("api/cards/{cardId}/comments")
+    suspend fun getCardComments(
+        @Path("cardId") cardId: Long
+    ): Response<CommentListResponse>
+
+    //  Presigned URL 발급
+    @POST("api/card/{userBookId}/presigned-url")
+    suspend fun getPresignedUrl(
+        @Path("userBookId") userBookId: Int
+    ): Response<PresignedUrlResponse>
+
+    //  카드 생성
+    @POST("api/card/{userBookId}")
+    suspend fun createCard(
+        @Path("userBookId") userBookId: Int,
+        @Body request: CreateCardRequest
+    ): Response<CardOperationResponse>
+
+    // 카드 수정
+    @PATCH("api/card/{cardId}")
+    suspend fun updateCard(
+        @Path("cardId") cardId: Long,
+        @Body request: UpdateCardRequest
+    ): Response<CardOperationResponse>
 }
 
 

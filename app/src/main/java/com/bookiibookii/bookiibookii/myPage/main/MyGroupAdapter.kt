@@ -22,7 +22,7 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
 
             // 2. 작가 및 장르 (예: 소설 | 스즈키 유이)
             // 데이터에 작가(auth)와 장르(GENRE)가 있으므로 이를 조합
-            binding.itemMypGroupBookAuthor.text = "${item.GENRE} | ${item.auth}"
+            binding.itemMypGroupBookAuthor.text = "${item.auth} (${item.GENRE})"
 
             // 3. 그룹 상태 배지 (모집 중 vs 모집 완료) 색상 처리
             binding.itemMypGroupBadgeTv.text = item.group_status
@@ -34,6 +34,7 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
             val context = itemView.context
             if (isRecruiting) {
                 // 모집 중: 배경 pre_main / 글자 white
+                binding.itemMypGroupBadgeTv.text = "모집 중"
                 binding.itemMypGroupBadgeTv.backgroundTintList =
                     ContextCompat.getColorStateList(context, R.color.pre_main)
                 binding.itemMypGroupBadgeTv.setTextColor(
@@ -41,6 +42,7 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
                 )
             } else {
                 // 그 외(모집 완료 등): 배경 grey_200 / 글자 grey_500
+                binding.itemMypGroupBadgeTv.text = "모집완료"
                 binding.itemMypGroupBadgeTv.backgroundTintList =
                     ContextCompat.getColorStateList(context, R.color.grey_200)
                 binding.itemMypGroupBadgeTv.setTextColor(
@@ -62,8 +64,8 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
                     backgroundTintList = ContextCompat.getColorStateList(context, R.color.pre_sub_pale)
 
                     // 내부 패딩 (Horizontal 10dp, Vertical 6dp)
-                    val paddingH = dpToPx(16)
-                    val paddingV = dpToPx(16)
+                    val paddingH = dpToPx(8)
+                    val paddingV = dpToPx(4)
                     setPadding(paddingH, paddingV, paddingH, paddingV)
 
                     // 외부 마진 (오른쪽 8dp)

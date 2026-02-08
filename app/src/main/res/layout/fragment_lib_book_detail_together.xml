@@ -246,7 +246,6 @@ android:background="@color/ui_bg">
             app:layout_constraintTop_toTopOf="@id/lib_detail_review_name1_tv"
             app:layout_constraintBottom_toBottomOf="@id/lib_detail_review_name1_tv"/>
 
-<!--        여기는 어차피 한줄만 필요하니까 리사이클러 안쓰는게 낫겠지?-->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/book_detail_reviews_rv"
             android:layout_width="0dp"
