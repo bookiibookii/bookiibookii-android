@@ -163,9 +163,9 @@ class HostActivity : AppCompatActivity() {
 
     private fun createSheetForStatus(status: TrackerStatus): BottomSheetDialogFragment {
         return when (status) {
-            TrackerStatus.READY -> HostStartBottomDialogFragment()
+            TrackerStatus.READY -> HostStartBottomDialogFragment.newInstance(groupId)
             TrackerStatus.HOST_READING,
-            TrackerStatus.HOST_EXTENSION -> HostReadingBottomDialogFragment()
+            TrackerStatus.HOST_EXTENSION -> HostReadingBottomDialogFragment.newInstance(groupId)
             TrackerStatus.HOST_DONE -> HostShippingBottomDialogFragment()
             TrackerStatus.SHIPPING_TO_GUEST -> HostShippingStatusBottomDialogFragment()
 
