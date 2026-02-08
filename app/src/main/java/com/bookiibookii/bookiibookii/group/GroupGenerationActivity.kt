@@ -42,6 +42,7 @@ class GroupGenerationActivity : AppCompatActivity() {
     private lateinit var searchAdapter: GrpSearchBookAdapter
     private var searchJob: Job? = null
     private var selectedIsbn: String = ""
+    private var selectedBookLink: String = ""
 
     // 상태 변수
     private var selectedDate: String? = null
@@ -391,8 +392,29 @@ class GroupGenerationActivity : AppCompatActivity() {
             confirmBtnText = "구매하러 가기",
             confirmBtnColor = R.color.grey_900,
             onConfirmClick = {
+                // 1. 상태 초기화 (원래 하던 것)
                 updateBookHaveState(null)
-                showCustomToast("구매 페이지로 이동 합니다.")
+
+                // 2. 링크가 있는지 확인
+                if (selectedBookLink.isNotEmpty()) {
+                    // 3. 토스트 메시지 띄우기
+                    showCustomToast("구매페이지로 이동합니다")
+
+                    // 4. 약간의 딜레이 후 브라우저 열기 (코루틴 사용)
+                    lifecycleScope.launch {
+                        delay(800) // 0.8초 대기 (토스트 읽을 시간 확보)
+
+                        try {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                            intent.data = android.net.Uri.parse(selectedBookLink)
+                            startActivity(intent)
+                        } catch (e: Exception) {
+                            showCustomToast("링크를 여는데 실패했습니다.")
+                        }
+                    }
+                } else {
+                    showCustomToast("구매 링크 정보가 없습니다.")
+                }
             },
             onCancelClick = { updateBookHaveState(null) }
         ).show()
@@ -594,13 +616,17 @@ class GroupGenerationActivity : AppCompatActivity() {
             isItemSelectMode = true
             binding.actGrpGenBookSearchBar.setText(bookItem.title)
             binding.actGrpGenBookSearchBar.setSelection(bookItem.title.length)
+
             selectedIsbn = bookItem.isbn13
+            selectedBookLink = bookItem.link
+
             binding.actGrpGenBookSearchRv.visibility = View.GONE
 
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(binding.actGrpGenBookSearchBar.windowToken, 0)
             binding.actGrpGenBookSearchBar.clearFocus()
             checkInputs()
+
         }
 
         binding.actGrpGenBookSearchRv.apply {
