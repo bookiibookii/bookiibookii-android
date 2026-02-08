@@ -51,7 +51,8 @@ data class BookItem(
     val publisher: String,   // 출판사
     val isbn13: String,      // ISBN (고유번호)
     val category: String,    // 카테고리 코드 (예: ECON_BIZ)
-    val categoryLabel: String // 카테고리 이름
+    val categoryLabel: String, // 카테고리 이름
+    val link : String // 구매링크
 )
 
 data class GroupListRequest(
@@ -100,9 +101,11 @@ data class GroupItemDto(
     @SerializedName("title")
     val title: String,
 
-    // ★ 로그에 author(저자)가 없어서 null 처리 필수
     @SerializedName("author")
     val author: String?,
+
+    @SerializedName("genre")
+    val genre: String?,
 
     @SerializedName("bookImage") // ★ 서버는 bookImage
     val bookImage: String?,
@@ -121,6 +124,9 @@ data class GroupItemDto(
 
     @SerializedName("maxCapacity")
     val maxCapacity: Int,
+
+    @SerializedName("readingPeriod")
+    val readingPeriod: Int,
 
     val groupType: String, // "TOGETHER"
     val tradeType: String?, // "NONE"
@@ -143,22 +149,45 @@ data class GroupItemDto(
         } ?: emptyList()
 
         val uiStatus = if (groupStatus == "RECRUITING") "모집 중" else "모집 완료"
-        val uiGenre = "(장르)" // 서버에서 안 줘서 임시값
 
         return GroupData(
             coverImgUrl = bookImage ?: "", // null이면 빈값
             bookTitle = title,
-            bookAuthor = author ?: "(저자 미상)", // null이면 기본값
-            bookGenre = uiGenre,
+            bookAuthor = author ?: "저자 미상", // null이면 기본값
+            genre = genre ?: "장르",
             status = uiStatus,
-            deadline = maxCapacity.toString(), // 마감인원 or D-day
+            readingPeriod = readingPeriod.toString(), // 책읽는 기간
             memberCount = currentCount.toString(),
             isHot = isHot,
-            profileImgUrl = "", // 프로필 이미지는 현재 안 오는 듯함
+            profileImgUrl = "",
             nickname = hostNickname ?: "알 수 없음",
-            date = startDate ?: "날짜 미정",
+            date = startDate?.replace("-",".") ?: "날짜 미정",
             tags = uiTags,
             groupType = groupType
         )
     }
+    data class PopularSearchResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: List<String>? // ["최강록", "한강", ...]
+    )
+
+ // 그룹 검색하기
+    // 서버 응답 껍데기
+    data class GroupSearchResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: GroupSearchResult?
+    )
+
+    // result 내부 구조
+    data class GroupSearchResult(
+        @SerializedName("groupList")
+        val groupList: List<GroupItemDto>,
+        val totalCount: Int,
+        val currentPage: Int,
+        val hasNext: Boolean
+    )
 }

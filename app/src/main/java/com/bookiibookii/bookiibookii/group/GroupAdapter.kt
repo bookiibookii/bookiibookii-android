@@ -14,7 +14,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.chip.Chip
 
 class GroupAdapter(
-    private val itemList: List<GroupData>,
+    private var itemList: List<GroupData>,
     private val itemClick: (GroupData) -> Unit
 ) : RecyclerView.Adapter<GroupAdapter.GroupViewHolder>() {
 
@@ -28,12 +28,18 @@ class GroupAdapter(
 
         holder.tvTitle.text = item.bookTitle
         holder.tvAuthor.text = item.bookAuthor
-        holder.tvGenre.text = item.bookGenre
         holder.chipStatus.text = item.status
-        holder.tvDeadline.text = item.deadline
+        holder.tvDeadline.text = item.readingPeriod
         holder.tvMemberCount.text = item.memberCount
         holder.tvNickname.text = item.nickname
         holder.tvDate.text = item.date
+
+        val genreText = item.genre // "소설"
+        if (genreText.isNotEmpty()) {
+            holder.tvGenre.text = "($genreText)" // "소설" -> "(소설)"
+        } else {
+            holder.tvGenre.text = "" // 장르가 비어있으면 아무것도 표시 안 함
+        }
 
         if (item.isHot) {
             holder.chipHot.visibility = View.VISIBLE
@@ -71,11 +77,16 @@ class GroupAdapter(
 
     override fun getItemCount(): Int = itemList.size
 
+    // 외부(Activity)에서 검색 결과를 새로 넣어주는 함수 추가
+    fun updateList(newList: List<GroupData>) {
+        this.itemList = newList
+        notifyDataSetChanged() // 리스트 뷰 새로고침
+    }
     inner class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivCover: ImageView = itemView.findViewById(R.id.grp_item_cover_Iv)
         val tvTitle: TextView = itemView.findViewById(R.id.grp_item_book_title_Tv)
         val tvAuthor: TextView = itemView.findViewById(R.id.grp_item_book_author_Tv)
-        val tvGenre: TextView = itemView.findViewById(R.id.grp_item_book_sort_Tv)
+        val tvGenre: TextView = itemView.findViewById(R.id.grp_item_book_genre_Tv)
         val chipStatus: Chip = itemView.findViewById(R.id.grp_item_status_Cp)
         val tvDeadline: TextView = itemView.findViewById(R.id.grp_item_deadlineNo_Tv)
         val tvMemberCount: TextView = itemView.findViewById(R.id.grp_item_mem_statusNo_Tv)

@@ -42,15 +42,16 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="12dp"
         android:ellipsize="end"
         android:fontFamily="@font/pretendard_variable"
         android:maxLines="1"
         android:text="괴테는 모든 것을 말했다"
         android:textColor="@color/black"
         android:textSize="14sp"
+        android:singleLine="true"
         android:textStyle="normal"
-        app:layout_constraintEnd_toEndOf="@id/virtual_area_box"
+        app:layout_constraintEnd_toStartOf="@id/grp_item_status_Cp"
         app:layout_constraintStart_toEndOf="@id/grp_item_cover_Iv"
         app:layout_constraintTop_toTopOf="@id/grp_item_cover_Iv" />
 
@@ -59,25 +60,36 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
+        android:layout_marginEnd="4dp"
         android:fontFamily="@font/pretendard_variable"
-        android:text="스즈키 유이"
+        android:text="작가 이름이 아주아주 길어지는 경우를 테스트합니다"
         android:textColor="@color/grey_500"
         android:textSize="11sp"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:ellipsize="end"
         app:layout_constraintStart_toStartOf="@id/grp_item_book_title_Tv"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_book_title_Tv" />
+        app:layout_constraintTop_toBottomOf="@id/grp_item_book_title_Tv"
+        app:layout_constraintEnd_toStartOf="@id/grp_item_book_genre_Tv"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constrainedWidth="true"
+    />
+
 
     <TextView
-        android:id="@+id/grp_item_book_sort_Tv"
+        android:id="@+id/grp_item_book_genre_Tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="4dp"
         android:fontFamily="@font/pretendard_variable"
-        android:text="(소설)"
         android:textColor="@color/grey_500"
         android:textSize="11sp"
+        android:text="소설"
+        app:layout_constraintTop_toTopOf="@id/grp_item_book_author_Tv"
+        app:layout_constraintBottom_toBottomOf="@id/grp_item_book_author_Tv"
         app:layout_constraintStart_toEndOf="@id/grp_item_book_author_Tv"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_book_title_Tv" />
+        app:layout_constraintEnd_toEndOf="@id/grp_item_book_title_Tv" />
+    />
 
     <com.google.android.material.chip.Chip
         android:id="@+id/grp_item_status_Cp"
