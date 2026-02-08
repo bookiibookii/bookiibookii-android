@@ -106,10 +106,10 @@ interface ApiService: TrkApi {
     ): Response<GroupMemberResponse>
 
     // 프로필 수정
-    @POST("api/users/name-validation")
-    suspend fun checkNickname(
-        @Body request: NicknameCheckRequest
-    ): Response<NicknameCheckResponse>
+//    @POST("api/users/name-validation")
+//    suspend fun checkNickname(
+//        @Body request: NicknameCheckRequest
+//    ): Response<NicknameCheckResponse>
 
     @POST("api/users/me/image/presigend-url")
     suspend fun getPresignedUrl(): Response<PresignedUrlResponse>

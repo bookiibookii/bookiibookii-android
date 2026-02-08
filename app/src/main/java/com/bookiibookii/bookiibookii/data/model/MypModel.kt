@@ -134,15 +134,15 @@ data class NicknameCheckResponse(
 )
 
 // Presigned URL 요청/응답
-data class PresignedUrlResponse(
-    val isSuccess: Boolean,
-    val result: PresignedUrlResult
-)
+//data class "PresignedUrlResponse(
+//    val isSuccess: Boolean,
+//    val result: PresignedUrlResult
+//)
 
-data class PresignedUrlResult(
-    val s3Key: String,
-    val presignedPutUrl: String
-)
+//data class PresignedUrlResult(
+//    val s3Key: String,
+//    val presignedPutUrl: String
+//)
 
 // 프로필 수정 요청
 data class UserUpdateRequest(
@@ -153,6 +153,7 @@ data class UserUpdateRequest(
     val address: String,
     val addressDetail: String,
     val meetPlace: String,
+    val region: String
 )
 
 data class UserUpdateResponse(

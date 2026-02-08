@@ -85,7 +85,7 @@
                     android:id="@+id/myp_edit_profile_iv"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_myp_profile" />
+                    android:background="@drawable/img_profile_default" />
                 <ImageView
                     android:id="@+id/myp_edit_profile_edit_iv"
                     android:layout_width="32dp"
@@ -149,7 +149,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@drawable/bg_input_round_20dp_white"
-                android:hint="연락처"
+                android:hint="연락처(000-0000-0000)"
                 android:textAppearance="@style/regular15"
                 android:textColor="@color/grey_500"
                 android:paddingHorizontal="20dp"

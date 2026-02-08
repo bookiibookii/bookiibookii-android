@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.myPage
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
@@ -117,9 +118,9 @@ class MypageFragment : Fragment() {
             val imageUrl = data.userImage?.s3Key
             Glide.with(root.context)
                 .load(imageUrl)
-                .placeholder(R.drawable.bg_myp_profile) // 기본 이미지
-                .error(R.drawable.bg_myp_profile)       // 에러 시 기본 이미지
-                .fallback(R.drawable.bg_myp_profile)    // null일 때 기본 이미지
+                .placeholder(R.drawable.img_profile_default) // 기본 이미지
+                .error(R.drawable.img_profile_default)       // 에러 시 기본 이미지
+                .fallback(R.drawable.img_profile_default)    // null일 때 기본 이미지
                 .circleCrop()
                 .into(mypProfileIv)
 
@@ -129,12 +130,13 @@ class MypageFragment : Fragment() {
                 val textView = TextView(root.context).apply {
                     text = "#$tagText"
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f) // 12sp로 명시
-                    setTextColor(ContextCompat.getColor(context, R.color.grey_900))
-                    setBackgroundResource(R.drawable.bg_round_20dp_white)
+                    setTextColor(ContextCompat.getColor(context, R.color.ui_main_sub))
+                    setBackgroundResource(R.drawable.bg_round_8dp_gray300)
+                    backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.ui_main_sub_pale))
 
                     // 패딩 (helper 함수 사용)
-                    val pH = dpToPx(20)
-                    val pV = dpToPx(12)
+                    val pH = dpToPx(8)
+                    val pV = dpToPx(4)
                     setPadding(pH, pV, pH, pV)
 
                     // 마진
@@ -142,7 +144,7 @@ class MypageFragment : Fragment() {
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                     ).apply {
-                        marginEnd = dpToPx(12)
+                        marginEnd = dpToPx(10)
                     }
                 }
                 mypTagsLayout.addView(textView)
