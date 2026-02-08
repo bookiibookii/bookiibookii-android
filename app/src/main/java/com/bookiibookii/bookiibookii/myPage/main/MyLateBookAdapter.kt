@@ -5,25 +5,25 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.Data.MypLateBook
+import com.bookiibookii.bookiibookii.data.model.MypageBook
 import com.bookiibookii.bookiibookii.databinding.ItemMypLateBookBinding
 
-class MypLateBookAdapter(private val items: List<MypLateBook>) :
+class MypLateBookAdapter(private val items: List<MypageBook>) :
     RecyclerView.Adapter<MypLateBookAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: ItemMypLateBookBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: MypLateBook) {
-            binding.itemMypLateTitleTv.text = item.title
+        fun bind(item: MypageBook) {
+            binding.itemMypLateTitleTv.text = item.bookTitle
+
+            val ratingInt = item.rating.toInt()
 
             // 별점 처리 (LinearLayout 내부의 ImageView들)
             for (i in 0 until binding.itemMypLateRatingLl.childCount) {
                 val star = binding.itemMypLateRatingLl.getChildAt(i) as ImageView
-                if (i < item.rating) {
+                if (i < ratingInt) {
                     star.setImageResource(R.drawable.ic_star_filled) // 채워진 별
                 } else {
-                    // 빈 별 아이콘이 있다면 교체, 없다면 투명도 조절 등
-                    // star.setImageResource(R.drawable.ic_star_empty)
-                    star.alpha = 0.3f // 예시로 투명도 처리
+                    star.setImageResource(R.drawable.ic_star_none) // 채워진 별
                 }
             }
         }

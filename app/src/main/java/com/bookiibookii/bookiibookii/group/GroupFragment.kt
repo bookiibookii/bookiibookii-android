@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
@@ -34,6 +35,7 @@ class GroupFragment : Fragment() {
     private var currentCategoryFilters: List<String> = listOf("전체")
     private var currentRegionFilter: String = "전체"
 
+    private var currentSortType = "RECOMMEND"
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -54,6 +56,7 @@ class GroupFragment : Fragment() {
         }
         binding.groupRecyclerview.adapter = groupAdapter
 
+        updateSortUi() // 초기정렬
         loadGroupData() // 데이터 로드
 
         initListeners()
@@ -131,7 +134,6 @@ class GroupFragment : Fragment() {
         isLoading = true
         binding.grpSwipeRefreshLayout.isRefreshing = true
 
-// (1) 그룹 유형 & 거래 방식
         val groupTypes = mutableListOf<String>()
         val tradeTypes = mutableListOf<String>()
 
@@ -147,14 +149,12 @@ class GroupFragment : Fragment() {
             }
         }
 
-        // (2) 지역 정보
         val meetPlace = if (currentRegionFilter == "전체") {
             null
         } else {
             currentRegionFilter.substringAfter(" ").split("/").map { it.trim() }
         }
 
-        // (3) 카테고리
         val categories = if (currentCategoryFilters.contains("전체")) {
             null
         } else {
@@ -163,13 +163,12 @@ class GroupFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                // API 호출
                 val response = RetrofitClient.api().getGroupList(
                     groupTypes = if (groupTypes.isEmpty()) null else groupTypes,
                     tradeTypes = if (tradeTypes.isEmpty()) null else tradeTypes,
                     meetPlace = meetPlace,
                     categories = categories,
-                    sort = "LATEST",
+                    sort = currentSortType, // 기본 추천순
                     page = 0,
                     size = 20
                 )
@@ -177,7 +176,7 @@ class GroupFragment : Fragment() {
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body?.isSuccess == true) {
-                        val serverList = body.result?.groupList ?: emptyList() // 수정된 DTO 사용
+                        val serverList = body.result?.groupList ?: emptyList()
                         val uiList = serverList.map { it.toUiModel() }
 
                         groupAdapter = GroupAdapter(ArrayList(uiList)) { groupData ->
@@ -228,8 +227,12 @@ class GroupFragment : Fragment() {
                 val dialog = GrpRegionBottomSheetFragment.newInstance(currentRegionFilter)
                 dialog.show(parentFragmentManager, "RegionSearchBottomSheet")
 
-                parentFragmentManager.registerFragmentLifecycleCallbacks(object : androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
-                    override fun onFragmentDetached(fm: androidx.fragment.app.FragmentManager, f: androidx.fragment.app.Fragment) {
+                parentFragmentManager.registerFragmentLifecycleCallbacks(object :
+                    androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
+                    override fun onFragmentDetached(
+                        fm: androidx.fragment.app.FragmentManager,
+                        f: androidx.fragment.app.Fragment
+                    ) {
                         super.onFragmentDetached(fm, f)
                         if (f == dialog) {
                             val displayList = if (currentRegionFilter == "전체") {
@@ -258,9 +261,47 @@ class GroupFragment : Fragment() {
                     }
                 ).show(parentFragmentManager, "CategoryFilter")
             }
+            //  정렬 필터 클릭 리스너
+            //
+            grpMainSortRecommendTv.setOnClickListener { changeSortType("RECOMMEND") }
+            grpMainSortLatestTv.setOnClickListener { changeSortType("LATEST") }
+            grpMainSortPopularTv.setOnClickListener { changeSortType("POPULAR") }
         }
     }
 
+    private fun changeSortType(type: String) {
+        if (currentSortType == type) return // 이미 선택된 거면 무시
+        currentSortType = type
+        updateSortUi()
+        loadGroupData()
+    }
+
+    // 정렬 UI (텍스트 색상) 업데이트
+    private fun updateSortUi() {
+        val activeColor = ContextCompat.getColor(requireContext(), R.color.pre_main)
+        val inactiveColor = ContextCompat.getColor(requireContext(), R.color.grey_500)
+
+        // 1. 추천순
+        if (currentSortType == "RECOMMEND") {
+            binding.grpMainSortRecommendTv.setTextColor(activeColor)
+        } else {
+            binding.grpMainSortRecommendTv.setTextColor(inactiveColor)
+        }
+
+        // 2. 최신순
+        if (currentSortType == "LATEST") {
+            binding.grpMainSortLatestTv.setTextColor(activeColor)
+        } else {
+            binding.grpMainSortLatestTv.setTextColor(inactiveColor)
+        }
+
+        // 3. 인기순
+        if (currentSortType == "POPULAR") {
+            binding.grpMainSortPopularTv.setTextColor(activeColor)
+        } else {
+            binding.grpMainSortPopularTv.setTextColor(inactiveColor)
+        }
+    }
     private fun updateChipUI(chip: Chip, resultList: List<String>, defaultText: String) {
         if (resultList.isEmpty() || (resultList.size == 1 && resultList[0] == "전체")) {
             chip.text = defaultText
@@ -280,14 +321,14 @@ class GroupFragment : Fragment() {
         intent.putExtra("GROUP_TYPE", groupData.groupType)
         intent.putExtra("BOOK_TITLE", groupData.bookTitle)
         intent.putExtra("BOOK_AUTHOR", groupData.bookAuthor)
-        intent.putExtra("BOOK_GENRE", groupData.bookGenre)
+        intent.putExtra("BOOK_GENRE", groupData.genre)
         intent.putExtra("START_DATE", groupData.date)
         intent.putExtra("COVER_IMG", groupData.coverImgUrl)
         intent.putExtra("PROFILE_IMG", groupData.profileImgUrl)
         intent.putExtra("USER_NICNAME", groupData.nickname)
         intent.putStringArrayListExtra("TAGS", ArrayList(groupData.tags))
         intent.putExtra("STATUS", groupData.status)
-        intent.putExtra("DEADLINE", groupData.deadline)
+        intent.putExtra("READING_PERIOD", groupData.readingPeriod)
         intent.putExtra("MEMBER_COUNT", groupData.memberCount)
         intent.putExtra("IS_HOT", groupData.isHot)
         startActivity(intent)

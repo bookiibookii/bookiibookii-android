@@ -27,6 +27,10 @@
         <activity
             android:name=".trkGuest.GuestActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".common.ComErrorActivity"
+            android:exported="false" />
       
         <activity
             android:name=".common.SplashActivity"

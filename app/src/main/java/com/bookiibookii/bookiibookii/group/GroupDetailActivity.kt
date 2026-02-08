@@ -90,7 +90,7 @@ class GroupDetailActivity : AppCompatActivity() {
         profileImgUrl = intent.getStringExtra("PROFILE_IMG") ?: ""
         tagsList = intent.getStringArrayListExtra("TAGS")
         status = intent.getStringExtra("STATUS") ?: "모집 중"
-        deadline = intent.getStringExtra("DEADLINE") ?: "0"
+        deadline = intent.getStringExtra("READING_PERIOD") ?: "0"
         memberCount = intent.getStringExtra("MEMBER_COUNT") ?: "0"
         isHot = intent.getBooleanExtra("IS_HOT", false)
         nickname = intent.getStringExtra("USER_NICNAME") ?: "닉네임 없음"

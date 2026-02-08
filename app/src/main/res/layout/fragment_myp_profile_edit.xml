@@ -85,7 +85,7 @@
                     android:id="@+id/myp_edit_profile_iv"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_myp_profile" />
+                    android:background="@drawable/img_profile_default" />
                 <ImageView
                     android:id="@+id/myp_edit_profile_edit_iv"
                     android:layout_width="32dp"
@@ -112,9 +112,13 @@
                 <Button
                     android:id="@+id/myp_edit_nick_check_et"
                     android:layout_width="100dp"
-                    android:layout_height="40dp"
+                    android:layout_height="match_parent"
                     android:layout_gravity="end|center_vertical"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="2dp"
                     android:layout_marginEnd="2dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
                     android:text="중복확인"
                     android:backgroundTint="@color/grey_300"
                     android:textAppearance="@style/medium14"
@@ -145,7 +149,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@drawable/bg_input_round_20dp_white"
-                android:hint="연락처"
+                android:hint="연락처(000-0000-0000)"
                 android:textAppearance="@style/regular15"
                 android:textColor="@color/grey_500"
                 android:paddingHorizontal="20dp"
@@ -169,9 +173,13 @@
                 <Button
                     android:id="@+id/myp_edit_post_check_et"
                     android:layout_width="100dp"
-                    android:layout_height="40dp"
+                    android:layout_height="match_parent"
                     android:layout_gravity="end|center_vertical"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="2dp"
                     android:layout_marginEnd="2dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
                     android:text="검색하기"
                     android:backgroundTint="@color/grey_900"
                     android:textAppearance="@style/medium14"
@@ -227,10 +235,13 @@
                 <Button
                     android:id="@+id/myp_edit_change_info_search_et"
                     android:layout_width="100dp"
-                    android:layout_height="40dp"
+                    android:layout_height="match_parent"
                     android:layout_gravity="end|center_vertical"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="2dp"
                     android:layout_marginEnd="2dp"
-                    android:text="검색하기"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"                    android:text="검색하기"
                     android:backgroundTint="@color/grey_900"
                     android:textAppearance="@style/medium14"
                     android:textColor="@color/grey_100"/>

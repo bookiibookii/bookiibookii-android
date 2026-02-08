@@ -2,18 +2,24 @@ package com.bookiibookii.bookiibookii.lib
 
 import android.graphics.Rect
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.Data.LibBook
-import com.bookiibookii.bookiibookii.bookData.Data.ReadStatus
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.LibBook
+import com.bookiibookii.bookiibookii.data.model.ReadStatus
+import com.bookiibookii.bookiibookii.data.viewModel.LibraryViewModel
+import com.bookiibookii.bookiibookii.data.viewModel.SortType
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBinding
+import kotlinx.coroutines.launch
 
 class LibraryFragment : Fragment() {
 
@@ -22,42 +28,13 @@ class LibraryFragment : Fragment() {
 
     private lateinit var libraryAdapter: LibraryBookAdapter
 
-    private val allMyBooks = listOf(
-        LibBook(
-            title = "괴테는 모든 것을 말했다",
-            author = "noshel",
-            readStatus = ReadStatus.READING,
-            progress = "50% 읽음"
-        ),
-        LibBook(
-            title = "자바의 정석",
-            author = "남궁성",
-            readStatus = ReadStatus.READING,
-            progress = "p.120"
-        ),
-        LibBook(
-            title = "해리포터와 마법사의 돌",
-            author = "J.K.롤링",
-            readStatus = ReadStatus.DONE,
-            rating = 5
-        ),
-        LibBook(
-            title = "클린 코드",
-            author = "로버트 C",
-            readStatus = ReadStatus.READING,
-            progress = "독서 시작 전"
-        ),
-        LibBook(title = "반지의 제왕", author = "톨킨", readStatus = ReadStatus.DONE, rating = 4),
-        LibBook(
-            title = "코틀린 인 액션",
-            author = "드미트리",
-            readStatus = ReadStatus.READING,
-            progress = "80% 읽음"
-        ),
-        LibBook(title = "안드로이드 프로그래밍", author = "구글", readStatus = ReadStatus.DONE, rating = 3),
-        LibBook(title = "없어질 행성에서 씁니다", author = "김초엽", readStatus = ReadStatus.READING, progress = "p.40"),
-        LibBook(title = "모국어는 차라리 침묵", author = "목정원", readStatus = ReadStatus.READING, progress = "p.15")
-    )
+    // 전체 데이터 (필터링/정렬 전 원본)
+    private var allMyBooks: List<LibBook> = emptyList()
+
+    // 현재 탭 상태 (기본값: 읽는 중)
+    private var currentTabStatus: ReadStatus = ReadStatus.READING
+
+    private val viewModel: LibraryViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -72,60 +49,141 @@ class LibraryFragment : Fragment() {
 
         initRecyclerView()
         initClickListeners()
+        fetchBooks()
 
-        showBooksByStatus(ReadStatus.READING)
+        // 정렬 옵션 관찰
+        viewModel.sortType.observe(viewLifecycleOwner) { sortType ->
+            Log.d("LibraryFragment", "정렬 타입 변경됨: $sortType")
+            applySort(sortType)
+        }
+    }
+
+    private fun fetchBooks() {
+        lifecycleScope.launch {
+            try {
+                Log.d("LibraryFragment", "API 요청 시작")
+                val response = RetrofitClient.api().getLibraryBooks()
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val resultList = response.body()?.result ?: emptyList()
+                    Log.d("LibraryFragment", "API 성공: ${resultList.size}권 받아옴")
+
+                    allMyBooks = resultList.map { apiData ->
+                        // 평점이 0.0 초과면 완독(DONE)으로 간주
+                        val status = if (apiData.rating > 0.0) ReadStatus.DONE else ReadStatus.READING
+                        val progressText = if (status == ReadStatus.READING) {
+                            "${apiData.duration}일째 독서 중"
+                        } else {
+                            "완독"
+                        }
+
+                        LibBook(
+                            id = apiData.userBookId,
+                            title = apiData.title,
+                            author = apiData.author,
+                            coverUrl = apiData.image,
+                            hostProfileUrl = apiData.hostProfileImageUrl,
+                            readStatus = status,
+                            progress = progressText,
+                            rating = apiData.rating,
+                            groupType = apiData.groupType // "TOGETHER" or "RELAY"
+                        )
+                    }
+
+                    // ViewModel에 원본 데이터 세팅 (선택 사항)
+                    viewModel.setBookList(allMyBooks)
+
+                    // 현재 탭 상태로 리스트 표시
+                    val currentSort = viewModel.sortType.value ?: SortType.TITLE
+                    applySort(currentSort)
+
+                } else {
+                    Log.e("LibraryFragment", "API 오류: ${response.code()} ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("LibraryFragment", "네트워크 오류: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun applySort(sortType: SortType) {
+        if (allMyBooks.isEmpty()) {
+            Log.d("LibraryFragment", "정렬할 데이터가 없음")
+            return
+        }
+
+        // 1. 정렬 수행
+        allMyBooks = when (sortType) {
+            SortType.TITLE -> allMyBooks.sortedBy { it.title }
+            SortType.RATING_HIGH -> allMyBooks.sortedByDescending { it.rating }
+            SortType.RATING_LOW -> allMyBooks.sortedBy { it.rating }
+            SortType.RECENT -> allMyBooks.sortedByDescending { it.id } // ID 기준 최신순
+            SortType.OLD -> allMyBooks.sortedBy { it.id }
+        }
+
+        // 2. 현재 탭(읽는중/완독)에 맞춰 필터링 후 표시
+        showBooksByStatus(currentTabStatus)
+    }
+
+    private fun showBooksByStatus(status: ReadStatus) {
+        val filteredList = allMyBooks.filter { it.readStatus == status }
+        Log.d("LibraryFragment", "탭 필터링 결과: 상태=$status, 개수=${filteredList.size}")
+
+        libraryAdapter.submitList(filteredList)
+        binding.libTotalTv.text = "${filteredList.size}권"
+        updateButtonStyles(status)
     }
 
     private fun initRecyclerView() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
+            Log.d("LibraryFragment", "책 클릭됨: ${clickedBook.title}, 타입=${clickedBook.groupType}")
 
-            // 1. 상태에 따라 이동할 프래그먼트 결정 (targetFragment)
-            val targetFragment = if (clickedBook.readStatus == ReadStatus.READING) {
-                LibraryBookDetailIngFragment() // 진행 중 화면
+            // ★ [핵심 분기] 함께읽기(TOGETHER) -> Ing 화면 / 이어읽기(RELAY) -> Detail 화면
+            val targetFragment = if (clickedBook.groupType == "TOGETHER") {
+                LibraryBookDetailIngFragment() // 함께읽기 (진행중)
             } else {
-                LibraryBookDetailFragment()    // 종료(디테일) 화면
+                LibraryBookDetailFragment()    // 이어읽기 (상세)
             }
 
-            // 2. 데이터 전달 (Bundle)
             val bundle = Bundle().apply {
-                putString("book_title", clickedBook.title)
-                putString("book_author", clickedBook.author)
-                // 필요하다면 ID도 전달
-                // putLong("book_id", clickedBook.id)
+                putInt("userBookId", clickedBook.id)
+                putString("bookTitle", clickedBook.title)
+                putString("bookAuthor", clickedBook.author)
+                putString("bookCover", clickedBook.coverUrl)
+                putBoolean("isMine", true)
             }
-
             targetFragment.arguments = bundle
 
-            // 3. 트랜잭션 실행 (수정된 부분: detailFragment -> targetFragment)
             parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, targetFragment) // <--- 여기가 targetFragment여야 합니다.
+                .replace(R.id.fragmentContainer, targetFragment)
                 .addToBackStack(null)
                 .commit()
         }
 
         binding.libBookListRv.adapter = libraryAdapter
-
-        setCoverModeLayout()
+        setCoverModeLayout() // 초기: 커버 모드
     }
 
     private fun initClickListeners() {
-        // [진행 중] 버튼 클릭
+        // [진행 중] 탭
         binding.libIngBtn.setOnClickListener {
+            currentTabStatus = ReadStatus.READING
             showBooksByStatus(ReadStatus.READING)
         }
 
-        // [종료] 버튼 클릭
+        // [종료] 탭
         binding.libEdBtn.setOnClickListener {
+            currentTabStatus = ReadStatus.DONE
             showBooksByStatus(ReadStatus.DONE)
         }
 
-        // [정렬] 버튼 클릭
+        // [정렬] 바텀시트
         binding.libSortIv.setOnClickListener {
-            val bottomSheet = LibrarySortBottomSheet()
-            bottomSheet.show(parentFragmentManager, "LibrarySortBottomSheet")
+            LibrarySortBottomSheet().show(parentFragmentManager, "LibrarySortBottomSheet")
         }
 
-        // [검색] 버튼 클릭
+        // [검색]
         binding.libSearchIv.setOnClickListener {
             val searchFragment = LibrarySearchFragment().apply {
                 arguments = Bundle().apply { putString("SOURCE", "LIBRARY") }
@@ -136,6 +194,7 @@ class LibraryFragment : Fragment() {
                 .commit()
         }
 
+        // [북마크]
         binding.libBookIv.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, LibraryBookmarkFragment())
@@ -143,6 +202,7 @@ class LibraryFragment : Fragment() {
                 .commit()
         }
 
+        // [뷰 모드 전환]
         binding.libGridIv.setOnClickListener {
             libraryAdapter.toggleMode()
 
@@ -158,77 +218,51 @@ class LibraryFragment : Fragment() {
 
     private fun setCoverModeLayout() {
         binding.libBookListRv.layoutManager = GridLayoutManager(context, 3)
-
         binding.libBookListRv.setPadding(0, 0, 0, dpToPx(80))
         binding.libBookListRv.clipToPadding = false
+        removeAllItemDecorations()
 
-        removeAllItemDecorations(binding.libBookListRv)
-        val spacingHorizontal = dpToPx(12)
-        val spacingVertical = dpToPx(36)
-
-        binding.libBookListRv.addItemDecoration(
-            LibDetailGridDecoration(3, spacingHorizontal, spacingVertical, false)
-        )
+        // 아이템 데코레이션 (기존 사용하시던 클래스)
+        binding.libBookListRv.addItemDecoration(LibDetailGridDecoration(3, dpToPx(12), dpToPx(36), false))
     }
 
     private fun setSpineModeLayout() {
-        val spanCount = 8
-        // 🔹 일반 GridLayoutManager로 변경하여 정렬 기준선을 일관되게 유지
-        val layoutManager = GridLayoutManager(context, spanCount)
-        binding.libBookListRv.layoutManager = layoutManager
-
-        // 🔹 RecyclerView 자체는 상단에 밀착 (여백 제거)
+        binding.libBookListRv.layoutManager = GridLayoutManager(context, 8)
         binding.libBookListRv.setPadding(dpToPx(8), 0, dpToPx(8), dpToPx(80))
         binding.libBookListRv.clipToPadding = false
-
-        removeAllItemDecorations(binding.libBookListRv)
+        removeAllItemDecorations()
 
         binding.libBookListRv.addItemDecoration(object : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-                outRect.left = dpToPx(4)
-                outRect.right = dpToPx(4)
-                outRect.top = dpToPx(16) // 🔹 줄 사이의 간격
-                outRect.bottom = 0
+                outRect.left = dpToPx(4); outRect.right = dpToPx(4); outRect.top = dpToPx(16); outRect.bottom = 0
             }
         })
     }
 
-    private fun showBooksByStatus(status: ReadStatus) {
-        val filteredList = allMyBooks.filter { it.readStatus == status }
-        libraryAdapter.submitList(filteredList)
-        binding.libTotalTv.text = "${filteredList.size}권"
-        updateButtonStyles(status)
+    private fun removeAllItemDecorations() {
+        while (binding.libBookListRv.itemDecorationCount > 0) {
+            binding.libBookListRv.removeItemDecorationAt(0)
+        }
     }
 
-    private fun updateButtonStyles(currentStatus: ReadStatus) {
+    private fun updateButtonStyles(status: ReadStatus) {
         val activeColor = ContextCompat.getColor(requireContext(), R.color.white)
         val inactiveColor = ContextCompat.getColor(requireContext(), R.color.grey_900)
 
-        if (currentStatus == ReadStatus.READING) {
+        if (status == ReadStatus.READING) {
             binding.libIngBtn.setBackgroundResource(R.drawable.bg_toggle_black10)
             binding.libIngBtn.setTextColor(activeColor)
-
             binding.libEdBtn.setBackgroundResource(R.drawable.bg_toggle_white10)
             binding.libEdBtn.setTextColor(inactiveColor)
         } else {
             binding.libIngBtn.setBackgroundResource(R.drawable.bg_toggle_white10)
             binding.libIngBtn.setTextColor(inactiveColor)
-
             binding.libEdBtn.setBackgroundResource(R.drawable.bg_toggle_black10)
             binding.libEdBtn.setTextColor(activeColor)
         }
     }
 
-    private fun removeAllItemDecorations(recyclerView: RecyclerView) {
-        while (recyclerView.itemDecorationCount > 0) {
-            recyclerView.removeItemDecorationAt(0)
-        }
-    }
-
-    private fun dpToPx(dp: Int): Int {
-        val density = resources.displayMetrics.density
-        return (dp * density).toInt()
-    }
+    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
     override fun onDestroyView() {
         super.onDestroyView()
