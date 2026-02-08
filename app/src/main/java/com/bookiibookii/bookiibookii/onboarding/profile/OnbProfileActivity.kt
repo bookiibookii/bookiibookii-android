@@ -15,6 +15,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.core.graphics.toColorInt
 import androidx.core.widget.addTextChangedListener
+import android.text.InputFilter
+import android.text.Spannable
+import android.view.inputmethod.BaseInputConnection
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityOnbProfileBinding
 import com.bookiibookii.bookiibookii.onboarding.steps.OnbStepActivity
@@ -35,18 +38,13 @@ class OnbProfileActivity : AppCompatActivity() {
     // 업로드 완료된 프로필 이미지 S3 Key
     private var uploadedS3Key: String? = null
 
-    // 서비스 금칙어 (임시)
-    // TODO: API 연동 후 삭제
-    private val bannedWords = listOf(
-        "관리자",
-        "admin",
-        "운영자",
-        "bookii",
-        "시발",
-        "병신",
-        "fuck",
-        "shit"
-    )
+    // 문자 1개 허용 여부(필터에서 사용)
+    private val nicknameAllowedCharRegex =
+        Regex("[가-힣ㄱ-ㅎㅏ-ㅣA-Za-z0-9._\\-_/()\\[\\]:!?]")
+
+    // 전체 문자열 허용 여부(최종 검증에서 사용)
+    private val nicknameAllowedRegex =
+        Regex("^[가-힣A-Za-z0-9._\\-_/()\\[\\]:!?]+$")
 
     // 갤러리 이미지 선택 런처 (권한 불필요)
     private val pickImageLauncher =
@@ -78,6 +76,7 @@ class OnbProfileActivity : AppCompatActivity() {
         binding = ActivityOnbProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupNicknameFilters()
         initView()
         initListeners()
         observeViewModel()
@@ -113,12 +112,6 @@ class OnbProfileActivity : AppCompatActivity() {
             // 형식 검증
             if (validateNicknameInput(nickname) != NicknameInputState.VALID) {
                 showError("허용되지 않은 문자가 포함되어 있습니다.")
-                return@setOnClickListener
-            }
-
-            // 금칙어 검증
-            if (containsBannedWord(nickname)) {
-                showError("금칙어가 포함되어 있습니다.")
                 return@setOnClickListener
             }
 
@@ -246,28 +239,37 @@ class OnbProfileActivity : AppCompatActivity() {
         binding.includeFooterButton.btnFooter.isEnabled = false
     }
 
-    // 금칙어 포함 여부 확인
-    private fun containsBannedWord(nickname: String): Boolean {
-        val lower = nickname.lowercase()
-        return bannedWords.any { banned -> lower.contains(banned.lowercase()) }
-    }
-
     // 닉네임 형식 검증
     private fun validateNicknameInput(nickname: String): NicknameInputState {
         if (nickname.isBlank()) return NicknameInputState.EMPTY
         if (nickname.length > 10) return NicknameInputState.INVALID
-        if (nickname.any { it.isWhitespace() }) return NicknameInputState.INVALID
+        if (nickname.any { it.isWhitespace() || Character.isSurrogate(it) }) return NicknameInputState.INVALID
 
-        // 허용 문자 정규식
-        val allowedRegex = Regex("^[가-힣A-Za-z0-9._\\-\\/\\(\\)\\[\\]:!?]+$")
-
-        // 이모지(서로게이트 문자) 차단
-        if (nickname.any { Character.isSurrogate(it) }) return NicknameInputState.INVALID
-
-        return if (allowedRegex.matches(nickname))
+        return if (nicknameAllowedRegex.matches(nickname))
             NicknameInputState.VALID
         else
             NicknameInputState.INVALID
+    }
+
+    // 닉네임 입력 단계에서 허용되지 않은 문자/공백/이모지 입력 방지 + 10자 제한
+    private fun setupNicknameFilters() {
+        val lengthFilter = InputFilter.LengthFilter(10)
+
+        val blockInvalidInputFilter = InputFilter { source, start, end, _, _, _ ->
+            if (source.isEmpty()) return@InputFilter null // 삭제 허용
+
+            for (i in start until end) {
+                val ch = source[i]
+
+                if (ch.isWhitespace()) return@InputFilter ""
+                if (Character.isSurrogate(ch)) return@InputFilter ""
+                if (!nicknameAllowedCharRegex.matches(ch.toString())) return@InputFilter ""
+            }
+
+            null
+        }
+
+        binding.etNickname.filters = arrayOf(lengthFilter, blockInvalidInputFilter)
     }
 
     // 갤러리 열기
