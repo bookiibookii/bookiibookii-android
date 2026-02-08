@@ -22,17 +22,11 @@ import com.bookiibookii.bookiibookii.data.model.LoginResponse
 import com.bookiibookii.bookiibookii.data.model.LogoutResponse
 import com.bookiibookii.bookiibookii.data.model.MyGroupResponse
 import com.bookiibookii.bookiibookii.data.model.MypageResponse
-import com.bookiibookii.bookiibookii.data.model.NicknameCheckRequest
-import com.bookiibookii.bookiibookii.data.model.NicknameCheckResponse
-import com.bookiibookii.bookiibookii.data.model.NicknameCheckRequest
-import com.bookiibookii.bookiibookii.data.model.NicknameCheckResponse
 import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
-import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
 import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
-import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.ReportCreateResponse
 import com.bookiibookii.bookiibookii.data.model.ReportListResponse
 import com.bookiibookii.bookiibookii.data.model.ReportRequest

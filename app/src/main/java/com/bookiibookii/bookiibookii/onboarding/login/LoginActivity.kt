@@ -46,25 +46,25 @@ class LoginActivity : AppCompatActivity() {
         // =================================================================
         // [TEST MODE] 하드코딩 토큰 주입 & 메인 강제 이동
         // =================================================================
-        Log.d("TEST_MODE", "🛠️ 테스트 모드 가동: 토큰 주입 중...")
-
-        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        prefs.edit().apply {
-            // 1. 개발자에게 받은 토큰을 저장소에 강제로 넣습니다.
-            putString("access_token", TestTokenConfig.TEST_ACCESS_TOKEN)
-            putString("refresh_token", TestTokenConfig.TEST_REFRESH_TOKEN)
-            putInt("user_id", TestTokenConfig.TEST_USER_ID)
-
-            // 2. 온보딩도 끝난 것으로 처리합니다.
-            putBoolean("onboarding_done", true)
-
-            // 저장 실행
-            apply()
-        }
-
-        Log.d("TEST_MODE", "🚀 토큰 주입 완료. 메인으로 이동합니다.")
-        moveToMain()
-        return // ★ 중요: 아래 기존 로그인 로직이 실행되지 않도록 여기서 종료
+//        Log.d("TEST_MODE", "🛠️ 테스트 모드 가동: 토큰 주입 중...")
+//
+//        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+//        prefs.edit().apply {
+//            // 1. 개발자에게 받은 토큰을 저장소에 강제로 넣습니다.
+//            putString("access_token", TestTokenConfig.TEST_ACCESS_TOKEN)
+//            putString("refresh_token", TestTokenConfig.TEST_REFRESH_TOKEN)
+//            putInt("user_id", TestTokenConfig.TEST_USER_ID)
+//
+//            // 2. 온보딩도 끝난 것으로 처리합니다.
+//            putBoolean("onboarding_done", true)
+//
+//            // 저장 실행
+//            apply()
+//        }
+//
+//        Log.d("TEST_MODE", "🚀 토큰 주입 완료. 메인으로 이동합니다.")
+//        moveToMain()
+//        return // ★ 중요: 아래 기존 로그인 로직이 실행되지 않도록 여기서 종료
         // =================================================================
 
         // 1. 자동 로그인 체크 (토큰이 이미 있으면 메인으로)
