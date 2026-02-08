@@ -21,8 +21,6 @@ import com.bookiibookii.bookiibookii.data.model.NicknameCheckResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
 import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
-import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
-import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
 import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
 import com.bookiibookii.bookiibookii.data.model.ReportCreateResponse
@@ -116,8 +114,6 @@ interface ApiService: TrkApi {
         @Url url: String,
         @Body image: RequestBody
     ): Response<Unit>
-
-}
 
 
     // 닉네임 중복 검증
