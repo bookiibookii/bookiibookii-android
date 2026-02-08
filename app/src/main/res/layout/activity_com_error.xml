@@ -44,12 +44,12 @@
         android:id="@+id/tv_error_des"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="100dp"
+        android:layout_marginTop="10dp"
         android:gravity="center"
         android:textColor="@color/grey_900"
         android:textSize="16sp"
         android:lineSpacingExtra="6dp"
-        app:layout_constraintBottom_toTopOf="@id/include_footer_button_1"
+        app:layout_constraintTop_toBottomOf="@id/tv_error_title"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
