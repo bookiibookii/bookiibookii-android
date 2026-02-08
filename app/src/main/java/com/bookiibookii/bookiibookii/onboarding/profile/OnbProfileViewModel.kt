@@ -25,7 +25,7 @@ class OnbProfileViewModel : ViewModel() {
     private val _profileS3Key = MutableLiveData<String?>(null)
     val profileS3Key: LiveData<String?> = _profileS3Key
 
-    // 닉네임 중복 검사 요청
+    // 닉네임 중복/금칙어 검사 요청
     fun checkNickname(nickname: String) {
         viewModelScope.launch {
             _nicknameState.value = NicknameCheckState.Loading
@@ -40,17 +40,22 @@ class OnbProfileViewModel : ViewModel() {
                 }
 
                 val body = response.body()
-                if (body?.isSuccess != true) {
+                if (body?.isSuccess != true || body.result == null) {
                     _nicknameState.value =
                         NicknameCheckState.Error(body?.message ?: "요청에 실패했습니다.")
                     return@onSuccess
                 }
 
-                val available = body.result?.isAvailable == true
-                _nicknameState.value = if (available) {
-                    NicknameCheckState.Available("사용 가능한 닉네임입니다.")
-                } else {
-                    NicknameCheckState.Duplicated("이미 존재하는 닉네임입니다.")
+                val result = body.result
+                val msg = result.message.ifBlank { "요청에 실패했습니다." }
+
+                _nicknameState.value = when (result.code) {
+                    "SUCCESS" -> NicknameCheckState.Available(msg)
+
+                    // 사용 불가: 중복/금칙어
+                    "DUPLICATE", "BAD_WORD" -> NicknameCheckState.Duplicated(msg)
+
+                    else -> NicknameCheckState.Error(msg)
                 }
 
             }.onFailure { e ->

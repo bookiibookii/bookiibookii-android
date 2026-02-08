@@ -9,6 +9,7 @@ import com.bookiibookii.bookiibookii.data.model.BookSearchResponse
 import com.bookiibookii.bookiibookii.data.model.CardListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
 import com.bookiibookii.bookiibookii.data.model.GroupCreateResponse
+import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.data.model.GroupListRequest
 import com.bookiibookii.bookiibookii.data.model.GroupListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupMemberResponse
@@ -23,9 +24,13 @@ import com.bookiibookii.bookiibookii.data.model.MyGroupResponse
 import com.bookiibookii.bookiibookii.data.model.MypageResponse
 import com.bookiibookii.bookiibookii.data.model.NicknameCheckRequest
 import com.bookiibookii.bookiibookii.data.model.NicknameCheckResponse
+import com.bookiibookii.bookiibookii.data.model.NicknameCheckRequest
+import com.bookiibookii.bookiibookii.data.model.NicknameCheckResponse
 import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
+import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
+import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
 import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.ReportCreateResponse
@@ -210,4 +215,14 @@ interface ApiService: TrkApi {
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<GroupListResponse>
+
+    //인기 검색어
+    @GET("api/groups/popular-keywords")
+    suspend fun getPopularKeywords(): Response<GroupItemDto.PopularSearchResponse>
+
+    @GET("/api/groups/search")
+    suspend fun searchGroups(
+        @Query("keyword") keyword: String,
+        @Query("sort") sort: String = "latest" // 정렬 옵션 (필요시)
+    ): Response<GroupItemDto.GroupSearchResponse>
 }
