@@ -1,13 +1,36 @@
 package com.bookiibookii.bookiibookii.trkHost
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerDetailResponseDto
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerDoneResponseDto
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerExtensionResponseDto
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerReadingStartResponseDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+data class HostTrackerUiState(
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val data: TrackerDetailResponseDto? = null
+)
+
+sealed class UiState<out T> {
+    data object Idle : UiState<Nothing>()
+    data object Loading : UiState<Nothing>()
+    data class Success<T>(val data: T) : UiState<T>()
+    data class Error(val message: String) : UiState<Nothing>()
+}
 
 class HostViewModel : ViewModel() {
 
     private val role: Role = Role.HOST
+
+    private val _uiState = MutableStateFlow(HostTrackerUiState())
+    val uiState: StateFlow<HostTrackerUiState> = _uiState.asStateFlow()
 
     private val _phase = MutableStateFlow(Phase.INIT)
     val phase: StateFlow<Phase> = _phase.asStateFlow()
@@ -15,17 +38,163 @@ class HostViewModel : ViewModel() {
     private val _steps = MutableStateFlow<List<TradeStatusItem>>(emptyList())
     val steps: StateFlow<List<TradeStatusItem>> = _steps.asStateFlow()
 
+    private val _readingStartState =
+        MutableStateFlow<UiState<TrackerReadingStartResponseDto>>(UiState.Idle)
+    val readingStartState: StateFlow<UiState<TrackerReadingStartResponseDto>> =
+        _readingStartState.asStateFlow()
+
+    private val _extensionState =
+        MutableStateFlow<UiState<TrackerExtensionResponseDto>>(UiState.Idle)
+    val extensionState: StateFlow<UiState<TrackerExtensionResponseDto>> = _extensionState.asStateFlow()
+
+    private val _doneState =
+        MutableStateFlow<UiState<TrackerDoneResponseDto>>(UiState.Idle)
+    val doneState: StateFlow<UiState<TrackerDoneResponseDto>> = _doneState.asStateFlow()
+
     init {
         recomputeSteps()
+    }
+
+    fun resetDoneState() {
+        _doneState.value = UiState.Idle
+    }
+
+    fun resetReadingStartState() {
+        _readingStartState.value = UiState.Idle
+    }
+
+    fun resetExtensionState() {
+        _extensionState.value = UiState.Idle
+    }
+
+    fun loadTracker(groupId: Long) {
+        viewModelScope.launch {
+            _uiState.value = HostTrackerUiState(isLoading = true)
+
+            try {
+                val body = RetrofitClient.api().getTrackerDetail(groupId)
+
+                if (!body.isSuccess || body.result == null) {
+                    _uiState.value = HostTrackerUiState(
+                        isLoading = false,
+                        errorMessage = body.message ?: "API error"
+                    )
+                    return@launch
+                }
+
+                val dto = body.result
+
+                _uiState.value = HostTrackerUiState(
+                    isLoading = false,
+                    data = dto
+                )
+
+                setPhaseFromApiStatus(dto.trackerStatus)
+
+            } catch (e: Exception) {
+                _uiState.value = HostTrackerUiState(
+                    isLoading = false,
+                    errorMessage = e.message ?: "network error"
+                )
+            }
+        }
+    }
+
+    fun patchTrackerReadingStart(groupId: Long) {
+        viewModelScope.launch {
+            _readingStartState.value = UiState.Loading
+
+            try {
+                val body = RetrofitClient.api().patchTrackerReadingStart(groupId)
+
+                if (!body.isSuccess || body.result == null) {
+                    _readingStartState.value = UiState.Error(body.message ?: "API error")
+                    return@launch
+                }
+
+                val dto = body.result
+                _readingStartState.value = UiState.Success(dto)
+
+                loadTracker(groupId)
+
+            } catch (e: Exception) {
+                _readingStartState.value = UiState.Error(e.message ?: "network error")
+            }
+        }
+    }
+
+    fun patchTrackerExtension(groupId: Long, days: Int) {
+        viewModelScope.launch {
+            _extensionState.value = UiState.Loading
+
+            try {
+                val body = RetrofitClient.api().patchTrackerExtension(groupId, days)
+
+                if (!body.isSuccess || body.result == null) {
+                    _extensionState.value = UiState.Error(body.message ?: "API error")
+                    return@launch
+                }
+
+                val dto = body.result
+                _extensionState.value = UiState.Success(dto)
+
+                loadTracker(groupId)
+
+            } catch (e: Exception) {
+                _extensionState.value = UiState.Error(e.message ?: "network error")
+            }
+        }
+    }
+
+    fun patchTrackerDone(groupId: Long) {
+        viewModelScope.launch {
+            _doneState.value = UiState.Loading
+
+            try {
+                val body = RetrofitClient.api().patchTrackerDone(groupId)
+
+                if (!body.isSuccess || body.result == null) {
+                    _doneState.value = UiState.Error(body.message ?: "API error")
+                    return@launch
+                }
+
+                val dto = body.result
+                _doneState.value = UiState.Success(dto)
+
+                loadTracker(groupId)
+
+            } catch (e: Exception) {
+                _doneState.value = UiState.Error(e.message ?: "network error")
+            }
+        }
+    }
+
+    fun setPhaseFromApiStatus(trackerStatus: String?) {
+        _phase.value = phaseFromServerStatus(trackerStatus)
+        recomputeSteps()
+    }
+
+    private fun phaseFromServerStatus(status: String?): Phase {
+        return when (status?.uppercase()) {
+            "READY" -> Phase.INIT
+
+            "HOST_READING", "HOST_EXTENSION" -> Phase.HOST_READING
+
+            "HOST_DONE" -> Phase.HOST_SHIPPING_READY
+            "SHIPPING_TO_GUEST" -> Phase.HOST_SHIPPED
+
+            "RECEIVED", "GUEST_READING", "GUEST_EXTENSION" -> Phase.GUEST_READING
+            "GUEST_DONE" -> Phase.GUEST_SHIPPING_READY
+            "SHIPPING_TO_HOST" -> Phase.GUEST_SHIPPED
+
+            "COMPLETED", "RETURNED" -> Phase.FINISHED
+            else -> Phase.INIT
+        }
     }
 
     fun onAction(action: HostAction) {
         _phase.value = nextPhase(_phase.value, action)
         recomputeSteps()
-    }
-
-    private fun recomputeSteps() {
-        _steps.value = buildSteps(role, _phase.value)
     }
 
     private fun nextPhase(current: Phase, action: HostAction): Phase {
@@ -69,6 +238,9 @@ class HostViewModel : ViewModel() {
         }
     }
 
+    private fun recomputeSteps() {
+        _steps.value = buildSteps(role, _phase.value)
+    }
 
     private fun buildSteps(role: Role, phase: Phase): List<TradeStatusItem> {
         val list = mutableListOf<TradeStatusItem>()
@@ -122,7 +294,7 @@ class HostViewModel : ViewModel() {
             badge = finishDDayBadge()
         )
 
-        val n = when (phase) {
+        val visibleCount = when (phase) {
             Phase.INIT -> 1
             Phase.HOST_READING -> 1
             Phase.HOST_SHIPPING_READY -> 2
@@ -133,18 +305,10 @@ class HostViewModel : ViewModel() {
             Phase.FINISHED -> 7
         }
 
-        return list.take(n).reversed()
+        return list.take(visibleCount).reversed()
     }
 
-    // 이거 사용하려 했는데 좀 애매하네
-    private fun badgeFor(current: Phase, targetDonePhase: Phase): String {
-        return if (current.ordinal >= targetDonePhase.ordinal) "완료" else "예정"
-    }
-
-    private fun finishDDayBadge(): String {
-        // TODO: endDate 기반으로 D-day 계산 넣기
-        return "D-7"
-    }
+    private fun finishDDayBadge(): String = "D-7"
 
     private fun hostReadingDescription(phase: Phase): String {
         return if (phase.ordinal < Phase.HOST_READING.ordinal) {
@@ -154,28 +318,23 @@ class HostViewModel : ViewModel() {
         }
     }
 
-    private fun readingDDayBadge(): String {
-        // TODO: 실제로는 (예정 독서 종료일 - 오늘) 계산
-        return "D-7"
-    }
-
-    private fun hostReadingBadge(phase: Phase): String =
+    private fun hostReadingBadge(phase: Phase) =
         if (phase.ordinal > Phase.HOST_READING.ordinal) "완료" else "예정"
-    private fun hostShipBadge(phase: Phase): String =
-        if (phase.ordinal >= Phase.HOST_SHIPPED.ordinal) "완료" else "예정"
-    private fun receiveCheckBadge(phase: Phase): String =
-        if (phase.ordinal >= Phase.GUEST_READING.ordinal) "완료" else "예정"
-    private fun guestReadingBadge(phase: Phase): String =
-        if (phase.ordinal > Phase.GUEST_READING.ordinal) "완료" else "예정"
-    private fun guestShipBadge(phase: Phase): String =
-        if (phase.ordinal >= Phase.GUEST_SHIPPED.ordinal) "완료" else "예정"
-    private fun receiveRegisterBadge(phase: Phase): String =
-        if (phase.ordinal >= Phase.FINISHED.ordinal) "완료" else "예정"
 
-    fun setPhaseForDummy(phase: Phase) {
-        _phase.value = phase
-        recomputeSteps()
-    }
+    private fun hostShipBadge(phase: Phase) =
+        if (phase.ordinal >= Phase.HOST_SHIPPED.ordinal) "완료" else "예정"
+
+    private fun receiveCheckBadge(phase: Phase) =
+        if (phase.ordinal >= Phase.GUEST_READING.ordinal) "완료" else "예정"
+
+    private fun guestReadingBadge(phase: Phase) =
+        if (phase.ordinal > Phase.GUEST_READING.ordinal) "완료" else "예정"
+
+    private fun guestShipBadge(phase: Phase) =
+        if (phase.ordinal >= Phase.GUEST_SHIPPED.ordinal) "완료" else "예정"
+
+    private fun receiveRegisterBadge(phase: Phase) =
+        if (phase.ordinal >= Phase.FINISHED.ordinal) "완료" else "예정"
 }
 
 enum class HostAction {

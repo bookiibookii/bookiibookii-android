@@ -48,6 +48,7 @@ class HostShippingInputDialogFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.btnRegister.isEnabled = false
         binding.btnRegister.alpha = 0.45f
+        binding.actvCourier.setDropDownBackgroundResource(android.R.color.white)
         setupCourierDropdown()
 
         childFragmentManager.setFragmentResultListener(

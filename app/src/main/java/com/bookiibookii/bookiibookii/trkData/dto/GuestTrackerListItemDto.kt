@@ -2,7 +2,7 @@ package com.bookiibookii.bookiibookii.trkData.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class HostTrackerListItemDto(
+data class GuestTrackerListItemDto(
     val groupId: Long,
     val groupType: String,
     val bookTitle: String,
@@ -15,12 +15,12 @@ data class HostTrackerListItemDto(
     val category: String?,
 
     val tradeType: String?,
-    val relayDetail: HostTrackerRelayDetailDto?,
-    val togetherDetail: HostTrackerTogetherDetailDto?
+    val relayDetail: GuestTrackerRelayDetailDto?,
+    val togetherDetail: GuestTrackerTogetherDetailDto?
 )
 
 
-data class HostTrackerRelayDetailDto(
+data class GuestTrackerRelayDetailDto(
     val partnerNickname: String?,
     val hostProfileImage: String?,
     val guestProfileImages: List<String>?,
@@ -28,17 +28,12 @@ data class HostTrackerRelayDetailDto(
     val stepDates: List<String?>?
 )
 
-data class HostTrackerTogetherDetailDto(
+data class GuestTrackerTogetherDetailDto(
     val hostNickname: String?,
     val participantCount: Int?,
     val myReadingRate: Int?,
     val groupReadingRate: Int?
 )
 
-data class ApiResponse<T>(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: T?
-)
+
 
