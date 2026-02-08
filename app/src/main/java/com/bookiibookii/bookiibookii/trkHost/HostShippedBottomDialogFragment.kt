@@ -1,12 +1,10 @@
 package com.bookiibookii.bookiibookii.trkHost
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.databinding.FragmentHostReadingDoneBottomDialogBinding
 import com.bookiibookii.bookiibookii.databinding.FragmentHostShippedBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -34,6 +32,7 @@ class HostShippedBottomDialogFragment : BottomSheetDialogFragment() {
 
         binding.btnDoReceiveConfirm.setOnClickListener{
             val dialog = HostReceiveConfirmDialogFragment()
+            dismiss()
             dialog.show(parentFragmentManager, HostReceiveConfirmDialogFragment.TAG)
         }
     }

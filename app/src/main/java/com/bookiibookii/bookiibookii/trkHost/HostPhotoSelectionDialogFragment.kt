@@ -53,4 +53,5 @@ class HostPhotoSelectionDialogFragment : DialogFragment() {
         const val ACTION_GALLERY = "gallery"
         const val ACTION_CAMERA = "camera"
     }
+
 }

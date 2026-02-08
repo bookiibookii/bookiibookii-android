@@ -157,4 +157,5 @@ object RetrofitClient {
 
     fun api(): ApiService =
         apiService ?: error("RetrofitClient.init(context) 먼저 호출해야 함")
+
 }

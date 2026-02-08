@@ -23,6 +23,7 @@ data class LoginResult(
     val accessToken: String,
     val refreshToken: String,
     val userId: Int,
+    val onboardingDone: Boolean
 )
 
 //data class UserUpdateRequest(

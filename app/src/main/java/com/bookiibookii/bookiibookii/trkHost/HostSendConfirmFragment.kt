@@ -45,11 +45,14 @@ class HostSendConfirmFragment : DialogFragment() {
                 }
             )
 
-            val next = HostReadingStatusBottomDialogFragment()
-            val prevBottomSheet = parentFragmentManager.findFragmentByTag(HostShippingStatusBottomDialogFragment.TAG) as? DialogFragment
-            dismiss()
-            prevBottomSheet?.dismiss()
-            next.show(parentFragmentManager, HostReadingStatusBottomDialogFragment.TAG)
+            (parentFragmentManager
+                .findFragmentByTag(HostShippingStatusBottomDialogFragment.TAG) as? DialogFragment)
+                ?.dismissAllowingStateLoss()
+
+            dismissAllowingStateLoss()
+
+            HostReadingStatusBottomDialogFragment()
+                .show(parentFragmentManager, HostReadingStatusBottomDialogFragment.TAG)
         }
     }
 

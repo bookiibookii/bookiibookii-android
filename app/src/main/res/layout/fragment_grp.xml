@@ -171,16 +171,18 @@
         android:layout_marginTop="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintTop_toBottomOf="@id/grp_main_sort_recommend_Tv">
+        app:layout_constraintTop_toBottomOf="@id/grp_main_sort_recommend_Tv"
+        app:layout_constraintVertical_bias="1.0">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/group_recyclerview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingBottom="80dp"
             android:overScrollMode="never"
+            android:paddingBottom="80dp"
             tools:listitem="@layout/item_grp_card" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
@@ -227,6 +229,7 @@
         android:scaleType="fitCenter"
         android:src="@drawable/ic_grouplist"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/guideline_end" />
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        android:layout_marginBottom="16dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

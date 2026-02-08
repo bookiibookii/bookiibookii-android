@@ -7,30 +7,33 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bookiibookii.bookiibookii.BuildConfig
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.API.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentTrkHostMainBinding
 import com.bookiibookii.bookiibookii.trkDirectHost.DirectHostActivity
 import com.bookiibookii.bookiibookii.trkGuest.TrkGuestMainFragment
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 
 class TrkHostMainFragment : Fragment() {
+
     private var _binding: FragmentTrkHostMainBinding? = null
     private val binding get() = _binding!!
+
+    private val vm: TrkHostMainViewModel by viewModels()
+
     private lateinit var trackerAdapter: TrackerAdapter
     private lateinit var footerAdapter: CreateGroupFooterAdapter
     private lateinit var concatAdapter: ConcatAdapter
-    private var currentList: MutableList<TrackerData> = mutableListOf()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentTrkHostMainBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -43,15 +46,16 @@ class TrkHostMainFragment : Fragment() {
 
         trackerAdapter = TrackerAdapter { item ->
             val target = when (item.exchangeType) {
-                ExchangeType.SHIPPING -> HostActivity::class.java
+                ExchangeType.DELIVERY -> HostActivity::class.java
                 ExchangeType.DIRECT -> DirectHostActivity::class.java
+                ExchangeType.NONE -> TODO()
             }
 
             val intent = Intent(requireContext(), target).apply {
                 putExtra("tracker_id", item.id)
                 putExtra("exchange_type", item.exchangeType.name)
+                putExtra("tracker_status", item.currentStatus.name)
             }
-
             startActivity(intent)
         }
 
@@ -70,13 +74,19 @@ class TrkHostMainFragment : Fragment() {
             setHasFixedSize(true)
         }
 
-        currentList = createDummyTrackerList().toMutableList()
-        trackerAdapter.submitList(currentList.toList()) {
-            footerAdapter.setShowEmptyText(trackerAdapter.itemCount == 0)
+        // 화면 렌더링
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.trackers.collect { list ->
+                    trackerAdapter.submitList(list) {
+                        footerAdapter.setShowEmptyText(trackerAdapter.itemCount == 0)
+                    }
+                }
+            }
         }
 
-        updateAllBooksFromAladin()
-
+//        vm.loadHostTrackers()
+        vm.loadHostTrackersDummy()
     }
 
     private fun setupToggleLogic() {
@@ -95,111 +105,6 @@ class TrkHostMainFragment : Fragment() {
     private fun updateTabState(isMyGroup: Boolean) {
         binding.myGroupBt.isSelected = isMyGroup
         binding.joinedGroupBt.isSelected = !isMyGroup
-    }
-
-    private fun updateAllBooksFromAladin() {
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            for (i in currentList.indices) {
-                val title = currentList[i].bookTitle
-
-                val myKey = BuildConfig.ALADIN_TTB_KEY
-                android.util.Log.d("BOOK_API", "전송되는 키값: [$myKey]")
-
-                try {
-                    val response = withContext(Dispatchers.IO) {
-                        RetrofitClient.api.searchBooks(
-                            ttbKey = BuildConfig.ALADIN_TTB_KEY,
-                            query = title,
-                            queryType = "Title",
-                            maxResults = 10,
-                            start = 1
-                        )
-                    }
-
-                    val books = response.item.orEmpty()
-                    val representative = pickRepresentativeBookLocal(books, title) ?: continue
-
-                    currentList[i] = currentList[i].copy(
-                        bookTitle = representative.title,
-                        bookAuthor = representative.author,
-                        coverImageUrl = representative.cover
-                    )
-
-                    trackerAdapter.submitList(currentList.toList()) {
-                        footerAdapter.setShowEmptyText(trackerAdapter.itemCount == 0)
-                    }
-
-                } catch (e: Exception) {
-                    android.util.Log.e("BOOK_API", "update fail: $title", e)
-                }
-            }
-        }
-    }
-
-    private fun isSetBookLocal(title: String): Boolean {
-        val setKeywords = listOf("세트", "전", "+")
-        return setKeywords.any { title.contains(it) }
-    }
-
-    private fun pickRepresentativeBookLocal(
-        books: List<com.bookiibookii.bookiibookii.bookData.Data.Book>,
-        queryTitle: String
-    ): com.bookiibookii.bookiibookii.bookData.Data.Book? {
-        val singleBooks = books.filterNot { isSetBookLocal(it.title) }
-        if (singleBooks.isEmpty()) return null
-        return singleBooks.firstOrNull { it.title == queryTitle } ?: singleBooks.first()
-    }
-
-
-    // 더미 데이터
-    private fun createDummyTrackerList(): List<TrackerData> {
-        return listOf(
-            TrackerData(
-                id = 1L,
-                bookTitle = "살인자의 기억법",
-                bookAuthor = "김영하",
-                withUserName = "noshel",
-                coverImageUrl = null,
-                currentStep = TrackerStep.DELIVERY,
-                exchangeType = ExchangeType.SHIPPING
-            ),
-            TrackerData(
-                id = 2L,
-                bookTitle = "아몬드",
-                bookAuthor = "손원평",
-                withUserName = null,
-                coverImageUrl = null,
-                currentStep = TrackerStep.READING,
-                exchangeType = ExchangeType.DIRECT
-            ),
-            TrackerData(
-                id = 3L,
-                bookTitle = "살인자의 기억법",
-                bookAuthor = "김영하",
-                withUserName = "noshel",
-                coverImageUrl = null,
-                currentStep = TrackerStep.DELIVERY,
-                exchangeType = ExchangeType.SHIPPING
-            ),
-            TrackerData(
-                id = 4L,
-                bookTitle = "아몬드67",
-                bookAuthor = "손원평",
-                withUserName = null,
-                coverImageUrl = null,
-                currentStep = TrackerStep.READING,
-                exchangeType = ExchangeType.SHIPPING
-            ),
-            TrackerData(
-                id = 5L,
-                bookTitle = "아몬드123",
-                bookAuthor = "손원평",
-                withUserName = null,
-                coverImageUrl = null,
-                currentStep = TrackerStep.READING,
-                exchangeType = ExchangeType.SHIPPING
-            )
-        )
     }
 
     override fun onDestroyView() {
