@@ -20,6 +20,7 @@ data class MypageResult(
     val completeBook: Int,         // 완독 수
     val relayGroup: Int,
     val togetherGroup: Int,
+    val userBadge: List<UserBadge>?,
     val groups: List<MypageGroup>, // 주최한 그룹
     val books: List<MypageBook>    // 최근 읽은 책
 )
@@ -31,7 +32,18 @@ data class UserImageInfo(
 )
 
 data class UserDetail(
-    val userTags: List<UserTagWrapper>? // #인사이트 같은 태그들
+    val id: Int,
+    val name: String?,       // 이름
+    val meetPlace: String?,  // 활동 지역
+    val region: String?,
+    val userTags: List<UserTagWrapper>?,
+
+    // ▼ [추가] 조회 시 없으면 null로 처리됨
+    // 서버가 나중에 이 필드들을 내려주면 그때 자동으로 매핑됨
+    val phone: String? = null,
+    val zipCode: String? = null,
+    val address: String? = null,
+    val addressDetail: String? = null
 )
 
 data class UserTagWrapper(
@@ -59,3 +71,7 @@ data class MypageBook(
 )
 
 //
+data class UserBadge(
+    val userBadge : String,
+    val count : Int
+)

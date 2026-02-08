@@ -9,15 +9,14 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.Data.City
 import com.bookiibookii.bookiibookii.databinding.FragmentMypRegionSearchBinding
 
 class MypRegionSearchFragment : Fragment() {
-    // ... (기본 코드 동일) ...
     private var _binding: FragmentMypRegionSearchBinding? = null
     private val binding get() = _binding!!
 
-    // 현재 선택된 정보 저장
     private var currentCity = ""
     private var currentDistrict = ""
 
@@ -88,5 +87,14 @@ class MypRegionSearchFragment : Fragment() {
             }
         }
     }
-    // ... onDestroyView, onResume(하단바 숨김) ...
+    override fun onResume() {
+        super.onResume()
+        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
 }

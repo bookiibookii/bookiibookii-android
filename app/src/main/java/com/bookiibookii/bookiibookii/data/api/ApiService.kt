@@ -15,6 +15,10 @@ import com.bookiibookii.bookiibookii.data.model.LoginResponse
 import com.bookiibookii.bookiibookii.data.model.LogoutResponse
 import com.bookiibookii.bookiibookii.data.model.MyGroupResponse
 import com.bookiibookii.bookiibookii.data.model.MypageResponse
+import com.bookiibookii.bookiibookii.data.model.NicknameCheckRequest
+import com.bookiibookii.bookiibookii.data.model.NicknameCheckResponse
+import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
+import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
 import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
@@ -28,6 +32,7 @@ import com.bookiibookii.bookiibookii.data.model.TokenRefreshResponse
 import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.data.model.UserUpdateResponse
 import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
+import okhttp3.RequestBody
 import com.bookiibookii.bookiibookii.trkData.api.TrkApi
 import retrofit2.Call
 import retrofit2.Response
@@ -37,7 +42,9 @@ import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Url
 import retrofit2.http.Query
 
 interface ApiService: TrkApi {
@@ -93,6 +100,24 @@ interface ApiService: TrkApi {
     suspend fun getGroupMembers(
         @Path("groupId") groupId: Int
     ): Response<GroupMemberResponse>
+
+    // 프로필 수정
+    @POST("api/users/name-validation")
+    suspend fun checkNickname(
+        @Body request: NicknameCheckRequest
+    ): Response<NicknameCheckResponse>
+
+    @POST("api/users/me/image/presigend-url")
+    suspend fun getPresignedUrl(): Response<PresignedUrlResponse>
+
+    @PUT
+    suspend fun uploadImageToS3(
+        @Url url: String,
+        @Body image: RequestBody
+    ): Response<Unit>
+
+}
+
 
     // 닉네임 중복 검증
     @POST("api/users/name-validation")
