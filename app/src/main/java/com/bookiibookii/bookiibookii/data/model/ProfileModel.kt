@@ -13,45 +13,39 @@ data class MypageResponse(
 // 메인 데이터
 data class MypageResult(
     val userId: Int,
-    val userImage: UserImageInfo?, // 프로필 이미지 & 태그 정보 포함
+    val userImage: UserImageInfo?, // 프로필 이미지 등
     val nickname: String,
     val manner: Double,
-    val topTags: List<String>,     // 획득한 후기 (가로 스크롤)
+    val topTags: List<String>,     // 획득한 후기
     val completeBook: Int,         // 완독 수
     val relayGroup: Int,
     val togetherGroup: Int,
     val userBadge: List<UserBadge>?,
-    val groups: List<MypageGroup>, // 주최한 그룹
-    val books: List<MypageBook>    // 최근 읽은 책
+    val groups: List<MypageGroup>?, // 주최한 그룹 (null 가능성 대비)
+    val books: List<MypageBook>?,   // 최근 읽은 책 (null 가능성 대비)
+
+    // ▼▼▼ [새로 추가된 필드: DTO 최상단으로 이동함] ▼▼▼
+    val receiverName: String?,  // 수령인 이름
+    val phone: String?,         // 전화번호
+    val zipCode: String?,       // 우편번호
+    val address: String?,       // 주소
+    val addressDetail: String?, // 상세주소
+    val region: String?,        // 활동 지역 (시/도 시/군/구)
+    val meetPlace: String?      // 교환 희망 장소
 )
 
 // 프로필 이미지 및 유저 상세
 data class UserImageInfo(
     val s3Key: String?,
-    val user: UserDetail?
+    val user: MypageUserDetail?
 )
 
-data class UserDetail(
+data class MypageUserDetail(
     val id: Int,
-    val name: String?,       // 이름
-    val meetPlace: String?,  // 활동 지역
-    val region: String?,
-    val userTags: List<UserTagWrapper>?,
-
-    // ▼ [추가] 조회 시 없으면 null로 처리됨
-    // 서버가 나중에 이 필드들을 내려주면 그때 자동으로 매핑됨
-    val phone: String? = null,
-    val zipCode: String? = null,
-    val address: String? = null,
-    val addressDetail: String? = null
-)
-
-data class UserTagWrapper(
-    val tag: TagDetail?
-)
-
-data class TagDetail(
-    val code: String // 태그 이름 (ex: "인사이트")
+    @SerializedName("nickName") val nickName: String?, // 내부 닉네임 (JSON 키: nickName)
+    val meetPlace: String?, // 직접 교환 장소
+    val region: String?     // 희망 지역
+    // 현재 JSON에 phone, address, zipCode 등이 없음 -> 매핑 제외 (코드에서 null 처리)
 )
 
 // 그룹 정보

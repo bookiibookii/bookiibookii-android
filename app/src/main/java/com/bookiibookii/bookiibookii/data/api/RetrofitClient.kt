@@ -45,32 +45,38 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             Log.e("API_FAILURE", "❌ [${response.code}] $method $url")
         }
 
-        if (response.code == 401) {
+// AuthInterceptor.kt 내부 수정
+
+        if (response.code == 401 || response.code == 500) {
             if (url.contains("api/auth/refresh")) {
                 response.close()
                 performLogout(appContext)
                 return response
             }
-            Log.d("AuthInterceptor", "⚠️ 401 토큰 만료됨. 리프레시 토큰으로 갱신 시도...")
+
+            Log.d("DEBUG_TOKEN", "⚠️ 401 발생! 리프레시 시도 시작")
+
+            // 1. 저장된 리프레시 토큰 확인
             val refreshToken = prefs.getString("refresh_token", null)
-            if (refreshToken != null) {
-                // 기존의 실패한 응답은 닫아줘야 리소스가 안 샙니다.
-                response.close()
+            Log.d("DEBUG_TOKEN", "👉 저장된 리프레시 토큰 값: $refreshToken")
+
+            if (!refreshToken.isNullOrEmpty()) {
+                response.close() // 기존 응답 닫기
 
                 try {
-                    val refreshResponse = RetrofitClient.api().refreshToken(
-                        TokenRefreshRequest(
-                            refreshToken
-                        )
-                    ).execute()
+                    // 2. 서버로 갱신 요청 전송
+                    Log.d("DEBUG_TOKEN", "👉 리프레시 API 호출 시도...")
+                    val call = RetrofitClient.api().refreshToken(TokenRefreshRequest(refreshToken))
+                    val refreshResponse = call.execute() // 동기 호출
+
+                    // 3. 결과 확인
+                    Log.d("DEBUG_TOKEN", "👉 리프레시 API 응답 코드: ${refreshResponse.code()}")
 
                     if (refreshResponse.isSuccessful && refreshResponse.body()?.isSuccess == true) {
                         val newTokens = refreshResponse.body()!!.result
-
                         if (newTokens != null) {
-                            Log.i("API_REFRESH", "♻️ 토큰 갱신 성공! 재요청 진행")
+                            Log.i("DEBUG_TOKEN", "✅ 갱신 성공! 새 토큰으로 교체")
 
-                            // (1) 새 토큰 저장
                             prefs.edit().apply {
                                 putString("access_token", newTokens.accessToken)
                                 putString("refresh_token", newTokens.refreshToken)
@@ -78,23 +84,31 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                                 apply()
                             }
 
-                            // (2) 실패했던 요청의 헤더를 새 토큰으로 교체
                             val newRequest = originalRequest.newBuilder()
                                 .removeHeader("Authorization")
                                 .addHeader("Authorization", "Bearer ${newTokens.accessToken}")
                                 .build()
 
-                            // (3) 재전송 (사용자는 에러를 모름)
                             return chain.proceed(newRequest)
+                        } else {
+                            Log.e("DEBUG_TOKEN", "❌ 성공은 했으나 result가 null임")
                         }
+                    } else {
+                        // 여기가 중요합니다! 왜 실패했는지 서버 에러 메시지를 까봅니다.
+                        val errorBody = refreshResponse.errorBody()?.string()
+                        Log.e("DEBUG_TOKEN", "❌ 리프레시 실패. 이유: $errorBody")
                     }
+
                 } catch (e: Exception) {
-                    Log.e("API_REFRESH", "토큰 갱신 중 에러 발생: ${e.message}")
+                    Log.e("DEBUG_TOKEN", "❌ 네트워크/코드 에러: ${e.message}")
+                    e.printStackTrace()
                 }
+            } else {
+                Log.e("DEBUG_TOKEN", "❌ 저장소에 리프레시 토큰이 없음 (null)")
             }
 
-            // 리프레시 토큰이 없거나, 갱신 실패 시 -> 강제 로그아웃
-            Log.e("AuthInterceptor", "🚫 토큰 갱신 실패. 강제 로그아웃")
+            // 위에서 return 못 하고 여기까지 왔으면 실패한 것임
+            Log.e("AuthInterceptor", "🚫 토큰 갱신 최종 실패. 강제 로그아웃")
             performLogout(appContext)
         }
         return response

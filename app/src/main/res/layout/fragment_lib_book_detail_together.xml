@@ -246,7 +246,6 @@ android:background="@color/ui_bg">
             app:layout_constraintTop_toTopOf="@id/lib_detail_review_name1_tv"
             app:layout_constraintBottom_toBottomOf="@id/lib_detail_review_name1_tv"/>
 
-<!--        여기는 어차피 한줄만 필요하니까 리사이클러 안쓰는게 낫겠지?-->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/book_detail_reviews_rv"
             android:layout_width="0dp"
@@ -381,10 +380,22 @@ android:background="@color/ui_bg">
             android:textColor="@color/grey_600"/>
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/lib_review_no_add_btn"
+            android:id="@+id/lib_write_done_btn"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="독서카드 추가하기"
+            android:text="다 읽었어요"
+            android:textAppearance="@style/regular15"
+            android:textColor="@color/pre_main"
+            android:enabled="true"
+            android:background="@drawable/bg_round_20dp_gray900"
+            android:backgroundTint="@color/pre_main_pale"
+            android:layout_marginTop="20dp"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/lib_write_review_btn"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="리뷰 작성하기"
             android:textAppearance="@style/regular15"
             android:textColor="@color/pre_main"
             android:enabled="true"
