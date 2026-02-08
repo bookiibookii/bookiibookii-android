@@ -10,16 +10,34 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.setFragmentResult
+import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.ReviewRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailWrtieReviewBinding
+import kotlinx.coroutines.launch
 
 class LibraryWriteReviewFragment : Fragment() {
 
     private var _binding: FragmentLibBookDetailWrtieReviewBinding? = null
     private val binding get() = _binding!!
 
+    private var userBookId: Int = -1
+    private var bookTitle = ""
+    private var bookAuthor = ""
+    private var bookCover = ""
     private var currentRating = 0
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let {
+            userBookId = it.getInt("userBookId", -1)
+            bookTitle = it.getString("bookTitle", "") ?: ""
+            bookAuthor = it.getString("bookAuthor", "") ?: ""
+            bookCover = it.getString("bookCover", "") ?: ""
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentLibBookDetailWrtieReviewBinding.inflate(inflater, container, false)
@@ -28,34 +46,64 @@ class LibraryWriteReviewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initView()
         initStarRating()
         initInputListener()
 
         binding.libDetailBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
-        // [기능 4] 후기 남기기 버튼
+        // [후기 남기기 버튼]
         binding.libReviewAddBtn.setOnClickListener {
-            // Fragment Result API를 사용하여 이전 화면(DetailFragment)으로 데이터 전달
-            val result = Bundle().apply {
-                putString("review_content", binding.libWriteReviewEt.text.toString())
-                putInt("review_rating", currentRating)
-            }
-            setFragmentResult("review_request", result)
-
-
-            parentFragmentManager.popBackStack()
-
-            navigateToDetailFragment()
+            postReview()
         }
     }
 
-    private fun navigateToDetailFragment() {
+    private fun initView() {
+        binding.libDetailBookTitleTv.text = bookTitle
+        binding.libWriteTitleTv.text = bookTitle
+        binding.libDetailBookAuthorTv.text = bookAuthor
+        Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
+    }
 
+    private fun postReview() {
+        val comment = binding.libWriteReviewEt.text.toString()
+        val rating = currentRating.toDouble()
+
+        lifecycleScope.launch {
+            try {
+                // 리뷰 API 호출
+                val request = ReviewRequest(rating, comment)
+                val response = RetrofitClient.api().postBookReview(userBookId, request)
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    // ★ 성공 시: Together(결과) 화면으로 이동
+                    navigateToTogetherFragment()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun navigateToTogetherFragment() {
+        // 결과 화면(Together) 프래그먼트 생성
+        val togetherFragment = LibraryBookDetailTogetherFragment().apply {
+            arguments = Bundle().apply {
+                putInt("userBookId", userBookId)
+                putString("bookTitle", bookTitle)
+                putString("bookAuthor", bookAuthor)
+                putString("bookCover", bookCover)
+            }
+        }
+
+        // 현재 화면(WriteReview)을 대체하여 이동
         parentFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, LibraryBookDetailFragment())
+            .replace(R.id.fragmentContainer, togetherFragment)
+            // .addToBackStack(null) // 결과 화면에서 뒤로가기 시 다시 목록으로 가고 싶다면 스택에 추가 X
             .commit()
     }
 
+    // --- (이하 별점 및 입력 감지 UI 로직) ---
     private fun initStarRating() {
         val stars = listOf(
             binding.libDetailRateList.getChildAt(0) as ImageView,
@@ -77,14 +125,13 @@ class LibraryWriteReviewFragment : Fragment() {
     private fun updateStarUI(stars: List<ImageView>, rating: Int) {
         stars.forEachIndexed { index, imageView ->
             if (index < rating) {
-                imageView.setImageResource(R.drawable.ic_star_filled) // 채워진 별
+                imageView.setImageResource(R.drawable.ic_star_filled)
             } else {
-                imageView.setImageResource(R.drawable.ic_star_none)   // 빈 별
+                imageView.setImageResource(R.drawable.ic_star_none)
             }
         }
     }
 
-    // [기능 4] 입력 감지 및 버튼 활성화
     private fun initInputListener() {
         binding.libWriteReviewEt.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) { checkValidation() }
@@ -97,41 +144,18 @@ class LibraryWriteReviewFragment : Fragment() {
         val hasText = binding.libWriteReviewEt.text.isNotBlank()
         val hasRating = currentRating > 0
 
-        if (hasText && hasRating) {
-            // 버튼 활성화 스타일
-            binding.libReviewAddBtn.isEnabled = true
-            binding.libReviewAddBtn.backgroundTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(requireContext(), R.color.grey_900)
-            )
-            binding.libReviewAddBtn.setTextColor(
-                ContextCompat.getColor(requireContext(), R.color.white)
-            )
-        } else {
-            // 버튼 비활성화 스타일
-            binding.libReviewAddBtn.isEnabled = false
-            binding.libReviewAddBtn.backgroundTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(requireContext(), R.color.grey_200)
-            )
-            binding.libReviewAddBtn.setTextColor(
-                ContextCompat.getColor(requireContext(), R.color.grey_500)
-            )
-        }
+        val isEnabled = hasText && hasRating
+        binding.libReviewAddBtn.isEnabled = isEnabled
+
+        val colorBg = if (isEnabled) R.color.grey_900 else R.color.grey_200
+        val colorText = if (isEnabled) R.color.white else R.color.grey_500
+
+        binding.libReviewAddBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), colorBg))
+        binding.libReviewAddBtn.setTextColor(ContextCompat.getColor(requireContext(), colorText))
     }
 
-    override fun onResume() {
-        super.onResume()
-        setBottomNavVisibility(false)
-    }
-
-    // 화면이 파괴될 때(뒤로가기 등) 다시 보임
     override fun onDestroyView() {
         super.onDestroyView()
-        setBottomNavVisibility(true)
         _binding = null
-    }
-
-    private fun setBottomNavVisibility(isVisible: Boolean) {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (isVisible) View.VISIBLE else View.GONE
     }
 }

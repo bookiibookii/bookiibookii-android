@@ -380,10 +380,22 @@ android:background="@color/ui_bg">
             android:textColor="@color/grey_600"/>
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/lib_review_no_add_btn"
+            android:id="@+id/lib_write_done_btn"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="독서카드 추가하기"
+            android:text="다 읽었어요"
+            android:textAppearance="@style/regular15"
+            android:textColor="@color/pre_main"
+            android:enabled="true"
+            android:background="@drawable/bg_round_20dp_gray900"
+            android:backgroundTint="@color/pre_main_pale"
+            android:layout_marginTop="20dp"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/lib_write_review_btn"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="리뷰 작성하기"
             android:textAppearance="@style/regular15"
             android:textColor="@color/pre_main"
             android:enabled="true"

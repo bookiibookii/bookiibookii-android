@@ -6,6 +6,7 @@ import com.bookiibookii.bookiibookii.data.model.CommentListResponse
 import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
 import com.bookiibookii.bookiibookii.data.model.CommonResponse
 import com.bookiibookii.bookiibookii.data.model.BookSearchResponse
+import com.bookiibookii.bookiibookii.data.model.CardListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
 import com.bookiibookii.bookiibookii.data.model.GroupCreateResponse
 import com.bookiibookii.bookiibookii.data.model.GroupListRequest
@@ -30,6 +31,7 @@ import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.ReportCreateResponse
 import com.bookiibookii.bookiibookii.data.model.ReportListResponse
 import com.bookiibookii.bookiibookii.data.model.ReportRequest
+import com.bookiibookii.bookiibookii.data.model.ReviewRequest
 import com.bookiibookii.bookiibookii.data.model.TokenRefreshRequest
 import com.bookiibookii.bookiibookii.data.model.TokenRefreshResponse
 import com.bookiibookii.bookiibookii.data.model.UpdateCardRequest
@@ -139,6 +141,18 @@ interface ApiService: TrkApi {
     suspend fun getPresignedUrl(
         @Path("userBookId") userBookId: Int
     ): Response<PresignedUrlResponse>
+
+    // 독서카드 목록 조회
+    @GET("api/card/{userBookId}")
+    suspend fun getBookCards(
+        @Path("userBookId") userBookId: Int
+    ): Response<CardListResponse>
+
+    @POST("api/reviews/books/{userBookId}")
+    suspend fun postBookReview(
+        @Path("userBookId") userBookId: Int,
+        @Body request: ReviewRequest
+    ): Response<com.bookiibookii.bookiibookii.data.model.BaseResponse>
 
     //  카드 생성
     @POST("api/card/{userBookId}")
