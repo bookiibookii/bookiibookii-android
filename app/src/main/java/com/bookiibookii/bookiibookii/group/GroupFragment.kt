@@ -3,22 +3,26 @@ package com.bookiibookii.bookiibookii.group
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bookiibookii.bookiibookii.R // 리소스 참조를 위해 필요
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.GroupListRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentGrpBinding
 import com.google.android.material.chip.Chip
+import kotlinx.coroutines.launch
 
 class GroupFragment : Fragment() {
 
+    private lateinit var groupAdapter: GroupAdapter
     private var _binding: FragmentGrpBinding? = null
     private val binding get() = _binding!!
 
@@ -42,21 +46,26 @@ class GroupFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         initRecyclerViewSetting()
-        initFragmentResultListeners()
-        loadGroupData()
+        initFragmentResultListeners() // 리스너 등록
+
+        // 어댑터 미리 초기화 (빈 리스트로)
+        groupAdapter = GroupAdapter(ArrayList()) { groupData ->
+            moveToDetail(groupData)
+        }
+        binding.groupRecyclerview.adapter = groupAdapter
+
+        loadGroupData() // 데이터 로드
+
         initListeners()
         initFabMenu()
         initRefreshLayout()
 
-        // 초기 UI 설정
         updateChipUI(binding.grpRegionCp, listOf("전체"), "지역별")
     }
 
-    // ★ [추가] 다이얼로그가 취소되어 닫혔을 때,
-    // 선택된 칩(검은색)을 다시 원래대로(흰색+테두리) 돌려놓기 위해 UI를 동기화합니다.
     override fun onResume() {
         super.onResume()
-        // 현재 저장된 필터 변수(currentRegionFilter)를 기준으로 칩 상태를 강제 재설정
+        // 필터 상태와 칩 UI 동기화 (다이얼로그 닫힌 후 등 대비)
         val displayList = if (currentRegionFilter == "전체" || currentRegionFilter.endsWith(" 전체")) {
             listOf("전체")
         } else {
@@ -65,6 +74,7 @@ class GroupFragment : Fragment() {
         updateChipUI(binding.grpRegionCp, displayList, "지역별")
     }
 
+    // 필터 결과 수신 리스너
     private fun initFragmentResultListeners() {
         setFragmentResultListener("requestKeyRegion") { _, bundle ->
             val rawResult = bundle.getString("regionResult") ?: "전체"
@@ -72,7 +82,7 @@ class GroupFragment : Fragment() {
 
             if (currentRegionFilter != finalResult) {
                 currentRegionFilter = finalResult
-                loadGroupData()
+                loadGroupData() // 변경되었으니 재조회
 
                 val displayList = if (finalResult == "전체") {
                     listOf("전체")
@@ -84,7 +94,6 @@ class GroupFragment : Fragment() {
         }
     }
 
-    // ... (RecyclerView, RefreshLayout, loadGroupData 등은 기존과 동일) ...
     private fun initRecyclerViewSetting() {
         binding.groupRecyclerview.layoutManager = LinearLayoutManager(context)
         if (binding.groupRecyclerview.itemDecorationCount == 0) {
@@ -99,60 +108,97 @@ class GroupFragment : Fragment() {
         }
     }
 
+
+    // ★ [헬퍼] 한글 카테고리 -> 서버 코드 변환
+    private fun convertCategoryToCode(uiName: String): String {
+        return when {
+            uiName.contains("경제") || uiName.contains("경영") -> "ECON_BIZ"
+            uiName.contains("과학") || uiName.contains("IT") -> "SCI_IT"
+            uiName.contains("소설") || uiName.contains("장르") -> "NOVEL_GENRE"
+            uiName.contains("시") || uiName.contains("에세이") -> "POEM_ESSAY"
+            uiName.contains("가정") || uiName.contains("취미") -> "HOME_HOBBY"
+            uiName.contains("예술") || uiName.contains("문화") -> "ART_CULTURE"
+            uiName.contains("인문") || uiName.contains("역사") -> "HUMAN_HISTORY"
+            uiName.contains("자기계발") -> "SELF_DEV"
+            uiName.contains("정치") || uiName.contains("사회") -> "POL_SOC"
+            else -> "ETC" // 기타
+        }
+    }
+
+    // ★ 2. 실제 API 통신 로직
     private fun loadGroupData() {
         if (isLoading) return
         isLoading = true
-        val allData = getDummyData()
+        binding.grpSwipeRefreshLayout.isRefreshing = true
 
-        // 1. 그룹 유형
-        var filteredData = if (currentGroupTypeFilters.contains("전체")) {
-            allData
-        } else {
-            allData.filter { data ->
-                currentGroupTypeFilters.any { filter ->
-                    (filter == "함께 읽기" && data.groupType == "TOGETHER") ||
-                            (filter == "택배 교환" && data.groupType == "RELAY") ||
-                            (filter == "직접 교환" && data.groupType == "DIRECT")
-                }
+// (1) 그룹 유형 & 거래 방식
+        val groupTypes = mutableListOf<String>()
+        val tradeTypes = mutableListOf<String>()
+
+        if (!currentGroupTypeFilters.contains("전체")) {
+            if (currentGroupTypeFilters.contains("함께 읽기")) groupTypes.add("TOGETHER")
+            if (currentGroupTypeFilters.contains("택배 교환")) {
+                groupTypes.add("RELAY")
+                tradeTypes.add("DELIVERY")
+            }
+            if (currentGroupTypeFilters.contains("직접 교환")) {
+                groupTypes.add("RELAY")
+                tradeTypes.add("DIRECT")
             }
         }
 
-        // 2. 분야별
-        filteredData = if (currentCategoryFilters.contains("전체")) {
-            filteredData
+        // (2) 지역 정보
+        val meetPlace = if (currentRegionFilter == "전체") {
+            null
         } else {
-            filteredData.filter { data ->
-                currentCategoryFilters.any { filter ->
-                    data.bookGenre.contains(filter.split("/")[0]) ||
-                            data.tags.any { tag -> tag.contains(filter) }
-                }
-            }
+            currentRegionFilter.substringAfter(" ").split("/").map { it.trim() }
         }
 
-        // 3. 지역별
-        filteredData = if (currentRegionFilter == "전체") {
-            filteredData
+        // (3) 카테고리
+        val categories = if (currentCategoryFilters.contains("전체")) {
+            null
         } else {
-            val searchKeywords = currentRegionFilter.substringAfter(" ").split("/")
-            filteredData.filter { data ->
-                searchKeywords.any { keyword ->
-                    data.tags.any { it.contains(keyword) }
-                }
-            }
+            currentCategoryFilters.map { convertCategoryToCode(it) }
         }
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            if (_binding == null) {
+        lifecycleScope.launch {
+            try {
+                // API 호출
+                val response = RetrofitClient.api().getGroupList(
+                    groupTypes = if (groupTypes.isEmpty()) null else groupTypes,
+                    tradeTypes = if (tradeTypes.isEmpty()) null else tradeTypes,
+                    meetPlace = meetPlace,
+                    categories = categories,
+                    sort = "LATEST",
+                    page = 0,
+                    size = 20
+                )
+
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body?.isSuccess == true) {
+                        val serverList = body.result?.groupList ?: emptyList() // 수정된 DTO 사용
+                        val uiList = serverList.map { it.toUiModel() }
+
+                        groupAdapter = GroupAdapter(ArrayList(uiList)) { groupData ->
+                            moveToDetail(groupData)
+                        }
+                        binding.groupRecyclerview.adapter = groupAdapter
+
+                    } else {
+                        Toast.makeText(context, body?.message, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(context, "서버 오류: ${response.code()}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "네트워크 오류", Toast.LENGTH_SHORT).show()
+            } finally {
                 isLoading = false
-                return@postDelayed
+                if (_binding != null) binding.grpSwipeRefreshLayout.isRefreshing = false
             }
-            val groupAdapter = GroupAdapter(ArrayList(filteredData)) { groupData ->
-                moveToDetail(groupData)
-            }
-            binding.groupRecyclerview.adapter = groupAdapter
-            binding.grpSwipeRefreshLayout.isRefreshing = false
-            isLoading = false
-        }, 500)
+        }
     }
 
     private fun initListeners() {
@@ -176,29 +222,22 @@ class GroupFragment : Fragment() {
                 ).show(parentFragmentManager, "GroupTypeFilter")
             }
 
-            // 2) 지역별 칩 클릭
+            // 2) 지역별
             grpRegionCp.setOnClickListener {
-                // 클릭 시각적 피드백
                 grpRegionCp.isChecked = true
-
                 val dialog = GrpRegionBottomSheetFragment.newInstance(currentRegionFilter)
                 dialog.show(parentFragmentManager, "RegionSearchBottomSheet")
 
-                //  다이얼로그가 닫히는 순간을 감지하는 리스너 등록
                 parentFragmentManager.registerFragmentLifecycleCallbacks(object : androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
                     override fun onFragmentDetached(fm: androidx.fragment.app.FragmentManager, f: androidx.fragment.app.Fragment) {
                         super.onFragmentDetached(fm, f)
                         if (f == dialog) {
-                            // UI를 현재 데이터 상태(currentRegionFilter)에 맞춰서 다시 그리기
-                            // (선택 안 하고 닫았다면 "전체"로 인식해서 흰색으로 원복됩니다)
                             val displayList = if (currentRegionFilter == "전체") {
                                 listOf("전체")
                             } else {
                                 currentRegionFilter.substringAfter(" ").split("/")
                             }
                             updateChipUI(grpRegionCp, displayList, "지역별")
-
-                            // 리스너 해제 (메모리 누수 방지)
                             fm.unregisterFragmentLifecycleCallbacks(this)
                         }
                     }
@@ -222,45 +261,22 @@ class GroupFragment : Fragment() {
         }
     }
 
-    // ★ [핵심 수정] 칩 UI 상태 변경 함수 (테두리 색상 gray_200 적용)
     private fun updateChipUI(chip: Chip, resultList: List<String>, defaultText: String) {
         if (resultList.isEmpty() || (resultList.size == 1 && resultList[0] == "전체")) {
-            // [기본 상태: "지역별"]
             chip.text = defaultText
-            chip.isChecked = false // 배경 흰색 등 Unchecked 스타일
-
-            // ★ 테두리 적용 (1dp, gray_200)
+            chip.isChecked = false
             chip.chipStrokeWidth = dpToPx(1).toFloat()
             chip.setChipStrokeColorResource(R.color.grey_200)
-
         } else {
-            // [선택된 상태: "송파구 · 동작구"]
             chip.text = resultList.joinToString(" · ")
-            chip.isChecked = true // 배경 검은색 등 Checked 스타일
-
-            // ★ 선택된 칩은 보통 테두리가 없거나 투명해야 깔끔합니다. (검은 배경이므로)
+            chip.isChecked = true
             chip.chipStrokeWidth = 0f
-            // 또는 디자인에 따라 테두리를 유지해야 한다면 아래 주석 해제
-            // chip.chipStrokeWidth = dpToPx(1).toFloat()
-            // chip.setChipStrokeColorResource(R.color.transparent)
         }
-    }
-
-    private fun getDummyData(): ArrayList<GroupData> {
-        val list = ArrayList<GroupData>()
-        list.add(GroupData(
-            "https://picsum.photos/300/200", "괴테는 모든 것을 말했다", "스즈키 유이", "(소설)", "모집 중", "7", "5", true,
-            "https://picsum.photos/100/100", "noshel", "2025. 12. 16.", listOf("#메모환영", "#인사이트"), "RELAY"
-        ))
-        list.add(GroupData(
-            "https://picsum.photos/300/201", "물고기는 존재하지 않는다", "룰루 밀러", "(에세이)", "모집 완료", "1", "2", false,
-            "https://picsum.photos/100/101", "booklover", "2026. 02. 02.", listOf("#과학", "#철학", "#함께읽기"), "TOGETHER"
-        ))
-        return list
     }
 
     private fun moveToDetail(groupData: GroupData) {
         val intent = Intent(requireContext(), GroupDetailActivity::class.java)
+        // GroupData의 필드들을 Intent에 담아 이동
         intent.putExtra("GROUP_TYPE", groupData.groupType)
         intent.putExtra("BOOK_TITLE", groupData.bookTitle)
         intent.putExtra("BOOK_AUTHOR", groupData.bookAuthor)

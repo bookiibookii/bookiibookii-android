@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.google.android.material.button.MaterialButton
+import androidx.core.content.edit
 
 class OnbStepActivity : AppCompatActivity() {
 
@@ -121,11 +122,34 @@ class OnbStepActivity : AppCompatActivity() {
 
     // 온보딩 완료 후 로딩 화면으로 이동
     private fun finishOnboarding() {
+        val state = vm.state.value ?: return
+
+        val genreValues = state.readingPreferences.map { it.serverValue }
+
+        // PHOTO/FOCUS 둘 다 serverValue가 CLEAN이니까 중복 제거 필요
+        val methodValues = state.recordMethods.map { it.serverValue }.distinct()
+
+        val speedValue = state.readingPace?.serverValue ?: return
+
+        // 프로필에서 넘어온 값 (onCreate에서 intent로 받아서 멤버로 들고있다고 가정)
+        val name = intent.getStringExtra(EXTRA_NAME) ?: return
+        val s3Key = intent.getStringExtra(EXTRA_S3_KEY) // null 가능
+
         startActivity(
             Intent(this, OnbStatusActivity::class.java)
                 .putExtra(OnbStatusActivity.EXTRA_STATUS, "LOADING")
+                .putExtra(OnbStatusActivity.EXTRA_NAME, name)
+                .putExtra(OnbStatusActivity.EXTRA_S3_KEY, s3Key)
+                .putStringArrayListExtra(OnbStatusActivity.EXTRA_GENRES, ArrayList(genreValues))
+                .putStringArrayListExtra(OnbStatusActivity.EXTRA_METHODS, ArrayList(methodValues))
+                .putExtra(OnbStatusActivity.EXTRA_SPEED, speedValue)
         )
         finish()
+    }
+
+    companion object {
+        const val EXTRA_NAME = "extra_name"
+        const val EXTRA_S3_KEY = "extra_s3_key"
     }
 
     // 현재 단계에 맞게 진행바 UI 갱신
@@ -149,9 +173,7 @@ class OnbStepActivity : AppCompatActivity() {
 
     private fun setOnboardingDone() {
         val prefs = getSharedPreferences("auth_prefs", MODE_PRIVATE)
-        prefs.edit()
-            .putBoolean("onboarding_done", true)
-            .apply()
+        prefs.edit { putBoolean("onboarding_done", true) }
     }
 
     // 현재 단계에서 "다음" 버튼을 활성화할 수 있는지 판단

@@ -15,7 +15,7 @@ import com.bookiibookii.bookiibookii.trkHost.ExchangeType
 import com.bookiibookii.bookiibookii.trkHost.FooterMode
 import com.bookiibookii.bookiibookii.trkHost.TrackerAdapter
 import com.bookiibookii.bookiibookii.trkHost.TrackerData
-import com.bookiibookii.bookiibookii.trkHost.TrackerStep
+import com.bookiibookii.bookiibookii.trkHost.TrackerStatus
 
 
 class TrkGuestMainFragment : Fragment() {
@@ -44,8 +44,9 @@ class TrkGuestMainFragment : Fragment() {
 
         trackerAdapter = TrackerAdapter { item ->
             val target = when (item.exchangeType) {
-                ExchangeType.SHIPPING -> GuestActivity::class.java
+                ExchangeType.DELIVERY -> GuestActivity::class.java
                 ExchangeType.DIRECT -> DirectGuestActivity::class.java
+                ExchangeType.NONE -> TODO()
             }
 
             val intent = Intent(requireContext(), target).apply {
@@ -98,19 +99,37 @@ class TrkGuestMainFragment : Fragment() {
                 id = 1L,
                 bookTitle = "살인자의 기억법",
                 bookAuthor = "김영하",
+                bookCategory = "소설",
                 withUserName = "noshel",
                 coverImageUrl = null,
-                currentStep = TrackerStep.DELIVERY,
-                exchangeType = ExchangeType.SHIPPING
+
+                // 1. SHIPPING -> DELIVERY 변경
+                exchangeType = ExchangeType.DELIVERY,
+
+                stepDates = listOf("2024.01.01", null, null, null),
+
+                // 2. currentStep(TrackerStep) -> currentStatus(TrackerStatus) 변경
+                currentStatus = TrackerStatus.HOST_READING,
+
+                hostProfileImageUrl = null,
+                guestProfileImageUrl = null
             ),
             TrackerData(
                 id = 2L,
                 bookTitle = "아몬드",
                 bookAuthor = "손원평",
+                bookCategory = "청소년 문학",
                 withUserName = null,
                 coverImageUrl = null,
-                currentStep = TrackerStep.READING,
-                exchangeType = ExchangeType.DIRECT
+                exchangeType = ExchangeType.DIRECT,
+
+                stepDates = listOf("2024.02.10", "2024.02.15", null, null),
+
+                // 3. 변경된 Enum 사용
+                currentStatus = TrackerStatus.GUEST_READING,
+
+                hostProfileImageUrl = null,
+                guestProfileImageUrl = null
             )
         )
     }

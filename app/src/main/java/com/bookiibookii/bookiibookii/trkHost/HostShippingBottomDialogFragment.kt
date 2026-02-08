@@ -25,8 +25,9 @@ class HostShippingBottomDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnRegister.setOnClickListener{
-            val dialog = HostShippingInputDialogFragment()
-            dialog.show(parentFragmentManager, HostShippingInputDialogFragment.TAG)
+            val next = HostShippingInputDialogFragment()
+            dismiss()
+            next.show(parentFragmentManager, HostShippingInputDialogFragment.TAG)
         }
     }
 

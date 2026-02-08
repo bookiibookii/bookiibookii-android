@@ -155,7 +155,12 @@ class LoginActivity : AppCompatActivity() {
                     if (result != null) {
                         Log.d("Login", "$socialType 로그인 성공! UserID: ${result.userId}")
 
-                        saveTokens(result.accessToken, result.refreshToken, result.userId)
+                        saveTokens(
+                            result.accessToken,
+                            result.refreshToken,
+                            result.userId,
+                            result.onboardingDone
+                        )
 
                        onLoginSuccess()
 
@@ -210,12 +215,13 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveTokens(access: String, refresh: String, userId: Int) {
+    private fun saveTokens(access: String, refresh: String, userId: Int, onboardingDone: Boolean) {
         val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         prefs.edit().apply {
             putString("access_token", access)
             putString("refresh_token", refresh)
             putInt("user_id", userId)
+            putBoolean("onboarding_done", onboardingDone)
             apply()
         }
     }

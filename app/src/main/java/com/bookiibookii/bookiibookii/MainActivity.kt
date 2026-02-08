@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // TODO: 온보딩까지 구현 후 삭제
+        // TODO: 추후 로그 삭제
         Log.d("ONB_FLOW", "MainActivity started")
 
 //        enableEdgeToEdge()
