@@ -1,28 +1,43 @@
-package com.bookiibookii.bookiibookii.group
+package com.bookiibookii.bookiibookii.group.main
 
+import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Rect
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import android.view.animation.OvershootInterpolator
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.GroupListRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentGrpBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
+import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
+import com.bookiibookii.bookiibookii.group.search.GrpSearchActivity
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
 
 class GroupFragment : Fragment() {
 
     private lateinit var groupAdapter: GroupAdapter
+
+    private val userViewModel: MyPageViewModel by activityViewModels()
+
     private var _binding: FragmentGrpBinding? = null
     private val binding get() = _binding!!
 
@@ -34,6 +49,7 @@ class GroupFragment : Fragment() {
     private var currentCategoryFilters: List<String> = listOf("전체")
     private var currentRegionFilter: String = "전체"
 
+    private var currentSortType = "RECOMMEND"
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -45,15 +61,19 @@ class GroupFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        userViewModel.fetchMypageData()
+
         initRecyclerViewSetting()
         initFragmentResultListeners() // 리스너 등록
 
         // 어댑터 미리 초기화 (빈 리스트로)
         groupAdapter = GroupAdapter(ArrayList()) { groupData ->
-            moveToDetail(groupData)
+            // [수정] 클릭 시 바로 이동하지 않고 검증 로직을 거침
+            checkInfoAndMoveToDetail(groupData)
         }
         binding.groupRecyclerview.adapter = groupAdapter
 
+        updateSortUi() // 초기정렬
         loadGroupData() // 데이터 로드
 
         initListeners()
@@ -131,7 +151,6 @@ class GroupFragment : Fragment() {
         isLoading = true
         binding.grpSwipeRefreshLayout.isRefreshing = true
 
-// (1) 그룹 유형 & 거래 방식
         val groupTypes = mutableListOf<String>()
         val tradeTypes = mutableListOf<String>()
 
@@ -147,14 +166,12 @@ class GroupFragment : Fragment() {
             }
         }
 
-        // (2) 지역 정보
         val meetPlace = if (currentRegionFilter == "전체") {
             null
         } else {
             currentRegionFilter.substringAfter(" ").split("/").map { it.trim() }
         }
 
-        // (3) 카테고리
         val categories = if (currentCategoryFilters.contains("전체")) {
             null
         } else {
@@ -163,13 +180,12 @@ class GroupFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                // API 호출
                 val response = RetrofitClient.api().getGroupList(
                     groupTypes = if (groupTypes.isEmpty()) null else groupTypes,
                     tradeTypes = if (tradeTypes.isEmpty()) null else tradeTypes,
                     meetPlace = meetPlace,
                     categories = categories,
-                    sort = "LATEST",
+                    sort = currentSortType, // 기본 추천순
                     page = 0,
                     size = 20
                 )
@@ -177,11 +193,11 @@ class GroupFragment : Fragment() {
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body?.isSuccess == true) {
-                        val serverList = body.result?.groupList ?: emptyList() // 수정된 DTO 사용
+                        val serverList = body.result?.groupList ?: emptyList()
                         val uiList = serverList.map { it.toUiModel() }
 
                         groupAdapter = GroupAdapter(ArrayList(uiList)) { groupData ->
-                            moveToDetail(groupData)
+                            checkInfoAndMoveToDetail(groupData)
                         }
                         binding.groupRecyclerview.adapter = groupAdapter
 
@@ -225,11 +241,15 @@ class GroupFragment : Fragment() {
             // 2) 지역별
             grpRegionCp.setOnClickListener {
                 grpRegionCp.isChecked = true
-                val dialog = GrpRegionBottomSheetFragment.newInstance(currentRegionFilter)
+                val dialog = GrpRegionBottomSheetFragment.Companion.newInstance(currentRegionFilter)
                 dialog.show(parentFragmentManager, "RegionSearchBottomSheet")
 
-                parentFragmentManager.registerFragmentLifecycleCallbacks(object : androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
-                    override fun onFragmentDetached(fm: androidx.fragment.app.FragmentManager, f: androidx.fragment.app.Fragment) {
+                parentFragmentManager.registerFragmentLifecycleCallbacks(object :
+                    FragmentManager.FragmentLifecycleCallbacks() {
+                    override fun onFragmentDetached(
+                        fm: FragmentManager,
+                        f: Fragment
+                    ) {
                         super.onFragmentDetached(fm, f)
                         if (f == dialog) {
                             val displayList = if (currentRegionFilter == "전체") {
@@ -258,9 +278,47 @@ class GroupFragment : Fragment() {
                     }
                 ).show(parentFragmentManager, "CategoryFilter")
             }
+            //  정렬 필터 클릭 리스너
+            //
+            grpMainSortRecommendTv.setOnClickListener { changeSortType("RECOMMEND") }
+            grpMainSortLatestTv.setOnClickListener { changeSortType("LATEST") }
+            grpMainSortPopularTv.setOnClickListener { changeSortType("POPULAR") }
         }
     }
 
+    private fun changeSortType(type: String) {
+        if (currentSortType == type) return // 이미 선택된 거면 무시
+        currentSortType = type
+        updateSortUi()
+        loadGroupData()
+    }
+
+    // 정렬 UI (텍스트 색상) 업데이트
+    private fun updateSortUi() {
+        val activeColor = ContextCompat.getColor(requireContext(), R.color.pre_main)
+        val inactiveColor = ContextCompat.getColor(requireContext(), R.color.grey_500)
+
+        // 1. 추천순
+        if (currentSortType == "RECOMMEND") {
+            binding.grpMainSortRecommendTv.setTextColor(activeColor)
+        } else {
+            binding.grpMainSortRecommendTv.setTextColor(inactiveColor)
+        }
+
+        // 2. 최신순
+        if (currentSortType == "LATEST") {
+            binding.grpMainSortLatestTv.setTextColor(activeColor)
+        } else {
+            binding.grpMainSortLatestTv.setTextColor(inactiveColor)
+        }
+
+        // 3. 인기순
+        if (currentSortType == "POPULAR") {
+            binding.grpMainSortPopularTv.setTextColor(activeColor)
+        } else {
+            binding.grpMainSortPopularTv.setTextColor(inactiveColor)
+        }
+    }
     private fun updateChipUI(chip: Chip, resultList: List<String>, defaultText: String) {
         if (resultList.isEmpty() || (resultList.size == 1 && resultList[0] == "전체")) {
             chip.text = defaultText
@@ -280,16 +338,17 @@ class GroupFragment : Fragment() {
         intent.putExtra("GROUP_TYPE", groupData.groupType)
         intent.putExtra("BOOK_TITLE", groupData.bookTitle)
         intent.putExtra("BOOK_AUTHOR", groupData.bookAuthor)
-        intent.putExtra("BOOK_GENRE", groupData.bookGenre)
+        intent.putExtra("BOOK_GENRE", groupData.genre)
         intent.putExtra("START_DATE", groupData.date)
         intent.putExtra("COVER_IMG", groupData.coverImgUrl)
         intent.putExtra("PROFILE_IMG", groupData.profileImgUrl)
         intent.putExtra("USER_NICNAME", groupData.nickname)
         intent.putStringArrayListExtra("TAGS", ArrayList(groupData.tags))
         intent.putExtra("STATUS", groupData.status)
-        intent.putExtra("DEADLINE", groupData.deadline)
+        intent.putExtra("READING_PERIOD", groupData.readingPeriod)
         intent.putExtra("MEMBER_COUNT", groupData.memberCount)
         intent.putExtra("IS_HOT", groupData.isHot)
+        intent.putExtra("GROUP_ID", groupData.groupId)
         startActivity(intent)
     }
 
@@ -320,13 +379,77 @@ class GroupFragment : Fragment() {
                 grpGroupFabMenuLayout.visibility = View.VISIBLE
                 grpGroupFabMenuLayout.alpha = 0f
                 grpGroupFabMenuLayout.translationY = 50f
-                grpGroupFabMenuLayout.animate().alpha(1f).translationY(0f).setDuration(300).setInterpolator(OvershootInterpolator()).start()
+                grpGroupFabMenuLayout.animate().alpha(1f).translationY(0f).setDuration(300).setInterpolator(
+                    OvershootInterpolator()
+                ).start()
                 grpGroupFabMainBtn.animate().rotation(45f).setDuration(300).start()
             } else {
                 grpGroupFabMenuLayout.animate().alpha(0f).translationY(50f).setDuration(300).withEndAction { grpGroupFabMenuLayout.visibility = View.GONE }.start()
                 grpGroupFabMainBtn.animate().rotation(0f).setDuration(300).start()
             }
         }
+    }
+
+    private fun checkInfoAndMoveToDetail(groupData: GroupData) { // GroupUiModel은 사용하시는 모델 클래스명
+
+        // 1. 만약 '함께 읽기(TOGETHER)' 그룹이라면 배송지가 필요 없으므로 그냥 통과
+        // (모델에 groupType 필드가 있다고 가정)
+        if (groupData.groupType == "TOGETHER") {
+            moveToDetail(groupData)
+            return
+        }
+
+        val myProfile = userViewModel.profileData.value
+
+        // 2. 프로필 데이터가 아직 로드되지 않았다면 잠시 대기
+        if (myProfile == null) {
+            Toast.makeText(requireContext(), "사용자 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+            userViewModel.fetchMypageData() // 재시도 트리거
+            return
+        }
+
+        // 3. 필수 정보 검증 로직
+        // 조건: 주소&동지역/직거래장소 필수
+        val hasAddress = !myProfile.address.isNullOrBlank() && !myProfile.zipCode.isNullOrBlank()
+        val hasMeetPlace = !myProfile.meetPlace.isNullOrBlank() // 혹은 region
+
+        // (예시) 교환(RELAY) 그룹은 배송지나 직거래 장소 중 하나는 반드시 설정되어 있어야 함
+       // val isInfoValid = hasBasicContact && (hasAddress || hasMeetPlace)
+
+        val isInfoValid = hasAddress && hasMeetPlace
+        if (isInfoValid) {
+            moveToDetail(groupData)
+        } else {
+            // 정보 부족 시 다이얼로그 출력
+            showRequiredInfoDialog()
+        }
+    }
+
+    private fun showRequiredInfoDialog() {
+        // 1. Dialog 객체 생성 (Builder 대신 바로 Dialog 사용하면 커스텀하기 편함)
+        val dialog = Dialog(requireContext())
+
+        // 2. 타이틀 제거 (setContentView 전에 해야 함)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        // 3. 레이아웃 설정
+        dialog.setContentView(R.layout.dialog_none_address)
+
+        // 4. 배경 투명 처리 (둥근 모서리 적용을 위해 필수)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        // 5. 텍스트 강제 설정 (XML의 tools:text 문제 해결)
+        // findViewById로 뷰를 찾아서 글자를 직접 넣습니다.
+        dialog.findViewById<TextView>(R.id.dialog_none_address_title_tv).text = "배송지 등록"
+        dialog.findViewById<TextView>(R.id.dialog_none_address_content_tv).text = "책을 주고 받을 배송지를 등록해주세요."
+
+        // 6. 닫기 버튼 리스너 연결
+        dialog.findViewById<View>(R.id.dialog_none_address_close_iv).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        // 7. 다이얼로그 띄우기
+        dialog.show()
     }
 
     override fun onDestroyView() {
@@ -338,6 +461,7 @@ class GroupFragment : Fragment() {
         val density = resources.displayMetrics.density
         return (dp * density).toInt()
     }
+
 
     inner class VerticalSpaceItemDecoration(private val verticalSpaceHeight: Int) : RecyclerView.ItemDecoration() {
         override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {

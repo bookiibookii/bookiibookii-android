@@ -13,10 +13,15 @@ class HostShippingBottomDialogFragment : BottomSheetDialogFragment() {
     private var _binding: FragmentHostShippingBottomDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentHostShippingBottomDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -24,10 +29,12 @@ class HostShippingBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnRegister.setOnClickListener{
-            val next = HostShippingInputDialogFragment()
+        binding.btnRegister.setOnClickListener {
+            HostShippingInputDialogFragment
+                .newInstance(groupId)
+                .show(parentFragmentManager, HostShippingInputDialogFragment.TAG)
+
             dismiss()
-            next.show(parentFragmentManager, HostShippingInputDialogFragment.TAG)
         }
     }
 
@@ -36,11 +43,14 @@ class HostShippingBottomDialogFragment : BottomSheetDialogFragment() {
         _binding = null
     }
 
-    companion object{
+    companion object {
         const val TAG = "ShippingBottomSheetDialogFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = HostShippingBottomDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
-    override fun getTheme(): Int {
-        return R.style.Theme_Bookii_BottomSheet_NoDim
-    }
+    override fun getTheme(): Int = R.style.Theme_Bookii_BottomSheet_NoDim
 }

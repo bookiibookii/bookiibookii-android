@@ -5,12 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.viewModel.ReviewModel
+import com.bookiibookii.bookiibookii.bookData.Data.LibReview
 import com.bookiibookii.bookiibookii.common.CommonDialog
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailIngBinding
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -20,9 +23,23 @@ class LibraryBookDetailIngFragment : Fragment() {
     private var _binding: FragmentLibBookDetailIngBinding? = null
     private val binding get() = _binding!!
 
-    // ViewModel 연결
-    private val viewModel: ReviewModel by activityViewModels()
-    private lateinit var reviewAdapter: LibraryReviewAdapter
+    // 데이터
+    private var userBookId: Int = -1
+    private var bookTitle = ""
+    private var bookAuthor = ""
+    private var bookCover = ""
+
+    private lateinit var cardAdapter: LibraryReviewAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let {
+            userBookId = it.getInt("userBookId", -1)
+            bookTitle = it.getString("bookTitle", "") ?: ""
+            bookAuthor = it.getString("bookAuthor", "") ?: ""
+            bookCover = it.getString("bookCover", "") ?: ""
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentLibBookDetailIngBinding.inflate(inflater, container, false)
@@ -35,54 +52,41 @@ class LibraryBookDetailIngFragment : Fragment() {
         initView()
         initRecyclerView()
         initListeners()
-        observeViewModel()
+        fetchCardData() // 독서카드 목록 조회
 
-        // [추가] 뷰가 다 그려진 후 프로그레스 바 점 위치 계산
+        // 뷰가 그려진 후 프로그레스 바 점 위치 계산 (기존 기능)
         binding.readingProgressBar.post {
             updateProgressDots()
         }
     }
 
     private fun initView() {
-        // 예시 데이터 설정 (XML에 79, 81로 되어있지만 코드에서 설정하는 것이 안전함)
+        binding.libDetailTitleTv.text = bookTitle
+        binding.libDetailBookTitleTv.text = bookTitle
+        binding.libDetailBookAuthorTv.text = bookAuthor
+        Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
+
+        // 프로그레스바 초기값 (더미 혹은 API 연동)
         binding.readingProgressBar.progress = 79
         binding.readingProgressBar.secondaryProgress = 81
-
         binding.myPercent.text = "나의 독서율"
+
+        // ★ [버튼 초기 상태]: '다 읽었어요' 보임, '후기 작성' 숨김
+        binding.libWriteDoneBtn.visibility = View.VISIBLE
+        binding.libWriteReviewBtn.visibility = View.GONE
+
+        // 카드 추가 버튼은 카드가 있을 때만 보이도록 초기엔 숨김 처리
         binding.libReviewAddBtn.visibility = View.GONE
     }
 
-    private fun updateProgressDots() {
-        if (_binding == null) return
-
-        val progressBar = binding.readingProgressBar
-        val width = progressBar.width.toFloat() // 바 전체 너비
-        val max = progressBar.max.toFloat()     // 최대값 (100)
-
-        val marginPixel = dpToPx(1).toFloat()
-
-        val myProgress = progressBar.progress.toFloat()
-        val myDot = binding.myProgressDot
-
-        val myX = (width * (myProgress / max)) - marginPixel - myDot.width
-
-        myDot.translationX = myX.coerceAtLeast(0f)
-
-        val groupProgress = progressBar.secondaryProgress.toFloat()
-        val groupDot = binding.groupAvgDot
-
-        val groupX = (width * (groupProgress / max)) - marginPixel - groupDot.width
-        groupDot.translationX = groupX.coerceAtLeast(0f)
-    }
-
     private fun initRecyclerView() {
-        reviewAdapter = LibraryReviewAdapter(
+        cardAdapter = LibraryReviewAdapter(
             onItemClick = { clickedItem ->
-                // 상세 화면 이동
                 val detailFragment = LibraryCardDetailFragment().apply {
                     arguments = Bundle().apply {
                         putLong("cardId", clickedItem.id)
                         putBoolean("isMine", clickedItem.isMine)
+                        putString("writerName", clickedItem.userName)
                     }
                 }
                 parentFragmentManager.beginTransaction()
@@ -92,71 +96,73 @@ class LibraryBookDetailIngFragment : Fragment() {
             },
             onBookmarkClick = { item, position ->
                 item.isBookmarked = !(item.isBookmarked ?: false)
-                reviewAdapter.notifyItemChangedAt(position)
+                cardAdapter.notifyItemChangedAt(position)
             }
         )
 
-        binding.libReviewListRv.apply {
-            layoutManager = GridLayoutManager(context, 2)
-            adapter = reviewAdapter
-            while (itemDecorationCount > 0) removeItemDecorationAt(0)
-            addItemDecoration(LibDetailGridDecoration(2, dpToPx(10), dpToPx(12), false))
-        }
-    }
-
-    private fun observeViewModel() {
-        viewModel.reviewList.observe(viewLifecycleOwner) { list ->
-            reviewAdapter.submitList(list.toList())
-            binding.libDetailTotalTv.text = "${list.size}개"
-        }
+        binding.libReviewListRv.layoutManager = GridLayoutManager(context, 2)
+        binding.libReviewListRv.adapter = cardAdapter
+        binding.libReviewListRv.addItemDecoration(LibDetailGridDecoration(2, dpToPx(10), dpToPx(12), false))
     }
 
     private fun initListeners() {
         binding.libDetailBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
-        binding.libDetailMoreIv.setOnClickListener {
-            LibraryGroupDeleteBottomSheet {
-                showDeleteConfirmDialog()
-            }.show(parentFragmentManager, "GroupDeleteSheet")
+        // [1] 다 읽었어요 -> 확인 -> 후기 작성 버튼 노출
+        binding.libWriteDoneBtn.setOnClickListener {
+            CommonDialog(
+                context = requireContext(),
+                title = "독서 종료",
+                subtitle = "",
+                content = "이 책을 다 읽으셨나요?\n종료 후에는 되돌릴 수 없어요.",
+                confirmBtnText = "확인",
+                confirmBtnColor = R.color.grey_900,
+                onConfirmClick = { finishReadingLogic() }
+            ).show()
         }
 
-        binding.libWriteDoneBtn.setOnClickListener { showFinishReadingDialog() }
-
+        // [2] 후기 작성하기 -> WriteReviewFragment 이동
         binding.libWriteReviewBtn.setOnClickListener {
+            val writeFragment = LibraryWriteReviewFragment().apply {
+                arguments = Bundle().apply {
+                    putInt("userBookId", userBookId)
+                    putString("bookTitle", bookTitle)
+                    putString("bookAuthor", bookAuthor)
+                    putString("bookCover", bookCover)
+                }
+            }
             parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, LibraryWriteReviewFragment())
+                .replace(R.id.fragmentContainer, writeFragment)
                 .addToBackStack(null)
                 .commit()
         }
 
+        // [3] 독서카드 추가
         binding.libReviewAddBtn.setOnClickListener {
+            val fragment = LibraryAddCardFragment().apply {
+                arguments = Bundle().apply { putInt("userBookId", userBookId) }
+            }
             parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, LibraryAddCardFragment())
+                .replace(R.id.fragmentContainer, fragment)
                 .addToBackStack(null)
                 .commit()
         }
-    }
 
-    private fun showFinishReadingDialog() {
-        val dialog = CommonDialog(
-            context = requireContext(),
-            title = "독서 종료",
-            subtitle = "",
-            content = "이 책을 다 읽으셨나요?\n종료 후에는 되돌릴 수 없어요.",
-            confirmBtnText = "확인",
-            confirmBtnColor = R.color.grey_900,
-            onConfirmClick = { finishReadingLogic() }
-        )
-        dialog.show()
+        // 더보기 버튼 (삭제 등)
+        binding.libDetailMoreIv.setOnClickListener {
+            LibraryGroupDeleteBottomSheet { /* 삭제 로직 */ }.show(parentFragmentManager, "GroupDeleteSheet")
+        }
     }
 
     private fun finishReadingLogic() {
         binding.readingProgressBar.progress = 100
-        // 점 위치도 100%로 다시 이동시켜야 함
         binding.readingProgressBar.post { updateProgressDots() }
 
+        // ★ 버튼 교체 로직
         binding.libWriteDoneBtn.visibility = View.GONE
         binding.libWriteReviewBtn.visibility = View.VISIBLE
+
+        // 카드 추가 버튼도 활성화 (필요하다면)
         binding.libReviewAddBtn.visibility = View.VISIBLE
 
         val currentDate = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault()).format(Date())
@@ -164,37 +170,61 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.libDetailDateTv.text = "$originalText $currentDate"
     }
 
-    private fun showDeleteConfirmDialog() {
-        val dialog = CommonDialog(
-            context = requireContext(),
-            title = "그룹 삭제",
-            subtitle = "",
-            content = "정말로 이 그룹을 삭제하시겠습니까?\n나에게서만 삭제됩니다.",
-            confirmBtnText = "삭제",
-            confirmBtnColor = R.color.ui_point_red,
-            onConfirmClick = { parentFragmentManager.popBackStack() }
-        )
-        dialog.show()
+    private fun fetchCardData() {
+        if (userBookId == -1) return
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.api().getBookCards(userBookId)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val result = response.body()?.result
+                    val apiCards = result?.cards ?: emptyList()
+
+                    val uiList = apiCards.map { card ->
+                        LibReview(
+                            id = card.cardId.toLong(),
+                            userName = "User",
+                            content = card.memo,
+                            page = card.page,
+                            reviewImageUri = card.cardImage?.presignedGetUrl,
+                            profileImage = null,
+                            isMine = true,
+                            isBookmarked = card.isBookmarked,
+                            date = card.createdAt // ★ Date 파라미터 매핑 필수
+                        )
+                    }
+                    cardAdapter.submitList(uiList)
+                    binding.libDetailTotalTv.text = "${uiList.size}개"
+
+                    if (uiList.isNotEmpty()) {
+                        binding.libReviewAddBtn.visibility = View.VISIBLE
+                    }
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    private fun updateProgressDots() {
+        if (_binding == null) return
+        val progressBar = binding.readingProgressBar
+        val width = progressBar.width.toFloat()
+        val max = progressBar.max.toFloat()
+        val marginPixel = dpToPx(1).toFloat()
+
+        val myProgress = progressBar.progress.toFloat()
+        val myDot = binding.myProgressDot
+        val myX = (width * (myProgress / max)) - marginPixel - myDot.width
+        myDot.translationX = myX.coerceAtLeast(0f)
+
+        val groupProgress = progressBar.secondaryProgress.toFloat()
+        val groupDot = binding.groupAvgDot
+        val groupX = (width * (groupProgress / max)) - marginPixel - groupDot.width
+        groupDot.translationX = groupX.coerceAtLeast(0f)
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
-    // [바텀 네비게이션 제어]
-    // 화면에 들어올 때 숨김
-    override fun onResume() {
-        super.onResume()
-        setBottomNavVisibility(false)
-    }
-
-    // 화면이 파괴될 때(뒤로가기 등) 다시 보임
     override fun onDestroyView() {
         super.onDestroyView()
-        setBottomNavVisibility(true)
         _binding = null
-    }
-
-    private fun setBottomNavVisibility(isVisible: Boolean) {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (isVisible) View.VISIBLE else View.GONE
     }
 }

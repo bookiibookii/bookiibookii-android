@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true"
     android:background="@color/white">
 
     <androidx.constraintlayout.widget.Guideline

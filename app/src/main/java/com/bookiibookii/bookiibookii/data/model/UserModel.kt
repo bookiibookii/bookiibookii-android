@@ -1,6 +1,6 @@
 package com.bookiibookii.bookiibookii.data.model
 
-// 1) 닉네임 중복 확인
+// 1) 닉네임 중복 + 금칙어 포함 여부 확인
 data class NicknameValidationResponse(
     val isSuccess: Boolean,
     val code: String,
@@ -9,7 +9,9 @@ data class NicknameValidationResponse(
 )
 
 data class NicknameValidationResult(
-    val isAvailable: Boolean
+    val isAvailable: Boolean,
+    val code: String,
+    val message: String
 )
 
 // 2) Presigned URL

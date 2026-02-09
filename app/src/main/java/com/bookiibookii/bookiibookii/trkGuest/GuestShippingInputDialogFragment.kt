@@ -6,14 +6,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.databinding.FragmentGuestShippingInputDialogBinding
 import com.bookiibookii.bookiibookii.trkHost.HostPhotoSelectionDialogFragment
+import com.bookiibookii.bookiibookii.trkHost.UiState
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.io.File
-
 
 class GuestShippingInputDialogFragment : DialogFragment() {
 
@@ -24,18 +31,22 @@ class GuestShippingInputDialogFragment : DialogFragment() {
     private var selectedCourier: String? = null
     private var selectedPhotoUri: Uri? = null
 
+    private val vm: GuestViewModel by activityViewModels()
+
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     private val pickImageLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()){ uri: Uri? ->
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri == null) return@registerForActivityResult
             showPreview(uri)
         }
 
     private val takePicLauncher =
-        registerForActivityResult(ActivityResultContracts.TakePicture()){ success: Boolean ->
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
             if (!success) return@registerForActivityResult
-            cameraImageUri?.let { uri ->
-                showPreview(uri)
-            }
+            cameraImageUri?.let { uri -> showPreview(uri) }
         }
 
     override fun onCreateView(
@@ -48,18 +59,23 @@ class GuestShippingInputDialogFragment : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        vm.resetShippingStartState()
+
         binding.btnRegister.isEnabled = false
         binding.btnRegister.alpha = 0.45f
+        binding.actvCourier.setDropDownBackgroundResource(android.R.color.white)
         setupCourierDropdown()
 
         childFragmentManager.setFragmentResultListener(
             HostPhotoSelectionDialogFragment.REQ_KEY,
             viewLifecycleOwner
-        ){ _, bundle ->
-            when(bundle.getString(HostPhotoSelectionDialogFragment.ACTION_KEY)){
+        ) { _, bundle ->
+            when (bundle.getString(HostPhotoSelectionDialogFragment.ACTION_KEY)) {
                 HostPhotoSelectionDialogFragment.ACTION_GALLERY -> {
                     pickImageLauncher.launch("image/*")
                 }
+
                 HostPhotoSelectionDialogFragment.ACTION_CAMERA -> {
                     cameraImageUri = createCameraImageUri()
                     takePicLauncher.launch(cameraImageUri)
@@ -73,21 +89,69 @@ class GuestShippingInputDialogFragment : DialogFragment() {
                 .show(childFragmentManager, HostPhotoSelectionDialogFragment.TAG)
         }
 
-        binding.btnRegister.setOnClickListener{
-            (parentFragmentManager.findFragmentByTag(GuestShippingBottomDialogFragment.TAG) as? DialogFragment)
-                ?.dismissAllowingStateLoss()
+        binding.btnRegister.setOnClickListener {
+            val courier = selectedCourier ?: run {
+                binding.tilCourier.error = "택배사를 선택해주세요."
+                return@setOnClickListener
+            }
 
-            dismissAllowingStateLoss()
+            val tracking = binding.etTrackingNum.text?.toString()?.trim().orEmpty()
+            if (tracking.isEmpty()) return@setOnClickListener
 
-            GuestShippingStatusBottomDialogFragment()
-                .show(parentFragmentManager, GuestShippingStatusBottomDialogFragment.TAG)
+            val photoUri = selectedPhotoUri ?: return@setOnClickListener
+
+            val bytes = requireContext().contentResolver
+                .openInputStream(photoUri)
+                ?.use { it.readBytes() }
+                ?: run {
+                    Toast.makeText(requireContext(), "이미지를 읽을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+            vm.startShipping(
+                groupId = groupId,
+                deliveryCompany = courier,
+                trackingNumber = tracking,
+                imageBytes = bytes,
+                contentType = "image/jpeg"
+            )
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.shippingStartState.collectLatest { state ->
+                    when (state) {
+                        is UiState.Idle -> Unit
+
+                        is UiState.Loading -> {
+                            binding.btnRegister.isEnabled = false
+                            binding.btnRegister.alpha = 0.45f
+                        }
+
+                        is UiState.Success -> {
+                            (parentFragmentManager.findFragmentByTag(GuestShippingBottomDialogFragment.TAG) as? DialogFragment)
+                                ?.dismissAllowingStateLoss()
+
+                            dismissAllowingStateLoss()
+
+                            GuestShippingStatusBottomDialogFragment()
+                                .show(parentFragmentManager, GuestShippingStatusBottomDialogFragment.TAG)
+                        }
+
+                        is UiState.Error -> {
+                            updateRegisterButtonState()
+                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
         }
 
         binding.etTrackingNum.doAfterTextChanged {
             updateRegisterButtonState()
         }
 
-        binding.btnClose.setOnClickListener{ dismiss() }
+        binding.btnClose.setOnClickListener { dismiss() }
     }
 
     private fun showPreview(uri: Uri) {
@@ -131,8 +195,13 @@ class GuestShippingInputDialogFragment : DialogFragment() {
         _binding = null
     }
 
-    companion object{
-        const val TAG = "ShippingInputDialogFragment"
+    companion object {
+        const val TAG = "GuestShippingInputDialogFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = GuestShippingInputDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
     private val courierList = listOf(
@@ -149,7 +218,6 @@ class GuestShippingInputDialogFragment : DialogFragment() {
         )
 
         binding.actvCourier.setAdapter(adapter)
-
         binding.actvCourier.setOnClickListener { binding.actvCourier.showDropDown() }
 
         binding.actvCourier.setOnItemClickListener { _, _, position, _ ->
@@ -165,7 +233,6 @@ class GuestShippingInputDialogFragment : DialogFragment() {
         val photoOk = selectedPhotoUri != null
 
         val enabled = courierOk && trackingOk && photoOk
-
         binding.btnRegister.isEnabled = enabled
         binding.btnRegister.alpha = if (enabled) 1.0f else 0.45f
     }

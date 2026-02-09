@@ -29,7 +29,25 @@
         android:background="@color/grey_100"
         app:layout_constraintTop_toBottomOf="@id/tv_title"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/iv_photo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="이미지를 불러오는 중..."
+            android:textColor="@color/grey_500"
+            android:layout_gravity="center" />
+
+    </FrameLayout>
+
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_confirm"
