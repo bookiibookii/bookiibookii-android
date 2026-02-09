@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.button.MaterialButton
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/btn_frag"
+    android:layout_width="0dp"
+    android:layout_height="48dp"
+    android:insetTop="0dp"
+    android:insetBottom="0dp"
+    android:text="frag 버튼"
+    android:minHeight="40dp"
+    android:textAllCaps="false"
+    android:textSize="14sp"
+    android:textColor="@color/selector_frag_button_text"
+    android:background="@drawable/selector_frag_button_bg"
+    app:backgroundTint="@null"
+    app:rippleColor="@android:color/transparent" />

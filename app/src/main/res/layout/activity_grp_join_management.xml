@@ -34,7 +34,7 @@
         android:id="@+id/act_grp_join_mg_back_Iv"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@drawable/ic_arrow"
+        android:src="@drawable/ic_back_button"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintTop_toTopOf="@id/act_grp_join_mg_dashBoard_Iv"
         app:layout_constraintBottom_toBottomOf="@id/act_grp_join_mg_dashBoard_Iv" />

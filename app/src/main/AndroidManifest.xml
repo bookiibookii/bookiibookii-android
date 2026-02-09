@@ -53,6 +53,14 @@
         </activity>
 
         <activity
+            android:name=".home.noti.HomNotificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".home.notiSetting.HomKeywordNotiSettingActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".onboarding.profile.OnbProfileActivity"
             android:exported="false">
         </activity>
