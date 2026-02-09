@@ -102,7 +102,6 @@ class HostExtendPeriodDialogFragment : DialogFragment() {
                         }
 
                         is UiState.Success -> {
-                            Toast.makeText(requireContext(), "독서 기간이 연장되었습니다.", Toast.LENGTH_SHORT).show()
                             dismiss()
                         }
 

@@ -166,15 +166,15 @@ class HostActivity : AppCompatActivity() {
             TrackerStatus.READY -> HostStartBottomDialogFragment.newInstance(groupId)
             TrackerStatus.HOST_READING,
             TrackerStatus.HOST_EXTENSION -> HostReadingBottomDialogFragment.newInstance(groupId)
-            TrackerStatus.HOST_DONE -> HostShippingBottomDialogFragment()
+            TrackerStatus.HOST_DONE -> HostShippingBottomDialogFragment.newInstance(groupId)
             TrackerStatus.SHIPPING_TO_GUEST -> HostShippingStatusBottomDialogFragment()
 
             TrackerStatus.RECEIVED,
             TrackerStatus.GUEST_READING,
             TrackerStatus.GUEST_EXTENSION-> HostReadingStatusBottomDialogFragment()
 
-            TrackerStatus.GUEST_DONE -> HostReadingDoneBottomDialogFragment()
-            TrackerStatus.SHIPPING_TO_HOST -> HostShippedBottomDialogFragment()
+            TrackerStatus.GUEST_DONE -> HostReadingDoneBottomDialogFragment.newInstance(groupId)
+            TrackerStatus.SHIPPING_TO_HOST -> HostShippedBottomDialogFragment.newInstance(groupId)
 
             TrackerStatus.RETURNED,
             TrackerStatus.COMPLETED,
