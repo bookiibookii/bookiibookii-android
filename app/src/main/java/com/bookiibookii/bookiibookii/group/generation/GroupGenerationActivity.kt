@@ -1,11 +1,15 @@
-package com.bookiibookii.bookiibookii.group
+package com.bookiibookii.bookiibookii.group.generation
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputFilter
 import android.text.TextWatcher
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -21,6 +25,7 @@ import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
 import com.bookiibookii.bookiibookii.data.model.GroupTagRequest
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpGenerationBinding
+// import com.bookiibookii.bookiibookii.group.generation.GrpGenAladinSearchAdapter // 같은 패키지면 import 생략 가능
 import com.google.android.material.chip.Chip
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
@@ -28,9 +33,11 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.collections.iterator
 
 class GroupGenerationActivity : AppCompatActivity() {
 
@@ -39,7 +46,7 @@ class GroupGenerationActivity : AppCompatActivity() {
     private var isEditMode = false
     private var groupType = "RELAY"
 
-    private lateinit var searchAdapter: GrpSearchBookAdapter
+    private lateinit var searchAdapter: GrpGenAladinSearchAdapter
     private var searchJob: Job? = null
     private var selectedIsbn: String = ""
     private var selectedBookLink: String = ""
@@ -50,9 +57,7 @@ class GroupGenerationActivity : AppCompatActivity() {
     private var selectedBookHave: Boolean? = null
     private var isItemSelectMode = false
 
-    // ★ 칩 선택 제한을 위한 이전 상태 저장 변수
     private var previousCheckedIds: List<Int> = emptyList()
-
     private var isCustomTagSelected = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,6 +76,46 @@ class GroupGenerationActivity : AppCompatActivity() {
         initSearchAdapter()
         checkInputs()
         initListener()
+
+        // ★ [추가] 그룹 생성 모드일 때, 사용자 정보(지역/장소) 미리 채우기
+        if (!isEditMode && groupType == "RELAY") {
+            fetchMyPageDataAndPreFill()
+        }
+    }
+
+    // ★ [추가] 마이페이지 정보 불러와서 EditText에 채워넣는 함수
+    private fun fetchMyPageDataAndPreFill() {
+        lifecycleScope.launch {
+            try {
+                // 마이페이지 조회 API 호출 (Endpoint 이름은 실제 API에 맞춰주세요. 예: getMyPage())
+                val response = RetrofitClient.api().getMypage()
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val profile = response.body()?.result
+
+                    profile?.let { data ->
+                        // 1. 활동 지역 (address 혹은 region 필드 사용)
+                        // data.address가 "서울시 강남구 ..." 형태라면 그대로 넣거나 가공해서 넣음
+                        val userRegion = data.region
+                        if (!userRegion.isNullOrBlank()) {
+                            binding.actGrpGenRegionEt.setText(userRegion)
+                        }
+
+                        // 2. 직거래 선호 장소
+                        val userMeetPlace = data.meetPlace
+                        if (!userMeetPlace.isNullOrBlank()) {
+                            binding.actGrpGenPlaceEt.setText(userMeetPlace)
+                        }
+
+                        // 3. 데이터가 채워졌으니 유효성 검사 갱신 (버튼 활성화를 위해)
+                        checkInputs()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("GrpGen", "유저 정보 불러오기 실패 (자동입력 건너뜀)", e)
+                // 실패해도 치명적이지 않으므로 조용히 넘어감 (사용자가 직접 입력하면 됨)
+            }
+        }
     }
 
     private fun updateUiState() {
@@ -88,8 +133,6 @@ class GroupGenerationActivity : AppCompatActivity() {
                 actGrpGenEditBookTitleTv.visibility = View.GONE
                 actGrpGenBookSelectDateTv.text = ""
                 actGrpGenBookLimitBar.setText("")
-
-                // (수정) EditText는 항상 보이되 칩처럼 동작하므로 visibility 조작 제거
             }
 
             val searchVisibility = if (!isEditMode) View.VISIBLE else View.GONE
@@ -118,23 +161,16 @@ class GroupGenerationActivity : AppCompatActivity() {
         }
     }
 
-    // ★ 1. 칩 선택 리스너 (기존 로직 유지)
     private fun initHashTagChipListener() {
-        // [필터] 공백 방지 + 8자 제한
-        val spaceFilter = android.text.InputFilter { source, _, _, _, _, _ ->
+        val spaceFilter = InputFilter { source, _, _, _, _, _ ->
             if (source.contains(" ")) "" else null
         }
-        binding.actGrpGenDirectInputEt.filters = arrayOf(spaceFilter, android.text.InputFilter.LengthFilter(8))
+        binding.actGrpGenDirectInputEt.filters = arrayOf(spaceFilter, InputFilter.LengthFilter(8))
 
         binding.actGrpGenChipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
+            val chipcurrentCount = checkedIds.size + (if (isCustomTagSelected) 1 else 0)
 
-            val hasCustomInput = binding.actGrpGenDirectInputEt.text.toString().isNotEmpty()
-            // 칩 개수 + 직접입력(있으면 1, 없으면 0)
-            val currentCount = checkedIds.size + (if (isCustomTagSelected) 1 else 0)
-
-            // [핵심 로직] 3개 초과 선택 방지
-            if (currentCount > 3) {
-                // 3개 초과 시 방금 누른 칩 취소
+            if (chipcurrentCount > 3) {
                 val newlyAddedIds = checkedIds - previousCheckedIds.toSet()
                 if (newlyAddedIds.isNotEmpty()) {
                     val idToUncheck = newlyAddedIds.first()
@@ -143,52 +179,42 @@ class GroupGenerationActivity : AppCompatActivity() {
                         showCustomToast("태그는 최대 3개까지만 선택 가능합니다.")
                     }
                 }
-                // 여기서 return 하여 previousCheckedIds 업데이트 방지
                 return@setOnCheckedStateChangeListener
             }
-
             previousCheckedIds = checkedIds
             checkInputs()
         }
     }
 
-    // ★ 2. 입력창 리스너 (UI Selector 적용 및 제한 로직 추가)
     private fun initDirectInputListener() {
         val et = binding.actGrpGenDirectInputEt
 
-        // (1) TextWatcher (기존 동일)
         et.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val text = s.toString()
-                if (text.isEmpty()) {
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val currentText = et.text.toString()
+                if (currentText.isEmpty() || currentText == "#") {
                     setCustomTagState(false)
                 } else {
                     if (!isCustomTagSelected) setCustomTagState(true)
                 }
                 checkInputs()
             }
-            override fun afterTextChanged(s: Editable?) {}
         })
 
-        // (2) TouchListener (★ 수정됨)
         et.setOnTouchListener { v, event ->
-            if (event.action == android.view.MotionEvent.ACTION_UP) {
-
-                // ★ [추가된 로직] 이미 3개가 꽉 찼고, 내가 선택된 상태가 아니라면 -> 진입 차단
+            if (event.action == MotionEvent.ACTION_UP) {
                 val chipCount = binding.actGrpGenChipGroup.checkedChipIds.size
                 if (chipCount >= 3 && !isCustomTagSelected) {
                     et.clearFocus()
-                    // 키보드 내리기 (혹시라도 떴을 경우 대비)
                     val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(v.windowToken, 0)
-
                     showCustomToast("태그는 최대 3개까지만 선택 가능합니다.")
-                    return@setOnTouchListener true // ★ true를 반환하여 터치 이벤트를 소비 -> 키보드/포커스 차단
+                    return@setOnTouchListener true
                 }
-
-                // [기존 로직] 텍스트가 있을 때 토글 기능
-                if (et.text.toString().isNotEmpty()) {
+                val text = et.text.toString()
+                if (text.isNotEmpty() && text != "#") {
                     if (isCustomTagSelected) {
                         if (et.hasFocus()) {
                             return@setOnTouchListener false
@@ -209,13 +235,13 @@ class GroupGenerationActivity : AppCompatActivity() {
             false
         }
 
-        // (3) FocusChangeListener (★ 보완)
-        // 터치 외에 다른 방식(Next 키 등)으로 포커스가 넘어왔을 때도 쫓아내야 함
         et.setOnFocusChangeListener { _, hasFocus ->
+            val currentText = et.text.toString()
             if (hasFocus) {
+                if (currentText.startsWith("#")) {
+                    et.setText(currentText.removePrefix("#"))
+                }
                 val chipCount = binding.actGrpGenChipGroup.checkedChipIds.size
-
-                // 내가 선택되지 않았는데 이미 3개라면 -> 포커스 해제
                 if (!isCustomTagSelected && chipCount >= 3) {
                     et.clearFocus()
                     val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
@@ -223,13 +249,15 @@ class GroupGenerationActivity : AppCompatActivity() {
                     showCustomToast("태그는 최대 3개까지만 선택 가능합니다.")
                 }
             } else {
-                if (et.text.toString().isEmpty()) {
+                if (currentText.isNotEmpty() && !currentText.startsWith("#")) {
+                    et.setText("#$currentText")
+                } else if (currentText == "#" || currentText.isEmpty()) {
+                    et.setText("")
                     setCustomTagState(false)
                 }
             }
         }
 
-        // (4) EditorAction (기존 동일)
         et.setOnEditorActionListener { v, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 et.clearFocus()
@@ -240,10 +268,10 @@ class GroupGenerationActivity : AppCompatActivity() {
             false
         }
     }
-    // ★ [헬퍼 함수] 상태 변경 및 UI 업데이트를 한 곳에서 관리
+
     private fun setCustomTagState(isSelected: Boolean) {
         isCustomTagSelected = isSelected
-        binding.actGrpGenDirectInputEt.isSelected = isSelected // XML Selector 발동 (색상 변경)
+        binding.actGrpGenDirectInputEt.isSelected = isSelected
     }
 
     private fun initListener() {
@@ -261,6 +289,15 @@ class GroupGenerationActivity : AppCompatActivity() {
             actGrpGenIntroduceBar.addTextChangedListener(textWatcher)
             actGrpGenRegionEt.addTextChangedListener(textWatcher)
             actGrpGenPlaceEt.addTextChangedListener(textWatcher)
+
+            actGrpGenIntroduceBar.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    val input = actGrpGenIntroduceBar.text.toString()
+                    if (input.isNotEmpty() && input.length < 10) {
+                        showCustomToast("그룹 소개는 최소 10자 이상 입력해주세요.")
+                    }
+                }
+            }
 
             actGrpGenBookDeliveryBtn.setOnClickListener {
                 selectedTradeType = "DELIVERY"
@@ -350,9 +387,7 @@ class GroupGenerationActivity : AppCompatActivity() {
         val commentText = binding.actGrpGenIntroduceBar.text.toString()
         val hasValidComment = commentText.length >= 10
 
-
-        // ★ [수정] 칩이 하나라도 있거나 OR 에디트텍스트에 글자가 있으면 통과
-        val hasValidTag = binding.actGrpGenChipGroup.checkedChipIds.isNotEmpty()
+        val hasValidTag = binding.actGrpGenChipGroup.checkedChipIds.isNotEmpty() || isCustomTagSelected
 
         var isValid = false
 
@@ -392,21 +427,14 @@ class GroupGenerationActivity : AppCompatActivity() {
             confirmBtnText = "구매하러 가기",
             confirmBtnColor = R.color.grey_900,
             onConfirmClick = {
-                // 1. 상태 초기화 (원래 하던 것)
                 updateBookHaveState(null)
-
-                // 2. 링크가 있는지 확인
                 if (selectedBookLink.isNotEmpty()) {
-                    // 3. 토스트 메시지 띄우기
                     showCustomToast("구매페이지로 이동합니다")
-
-                    // 4. 약간의 딜레이 후 브라우저 열기 (코루틴 사용)
                     lifecycleScope.launch {
-                        delay(800) // 0.8초 대기 (토스트 읽을 시간 확보)
-
+                        delay(800)
                         try {
-                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
-                            intent.data = android.net.Uri.parse(selectedBookLink)
+                            val intent = Intent(Intent.ACTION_VIEW)
+                            intent.data = Uri.parse(selectedBookLink)
                             startActivity(intent)
                         } catch (e: Exception) {
                             showCustomToast("링크를 여는데 실패했습니다.")
@@ -535,10 +563,10 @@ class GroupGenerationActivity : AppCompatActivity() {
     }
 
     private fun createGroupApi() {
-//        if (selectedIsbn.isEmpty()) {
-//            Toast.makeText(this, "도서를 검색해서 선택해주세요.", Toast.LENGTH_SHORT).show()
-//            return
-//        }
+        if (selectedIsbn.isEmpty()) {
+            Toast.makeText(this, "도서를 검색해서 선택해주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         val durationStr = binding.actGrpGenBookLimitBar.text.toString()
         val capacityStr = binding.actGrpGenMemberCountEt.text.toString()
@@ -546,17 +574,10 @@ class GroupGenerationActivity : AppCompatActivity() {
         val readingPeriod = durationStr.toIntOrNull() ?: 0
         val maxCapacity = if (groupType == "TOGETHER") (capacityStr.toIntOrNull() ?: 0) else 2
 
-        // 태그 처리
         val finalTags = mutableListOf<GroupTagRequest>()
         var customTagString = ""
-        if (isCustomTagSelected) {
-            val directText = binding.actGrpGenDirectInputEt.text.toString().trim()
-            if (directText.isNotEmpty()) {
-                customTagString = directText
-            }
-        }
 
-        // 1. 일반 칩 태그 수집
+        // 1. 일반 칩 태그
         val checkedIds = binding.actGrpGenChipGroup.checkedChipIds
         val tagMap = mutableMapOf<String, MutableList<String>>()
 
@@ -570,9 +591,16 @@ class GroupGenerationActivity : AppCompatActivity() {
                 list.add(code)
             }
         }
-
         for ((type, codes) in tagMap) {
             finalTags.add(GroupTagRequest(type = type, value = codes))
+        }
+
+        // 2. 직접 입력 태그
+        if (isCustomTagSelected) {
+            val directText = binding.actGrpGenDirectInputEt.text.toString().trim()
+            if (directText.isNotEmpty()) {
+                customTagString = directText.removePrefix("#")
+            }
         }
 
         val request = GroupCreateRequest(
@@ -587,32 +615,37 @@ class GroupGenerationActivity : AppCompatActivity() {
             tags = finalTags
         )
 
-        if (isCustomTagSelected) {
-            val directText = binding.actGrpGenDirectInputEt.text.toString().trim()
-            if (directText.isNotEmpty()) {
-                customTagString = directText
-            }
-        }
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().createGroup(request)
                 if (response.isSuccessful) {
-                    Toast.makeText(this@GroupGenerationActivity, "그룹이 생성되었습니다!", Toast.LENGTH_LONG).show()
+                    showCustomToast("🎉그룹 생성 완료🎉")
                     finish()
                 } else {
-                    val errorBody = response.errorBody()?.string()
-                    Log.e("API_ERROR", "실패: $errorBody")
-                    Toast.makeText(this@GroupGenerationActivity, "생성 실패: 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                    val errorString = response.errorBody()?.string()
+                    Log.e("API_ERROR", "실패 raw: $errorString")
+                    try {
+                        if (!errorString.isNullOrEmpty()) {
+                            val jsonObject = JSONObject(errorString)
+                            val serverMessage = jsonObject.getString("message")
+                            showCustomToast(serverMessage)
+                        } else {
+                            showCustomToast("알 수 없는 오류가 발생했습니다.")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("API_PARSING", "JSON 파싱 실패", e)
+                        showCustomToast("잠시 후 다시 시도해주세요.")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("API_FAIL", "통신 오류", e)
-                Toast.makeText(this@GroupGenerationActivity, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                showCustomToast("네트워크 오류가 발생했습니다.")
             }
         }
     }
 
     private fun initSearchAdapter() {
-        searchAdapter = GrpSearchBookAdapter { bookItem ->
+        searchAdapter = GrpGenAladinSearchAdapter { bookItem ->
             isItemSelectMode = true
             binding.actGrpGenBookSearchBar.setText(bookItem.title)
             binding.actGrpGenBookSearchBar.setSelection(bookItem.title.length)

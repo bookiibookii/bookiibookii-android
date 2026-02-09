@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.group
+package com.bookiibookii.bookiibookii.group.main
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
@@ -17,7 +18,6 @@ class GroupAdapter(
     private var itemList: List<GroupData>,
     private val itemClick: (GroupData) -> Unit
 ) : RecyclerView.Adapter<GroupAdapter.GroupViewHolder>() {
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GroupViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_grp_card, parent, false)
         return GroupViewHolder(view)
@@ -33,6 +33,8 @@ class GroupAdapter(
         holder.tvMemberCount.text = item.memberCount
         holder.tvNickname.text = item.nickname
         holder.tvDate.text = item.date
+
+        holder.bottomBtnLayout.visibility = View.GONE
 
         val genreText = item.genre // "소설"
         if (genreText.isNotEmpty()) {
@@ -61,11 +63,26 @@ class GroupAdapter(
 
         val chipList = listOf(holder.chipHash1, holder.chipHash2, holder.chipHash3, holder.chipHash4, holder.chipHash5)
 
+        // 1. 일단 칩 다 숨기기
         chipList.forEach { it.visibility = View.GONE }
 
-        for (i in item.tags.indices) {
+        // 2. 표시할 태그 리스트를 새로 만듭니다 (기존 태그 + 커스텀 태그)
+        val displayTags = ArrayList<String>()
+
+        // (1) 기존 태그(groupTags)를 한글로 변환해서 추가
+        item.tags.forEach { tagCode ->
+            displayTags.add(GroupTagMapper.toKoreanTag(tagCode))
+        }
+
+        // (2) 커스텀 태그(customTag)가 있으면 추가
+        if (!item.customTag.isNullOrBlank()) {
+            displayTags.add("#${item.customTag}")
+        }
+
+        // 3. 합쳐진 리스트(displayTags)를 기준으로 칩에 넣기
+        for (i in displayTags.indices) {
             if (i < chipList.size) {
-                chipList[i].text = item.tags[i]
+                chipList[i].text = displayTags[i]
                 chipList[i].visibility = View.VISIBLE
             }
         }
@@ -99,5 +116,6 @@ class GroupAdapter(
         val chipHash3: Chip = itemView.findViewById(R.id.grp_item_hash3_Cp)
         val chipHash4: Chip = itemView.findViewById(R.id.grp_item_hash4_Cp)
         val chipHash5: Chip = itemView.findViewById(R.id.grp_item_hash5_Cp)
+        val bottomBtnLayout: View = itemView.findViewById(R.id.grp_item_bottom_btn_layout)
     }
 }

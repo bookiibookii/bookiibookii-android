@@ -1,6 +1,7 @@
-package com.bookiibookii.bookiibookii.group
+package com.bookiibookii.bookiibookii.group.main
 
 data class GroupData(
+    val groupId : Int,
     val coverImgUrl: String,      // 책 표지 URL
     val bookTitle: String,        // 책 제목
     val bookAuthor: String,       // 저자
@@ -13,5 +14,6 @@ data class GroupData(
     val nickname: String,         // 닉네임
     val date: String,             // 등록 날짜
     val tags: List<String>,        // 해시태그 리스트
+    val customTag : String?,
     val groupType: String
 )

@@ -1,41 +1,58 @@
 package com.bookiibookii.bookiibookii.group
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.CommonDialog
+import com.bookiibookii.bookiibookii.common.GroupTagMapper // 태그 변환기 (없으면 아래 주석 참고)
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpJoinManagementBinding
+import kotlinx.coroutines.launch
 
 class GroupJoinManagementActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityGrpJoinManagementBinding
     private lateinit var groupJoinAdapter: GroupJoinAdapter
 
-    // 책 제목을 변수로 관리 (토스트에서도 쓰기 위해)
-    private val currentBookTitle = "살인자의 기억법"
+    private var currentGroupId: Long = 0L
+    private var currentBookTitle = "" // 이전 화면에서 받아오거나 API로 조회
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGrpJoinManagementBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // 1. Intent 데이터 수신
+        val groupIdInt = intent.getIntExtra("GROUP_ID", 0)
+        currentGroupId = groupIdInt.toLong()
+
+        // 책 제목도 이전 화면에서 넘겨주면 좋습니다. (없으면 기본값)
+        currentBookTitle = intent.getStringExtra("BOOK_TITLE") ?: "모임 신청 관리"
+
+        if (currentGroupId == 0L) {
+            Toast.makeText(this, "잘못된 접근입니다.", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
         initView()
         initListener()
+
+        // 2. API 호출
+        fetchApplicationList()
     }
 
     private fun initView() {
-        val mockData = mutableListOf(
-            GroupJoinData(1, null, "독서광", "2025.12.05", "저 진짜 열심히 할게요!", listOf("#메모환영", "#인사이트", "#열정")),
-            GroupJoinData(2, null, "심심이", "2025.12.06", "안녕하세요", listOf("#하나")),
-            GroupJoinData(3, null, "투머치토커", "2025.12.07", "태그 부자입니다.", listOf("#일", "#이", "#삼", "#사", "#오", "#육"))
-        )
-
-        groupJoinAdapter = GroupJoinAdapter(mockData) { item, isAccept ->
+        // 어댑터 초기화 (처음엔 빈 리스트)
+        groupJoinAdapter = GroupJoinAdapter(mutableListOf()) { item, isAccept ->
             if (isAccept) showAgreeDialog(item) else showRefusalDialog(item)
         }
 
@@ -43,7 +60,53 @@ class GroupJoinManagementActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@GroupJoinManagementActivity)
             adapter = groupJoinAdapter
         }
-        updateCountText(mockData.size)
+
+        // 책 제목 세팅 (XML에 해당 뷰가 있다면)
+        // binding.bookTitleTv.text = currentBookTitle
+    }
+
+    // ★ 서버에서 신청 목록 가져오기
+    private fun fetchApplicationList() {
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.api().getGroupApplications(currentGroupId)
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val result = response.body()?.result
+                    val serverList = result?.applicationList ?: emptyList()
+                    val totalCount = result?.totalCount ?: 0
+
+                    // DTO -> GroupJoinData 변환
+                    val uiList = serverList.map { serverItem ->
+
+                        // 태그 변환: 서버 코드(ENGLISH) -> 화면용(#한글)
+                        // GroupTagMapper가 없다면: serverItem.tags?.map { "#$it" } ?: emptyList() 로 대체
+                        val displayTags = serverItem.tags?.map { tagCode ->
+                            GroupTagMapper.toKoreanTag(tagCode)
+                        } ?: emptyList()
+
+                        GroupJoinData(
+                            id = serverItem.applicationId.toInt(), // ID
+                            profileResId = null, // API에 이미지 URL이 없으므로 null (Adapter가 기본 이미지 처리)
+                            nickname = serverItem.name,
+                            date = serverItem.createdAt,
+                            intro = serverItem.applyMsg,
+                            tags = displayTags
+                        )
+                    }.toMutableList()
+
+                    // ★ 어댑터 데이터 갱신
+                    groupJoinAdapter.updateData(uiList)
+                    updateCountText(totalCount)
+
+                } else {
+                    Toast.makeText(this@GroupJoinManagementActivity, "목록 로드 실패", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("JoinManage", "Error", e)
+                Toast.makeText(this@GroupJoinManagementActivity, "네트워크 오류", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun updateCountText(count: Int) {
@@ -54,61 +117,86 @@ class GroupJoinManagementActivity : AppCompatActivity() {
         binding.actGrpJoinMgBackIv.setOnClickListener { finish() }
     }
 
-    // 커스텀 토스트 띄우기 함수
-    private fun showCustomToast(message: String) {
-        val inflater = LayoutInflater.from(this)
-        val layout = inflater.inflate(R.layout.toast_custom, null)
+    private fun processApplication(applicationId: Int, status: String, nickname: String) {
+        lifecycleScope.launch {
+            try {
+                // 서버로 보낼 Body 생성
+                val requestBody = GroupItemDto.GroupAppStatusRequest(status)
 
-        // 텍스트 설정
-        val textView = layout.findViewById<TextView>(R.id.toast_message_tv)
-        textView.text = message
+                // API 호출 (Int -> Long 변환 주의)
+                val response = RetrofitClient.api().updateApplicationStatus(
+                    applicationId.toLong(), // ★ 여기서 item.id를 넘겨야 함 (groupId 아님!)
+                    requestBody
+                )
 
-        // 토스트 생성 및 설정
-        with(Toast(applicationContext)) {
-            setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100) // 위치 조정 (하단에서 100만큼 위로)
-            duration = Toast.LENGTH_SHORT
-            view = layout
-            show()
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    // 성공 시 메시지 출력
+                    val msg = if (status == "ACCEPTED") {
+                        "$nickname 님이 게스트가 되었습니다."
+                    } else {
+                        "$nickname 님의 요청을 거절했습니다."
+                    }
+                    showCustomToast(msg)
+
+                    // ★ 목록 새로고침 (중요)
+                    fetchApplicationList()
+
+                } else {
+                    // 실패 시 에러 메시지
+                    val errorMsg = response.body()?.message ?: "처리 실패"
+                    Toast.makeText(this@GroupJoinManagementActivity, errorMsg, Toast.LENGTH_SHORT).show()
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@GroupJoinManagementActivity, "네트워크 오류 발생", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    // 수락 다이얼로그
+    // --- 다이얼로그 및 토스트 로직 ---
+
     private fun showAgreeDialog(item: GroupJoinData) {
         CommonDialog(
             context = this,
             title = "참여 요청 수락",
             subtitle = currentBookTitle,
-            content = "${item.nickname} 님의 그룹 참여 요청을 수락하시겠습니까? 수락 즉시 그룹이 시작됩니다.",
+            content = "${item.nickname} 님의 그룹 참여 요청을 수락하시겠습니까?",
             confirmBtnText = "수락",
             confirmBtnColor = R.color.grey_900,
             onConfirmClick = {
-                // ★ 커스텀 토스트 호출 (수락 메시지)
-                val msg = "${item.nickname} 님이 ${currentBookTitle}의 게스트가 되었습니다."
-                showCustomToast(msg)
-
-                groupJoinAdapter.removeItem(item)
-                updateCountText(groupJoinAdapter.itemCount)
+                // 수락 API 호출 ("ACCEPTED")
+                processApplication(item.id, "ACCEPTED", item.nickname)
             }
         ).show()
     }
 
-    // 거절 다이얼로그
     private fun showRefusalDialog(item: GroupJoinData) {
         CommonDialog(
             context = this,
             title = "참여 요청 거절",
             subtitle = currentBookTitle,
-            content = "${item.nickname} 님의 그룹 참여 요청을 거절하시겠습니까? 상대방에게 거절 알림이 발송됩니다.",
+            content = "${item.nickname} 님의 그룹 참여 요청을 거절하시겠습니까?",
             confirmBtnText = "거절",
             confirmBtnColor = R.color.ui_point_red,
             onConfirmClick = {
-                // ★ 커스텀 토스트 호출 (거절 메시지)
-                val msg = "${item.nickname} 님의 $currentBookTitle 그룹 요청을 거절했습니다."
-                showCustomToast(msg)
-
-                groupJoinAdapter.removeItem(item)
-                updateCountText(groupJoinAdapter.itemCount)
+                // 거절 API 호출 ("REJECTED")
+                processApplication(item.id, "REJECTED", item.nickname)
             }
         ).show()
+    }
+
+    private fun showCustomToast(message: String) {
+        val inflater = LayoutInflater.from(this)
+        val layout = inflater.inflate(R.layout.toast_custom, null)
+        val textView = layout.findViewById<TextView>(R.id.toast_message_tv)
+        textView.text = message
+
+        with(Toast(applicationContext)) {
+            setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
+            duration = Toast.LENGTH_SHORT
+            view = layout
+            show()
+        }
     }
 }
