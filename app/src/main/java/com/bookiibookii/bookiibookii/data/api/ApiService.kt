@@ -10,7 +10,6 @@ import com.bookiibookii.bookiibookii.data.model.CardListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
 import com.bookiibookii.bookiibookii.data.model.GroupCreateResponse
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
-import com.bookiibookii.bookiibookii.data.model.GroupListRequest
 import com.bookiibookii.bookiibookii.data.model.GroupListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupMemberResponse
 import com.bookiibookii.bookiibookii.data.model.InquiryCreateResponse
@@ -210,7 +209,7 @@ interface ApiService: TrkApi {
         @Query("size") size: Int
     ): Response<GroupListResponse>
 
-    //인기 검색어
+    // 인기 검색어
     @GET("api/groups/popular-keywords")
     suspend fun getPopularKeywords(): Response<GroupItemDto.PopularSearchResponse>
 
@@ -219,4 +218,35 @@ interface ApiService: TrkApi {
         @Query("keyword") keyword: String,
         @Query("sort") sort: String = "latest" // 정렬 옵션 (필요시)
     ): Response<GroupItemDto.GroupSearchResponse>
+
+    // 그룹 상세 조회
+    @GET("api/groups/{groupId}")
+    suspend fun getGroupDetail(
+        @Path("groupId") groupId: Int
+    ): Response<GroupItemDto.GroupDetailResponse>
+
+    //그룹 신청하기
+    @POST("api/groups/{groupId}/apply")
+    suspend fun applyGroup(
+        @Path("groupId") groupId: Long,
+        @Body request: GroupItemDto.GroupApplyRequest
+    ): Response<GroupItemDto.GroupApplyResponse>
+
+    //그룹신청 취소하기
+    @DELETE("api/groups/{groupId}/apply")
+    suspend fun cancelGroupApplication(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.GroupCancelResponse>
+
+    //그룹 신청 조회
+    @GET("api/groups/{groupId}/applylist")
+    suspend fun getGroupApplications(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.GroupAppListResponse>
+
+    @PATCH("api/groups/apply/{applyId}")
+    suspend fun updateApplicationStatus(
+        @Path("applyId") applyId: Long,
+        @Body request: GroupItemDto.GroupAppStatusRequest
+    ): Response<GroupItemDto.GroupAppStatusResponse>
 }
