@@ -1,12 +1,13 @@
-package com.bookiibookii.bookiibookii.home
+package com.bookiibookii.bookiibookii.home.noti
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import com.bookiibookii.bookiibookii.R
-import com.google.android.material.button.MaterialButton
 import androidx.appcompat.app.AppCompatActivity
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.home.notiSetting.HomKeywordNotiSettingActivity
+import com.bookiibookii.bookiibookii.home.noti.HomSystemNotiFragment
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.button.MaterialButton
 
 class HomNotificationActivity : AppCompatActivity() {
 

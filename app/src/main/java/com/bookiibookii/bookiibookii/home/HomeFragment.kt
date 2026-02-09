@@ -14,6 +14,7 @@ import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeMateBinding
+import com.bookiibookii.bookiibookii.home.noti.HomNotificationActivity
 
 class HomeFragment : Fragment() {
 

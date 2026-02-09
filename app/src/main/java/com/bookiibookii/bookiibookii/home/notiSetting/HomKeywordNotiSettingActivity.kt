@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.home
+package com.bookiibookii.bookiibookii.home.notiSetting
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
