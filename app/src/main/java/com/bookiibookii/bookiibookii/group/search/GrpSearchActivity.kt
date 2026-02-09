@@ -1,15 +1,17 @@
-package com.bookiibookii.bookiibookii.group
+package com.bookiibookii.bookiibookii.group.search
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
+import android.graphics.Rect
 import android.os.Bundle
 import android.transition.AutoTransition
 import android.transition.TransitionManager
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -18,6 +20,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.SearchHistoryManager
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpSearchBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
+import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
+import com.bookiibookii.bookiibookii.group.main.GroupAdapter
 import com.google.android.material.chip.Chip
 
 class GrpSearchActivity : AppCompatActivity() {
@@ -79,7 +84,7 @@ class GrpSearchActivity : AppCompatActivity() {
     private fun initViewModel() {
         // 인기 검색어 리스트 관찰
         viewModel.displayList.observe(this) { list ->
-            TransitionManager.beginDelayedTransition(binding.root as android.view.ViewGroup, AutoTransition())
+            TransitionManager.beginDelayedTransition(binding.root as ViewGroup, AutoTransition())
             popularAdapter.submitList(list)
         }
 
@@ -121,7 +126,7 @@ class GrpSearchActivity : AppCompatActivity() {
             if (actionId == EditorInfo.IME_ACTION_SEARCH ||
                 actionId == EditorInfo.IME_ACTION_DONE ||
                 actionId == 0 || // ★ 추가: 키보드가 아무 액션 ID도 안 줄 때(기본 엔터) 처리
-                (event != null && event.keyCode == android.view.KeyEvent.KEYCODE_ENTER && event.action == android.view.KeyEvent.ACTION_DOWN)
+                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
             ) {
                 val query = binding.actGrpSearchBar.text.toString()
                 if (query.isNotBlank()) {
@@ -135,7 +140,7 @@ class GrpSearchActivity : AppCompatActivity() {
 
         binding.actGrpSearchBar.setOnTouchListener { v, event ->
             // 터치를 했다가 손을 뗐을 때 (ACTION_UP)
-            if (event.action == android.view.MotionEvent.ACTION_UP) {
+            if (event.action == MotionEvent.ACTION_UP) {
                 // 터치한 위치(event.x)가 왼쪽 아이콘 영역(totalPaddingStart) 안쪽인지 확인
                 if (event.x <= binding.actGrpSearchBar.totalPaddingStart) {
                     val query = binding.actGrpSearchBar.text.toString()
@@ -241,7 +246,7 @@ class GrpSearchActivity : AppCompatActivity() {
 //    }
 
     private fun hideKeyboard() {
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(binding.actGrpSearchBar.windowToken, 0)
     }
 
@@ -284,7 +289,7 @@ class GrpSearchActivity : AppCompatActivity() {
     // 리사이클러뷰 아이템 간격 조절용 클래스
     class VerticalSpaceItemDecoration(private val verticalSpaceDp: Int) : RecyclerView.ItemDecoration() {
 
-        override fun getItemOffsets(outRect: android.graphics.Rect, view: View, parent: androidx.recyclerview.widget.RecyclerView, state: androidx.recyclerview.widget.RecyclerView.State) {
+        override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
             // 마지막 아이템이 아니면 바텀 마진 추가 (마지막 아이템은 바닥에 딱 붙게 하고 싶으면 조건문 유지)
             if (parent.getChildAdapterPosition(view) != parent.adapter!!.itemCount - 1) {
                 outRect.bottom = dpToPx(parent.context, verticalSpaceDp)

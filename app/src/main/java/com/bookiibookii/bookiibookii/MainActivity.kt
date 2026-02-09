@@ -7,7 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.bookiibookii.bookiibookii.group.GroupFragment
+import com.bookiibookii.bookiibookii.group.main.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment

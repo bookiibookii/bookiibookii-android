@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.group
+package com.bookiibookii.bookiibookii.group.generation
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -8,9 +8,9 @@ import com.bookiibookii.bookiibookii.data.model.BookItem
 import com.bookiibookii.bookiibookii.databinding.ItemSearchBookListBinding
 import com.bumptech.glide.Glide
 
-class GrpSearchBookAdapter(
+class GrpGenAladinSearchAdapter(
     private val onItemClicked: (BookItem) -> Unit
-) : RecyclerView.Adapter<GrpSearchBookAdapter.BookViewHolder>() {
+) : RecyclerView.Adapter<GrpGenAladinSearchAdapter.BookViewHolder>() {
 
     private var items: List<BookItem> = emptyList()
 

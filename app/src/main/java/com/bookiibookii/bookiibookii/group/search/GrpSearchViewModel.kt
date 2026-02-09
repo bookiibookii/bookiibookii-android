@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.group
+package com.bookiibookii.bookiibookii.group.search
 
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.group.main.GroupData
 import kotlinx.coroutines.launch
 
 data class PopularSearchItem(val rank: Int, val keyword: String)
