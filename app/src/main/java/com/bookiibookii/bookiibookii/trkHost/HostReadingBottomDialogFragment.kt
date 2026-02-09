@@ -1,7 +1,6 @@
 package com.bookiibookii.bookiibookii.trkHost
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentReadingBottomSheetDialogBinding
+import com.bookiibookii.bookiibookii.trkHost.TrackerDateUtil.prettyDate
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -44,6 +44,10 @@ class HostReadingBottomDialogFragment : BottomSheetDialogFragment() {
 
         vm.resetDoneState()
 
+        binding.btnWriteCard.setOnClickListener{
+
+        }
+
         binding.btnExtendPeriod.setOnClickListener{
             if (parentFragmentManager.findFragmentByTag(HostExtendPeriodDialogFragment.TAG) != null) {
                 return@setOnClickListener
@@ -63,7 +67,10 @@ class HostReadingBottomDialogFragment : BottomSheetDialogFragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.uiState.collectLatest { state ->
 
-                    Log.d("HOST_FLOW", "extension try status=${state.data?.trackerStatus} count=${state.data?.extensionCount}")
+                    val dto = state.data
+
+                    binding.tvStartDate.text = prettyDate(dto?.startDate)
+                    binding.tvEndDate.text = prettyDate(dto?.endDate)
 
                     val extensionCount = state.data?.extensionCount ?: 0
                     val status = state.data?.trackerStatus?.uppercase()
@@ -96,7 +103,9 @@ class HostReadingBottomDialogFragment : BottomSheetDialogFragment() {
                             )
 
                             dismiss()
-                            HostShippingBottomDialogFragment()
+
+                            HostShippingBottomDialogFragment
+                                .newInstance(groupId)
                                 .show(parentFragmentManager, HostShippingBottomDialogFragment.TAG)
                         }
                         is UiState.Error -> {

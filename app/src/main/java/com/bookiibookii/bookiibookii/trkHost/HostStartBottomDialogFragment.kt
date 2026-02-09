@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentStartBottomSheetDialogBinding
+import com.bookiibookii.bookiibookii.trkHost.TrackerDateUtil.prettyDate
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -38,9 +39,21 @@ class HostStartBottomDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         vm.resetReadingStartState()
+        vm.loadTracker(groupId)
 
         binding.btnStart.setOnClickListener {
             vm.patchTrackerReadingStart(groupId)
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.uiState.collect { state ->
+                    val dto = state.data ?: return@collect
+
+                   binding.tvStartDate.text = prettyDate(dto?.startDate)
+                   binding.tvEndDate.text = prettyDate(dto?.endDate)
+                }
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -62,7 +75,8 @@ class HostStartBottomDialogFragment : BottomSheetDialogFragment() {
                             )
 
                             dismiss()
-                            HostReadingBottomDialogFragment()
+                            HostReadingBottomDialogFragment
+                                .newInstance(groupId)
                                 .show(parentFragmentManager, HostReadingBottomDialogFragment.TAG)
                         }
 

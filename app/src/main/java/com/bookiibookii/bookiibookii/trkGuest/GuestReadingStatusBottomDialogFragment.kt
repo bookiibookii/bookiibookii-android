@@ -26,9 +26,7 @@ class GuestReadingStatusBottomDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnGoRead.setOnClickListener{
-            val next = GuestExtendRequestBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, GuestExtendRequestBottomDialogFragment.TAG)
+            // TODO: 독서카드 확인하러 가기
         }
     }
 

@@ -128,7 +128,10 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
                         is UiState.Success -> {
                             parentFragmentManager.setFragmentResult(
                                 RESULT_KEY,
-                                Bundle().apply { putString(BUNDLE_ACTION, "FINISHED") }
+                                Bundle().apply {
+                                    putString(BUNDLE_ACTION, "FINISHED")
+                                    putLong(ARG_GROUP_ID, groupId)
+                                }
                             )
 
                             (parentFragmentManager
@@ -137,7 +140,8 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
 
                             dismissAllowingStateLoss()
 
-                            HostTradeFinishBottomDialogFragment()
+                            HostTradeFinishBottomDialogFragment
+                                .newInstance(groupId)
                                 .show(parentFragmentManager, HostTradeFinishBottomDialogFragment.TAG)
                         }
 
