@@ -13,6 +13,10 @@ class DirectHostAppointmentBottomDialogFragment : BottomSheetDialogFragment() {
     private var _binding: FragmentDirectHostAppointmentBottomDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -24,9 +28,14 @@ class DirectHostAppointmentBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.btnGoComment.setOnClickListener{
+
+        }
+
         binding.btnRegisterMeet.setOnClickListener{
-            val dialog = DirectHostSetAppointmentDialogFragment()
-            dialog.show(parentFragmentManager, DirectHostSetAppointmentDialogFragment.TAG)
+            DirectHostSetAppointmentDialogFragment
+                .newInstance(groupId)
+                .show(parentFragmentManager, DirectHostSetAppointmentDialogFragment.TAG)
         }
     }
 
@@ -37,6 +46,14 @@ class DirectHostAppointmentBottomDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "DirectAppointmentFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) =
+            DirectHostAppointmentBottomDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_GROUP_ID, groupId)
+                }
+            }
     }
 
     override fun getTheme(): Int {

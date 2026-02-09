@@ -8,13 +8,27 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectHostAppointmentEditDialogBinding
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class DirectHostAppointmentEditDialogFragment : DialogFragment() {
 
     private var _binding: FragmentDirectHostAppointmentEditDialogBinding? = null
     private val binding get() = _binding!!
+
+    private val vm: DirectHostViewModel by activityViewModels()
+
+    private var didInitInputs = false
+
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -28,7 +42,6 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
         super.onStart()
 
         dialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
         dialog?.window?.apply {
             setLayout(
                 (resources.displayMetrics.widthPixels * 0.90).toInt(),
@@ -43,9 +56,36 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
         binding.btnClose.setOnClickListener { dismiss() }
 
         updateRegisterState()
-
         binding.etDate.doAfterTextChanged { updateRegisterState() }
         binding.etPlace.doAfterTextChanged { updateRegisterState() }
+
+        vm.loadMeeting(groupId)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.meetingState.collectLatest { state ->
+                    when (state) {
+                        UiState.Idle -> Unit
+                        UiState.Loading -> Unit
+
+                        is UiState.Success -> {
+                            if (didInitInputs) return@collectLatest
+                            didInitInputs = true
+
+                            val dto = state.data
+
+                            binding.etDate.setText(dto.meetingTime.orEmpty())
+                            binding.etPlace.setText(dto.meetingPlace.orEmpty())
+
+                            updateRegisterState()
+                        }
+
+                        is UiState.Error -> {
+                        }
+                    }
+                }
+            }
+        }
 
         binding.btnRegister.setOnClickListener {
             if (!binding.btnRegister.isEnabled) return@setOnClickListener
@@ -53,10 +93,44 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
             val date = binding.etDate.text?.toString()?.trim().orEmpty()
             val place = binding.etPlace.text?.toString()?.trim().orEmpty()
 
-            dismissAllowingStateLoss()
+            binding.btnRegister.isEnabled = false
+            vm.makeMeeting(groupId, date, place)
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.event.collect { ev ->
+                    when (ev) {
+                        is DirectHostEvent.MeetingSuccess -> {
+                            dismissAllDialogsAndSheets()
+
+                            vm.loadTracker(groupId)
+                        }
+
+                        is DirectHostEvent.MeetingFail -> {
+                            binding.btnRegister.isEnabled = true
+                        }
+
+                        else -> Unit
+                    }
+                }
+            }
         }
     }
 
+    private fun dismissAllDialogsAndSheets() {
+        val fm = requireActivity().supportFragmentManager
+        fm.fragments.forEach { f ->
+            if (f is DialogFragment) {
+                f.dismissAllowingStateLoss()
+            }
+        }
+        parentFragmentManager.fragments.forEach { f ->
+            if (f is DialogFragment) {
+                f.dismissAllowingStateLoss()
+            }
+        }
+    }
 
     private fun updateRegisterState() {
         val context = binding.root.context
@@ -84,5 +158,13 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
 
     companion object {
         const val TAG = "DirectAppointmentEditDialogFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) =
+            DirectHostAppointmentEditDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_GROUP_ID, groupId)
+                }
+            }
     }
 }

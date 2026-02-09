@@ -4,14 +4,26 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectReadingStatusBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class DirectReadingStatusBottomDialogFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentDirectReadingStatusBottomDialogBinding? = null
     private val binding get() = _binding!!
+
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
+    private val vm: DirectHostViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -24,11 +36,35 @@ class DirectReadingStatusBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 이거 나중에 수정
+        vm.loadTracker(groupId)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.trackerState.collectLatest { state ->
+                    when (state) {
+                        UiState.Idle -> Unit
+                        UiState.Loading -> {
+                            binding.tvStartDate.text = "-"
+                            binding.tvEndDate.text = "-"
+                        }
+
+                        is UiState.Success -> {
+                            val dto = state.data
+                            binding.tvStartDate.text = dto.startDate ?: "-"
+                            binding.tvEndDate.text = dto.endDate ?: "-"
+                        }
+
+                        is UiState.Error -> {
+                            binding.tvStartDate.text = "-"
+                            binding.tvEndDate.text = "-"
+                        }
+                    }
+                }
+            }
+        }
+
         binding.btnGoRead.setOnClickListener{
-            val next = DirectHostExtendRequestBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, DirectHostExtendRequestBottomDialogFragment.TAG)
+            // TODO 독서카드
         }
     }
 
@@ -39,6 +75,14 @@ class DirectReadingStatusBottomDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "DirectReadingStatusFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) =
+            DirectReadingStatusBottomDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_GROUP_ID, groupId)
+                }
+            }
     }
 
     override fun getTheme(): Int {
