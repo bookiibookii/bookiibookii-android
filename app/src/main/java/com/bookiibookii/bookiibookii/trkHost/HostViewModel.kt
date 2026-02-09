@@ -7,10 +7,20 @@ import com.bookiibookii.bookiibookii.trkData.dto.TrackerDetailResponseDto
 import com.bookiibookii.bookiibookii.trkData.dto.TrackerDoneResponseDto
 import com.bookiibookii.bookiibookii.trkData.dto.TrackerExtensionResponseDto
 import com.bookiibookii.bookiibookii.trkData.dto.TrackerReadingStartResponseDto
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerReceiveRequestDto
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerReceiveResponseDto
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerShippingStartRequestDto
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerShippingStartResponseDto
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
 data class HostTrackerUiState(
     val isLoading: Boolean = false,
@@ -51,6 +61,16 @@ class HostViewModel : ViewModel() {
         MutableStateFlow<UiState<TrackerDoneResponseDto>>(UiState.Idle)
     val doneState: StateFlow<UiState<TrackerDoneResponseDto>> = _doneState.asStateFlow()
 
+    private val _shippingStartState =
+        MutableStateFlow<UiState<TrackerShippingStartResponseDto>>(UiState.Idle)
+    val shippingStartState: StateFlow<UiState<TrackerShippingStartResponseDto>> =
+        _shippingStartState.asStateFlow()
+
+    private val _receiveState =
+        MutableStateFlow<UiState<TrackerReceiveResponseDto>>(UiState.Idle)
+    val receiveState: StateFlow<UiState<TrackerReceiveResponseDto>> =
+        _receiveState.asStateFlow()
+
     init {
         recomputeSteps()
     }
@@ -65,6 +85,14 @@ class HostViewModel : ViewModel() {
 
     fun resetExtensionState() {
         _extensionState.value = UiState.Idle
+    }
+
+    fun resetShippingStartState() {
+        _shippingStartState.value = UiState.Idle
+    }
+
+    fun resetReceiveState() {
+        _receiveState.value = UiState.Idle
     }
 
     fun loadTracker(groupId: Long) {
@@ -168,6 +196,132 @@ class HostViewModel : ViewModel() {
             }
         }
     }
+
+    fun startShipping(
+        groupId: Long,
+        deliveryCompany: String,
+        trackingNumber: String,
+        imageBytes: ByteArray,
+        contentType: String
+    ) {
+        viewModelScope.launch {
+            _shippingStartState.value = UiState.Loading
+
+            try {
+                val presignedBody = RetrofitClient.api().getTrackerImagePresignedUrl(groupId)
+                if (!presignedBody.isSuccess || presignedBody.result == null) {
+                    _shippingStartState.value =
+                        UiState.Error(presignedBody.message ?: "presigned-url error")
+                    return@launch
+                }
+
+                val s3Key = presignedBody.result.s3Key
+                val putUrl = presignedBody.result.presignedPutUrl
+
+                val uploaded = uploadToPresignedUrl(
+                    putUrl = putUrl,
+                    bytes = imageBytes,
+                    contentType = contentType
+                )
+                if (!uploaded) {
+                    _shippingStartState.value = UiState.Error("이미지 업로드에 실패했습니다.")
+                    return@launch
+                }
+
+                val req = TrackerShippingStartRequestDto(
+                    deliveryCompany = deliveryCompany,
+                    trackingNumber = trackingNumber,
+                    s3Key = s3Key
+                )
+
+                val shipBody = RetrofitClient.api().postTrackerShippingStart(groupId, req)
+                if (!shipBody.isSuccess || shipBody.result == null) {
+                    _shippingStartState.value =
+                        UiState.Error(shipBody.message ?: "shipping start error")
+                    return@launch
+                }
+
+                _shippingStartState.value = UiState.Success(shipBody.result)
+
+                loadTracker(groupId)
+
+            } catch (e: Exception) {
+                _shippingStartState.value = UiState.Error(e.message ?: "network error")
+            }
+        }
+    }
+
+    fun patchTrackerReceiveWithImage(
+        groupId: Long,
+        imageBytes: ByteArray,
+        contentType: String
+    ) {
+        viewModelScope.launch {
+            _receiveState.value = UiState.Loading
+
+            try {
+                val presignedBody = RetrofitClient.api()
+                    .getTrackerImagePresignedUrl(groupId)
+
+                if (!presignedBody.isSuccess || presignedBody.result == null) {
+                    _receiveState.value =
+                        UiState.Error(presignedBody.message ?: "presigned-url error")
+                    return@launch
+                }
+
+                val s3Key = presignedBody.result.s3Key
+                val putUrl = presignedBody.result.presignedPutUrl
+
+                val uploaded = uploadToPresignedUrl(
+                    putUrl = putUrl,
+                    bytes = imageBytes,
+                    contentType = contentType
+                )
+                if (!uploaded) {
+                    _receiveState.value = UiState.Error("이미지 업로드 실패")
+                    return@launch
+                }
+
+                val body = RetrofitClient.api().patchTrackerReceive(
+                    groupId = groupId,
+                    request = TrackerReceiveRequestDto(s3Key)
+                )
+
+                if (!body.isSuccess || body.result == null) {
+                    _receiveState.value =
+                        UiState.Error(body.message ?: "receive error")
+                    return@launch
+                }
+
+                _receiveState.value = UiState.Success(body.result)
+
+                loadTracker(groupId) // HostViewModel에 있는 트래커 재조회 함수
+
+            } catch (e: Exception) {
+                _receiveState.value = UiState.Error(e.message ?: "network error")
+            }
+        }
+    }
+
+    private suspend fun uploadToPresignedUrl(
+        putUrl: String,
+        bytes: ByteArray,
+        contentType: String
+    ): Boolean = withContext(Dispatchers.IO) {
+        val client = OkHttpClient()
+
+        val body = bytes.toRequestBody(contentType.toMediaType())
+        val request = Request.Builder()
+            .url(putUrl)
+            .put(body)
+            .addHeader("Content-Type", contentType)
+            .build()
+
+        client.newCall(request).execute().use { resp ->
+            resp.isSuccessful
+        }
+    }
+
 
     fun setPhaseFromApiStatus(trackerStatus: String?) {
         _phase.value = phaseFromServerStatus(trackerStatus)

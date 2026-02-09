@@ -129,13 +129,13 @@ class GuestActivity : AppCompatActivity() {
             TrackerStatus.HOST_READING -> GuestReadingStatusBottomDialogFragment()
             TrackerStatus.HOST_EXTENSION -> GuestExtendRequestBottomDialogFragment()
             TrackerStatus.HOST_DONE -> GuestReadingDoneBottomDialogFragment()
-            TrackerStatus.SHIPPING_TO_GUEST -> GuestShippingStatusBottomDialogFragment()
+            TrackerStatus.SHIPPING_TO_GUEST -> GuestShippedBottomDialogFragment.newInstance(groupId)
 
-            TrackerStatus.RECEIVED -> GuestStartBottomDialogFragment()
+            TrackerStatus.RECEIVED -> GuestStartBottomDialogFragment.newInstance(groupId)
             TrackerStatus.GUEST_READING,
-            TrackerStatus.GUEST_EXTENSION-> GuestReadingStatusBottomDialogFragment()
+            TrackerStatus.GUEST_EXTENSION-> GuestReadingBottomDialogFragment.newInstance(groupId)
 
-            TrackerStatus.GUEST_DONE -> GuestShippingBottomDialogFragment()
+            TrackerStatus.GUEST_DONE -> GuestShippingBottomDialogFragment.newInstance(groupId)
             TrackerStatus.SHIPPING_TO_HOST -> GuestShippingStatusBottomDialogFragment()
 
             TrackerStatus.RETURNED,

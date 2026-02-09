@@ -4,15 +4,27 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentGuestStartBottomDialogBinding
+import com.bookiibookii.bookiibookii.trkHost.UiState
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 
 class GuestStartBottomDialogFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentGuestStartBottomDialogBinding? = null
     private val binding get() = _binding!!
+    private val vm: GuestViewModel by activityViewModels()
+
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -24,11 +36,38 @@ class GuestStartBottomDialogFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        vm.resetReadingStartState()
 
-        binding.btnStart.setOnClickListener{
-            val next = GuestReadingBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, GuestReadingBottomDialogFragment.TAG)
+        binding.btnStart.setOnClickListener {
+            vm.patchTrackerReadingStart(groupId)
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.readingStartState.collectLatest { state ->
+                    when (state) {
+                        is UiState.Idle -> Unit
+
+                        is UiState.Loading -> {
+                            binding.btnStart.isEnabled = false
+                            binding.btnStart.alpha = 0.45f
+                        }
+
+                        is UiState.Success -> {
+                            dismissAllowingStateLoss()
+
+                            GuestReadingBottomDialogFragment
+                                .newInstance(groupId)
+                                .show(parentFragmentManager, GuestReadingBottomDialogFragment.TAG)
+                        }
+
+                        is UiState.Error -> {
+                            binding.btnStart.isEnabled = true
+                            binding.btnStart.alpha = 1.0f
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -37,8 +76,14 @@ class GuestStartBottomDialogFragment : BottomSheetDialogFragment() {
         _binding = null
     }
 
-    companion object{
+    companion object {
         const val TAG = "GuestBookStartBottomSheetFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) =
+            GuestStartBottomDialogFragment().apply {
+                arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+            }
     }
 
     override fun getTheme(): Int {
