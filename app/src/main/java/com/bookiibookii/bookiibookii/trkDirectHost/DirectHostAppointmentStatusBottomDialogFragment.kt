@@ -52,14 +52,11 @@ class DirectHostAppointmentStatusBottomDialogFragment : BottomSheetDialogFragmen
                             val dto = state.data
                             val meetingTime = dto.meetingTime
 
-                            // ✅ 제목 날짜
                             binding.tvTitleDate.text = formatTitleDate(meetingTime)
 
-                            // ✅ 카드 날짜
                             binding.tvAppointmentDatetime.text =
                                 formatCardDateTime(meetingTime)
 
-                            // ✅ 장소
                             binding.tvAppointmentPlace.text =
                                 dto.meetingPlace ?: "-"
                         }
@@ -84,7 +81,6 @@ class DirectHostAppointmentStatusBottomDialogFragment : BottomSheetDialogFragmen
 
         val dt = parseAnyDateTime(raw) ?: return "-"
 
-        // 👉 "1월 19일 14:00"
         val time = dt.format(DateTimeFormatter.ofPattern("HH:mm"))
         return "${dt.monthValue}월 ${dt.dayOfMonth}일 $time"
     }
@@ -94,7 +90,6 @@ class DirectHostAppointmentStatusBottomDialogFragment : BottomSheetDialogFragmen
 
         val dt = parseAnyDateTime(raw) ?: return "-"
 
-        // 👉 "2026. 01. 19. 14:00"
         return dt.format(DateTimeFormatter.ofPattern("yyyy. MM. dd. HH:mm"))
     }
 

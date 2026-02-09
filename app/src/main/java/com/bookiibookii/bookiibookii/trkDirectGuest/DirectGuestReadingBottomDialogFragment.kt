@@ -4,19 +4,31 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestReadingBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class DirectGuestReadingBottomDialogFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentDirectGuestReadingBottomDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
+    private val vm: DirectGuestViewModel by activityViewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentDirectGuestReadingBottomDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -24,15 +36,67 @@ class DirectGuestReadingBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnExtendPeriod.setOnClickListener{
-            val dialog = DirectGuestExtendPeriodDialogFragment()
-            dialog.show(parentFragmentManager, DirectGuestExtendPeriodDialogFragment.TAG)
+        vm.loadTracker(groupId)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.trackerState.collectLatest { state ->
+                    when (state) {
+                        UiState.Idle -> Unit
+
+                        UiState.Loading -> {
+                            binding.tvStartDate.text = "-"
+                            binding.tvEndDate.text = "-"
+                        }
+
+                        is UiState.Success -> {
+                            val dto = state.data
+                            binding.tvStartDate.text = dto.startDate ?: "-"
+                            binding.tvEndDate.text = dto.endDate ?: "-"
+
+                            val alreadyExtended = (dto.extensionCount ?: 0) >= 1
+                            binding.btnExtendPeriod.isEnabled = !alreadyExtended
+                            binding.btnExtendPeriod.alpha = if (alreadyExtended) 0.5f else 1f
+                        }
+
+                        is UiState.Error -> {
+                            binding.tvStartDate.text = "-"
+                            binding.tvEndDate.text = "-"
+                        }
+                    }
+                }
+            }
         }
 
-        binding.btnFinish.setOnClickListener{
-            val next = DirectGuestAppointmentBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, DirectGuestAppointmentBottomDialogFragment.TAG)
+        binding.btnExtendPeriod.setOnClickListener {
+            DirectGuestExtendPeriodDialogFragment
+                .newInstance(groupId)
+                .show(parentFragmentManager, DirectGuestExtendPeriodDialogFragment.TAG)
+        }
+
+        binding.btnFinish.setOnClickListener {
+            binding.btnFinish.isEnabled = false
+            vm.doneTracker(groupId)
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.event.collect { ev ->
+                    when (ev) {
+                        is DirectGuestEvent.DoneSuccess -> {
+                            binding.btnFinish.isEnabled = true
+                            vm.loadTracker(groupId)
+                            dismissAllowingStateLoss()
+                        }
+
+                        is DirectGuestEvent.DoneFail -> {
+                            binding.btnFinish.isEnabled = true
+                        }
+
+                        else -> Unit
+                    }
+                }
+            }
         }
     }
 
@@ -41,11 +105,15 @@ class DirectGuestReadingBottomDialogFragment : BottomSheetDialogFragment() {
         _binding = null
     }
 
-    companion object{
+    companion object {
         const val TAG = "DirectGuestReadingBottomSheetDialogFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) =
+            DirectGuestReadingBottomDialogFragment().apply {
+                arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+            }
     }
 
-    override fun getTheme(): Int {
-        return R.style.Theme_Bookii_BottomSheet_NoDim
-    }
+    override fun getTheme(): Int = R.style.Theme_Bookii_BottomSheet_NoDim
 }
