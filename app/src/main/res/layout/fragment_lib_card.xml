@@ -191,7 +191,7 @@
                 android:id="@+id/lib_card_trash_iv"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_trash"
+                android:src="@drawable/ic_trash_button"
                 android:layout_marginEnd="8dp"
                 android:layout_marginTop="16dp"
                 app:layout_constraintEnd_toStartOf="@id/lib_card_edit_iv"
