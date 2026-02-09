@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.home.noti
+package com.bookiibookii.bookiibookii.home.notification.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.home.notification.model.HomNotiItem
 
 class HomNotiAdapter(
     private val onItemClick: ((HomNotiItem) -> Unit)? = null
@@ -27,18 +28,11 @@ class HomNotiAdapter(
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bind(items[position])
+        val item = items[position]
+        holder.bind(item)
 
         holder.itemView.setOnClickListener {
-            val item = items[position]
-
-            // 읽지 않은 알림이면 읽음 처리
-            if (item.isUnread) {
-                item.isUnread = false
-                notifyItemChanged(position)
-            }
-
-            // Fragment로 클릭 이벤트 전달
+            // 읽음 처리/이동 로직은 Fragment에서 결정
             onItemClick?.invoke(item)
         }
     }
@@ -61,19 +55,15 @@ class HomNotiAdapter(
         fun bind(item: HomNotiItem) {
             tvTitle.text = item.title
             tvBody.text = item.body
-
             tvTime.text = item.timeText
 
-            // bookTitle 없으면 메타 뒷부분 숨김
             val hasBook = item.bookTitle.isNotBlank()
             tvDotMeta.visibility = if (hasBook) View.VISIBLE else View.GONE
             tvBook.visibility = if (hasBook) View.VISIBLE else View.GONE
             if (hasBook) tvBook.text = item.bookTitle
 
-            // 읽지 않은 점 표시
             dotUnread.visibility = if (item.isUnread) View.VISIBLE else View.GONE
 
-            // 아이콘 스타일 적용
             applyIconStyle(item.isUnread)
         }
 

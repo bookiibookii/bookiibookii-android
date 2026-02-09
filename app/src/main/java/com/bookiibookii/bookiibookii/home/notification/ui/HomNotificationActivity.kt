@@ -1,10 +1,9 @@
-package com.bookiibookii.bookiibookii.home.noti
+package com.bookiibookii.bookiibookii.home.notification.ui
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.home.notiSetting.HomKeywordNotiSettingActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 

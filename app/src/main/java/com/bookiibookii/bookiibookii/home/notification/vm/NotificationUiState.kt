@@ -1,0 +1,12 @@
+package com.bookiibookii.bookiibookii.home.notification.vm
+
+import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
+
+data class NotificationUiState(
+    val items: List<NotificationItemDto> = emptyList(),
+    val isLoading: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val nextCursor: String? = null,
+    val hasNext: Boolean = false,
+    val errorMessage: String? = null
+)
