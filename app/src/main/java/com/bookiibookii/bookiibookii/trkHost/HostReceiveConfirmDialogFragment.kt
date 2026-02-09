@@ -134,16 +134,9 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
                                 }
                             )
 
-                            (parentFragmentManager
-                                .findFragmentByTag(HostShippedBottomDialogFragment.TAG) as? DialogFragment)
-                                ?.dismissAllowingStateLoss()
-
                             dismissAllowingStateLoss()
-
-                            HostTradeFinishBottomDialogFragment
-                                .newInstance(groupId)
-                                .show(parentFragmentManager, HostTradeFinishBottomDialogFragment.TAG)
                         }
+
 
                         is UiState.Error -> {
                             updateFinishButtonState()

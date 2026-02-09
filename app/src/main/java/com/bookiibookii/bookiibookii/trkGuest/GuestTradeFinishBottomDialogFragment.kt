@@ -12,6 +12,10 @@ class GuestTradeFinishBottomDialogFragment : BottomSheetDialogFragment() {
     private var _binding: FragmentGuestTradeFinishBottomDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -32,6 +36,12 @@ class GuestTradeFinishBottomDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "GuestTradeFinishFragment"
+
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = GuestTradeFinishBottomDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
     override fun getTheme(): Int {

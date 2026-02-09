@@ -56,10 +56,6 @@ class HostSendConfirmFragment : DialogFragment() {
                 ?.dismissAllowingStateLoss()
 
             dismissAllowingStateLoss()
-
-            HostReadingStatusBottomDialogFragment
-                .newInstance(groupId)
-                .show(parentFragmentManager, HostReadingStatusBottomDialogFragment.TAG)
         }
     }
 

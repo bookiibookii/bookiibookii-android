@@ -12,6 +12,10 @@ class GuestSendConfirmFragment : DialogFragment() {
     private var _binding: FragmentGuestSendConfirmBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -36,13 +40,12 @@ class GuestSendConfirmFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnConfirm.setOnClickListener{
-            val next = GuestTradeFinishBottomDialogFragment()
-            val prevBottomSheet = parentFragmentManager.findFragmentByTag(
-                GuestShippingStatusBottomDialogFragment.TAG) as? DialogFragment
+        binding.btnConfirm.setOnClickListener {
             dismiss()
-            prevBottomSheet?.dismiss()
-            next.show(parentFragmentManager, GuestTradeFinishBottomDialogFragment.TAG)
+
+            (parentFragmentManager.findFragmentByTag(GuestShippingStatusBottomDialogFragment.TAG) as? DialogFragment)
+                ?.dismiss()
+
         }
     }
 
@@ -53,5 +56,10 @@ class GuestSendConfirmFragment : DialogFragment() {
 
     companion object {
         const val TAG = "GuestSendConfirmFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = GuestSendConfirmFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 }

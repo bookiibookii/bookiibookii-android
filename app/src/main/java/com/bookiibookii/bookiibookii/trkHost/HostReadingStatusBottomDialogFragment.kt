@@ -54,7 +54,6 @@ class HostReadingStatusBottomDialogFragment : BottomSheetDialogFragment() {
         }
 
         binding.btnGoRead.setOnClickListener {
-            dismiss()
             // TODO:
         }
     }

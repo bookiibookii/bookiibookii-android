@@ -134,7 +134,8 @@ class GuestShippingInputDialogFragment : DialogFragment() {
 
                             dismissAllowingStateLoss()
 
-                            GuestShippingStatusBottomDialogFragment()
+                            GuestShippingStatusBottomDialogFragment
+                                .newInstance(groupId)
                                 .show(parentFragmentManager, GuestShippingStatusBottomDialogFragment.TAG)
                         }
 

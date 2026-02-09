@@ -1,10 +1,10 @@
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentHostExtendRequestBottomDialogBinding
-import com.bookiibookii.bookiibookii.trkHost.HostReadingDoneBottomDialogFragment
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class HostExtendRequestBottomDialogFragment : BottomSheetDialogFragment() {
@@ -28,19 +28,7 @@ class HostExtendRequestBottomDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnConfirm.setOnClickListener {
-            parentFragmentManager.setFragmentResult(
-                RESULT_KEY,
-                Bundle().apply {
-                    putString(BUNDLE_ACTION, "GUEST_SHIPPING_READY")
-                    putLong(ARG_GROUP_ID, groupId)
-                }
-            )
-
             dismiss()
-
-            HostReadingDoneBottomDialogFragment
-                .newInstance(groupId)
-                .show(parentFragmentManager, HostReadingDoneBottomDialogFragment.TAG)
         }
     }
 

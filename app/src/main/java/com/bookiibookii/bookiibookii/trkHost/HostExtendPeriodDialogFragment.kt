@@ -108,6 +108,16 @@ class HostExtendPeriodDialogFragment : DialogFragment() {
 
             val days = text?.toString()?.trim().orEmpty().toIntOrNull() ?: 0
             binding.tvExtendedDate.text = extendedEndDateText(originEndDateRaw, days)
+
+            if (hasInput && days > 0) {
+                binding.tvExtendedDate.setTextColor(
+                    ContextCompat.getColor(context, R.color.ui_main_sub)
+                )
+            } else {
+                binding.tvExtendedDate.setTextColor(
+                    ContextCompat.getColor(context, R.color.grey_600)
+                )
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
