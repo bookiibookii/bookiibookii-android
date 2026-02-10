@@ -28,6 +28,8 @@ class GuestActivity : AppCompatActivity() {
 
     private var didAutoShowSheet = false
 
+    private var currentIsVerified: Boolean? = null
+
     private val groupId: Long by lazy {
         intent.getLongExtra("group_id", -1L)
     }
@@ -93,6 +95,7 @@ class GuestActivity : AppCompatActivity() {
                         android.util.Log.d("GUEST", "mapped=${TrackerStatus.from(dto.trackerStatus)}")
 
                         currentStatus = TrackerStatus.from(dto.trackerStatus)
+                        currentIsVerified = dto.deliveryInfo?.isVerified
                         binding.cardWidget.isEnabled = true
 
                         if (!didAutoShowSheet && savedInstanceState == null) {
@@ -144,7 +147,15 @@ class GuestActivity : AppCompatActivity() {
             TrackerStatus.GUEST_DONE -> GuestShippingBottomDialogFragment.newInstance(groupId)
             TrackerStatus.SHIPPING_TO_HOST -> GuestShippingStatusBottomDialogFragment.newInstance(groupId)
 
-            TrackerStatus.RETURNED,
+            TrackerStatus.RETURNED -> {
+                val verified = currentIsVerified ?: false
+                if (!verified) {
+                    GuestShippingStatusBottomDialogFragment.newInstance(groupId)
+                } else {
+                    GuestTradeFinishBottomDialogFragment.newInstance(groupId)
+                }
+            }
+
             TrackerStatus.COMPLETED,
             TrackerStatus.UNKNOWN -> GuestTradeFinishBottomDialogFragment()
         }
@@ -152,7 +163,9 @@ class GuestActivity : AppCompatActivity() {
 
     private fun showSheetOnceForStatus(status: TrackerStatus) {
         val tag = "tracker_sheet"
-        if (supportFragmentManager.findFragmentByTag(tag) != null) return
+
+        (supportFragmentManager.findFragmentByTag(tag) as? BottomSheetDialogFragment)
+            ?.dismissAllowingStateLoss()
 
         val sheet = createSheetForStatus(status)
         sheet.show(supportFragmentManager, tag)

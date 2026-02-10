@@ -5,12 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
 import com.bookiibookii.bookiibookii.databinding.FragmentGuestSendConfirmBinding
 
 class GuestSendConfirmFragment : DialogFragment() {
 
     private var _binding: FragmentGuestSendConfirmBinding? = null
     private val binding get() = _binding!!
+
+    private val vm: GuestViewModel by activityViewModels()
 
     private val groupId: Long by lazy {
         requireArguments().getLong(ARG_GROUP_ID)
@@ -41,11 +44,13 @@ class GuestSendConfirmFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnConfirm.setOnClickListener {
-            dismiss()
+            vm.patchConfirmReception(groupId)
 
-            (parentFragmentManager.findFragmentByTag(GuestShippingStatusBottomDialogFragment.TAG) as? DialogFragment)
-                ?.dismiss()
+            (parentFragmentManager
+                .findFragmentByTag(GuestShippingStatusBottomDialogFragment.TAG) as? DialogFragment)
+                ?.dismissAllowingStateLoss()
 
+            dismissAllowingStateLoss()
         }
     }
 

@@ -95,6 +95,11 @@ interface TrkApi {
     suspend fun patchMeetingComplete(
         @Path("groupId") groupId: Long
     ): retrofit2.Response<TrackerDetailDto>
+
+    @PATCH("/api/groups/{groupId}/tracker/confirm-reception")
+    suspend fun patchConfirmReception(
+        @Path("groupId") groupId: Long
+    ): ApiResponse<TrackerDetailResponseDto>
 }
 
 
