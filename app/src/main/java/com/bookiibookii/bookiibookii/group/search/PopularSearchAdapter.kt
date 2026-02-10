@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.group
+package com.bookiibookii.bookiibookii.group.search
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

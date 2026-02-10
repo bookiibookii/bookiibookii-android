@@ -107,7 +107,7 @@ class LibraryBookDetailFragment : Fragment() {
         binding.libDetailBookAuthorTv.isSelected = true
 
         Glide.with(this).load(bookCover).placeholder(R.drawable.bg_round_20dp_gray200)
-            .transform(CenterCrop(), RoundedCorners(dpToPx(20))).into(binding.libDetailImageIv)
+            .transform(CenterCrop(), RoundedCorners(dpToPx(10))).into(binding.libDetailImageIv)
 
         Glide.with(this)
             .load(hostProfileUrl)

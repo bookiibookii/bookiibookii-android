@@ -4,20 +4,32 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentStartBottomSheetDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class HostStartBottomDialogFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentStartBottomSheetDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val vm: HostViewModel by activityViewModels()
+
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentStartBottomSheetDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -25,17 +37,41 @@ class HostStartBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnStart.setOnClickListener{
-            parentFragmentManager.setFragmentResult(
-                HostStartBottomDialogFragment.RESULT_KEY,
-                Bundle().apply {
-                    putString(HostStartBottomDialogFragment.BUNDLE_ACTION, "START_READING")
-                }
-            )
+        vm.resetReadingStartState()
 
-            val next = HostReadingBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, HostReadingBottomDialogFragment.TAG)
+        binding.btnStart.setOnClickListener {
+            vm.patchTrackerReadingStart(groupId)
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.readingStartState.collectLatest { state ->
+                    when (state) {
+                        is UiState.Idle -> {
+                            binding.btnStart.isEnabled = true
+                        }
+
+                        is UiState.Loading -> {
+                            binding.btnStart.isEnabled = false
+                        }
+
+                        is UiState.Success -> {
+                            parentFragmentManager.setFragmentResult(
+                                RESULT_KEY,
+                                Bundle().apply { putString(BUNDLE_ACTION, "START_READING") }
+                            )
+
+                            dismiss()
+                            HostReadingBottomDialogFragment()
+                                .show(parentFragmentManager, HostReadingBottomDialogFragment.TAG)
+                        }
+
+                        is UiState.Error -> {
+                            binding.btnStart.isEnabled = true
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -44,13 +80,17 @@ class HostStartBottomDialogFragment : BottomSheetDialogFragment() {
         _binding = null
     }
 
-    companion object{
+    companion object {
         const val TAG = "BookStartBottomSheetFragment"
         const val RESULT_KEY = "host_action"
         const val BUNDLE_ACTION = "action"
+
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = HostStartBottomDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
-    override fun getTheme(): Int {
-        return R.style.Theme_Bookii_BottomSheet_NoDim
-    }
+    override fun getTheme(): Int = R.style.Theme_Bookii_BottomSheet_NoDim
 }

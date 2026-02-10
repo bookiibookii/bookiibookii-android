@@ -1,6 +1,6 @@
 package com.bookiibookii.bookiibookii.data.model
 
-import com.bookiibookii.bookiibookii.group.GroupData
+import com.bookiibookii.bookiibookii.group.main.GroupData
 import com.google.gson.annotations.SerializedName
 
 
@@ -55,29 +55,6 @@ data class BookItem(
     val link : String // 구매링크
 )
 
-data class GroupListRequest(
-    @SerializedName("groupTypes")
-    val groupTypes: List<String>?, // ["TOGETHER", "RELAY"] (없으면 null)
-
-    @SerializedName("tradeTypes")
-    val tradeTypes: List<String>?, // ["DELIVERY", "DIRECT"]
-
-    @SerializedName("meetPlace")
-    val meetPlace: List<String>?, // ["송파구", "강남구"]
-
-    @SerializedName("categories")
-    val categories: List<String>?, // ["ECON_BIZ"]
-
-    @SerializedName("sort")
-    val sort: String = "LATEST", // "LATEST", "DEADLINE" 등
-
-    @SerializedName("page")
-    val page: Int = 0,
-
-    @SerializedName("size")
-    val size: Int = 20
-)
-
 data class GroupListResponse(
     val isSuccess: Boolean,
     val code: String,
@@ -88,7 +65,6 @@ data class GroupListResponse(
 data class GroupPageResult(
     @SerializedName("groupList")
     val groupList: List<GroupItemDto>?,
-
     val currentPage: Int,
     val hasNext: Boolean
 )
@@ -128,6 +104,9 @@ data class GroupItemDto(
     @SerializedName("readingPeriod")
     val readingPeriod: Int,
 
+    @SerializedName("customTag")
+    val customTag : String?,
+
     val groupType: String, // "TOGETHER"
     val tradeType: String?, // "NONE"
     val startDate: String?,
@@ -136,21 +115,12 @@ data class GroupItemDto(
     // UI 모델로 변환
     fun toUiModel(): GroupData {
         // 태그에 # 붙이기
-        val uiTags = tags?.map {
-            when(it) {
-                "MEMO" -> "#메모환영"
-                "POSTIT" -> "#포스트잇"
-                "CLEAN" -> "#깔끔"
-                "SERIOUS" -> "#진지하게"
-                "LIGHT_FUN" -> "#재미있게"
-                "INSIGHT" -> "#인사이트"
-                else -> "#$it"
-            }
-        } ?: emptyList()
+        val safeTags = tags ?: emptyList()
 
         val uiStatus = if (groupStatus == "RECRUITING") "모집 중" else "모집 완료"
 
         return GroupData(
+            groupId  = groupId.toInt(),
             coverImgUrl = bookImage ?: "", // null이면 빈값
             bookTitle = title,
             bookAuthor = author ?: "저자 미상", // null이면 기본값
@@ -162,8 +132,10 @@ data class GroupItemDto(
             profileImgUrl = "",
             nickname = hostNickname ?: "알 수 없음",
             date = startDate?.replace("-",".") ?: "날짜 미정",
-            tags = uiTags,
-            groupType = groupType
+            tags = safeTags,
+            customTag = customTag ?: "",
+            groupType = groupType,
+
         )
     }
     data class PopularSearchResponse(
@@ -189,5 +161,115 @@ data class GroupItemDto(
         val totalCount: Int,
         val currentPage: Int,
         val hasNext: Boolean
+    )
+
+    //그룹 아이템 관리
+    data class GroupDetailResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: GroupDetailResult
+    )
+
+    data class GroupDetailResult(
+        val groupId: Int,
+        val title: String,          // 게시글 제목
+        val bookTitle: String,      // 책 제목
+        val bookImage: String?,     // 책 표지
+        val author: String,
+        val category: String,
+        val groupStatus: String,    // "RECRUITING", "CLOSED" 등
+        val buttonStatus: String,   // ★ 핵심: "MANAGE", "TRACKER", "CANCEL", "FULL", "APPLY"
+        val isHost: Boolean,        // ★ 호스트 여부 (메뉴 버튼 분기용)
+        val readingPeriod: Int,
+        val matchedCount: Int,      // 현재 인원
+        val maxCapacity: Int,       // 최대 인원
+        val waitingCount: Int,      // 대기 인원 (호스트용)
+        val isHot: Boolean,
+        val createdAt: String,
+        val startDate: String,
+        val hostNickname: String,
+        val hostProfileImage: String?,
+        val groupTags: List<String>?,
+        val customTag: String?,
+        val groupComment: String?,  // 소개글
+        val participantSlots: List<ParticipantSlot>? // 하단 멤버 리스트용
+    )
+
+
+    data class ParticipantSlot(
+        val nickname: String?,
+        val profileImage: String?,
+        val role: String, // "HOST", "GUEST", "EMPTY"
+        val isMe: Boolean
+    )
+
+    data class GroupApplyRequest(
+        val applyMsg: String
+    )
+
+    // 응답 바디 (성공 시 result 내부 데이터)
+    data class GroupApplyResult(
+        val applicationId: Long,
+        val status: String,
+        val createdAt: String
+    )
+
+    // 전체 응답 래퍼 (기존에 쓰시던 BaseResponse 형태가 있다면 그것을 쓰셔도 됩니다)
+    data class GroupApplyResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: GroupApplyResult?
+    )
+
+    // 취소 결과 (Result)
+    data class GroupCancelResult(
+        val groupId: Long,
+        val canceledAt: String
+    )
+
+    // 취소 응답 (Response Wrapper)
+    data class GroupCancelResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: GroupCancelResult?
+    )
+
+    // 그룹 신청자 조회
+    data class GroupAppListResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: GroupAppListResult?
+    )
+
+    // 2. 결과 (리스트 + 카운트)
+    data class GroupAppListResult(
+        val applicationList: List<GroupAppItem>,
+        val totalCount: Int
+    )
+
+    // 3. 아이템 (서버에서 오는 필드명 기준)
+    data class GroupAppItem(
+        val applicationId: Long,
+        val user: Int,
+        val name: String,        // 닉네임
+        val tags: List<String>?, // 태그 코드들
+        val createdAt: String,
+        val applyMsg: String
+    )
+
+    //참여요청 수락/거절
+    data class GroupAppStatusRequest(
+        val status: String // "ACCEPTED" 또는 "REJECTED"
+    )
+
+    // 2. 응답 (받을 데이터 - 성공/실패 확인용)
+    data class GroupAppStatusResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String
     )
 }

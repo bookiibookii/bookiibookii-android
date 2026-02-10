@@ -6,12 +6,19 @@ data class HostTrackerListItemDto(
     val groupId: Long,
     val groupType: String,
     val bookTitle: String,
+
+    @SerializedName("bookImage")
     val image: String?,
+    @SerializedName("bookAuthor")
     val author: String?,
+    @SerializedName("bookCategory")
     val category: String?,
+
+    val tradeType: String?,
     val relayDetail: HostTrackerRelayDetailDto?,
     val togetherDetail: HostTrackerTogetherDetailDto?
 )
+
 
 data class HostTrackerRelayDetailDto(
     val partnerNickname: String?,
@@ -26,20 +33,6 @@ data class HostTrackerTogetherDetailDto(
     val participantCount: Int?,
     val myReadingRate: Int?,
     val groupReadingRate: Int?
-)
-
-data class TrackerDetailDto(
-    val trackerId: Long,
-    val trackerStatus: String,
-    val currentMatchedMemberId: Long?,
-
-    val endDate: String?,
-
-    @SerializedName("extension_count")
-    val extensionCount: Int?,
-
-    @SerializedName("extension_days")
-    val extensionDays: Int?
 )
 
 data class ApiResponse<T>(

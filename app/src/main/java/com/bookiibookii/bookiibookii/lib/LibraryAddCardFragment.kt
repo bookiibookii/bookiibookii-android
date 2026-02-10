@@ -22,7 +22,9 @@ import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
 import com.bookiibookii.bookiibookii.data.model.UpdateCardRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibAddCardBinding
 import com.bookiibookii.bookiibookii.trkHost.HostPhotoSelectionDialogFragment
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
@@ -203,26 +205,57 @@ class LibraryAddCardFragment : Fragment() {
 
                 // 3. S3에 이미지 업로드 (PUT)
                 Log.d("AddCardDebug", "S3 이미지 업로드 시작")
+
+// (1) 파일의 실제 타입(MIME Type)을 가져옵니다. (예: image/jpeg, image/png)
+                val mimeType = requireContext().contentResolver.getType(selectedPhotoUri!!) ?: "image/jpeg"
+                Log.d("AddCardDebug", "파일 타입: $mimeType")
+
+// (2) 이미지 데이터를 바이트 배열로 읽어옵니다.
                 val inputStream = requireContext().contentResolver.openInputStream(selectedPhotoUri!!)
                 val imageBytes = inputStream?.readBytes()
                 inputStream?.close()
 
                 if (imageBytes != null) {
-                    val requestBody = imageBytes.toRequestBody("image/*".toMediaTypeOrNull())
-                    val uploadRes = RetrofitClient.api().uploadImageToS3(uploadUrl, requestBody)
+                    // ★ 핵심 변경점: RetrofitClient 대신 '새로운' OkHttpClient를 사용합니다.
+                    // 이렇게 해야 앱의 로그인 토큰(Authorization 헤더)이 S3로 전송되지 않습니다.
+                    val cleanClient = okhttp3.OkHttpClient()
 
-                    // ★★★ 로그 확인 포인트 2: S3 업로드 응답 ★★★
-                    if (!uploadRes.isSuccessful) {
-                        Log.e("AddCardDebug", "S3 업로드 실패 - Code: ${uploadRes.code()}, Msg: ${uploadRes.message()}")
-                        Toast.makeText(context, "이미지 업로드 실패", Toast.LENGTH_SHORT).show()
-                        binding.libAddBtn.isEnabled = true
+                    val requestBody = imageBytes.toRequestBody(mimeType.toMediaTypeOrNull())
+
+                    // S3 PUT 요청 생성
+                    val request = okhttp3.Request.Builder()
+                        .url(uploadUrl) // 받아온 Presigned URL
+                        .put(requestBody)
+                        .build()
+
+                    try {
+                        // 동기적으로 실행 (이미 코루틴 내부이므로 멈추지 않음)
+                        val response = withContext(Dispatchers.IO) {
+                            cleanClient.newCall(request).execute()
+                        }
+                        if (!response.isSuccessful) {
+                            // 실패 시 로그 출력
+                            Log.e("AddCardDebug", "S3 업로드 실패 - 코드: ${response.code}, 메시지: ${response.message}")
+                            // 필요하다면 에러 본문 확인: Log.e("AddCardDebug", "에러 내용: ${response.body?.string()}")
+
+                            activity?.runOnUiThread {
+                                Toast.makeText(context, "이미지 서버 업로드 실패", Toast.LENGTH_SHORT).show()
+                                binding.libAddBtn.isEnabled = true
+                            }
+                            return@launch
+                        }
+                        Log.d("AddCardDebug", "S3 업로드 성공! (200 OK)")
+                    } catch (e: Exception) {
+                        Log.e("AddCardDebug", "S3 업로드 중 오류 발생", e)
+                        activity?.runOnUiThread {
+                            Toast.makeText(context, "업로드 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                            binding.libAddBtn.isEnabled = true
+                        }
                         return@launch
                     }
-                    Log.d("AddCardDebug", "S3 업로드 성공")
+
                 } else {
-                    Log.e("AddCardDebug", "이미지 바이트 변환 실패")
-                    Toast.makeText(context, "이미지 파일 오류", Toast.LENGTH_SHORT).show()
-                    binding.libAddBtn.isEnabled = true
+                    Log.e("AddCardDebug", "이미지 파일을 읽을 수 없습니다.")
                     return@launch
                 }
 
@@ -275,6 +308,7 @@ class LibraryAddCardFragment : Fragment() {
     }
 
     // 선택된 사진 미리보기 설정
+    // 기존 showPreview 함수를 아래와 같이 수정하세요.
     private fun showPreview(uri: Uri) {
         selectedPhotoUri = uri
 
@@ -282,10 +316,14 @@ class LibraryAddCardFragment : Fragment() {
         binding.libAddCardPreviewIv.visibility = View.VISIBLE
         binding.libAddCardEditIv.visibility = View.VISIBLE
 
-        binding.libAddCardPreviewIv.setImageURI(uri)
+        // [수정] setImageURI 대신 Glide 사용
+        Glide.with(this)
+            .load(uri)
+            .centerCrop() // 혹은 .fitCenter()
+            .into(binding.libAddCardPreviewIv)
 
         val params = binding.libAddCardCv.layoutParams
-        params.height = dpToPx(400) // 사진 들어오면 높이 확장
+        params.height = dpToPx(400)
         binding.libAddCardCv.layoutParams = params
 
         updateButtonState()

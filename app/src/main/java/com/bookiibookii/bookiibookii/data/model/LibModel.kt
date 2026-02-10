@@ -18,6 +18,7 @@ data class BookResult(
     val image: String?,              // ★ 수정: URL은 없을 수 있으므로 Nullable 권장
     val hostId: Int,
     val hostProfileImageUrl: String?, // ★ 수정: Nullable 권장
+    val hostNickname: String?,
     val startDate: String,
     val endDate : String?,
     val duration: Int,
@@ -30,7 +31,7 @@ data class BookResult(
 data class LibBook(
     val groupId : Int,
     val id: Int,
-    val hostName : String,
+    val hostName : String?,
     val title: String,
     val author: String,
     val coverUrl: String?,
@@ -112,9 +113,9 @@ data class CardDetailResult(
     // ★ 상세 화면에서 수정/삭제 버튼 노출 여부를 위해 필요
     val isMine: Boolean = false,
     // ★ 상세 화면 프로필 표시용
-    val writerName: String? = null,
     val writerProfile: String? = null,
-    val isBookmarked: Boolean?
+    val isBookmarked: Boolean?,
+    val creatorName : String
 )
 
 // ==========================================

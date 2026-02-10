@@ -1,12 +1,10 @@
 package com.bookiibookii.bookiibookii.trkHost
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.databinding.FragmentHostExtendRequestBottomDialogBinding
 import com.bookiibookii.bookiibookii.databinding.FragmentHostReadingDoneBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -15,6 +13,10 @@ class HostReadingDoneBottomDialogFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentHostReadingDoneBottomDialogBinding? = null
     private val binding get() = _binding!!
+
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,7 +37,7 @@ class HostReadingDoneBottomDialogFragment : BottomSheetDialogFragment() {
                 }
             )
 
-            val next = HostShippedBottomDialogFragment()
+            val next = HostShippedBottomDialogFragment.newInstance(groupId)
             dismiss()
             next.show(parentFragmentManager, HostShippedBottomDialogFragment.TAG)
         }
@@ -50,6 +52,12 @@ class HostReadingDoneBottomDialogFragment : BottomSheetDialogFragment() {
         const val TAG = "ReadingDoneFragment"
         const val RESULT_KEY = "host_action"
         const val BUNDLE_ACTION = "action"
+
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = HostReadingDoneBottomDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
     override fun getTheme(): Int {

@@ -6,11 +6,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.databinding.FragmentHostShippingInputDialogBinding
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.io.File
 
 class HostShippingInputDialogFragment : DialogFragment() {
@@ -21,6 +28,12 @@ class HostShippingInputDialogFragment : DialogFragment() {
     private var cameraImageUri: Uri? = null
     private var selectedCourier: String? = null
     private var selectedPhotoUri: Uri? = null
+
+    private val vm: HostViewModel by activityViewModels()
+
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
 
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()){ uri: Uri? ->
@@ -46,8 +59,10 @@ class HostShippingInputDialogFragment : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        vm.resetShippingStartState()
         binding.btnRegister.isEnabled = false
         binding.btnRegister.alpha = 0.45f
+        binding.actvCourier.setDropDownBackgroundResource(android.R.color.white)
         setupCourierDropdown()
 
         childFragmentManager.setFragmentResultListener(
@@ -72,22 +87,66 @@ class HostShippingInputDialogFragment : DialogFragment() {
                 .show(childFragmentManager, HostPhotoSelectionDialogFragment.TAG)
         }
 
-        binding.btnRegister.setOnClickListener{
-            parentFragmentManager.setFragmentResult(
-                HostShippingInputDialogFragment.RESULT_KEY,
-                Bundle().apply {
-                    putString(HostShippingInputDialogFragment.BUNDLE_ACTION, "HOST_SHIPPED")
+        binding.btnRegister.setOnClickListener {
+            val courier = selectedCourier ?: run {
+                binding.tilCourier.error = "택배사를 선택해주세요."
+                return@setOnClickListener
+            }
+
+            val tracking = binding.etTrackingNum.text?.toString()?.trim().orEmpty()
+            if (tracking.isEmpty()) return@setOnClickListener
+
+            val photoUri = selectedPhotoUri ?: return@setOnClickListener
+
+            val bytes = requireContext().contentResolver
+                .openInputStream(photoUri)
+                ?.use { it.readBytes() }
+                ?: run {
+                    Toast.makeText(requireContext(), "이미지를 읽을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
                 }
+
+            vm.startShipping(
+                groupId = groupId,
+                deliveryCompany = courier,
+                trackingNumber = tracking,
+                imageBytes = bytes,
+                contentType = "image/jpeg"
             )
-
-            (parentFragmentManager.findFragmentByTag(HostShippingBottomDialogFragment.TAG) as? DialogFragment)
-                ?.dismissAllowingStateLoss()
-
-            dismissAllowingStateLoss()
-
-            HostShippingStatusBottomDialogFragment()
-                .show(parentFragmentManager, HostShippingStatusBottomDialogFragment.TAG)
         }
+
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.shippingStartState.collectLatest { state ->
+                    when (state) {
+                        is UiState.Idle -> Unit
+
+                        is UiState.Loading -> {
+                            binding.btnRegister.isEnabled = false
+                            binding.btnRegister.alpha = 0.45f
+                        }
+
+                        is UiState.Success -> {
+                            (parentFragmentManager.findFragmentByTag(
+                                HostShippingBottomDialogFragment.TAG
+                            ) as? DialogFragment)?.dismissAllowingStateLoss()
+
+                            dismissAllowingStateLoss()
+
+                            HostShippingStatusBottomDialogFragment()
+                                .show(parentFragmentManager, HostShippingStatusBottomDialogFragment.TAG)
+                        }
+
+                        is UiState.Error -> {
+                            updateRegisterButtonState()
+                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+        }
+
 
         binding.etTrackingNum.doAfterTextChanged {
             updateRegisterButtonState()
@@ -141,6 +200,11 @@ class HostShippingInputDialogFragment : DialogFragment() {
         const val TAG = "ShippingInputDialogFragment"
         const val RESULT_KEY = "host_action"
         const val BUNDLE_ACTION = "action"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = HostShippingInputDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
     private val courierList = listOf(

@@ -16,6 +16,8 @@ import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailTogetherBinding
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
 
 class LibraryBookDetailTogetherFragment : Fragment() {
@@ -97,7 +99,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
         binding.libDetailBookTitleTv.isSelected = true
         binding.libDetailBookAuthorTv.isSelected = true
 
-        Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
+        Glide.with(this).load(bookCover).transform(CenterCrop(), RoundedCorners(dpToPx(10))).into(binding.libDetailImageIv)
 
         // 호스트 정보
         binding.libDetailProfileTv.text = hostName

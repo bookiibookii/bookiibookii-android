@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="340dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_round_24dp_white"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/dialog_none_address_title_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="배송지 등록"
+        android:textColor="@color/grey_900"
+        android:textSize="20sp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:singleLine="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/dialog_none_address_close_iv"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_close_round"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/dialog_none_address_title_tv"
+        app:layout_constraintBottom_toBottomOf="@id/dialog_none_address_title_tv"/>
+
+    <TextView
+        android:id="@+id/dialog_none_address_content_tv"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/pretendard_variable"
+        android:text="책을 주고 받을 배송지를 등록해주세요."
+        android:textColor="@color/grey_700"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="@id/dialog_none_address_title_tv"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/dialog_none_address_title_tv" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

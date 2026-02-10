@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.group
+package com.bookiibookii.bookiibookii.group.main
 
 import android.app.Dialog
 import android.os.Bundle

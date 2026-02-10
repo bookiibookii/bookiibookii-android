@@ -5,13 +5,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeMateBinding
+import com.bookiibookii.bookiibookii.home.noti.HomNotificationActivity
 
 class HomeFragment : Fragment() {
 
@@ -68,11 +71,31 @@ class HomeFragment : Fragment() {
         applyExchangeState(exchangeHasData)
         applyGroupState(groupHasData)
         applyMateState(mateHasData)
+
+        bindHeaderActions()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun bindHeaderActions() {
+
+        // include된 헤더(root)에서 알림 아이콘 찾기
+        val headerRoot = binding.sectionHomeHeader.root
+        val ivNoti = headerRoot.findViewById<ImageView>(R.id.iv_home_notification)
+
+        ivNoti.setOnClickListener {
+            val intent = Intent(requireContext(), HomNotificationActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    private fun setNotificationBadgeVisible(visible: Boolean) {
+        val headerRoot = binding.sectionHomeHeader.root
+        val badge = headerRoot.findViewById<View>(R.id.view_home_notification_badge)
+        badge.visibility = if (visible) View.VISIBLE else View.INVISIBLE
     }
 
     private fun applyExchangeState(hasData: Boolean) {

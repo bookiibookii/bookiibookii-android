@@ -12,6 +12,10 @@ class GuestShippingBottomDialogFragment : BottomSheetDialogFragment() {
     private var _binding: FragmentGuestShippingBottomDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -23,9 +27,12 @@ class GuestShippingBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnRegister.setOnClickListener{
-            val dialog = GuestShippingInputDialogFragment()
-            dialog.show(parentFragmentManager, GuestShippingInputDialogFragment.TAG)
+        binding.btnRegister.setOnClickListener {
+            GuestShippingInputDialogFragment
+                .newInstance(groupId)
+                .show(parentFragmentManager, GuestShippingInputDialogFragment.TAG)
+
+            dismiss()
         }
     }
 
@@ -34,8 +41,13 @@ class GuestShippingBottomDialogFragment : BottomSheetDialogFragment() {
         _binding = null
     }
 
-    companion object{
-        const val TAG = "GuestShippingBottomSheetDialogFragment"
+    companion object {
+        const val TAG = "GuestShippingBottomDialogFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = GuestShippingBottomDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
     override fun getTheme(): Int {

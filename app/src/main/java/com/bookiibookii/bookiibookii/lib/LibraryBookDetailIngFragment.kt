@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.lib
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,8 @@ import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailIngBinding
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
 
 class LibraryBookDetailIngFragment : Fragment() {
@@ -60,8 +63,8 @@ class LibraryBookDetailIngFragment : Fragment() {
         initListeners()
 
         // 데이터 호출
-        fetchCardList()  // 기존 fetchData 이름 변경 (명확하게)
-        fetchProgress()  // ★ [추가] 진행률 조회
+        fetchCardList()
+        fetchProgress()
     }
 
     private fun initView() {
@@ -73,7 +76,11 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.libDetailBookTitleTv.isSelected = true
         binding.libDetailBookAuthorTv.isSelected = true
 
-        Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
+        Glide.with(this)
+            .load(bookCover)
+            .transform(CenterCrop(), RoundedCorners(dpToPx(10)))
+            .into(binding.libDetailImageIv)
+
         binding.libDetailProfileTv.text = hostName
         Glide.with(this)
             .load(hostProfileUrl)
@@ -82,43 +89,38 @@ class LibraryBookDetailIngFragment : Fragment() {
             .circleCrop()
             .into(binding.libDetailProfileIv)
 
-        // 초기값 0%로 설정
         updateProgressBar(0, 0)
 
-        // 버튼 및 뷰 초기 상태
         binding.libWriteDoneBtn.visibility = View.VISIBLE
         binding.libWriteReviewBtn.visibility = View.GONE
         binding.groupDataExist.visibility = View.GONE
         binding.layoutEmpty.visibility = View.GONE
     }
 
-    // ★ [핵심] 진행률 API 호출 및 반영
     private fun fetchProgress() {
-        if (groupId == -1) return
+        if (groupId == -1) {
+            Log.e("ProgressDebug", "groupId가 -1입니다.")
+            return
+        }
+
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().getMyTrackers()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val trackerList = response.body()?.result ?: emptyList()
-
-                    // 1. 현재 groupId와 일치하는 트래커 찾기
                     val myTracker = trackerList.find { it.groupId == this@LibraryBookDetailIngFragment.groupId }
 
-                    // 2. 투게더(TOGETHER) 타입인지 확인 후 데이터 반영
-                    // (JSON 예시에는 tradeType이 DELIVERY로 되어있으나, 로직상 TOGETHER 체크 혹은 togetherDetail 존재 여부 확인)
                     if (myTracker != null) {
                         val detail = myTracker.togetherDetail
                         if (detail != null) {
                             val myRate = detail.myReadingRate
                             val groupRate = detail.groupReadingRate
-
-                            // UI 업데이트
                             updateProgressBar(myRate, groupRate)
 
-                            // 만약 이미 100%라면 버튼 상태 변경 등의 추가 로직 가능
                             if (myRate >= 100) {
                                 binding.libWriteDoneBtn.visibility = View.GONE
                                 binding.libWriteReviewBtn.visibility = View.VISIBLE
+                                binding.libReviewAddBtn.visibility = View.GONE
                             }
                         }
                     }
@@ -130,26 +132,19 @@ class LibraryBookDetailIngFragment : Fragment() {
     }
 
     private fun updateProgressBar(myProgress: Int, groupProgress: Int) {
-        // 프로그레스 바 진행도
         binding.readingProgressBar.progress = myProgress
         binding.readingProgressBar.secondaryProgress = groupProgress
-
-        // 텍스트 업데이트
         binding.myPercent.text = "$myProgress%"
         binding.avgPercent.text = "$groupProgress%"
 
-        // 점(Dot) 위치 이동 (ConstraintLayout Guideline Percent)
         val constraintLayout = binding.progressLayout
         val constraintSet = ConstraintSet()
         constraintSet.clone(constraintLayout)
-
         constraintSet.setGuidelinePercent(R.id.guideline_my_progress, myProgress / 100f)
         constraintSet.setGuidelinePercent(R.id.guideline_group_progress, groupProgress / 100f)
-
         constraintSet.applyTo(constraintLayout)
     }
 
-    // 기존 fetchData -> fetchCardList로 이름 변경
     private fun fetchCardList() {
         if (groupId == -1) return
         lifecycleScope.launch {
@@ -170,28 +165,44 @@ class LibraryBookDetailIngFragment : Fragment() {
                         binding.groupDataExist.visibility = View.GONE
                         binding.layoutEmpty.visibility = View.VISIBLE
                     }
+                    // 독서 중에는 카드 추가 가능
                     binding.libReviewAddBtn.visibility = View.VISIBLE
                 }
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
-    // ... (initRecyclerView, toggleBookmark, initListeners, dpToPx 등 기존 코드 유지) ...
-
     private fun initRecyclerView() {
         cardAdapter = LibraryReviewAdapter(
             onItemClick = { clickedCard ->
-                val detailFragment = LibraryCardDetailFragment().apply {
-                    arguments = Bundle().apply {
-                        putLong("cardId", clickedCard.cardId.toLong())
-                        putBoolean("isMine", true)
-                        putString("writerName", clickedCard.creatorName)
+                // ★ [디버깅] 클릭 이벤트 로그
+                Log.d("CardClickError", "카드 클릭됨: ID=${clickedCard.cardId}, Writer=${clickedCard.creatorName}")
+
+                try {
+                    val detailFragment = LibraryCardDetailFragment().apply {
+                        arguments = Bundle().apply {
+                            putLong("cardId", clickedCard.cardId.toLong())
+
+                            // [수정 포인트] 내 카드인지 여부 판별
+                            // 현재는 true로 고정되어 있으나, 추후 내 닉네임과 비교 필요
+                            // val isMyCard = clickedCard.creatorName == myNickname
+                            putBoolean("isMine", true)
+
+                            putString("writerName", clickedCard.creatorName)
+                            putString("writerProfileUrl", null) // 프로필 URL 필드가 있다면 추가
+                        }
                     }
+
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, detailFragment)
+                        .addToBackStack(null)
+                        .commit()
+
+                } catch (e: Exception) {
+                    // ★ [핵심] 여기서 에러가 잡힌다면 프래그먼트 전환 문제
+                    Log.e("CardClickError", "화면 이동 중 에러 발생", e)
+                    Toast.makeText(context, "상세 화면으로 이동할 수 없습니다.", Toast.LENGTH_SHORT).show()
                 }
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainer, detailFragment)
-                    .addToBackStack(null)
-                    .commit()
             },
             onBookmarkClick = { card, _ -> toggleBookmark(card) }
         )
@@ -225,15 +236,14 @@ class LibraryBookDetailIngFragment : Fragment() {
             LibraryGroupDeleteBottomSheet { showDeleteConfirmDialog() }.show(parentFragmentManager, "GroupDeleteSheet")
         }
 
-        // [4번 요구사항 준비] 다 읽었어요 버튼 클릭 리스너 (아직 API 연결 전)
         binding.libWriteDoneBtn.setOnClickListener {
             CommonDialog(
                 context = requireContext(),
                 title = "독서 종료",
                 subtitle = "",
-                content = "이 책을 다 읽으셨나요?\n확인을 누르면 후기를 작성할 수 있습니다.",
+                content = "독서를 종료하면 더 이상 독서카드를 추가할 수 없어요. 독서를 종료할까요?",
                 confirmBtnText = "확인",
-                confirmBtnColor = R.color.pre_main,
+                confirmBtnColor = R.color.grey_900,
                 onConfirmClick = {
                     requestCompleteReading()
                 }
@@ -278,19 +288,14 @@ class LibraryBookDetailIngFragment : Fragment() {
             try {
                 val response = RetrofitClient.api().completeReading(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val result = response.body()?.result
-
                     Toast.makeText(context, "완독 처리가 완료되었습니다.", Toast.LENGTH_SHORT).show()
 
-                    // UI 업데이트: 버튼 교체
                     binding.libWriteDoneBtn.visibility = View.GONE
                     binding.libWriteReviewBtn.visibility = View.VISIBLE
+                    binding.libReviewAddBtn.visibility = View.GONE
 
-                    // UI 업데이트: 진행률 100%로 변경 (내 독서율만 100으로, 그룹은 유지하거나 서버값 사용)
-                    // 여기서는 시각적 피드백을 위해 내 독서율을 100으로 즉시 변경합니다.
                     val currentGroupRate = binding.avgPercent.text.toString().replace("%", "").toIntOrNull() ?: 0
                     updateProgressBar(100, currentGroupRate)
-
                 } else {
                     Toast.makeText(context, "완독 처리에 실패했습니다.", Toast.LENGTH_SHORT).show()
                 }

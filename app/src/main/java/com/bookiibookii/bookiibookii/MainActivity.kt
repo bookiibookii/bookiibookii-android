@@ -1,25 +1,20 @@
 package com.bookiibookii.bookiibookii
 
+import LoadingDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.bookiibookii.bookiibookii.bookData.viewModel.BookViewModel
-import com.bookiibookii.bookiibookii.group.GroupFragment
+import com.bookiibookii.bookiibookii.group.main.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment
 import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
 
 class MainActivity : AppCompatActivity() {
-
-    // API 연결 확인용
-    private val viewModel: BookViewModel by viewModels()
-
     private enum class NavTab { HOME, GROUP, TRACKER, LIBRARY, MY }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,8 +33,6 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-        // ViewModel init 확인용
-        viewModel.toString()
 
         // 최초 진입 시 홈 Fragment
         if (savedInstanceState == null) {

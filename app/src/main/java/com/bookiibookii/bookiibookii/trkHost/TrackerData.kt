@@ -8,6 +8,7 @@ enum class ExchangeType {
 
 data class TrackerData(
     val id: Long,
+    val groupId: Long,
     val bookTitle: String,
     val bookAuthor: String,
     val bookCategory: String?,

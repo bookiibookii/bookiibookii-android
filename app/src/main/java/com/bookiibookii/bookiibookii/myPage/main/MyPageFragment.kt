@@ -166,8 +166,9 @@ class MypageFragment : Fragment() {
     private fun fetchMypageData() {
         lifecycleScope.launch {
             try {
+                Log.d("MYPAGE_DEBUG", "fetchMypageData 호출 시작")
                 val response = RetrofitClient.api().getMypage()
-                Log.d("MYPAGE_DEBUG", "전체 응답: ${response.body()}")
+                Log.e("MYPAGE_DEBUG", "전체 응답: ${response.body()}")
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result

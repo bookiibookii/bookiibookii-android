@@ -22,7 +22,7 @@
         android:text="로딩 중"
         android:layout_marginTop="60dp"
         android:textAppearance="@style/regular16"
-        android:textColor="pre_main"
+        android:textColor="@color/pre_main"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/iv_fox"/>

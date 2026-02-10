@@ -25,6 +25,7 @@ class TrkHostMainViewModel : ViewModel() {
                 image = null,
                 author = "김영하",
                 category = "소설",
+                tradeType = "DELIVERY",
                 relayDetail = HostTrackerRelayDetailDto(
                     partnerNickname = "noshel",
                     hostProfileImage = null,
@@ -42,6 +43,7 @@ class TrkHostMainViewModel : ViewModel() {
                 image = null,
                 author = "손원평",
                 category = "청소년 문학",
+                tradeType = "DELIVERY",
                 relayDetail = HostTrackerRelayDetailDto(
                     partnerNickname = "guest1",
                     hostProfileImage = null,
@@ -78,25 +80,47 @@ class TrkHostMainViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api().getHostTrackers()
-                if (!response.isSuccessful) return@launch
 
-                val body = response.body() ?: return@launch
+                if (!response.isSuccessful) {
+                    android.util.Log.e("HOST", "HTTP ${response.code()} ${response.message()}")
+                    android.util.Log.e("HOST", "errorBody=${response.errorBody()?.string()}")
+                    return@launch
+                }
 
-                val list = body.result.orEmpty()
-                _trackers.value = list.map { dto -> dto.toTrackerData() }
+                val body = response.body()
+                if (body == null) {
+                    android.util.Log.e("HOST", "body is null")
+                    return@launch
+                }
+
+                if (!body.isSuccess) {
+                    android.util.Log.e("HOST", "API fail code=${body.code} msg=${body.message}")
+                    return@launch
+                }
+
+                val list = body.result
+                if (list == null) {
+                    android.util.Log.e("HOST", "result is null (unexpected)")
+                    _trackers.value = emptyList()
+                    return@launch
+                }
+
+                _trackers.value = list.map { it.toTrackerData() }
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("HOST", "exception", e)
             }
         }
     }
 
 
+
     private fun HostTrackerListItemDto.toTrackerData(): TrackerData {
-        val exchangeType = mapExchangeType(this.groupType)
+        val exchangeType = mapExchangeType(this.tradeType)
 
         val baseData = TrackerData(
             id = this.groupId,
+            groupId = this.groupId,
             bookTitle = this.bookTitle,
             bookAuthor = this.author.orEmpty(),
             bookCategory = this.category,
@@ -158,9 +182,9 @@ class TrkHostMainViewModel : ViewModel() {
         }
     }
 
-    private fun mapExchangeType(groupType: String): ExchangeType {
-        return when (groupType.uppercase()) {
-            "SHIPPING" -> ExchangeType.DELIVERY
+    private fun mapExchangeType(typeString: String?): ExchangeType {
+        return when (typeString?.uppercase()) {
+            "DELIVERY", "SHIPPING" -> ExchangeType.DELIVERY
             "DIRECT" -> ExchangeType.DIRECT
             "TOGETHER" -> ExchangeType.NONE
             else -> ExchangeType.DELIVERY

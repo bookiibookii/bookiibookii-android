@@ -15,7 +15,6 @@ import com.bookiibookii.bookiibookii.data.model.GroupCardListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
 import com.bookiibookii.bookiibookii.data.model.GroupCreateResponse
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
-import com.bookiibookii.bookiibookii.data.model.GroupListRequest
 import com.bookiibookii.bookiibookii.data.model.GroupListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupMemberResponse
 import com.bookiibookii.bookiibookii.data.model.InquiryCreateResponse
@@ -107,10 +106,10 @@ interface ApiService: TrkApi {
         @Body request: TokenRefreshRequest
     ): retrofit2.Call<TokenRefreshResponse>
 
-    @GET("api/groups/my")
+    @GET("api/report/groups/my")
     suspend fun getMyGroups(): Response<MyGroupResponse>
 
-    @GET("api/groups/{groupId}/members")
+    @GET("api/report/{groupId}/members")
     suspend fun getGroupMembers(
         @Path("groupId") groupId: Int
     ): Response<GroupMemberResponse>
@@ -133,7 +132,7 @@ interface ApiService: TrkApi {
     @GET("api/library/books")
     suspend fun getLibraryBooks() : Response<LibraryResponse>
 
-    @GET("api/card/detail/{cardId}")
+    @GET("api/cards/detail/{cardId}")
     suspend fun getCardDetail(
         @Path("cardId") cardId: Long
     ): Response<CardDetailResponse>
@@ -193,7 +192,7 @@ interface ApiService: TrkApi {
         @Query("size") size: Int
     ): Response<GroupListResponse>
 
-    //인기 검색어
+    // 인기 검색어
     @GET("api/groups/popular-keywords")
     suspend fun getPopularKeywords(): Response<GroupItemDto.PopularSearchResponse>
 
@@ -267,8 +266,44 @@ interface ApiService: TrkApi {
     @GET("/api/groups/me/trackers")
     suspend fun getMyTrackers(): Response<TrackerResponse>
 
-    @PATCH("/api/groups/{groupId}/together/memers/me/complete")
+    @PATCH("/api/groups/{groupId}/together/members/me/complete")
     suspend fun completeReading(
         @Path("groupId") groupId: Int
     ): Response<CompleteReadingResponse>
+
+    // 그룹 상세 조회
+    @GET("api/groups/{groupId}")
+    suspend fun getGroupDetail(
+        @Path("groupId") groupId: Int
+    ): Response<GroupItemDto.GroupDetailResponse>
+
+    //그룹 신청하기
+    @POST("api/groups/{groupId}/apply")
+    suspend fun applyGroup(
+        @Path("groupId") groupId: Long,
+        @Body request: GroupItemDto.GroupApplyRequest
+    ): Response<GroupItemDto.GroupApplyResponse>
+
+    //그룹신청 취소하기
+    @DELETE("api/groups/{groupId}/apply")
+    suspend fun cancelGroupApplication(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.GroupCancelResponse>
+
+    //그룹 신청 조회
+    @GET("api/groups/{groupId}/applylist")
+    suspend fun getGroupApplications(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.GroupAppListResponse>
+
+    @PATCH("api/groups/apply/{applyId}")
+    suspend fun updateApplicationStatus(
+        @Path("applyId") applyId: Long,
+        @Body request: GroupItemDto.GroupAppStatusRequest
+    ): Response<GroupItemDto.GroupAppStatusResponse>
+
+    @DELETE("api/cards/{cardId}")
+    suspend fun deleteCard(
+        @Path("cardId") cardId: Long
+    ): Response<BaseResponse>
 }

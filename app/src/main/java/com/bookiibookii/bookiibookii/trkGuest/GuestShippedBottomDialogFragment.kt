@@ -13,10 +13,15 @@ class GuestShippedBottomDialogFragment : BottomSheetDialogFragment() {
     private var _binding: FragmentGuestShippedBottomDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentGuestShippedBottomDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -24,14 +29,16 @@ class GuestShippedBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnViewShippingPhoto.setOnClickListener{
-            val dialog = GuestShippingPhotoDialogFragment()
-            dialog.show(parentFragmentManager, GuestShippingPhotoDialogFragment.TAG)
+        binding.btnViewShippingPhoto.setOnClickListener {
+            GuestShippingPhotoDialogFragment
+                .newInstance(groupId)
+                .show(parentFragmentManager, GuestShippingPhotoDialogFragment.TAG)
         }
 
-        binding.btnDoReceiveConfirm.setOnClickListener{
-            val dialog = GuestReceiveConfirmDialogFragment()
-            dialog.show(parentFragmentManager, GuestReceiveConfirmDialogFragment.TAG)
+        binding.btnDoReceiveConfirm.setOnClickListener {
+            GuestReceiveConfirmDialogFragment
+                .newInstance(groupId)
+                .show(parentFragmentManager, GuestReceiveConfirmDialogFragment.TAG)
         }
     }
 
@@ -42,9 +49,12 @@ class GuestShippedBottomDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "GuestShippedFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = GuestShippedBottomDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
-    override fun getTheme(): Int {
-        return R.style.Theme_Bookii_BottomSheet_NoDim
-    }
+    override fun getTheme(): Int = R.style.Theme_Bookii_BottomSheet_NoDim
 }

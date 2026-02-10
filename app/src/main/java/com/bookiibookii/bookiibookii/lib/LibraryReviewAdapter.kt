@@ -9,6 +9,8 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.ItemLibDetailReviewBinding
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,6 +39,7 @@ class LibraryReviewAdapter(
 
     override fun getItemCount(): Int = items.size
 
+
     inner class ReviewViewHolder(private val binding: ItemLibDetailReviewBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: CardItem) {
             // 1. 기본 텍스트 정보
@@ -57,9 +60,9 @@ class LibraryReviewAdapter(
                 binding.itemReviewPhotoIv.visibility = View.VISIBLE
                 Glide.with(itemView.context)
                     .load(cardImageUrl)
+                    .transform(CenterCrop(), RoundedCorners(dpToPx(5))) // ★ 5dp 적용
                     .placeholder(R.drawable.bg_round_8dp_gray300)
-                    .error(R.drawable.bg_round_8dp_gray300) // 에러 시 회색 배경
-                    .centerCrop()
+                    .error(R.drawable.bg_round_8dp_gray300)
                     .into(binding.itemReviewPhotoIv)
             } else {
                 // 이미지가 없으면 공간을 숨기거나 기본 이미지 처리
@@ -68,7 +71,7 @@ class LibraryReviewAdapter(
 
             // 4. [비동기] 작성자 프로필 이미지 가져오기
             // 기본 이미지로 먼저 설정
-            binding.itemReviewProfileIv.setImageResource(R.drawable.bg_round_10dp_gray300)
+            binding.itemReviewProfileIv.setImageResource(R.drawable.img_profile_default)
 
             // 뷰홀더에서 코루틴 실행 (API 호출)
             CoroutineScope(Dispatchers.IO).launch {
@@ -119,6 +122,10 @@ class LibraryReviewAdapter(
             binding.itemReviewBookmark.setOnClickListener {
                 onBookmarkClick(item, bindingAdapterPosition)
             }
+
+        }
+        private fun dpToPx(dp: Int): Int {
+            return (dp * itemView.context.resources.displayMetrics.density).toInt()
         }
     }
 }

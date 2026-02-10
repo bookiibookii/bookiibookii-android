@@ -34,23 +34,29 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:fontFamily="@font/pretendard_variable"
-        android:text="[noshel]"
+        android:text="너도 매우매우 길어지면 어쩔껀데"
         android:textColor="@color/grey_700"
         android:textSize="14sp"
-
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:singleLine="true"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/dialog_join_info_Tv"
         app:layout_constraintTop_toBottomOf="@id/dialog_join_title_Tv" />
 
     <TextView
         android:id="@+id/dialog_join_info_Tv"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:singleLine="true"
         android:fontFamily="@font/pretendard_variable"
         android:layout_marginStart="4dp"
-        android:text="괴테는 모든 것을 말했다"
+        android:text="매우매우매우길어지면 너가어쩔ㄱ건데 이 바보요"
         android:textColor="@color/grey_700"
         android:textSize="14sp"
+        app:layout_constraintEnd_toStartOf="@id/dialog_join_close_Iv"
         app:layout_constraintStart_toEndOf="@id/dialog_join_host_Tv"
         app:layout_constraintTop_toTopOf="@id/dialog_join_host_Tv" />
 

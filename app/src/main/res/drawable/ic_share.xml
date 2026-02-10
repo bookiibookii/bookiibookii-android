@@ -1,6 +1,27 @@
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M13 7L8 12L13 17" stroke="#242322" stroke-width="1.5" stroke-linejoin="round"/>
-<circle cx="15" cy="5" r="2.25" stroke="#242322" stroke-width="1.5"/>
-<circle cx="8" cy="12" r="3" fill="#242322"/>
-<circle cx="15" cy="19" r="2.25" stroke="#242322" stroke-width="1.5"/>
-</svg>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:pathData="M13,7 L8,12 L13,17"
+        android:strokeColor="#242322"
+        android:strokeWidth="1.5"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"/>
+
+    <path
+        android:pathData="M15, 2.75 A 2.25,2.25 0 1 1 15, 7.25 A 2.25,2.25 0 1 1 15, 2.75"
+        android:strokeColor="#242322"
+        android:strokeWidth="1.5"/>
+
+    <path
+        android:pathData="M8, 9 A 3,3 0 1 1 8, 15 A 3,3 0 1 1 8, 9"
+        android:fillColor="#242322"/>
+
+    <path
+        android:pathData="M15, 16.75 A 2.25,2.25 0 1 1 15, 21.25 A 2.25,2.25 0 1 1 15, 16.75"
+        android:strokeColor="#242322"
+        android:strokeWidth="1.5"/>
+</vector>

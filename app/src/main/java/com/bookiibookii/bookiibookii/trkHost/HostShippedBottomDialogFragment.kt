@@ -14,6 +14,10 @@ class HostShippedBottomDialogFragment : BottomSheetDialogFragment() {
     private var _binding: FragmentHostShippedBottomDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -26,14 +30,15 @@ class HostShippedBottomDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnViewShippingPhoto.setOnClickListener{
-            val dialog = HostShippingPhotoDialogFragment()
-            dialog.show(parentFragmentManager, HostShippingPhotoDialogFragment.TAG)
+            HostShippingPhotoDialogFragment
+                .newInstance(groupId)
+                .show(parentFragmentManager, HostShippingPhotoDialogFragment.TAG)
         }
 
         binding.btnDoReceiveConfirm.setOnClickListener{
-            val dialog = HostReceiveConfirmDialogFragment()
-            dismiss()
-            dialog.show(parentFragmentManager, HostReceiveConfirmDialogFragment.TAG)
+            HostReceiveConfirmDialogFragment
+                .newInstance(groupId)
+                .show(parentFragmentManager, HostReceiveConfirmDialogFragment.TAG)
         }
     }
 
@@ -44,6 +49,11 @@ class HostShippedBottomDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "ShippedFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = HostShippedBottomDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
     override fun getTheme(): Int {

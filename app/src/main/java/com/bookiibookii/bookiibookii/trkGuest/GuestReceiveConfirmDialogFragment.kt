@@ -8,8 +8,15 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.databinding.FragmentGuestReceiveConfirmDialogBinding
 import com.bookiibookii.bookiibookii.trkHost.HostPhotoSelectionDialogFragment
+import com.bookiibookii.bookiibookii.trkHost.UiState
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.io.File
 
 class GuestReceiveConfirmDialogFragment : DialogFragment() {
@@ -20,6 +27,12 @@ class GuestReceiveConfirmDialogFragment : DialogFragment() {
     private var cameraImageUri: Uri? = null
     private var selectedPhotoUri: Uri? = null
     private var isChecked: Boolean = false
+
+    private val vm: GuestViewModel by activityViewModels()
+
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
 
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()){ uri: Uri? ->
@@ -58,6 +71,7 @@ class GuestReceiveConfirmDialogFragment : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        vm.resetReceiveState()
 
         binding.btnFinish.isEnabled = false
         binding.btnFinish.alpha = 0.45f
@@ -88,13 +102,49 @@ class GuestReceiveConfirmDialogFragment : DialogFragment() {
             updateFinishButtonState()
         }
 
-        binding.btnFinish.setOnClickListener{
-            val next = GuestStartBottomDialogFragment()
-            val prevBottomSheet = parentFragmentManager.findFragmentByTag(
-                GuestShippedBottomDialogFragment.TAG) as? DialogFragment
-            dismiss()
-            prevBottomSheet?.dismiss()
-            next.show(parentFragmentManager, GuestStartBottomDialogFragment.TAG)
+        binding.btnFinish.setOnClickListener {
+            val photoUri = selectedPhotoUri ?: return@setOnClickListener
+
+            val bytes = requireContext().contentResolver
+                .openInputStream(photoUri)
+                ?.use { it.readBytes() }
+                ?: return@setOnClickListener
+
+            vm.patchTrackerReceiveWithImage(
+                groupId = groupId,
+                imageBytes = bytes,
+                contentType = "image/jpeg"
+            )
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.receiveState.collectLatest { state ->
+                    when (state) {
+                        is UiState.Idle -> Unit
+
+                        is UiState.Loading -> {
+                            setFinishEnabled(false)
+                        }
+
+                        is UiState.Success -> {
+                            val prev = parentFragmentManager.findFragmentByTag(
+                                GuestShippedBottomDialogFragment.TAG
+                            ) as? DialogFragment
+
+                            prev?.dismissAllowingStateLoss()
+                            dismissAllowingStateLoss()
+
+                            GuestStartBottomDialogFragment()
+                                .show(parentFragmentManager, GuestStartBottomDialogFragment.TAG)
+                        }
+
+                        is UiState.Error -> {
+                            updateFinishButtonState()
+                        }
+                    }
+                }
+            }
         }
 
         binding.btnClose.setOnClickListener { dismiss() }
@@ -140,5 +190,11 @@ class GuestReceiveConfirmDialogFragment : DialogFragment() {
 
     companion object {
         const val TAG = "ReceiveConfirmFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) =
+            GuestReceiveConfirmDialogFragment().apply {
+                arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+            }
     }
 }
