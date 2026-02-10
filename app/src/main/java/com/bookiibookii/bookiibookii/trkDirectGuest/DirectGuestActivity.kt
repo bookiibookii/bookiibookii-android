@@ -159,7 +159,9 @@ class DirectGuestActivity : AppCompatActivity() {
     private fun parseAnyDateTime(raw: String): LocalDateTime? {
         return try {
             if (raw.endsWith("Z")) {
-                java.time.OffsetDateTime.parse(raw).toLocalDateTime()
+                java.time.OffsetDateTime.parse(raw)
+                    .atZoneSameInstant(java.time.ZoneId.systemDefault())
+                    .toLocalDateTime()
             } else {
                 LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
             }
