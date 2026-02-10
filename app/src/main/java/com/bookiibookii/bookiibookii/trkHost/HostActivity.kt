@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.trkHost
 
+import HostExtendRequestBottomDialogFragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -23,6 +24,8 @@ class HostActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHostBinding
     private val vm: HostViewModel by viewModels()
 
+    private var currentIsVerified: Boolean? = null
+
     private var didAutoShowSheet = false
 
     private val groupId: Long by lazy {
@@ -30,6 +33,8 @@ class HostActivity : AppCompatActivity() {
     }
 
     private var currentStatus: TrackerStatus = TrackerStatus.UNKNOWN
+
+    private var pendingShowAfterRefresh: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +53,6 @@ class HostActivity : AppCompatActivity() {
 
         binding.cardWidget.isEnabled = false
 
-        // 임시 로직 이거 나중에 삭제
         supportFragmentManager.setFragmentResultListener(
             HostStartBottomDialogFragment.RESULT_KEY,
             this
@@ -81,12 +85,17 @@ class HostActivity : AppCompatActivity() {
                 "FINISHED" -> {
                     vm.onAction(HostAction.SET_FINISHED)
                     currentStatus = TrackerStatus.COMPLETED
+
+                    pendingShowAfterRefresh = true
+                    vm.loadTracker(groupId)
                 }
             }
         }
 
         binding.cardWidget.setOnClickListener {
-            showSheetOnceForStatus(currentStatus)
+            if (pendingShowAfterRefresh) return@setOnClickListener
+            pendingShowAfterRefresh = true
+            vm.loadTracker(groupId)
         }
 
         lifecycleScope.launch {
@@ -116,6 +125,7 @@ class HostActivity : AppCompatActivity() {
                         android.util.Log.e("HOST", "loadTracker error=${state.errorMessage}")
 
                         binding.cardWidget.isEnabled = false
+                        currentIsVerified = null
                         currentStatus = TrackerStatus.UNKNOWN
                         vm.setPhaseFromApiStatus(null)
                         return@collectLatest
@@ -124,20 +134,25 @@ class HostActivity : AppCompatActivity() {
                     val dto = state.data ?: return@collectLatest
 
                     currentStatus = TrackerStatus.from(dto.trackerStatus)
+                    currentIsVerified = dto.deliveryInfo?.isVerified
 
                     binding.cardWidget.isEnabled = true
 
-                    if (!didAutoShowSheet && savedInstanceState == null) {
+                    if (!didAutoShowSheet && savedInstanceState == null && !pendingShowAfterRefresh) {
                         didAutoShowSheet = true
-                        binding.root.post {
-                            showSheetOnceForStatus(currentStatus)
-                        }
+                        binding.root.post { showSheetOnceForStatus(currentStatus) }
                     }
 
                     android.util.Log.d(
                         "HOST",
                         "loaded: groupId=$groupId trackerId=${dto.trackerId} status=${dto.trackerStatus} title=${dto.bookTitle}"
                     )
+
+                    if (pendingShowAfterRefresh) {
+                        pendingShowAfterRefresh = false
+                        didAutoShowSheet = true
+                        binding.root.post { showSheetOnceForStatus(currentStatus) }
+                    }
                 }
             }
         }
@@ -167,24 +182,35 @@ class HostActivity : AppCompatActivity() {
             TrackerStatus.HOST_READING,
             TrackerStatus.HOST_EXTENSION -> HostReadingBottomDialogFragment.newInstance(groupId)
             TrackerStatus.HOST_DONE -> HostShippingBottomDialogFragment.newInstance(groupId)
-            TrackerStatus.SHIPPING_TO_GUEST -> HostShippingStatusBottomDialogFragment()
 
-            TrackerStatus.RECEIVED,
-            TrackerStatus.GUEST_READING,
-            TrackerStatus.GUEST_EXTENSION-> HostReadingStatusBottomDialogFragment()
+            TrackerStatus.SHIPPING_TO_GUEST,
+            TrackerStatus.RECEIVED -> HostShippingStatusBottomDialogFragment.newInstance(groupId)
+
+            TrackerStatus.GUEST_READING -> {
+                val verified = currentIsVerified ?: false
+                if (!verified) {
+                    HostShippingStatusBottomDialogFragment.newInstance(groupId)
+                } else {
+                    HostReadingStatusBottomDialogFragment.newInstance(groupId)
+                }
+            }
+
+            TrackerStatus.GUEST_EXTENSION-> HostExtendRequestBottomDialogFragment.newInstance(groupId)
 
             TrackerStatus.GUEST_DONE -> HostReadingDoneBottomDialogFragment.newInstance(groupId)
             TrackerStatus.SHIPPING_TO_HOST -> HostShippedBottomDialogFragment.newInstance(groupId)
 
             TrackerStatus.RETURNED,
             TrackerStatus.COMPLETED,
-            TrackerStatus.UNKNOWN -> HostTradeFinishBottomDialogFragment()
+            TrackerStatus.UNKNOWN -> HostTradeFinishBottomDialogFragment.newInstance(groupId)
         }
     }
 
     private fun showSheetOnceForStatus(status: TrackerStatus) {
         val tag = "tracker_sheet"
-        if (supportFragmentManager.findFragmentByTag(tag) != null) return
+
+        (supportFragmentManager.findFragmentByTag(tag) as? BottomSheetDialogFragment)
+            ?.dismissAllowingStateLoss()
 
         val sheet = createSheetForStatus(status)
         sheet.show(supportFragmentManager, tag)

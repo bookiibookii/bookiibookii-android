@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentGuestStartBottomDialogBinding
+import com.bookiibookii.bookiibookii.trkHost.TrackerDateUtil.prettyDate
 import com.bookiibookii.bookiibookii.trkHost.UiState
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
@@ -40,6 +41,17 @@ class GuestStartBottomDialogFragment : BottomSheetDialogFragment() {
 
         binding.btnStart.setOnClickListener {
             vm.patchTrackerReadingStart(groupId)
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.uiState.collectLatest { state ->
+                    val dto = state.data
+
+                    binding.tvStartDate.text = prettyDate(dto?.startDate)
+                    binding.tvEndDate.text = prettyDate(dto?.endDate)
+                }
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -78,12 +90,15 @@ class GuestStartBottomDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "GuestBookStartBottomSheetFragment"
+
+        const val RESULT_KEY = "guest_action"
+        const val BUNDLE_ACTION = "action"
+
         private const val ARG_GROUP_ID = "arg_group_id"
 
-        fun newInstance(groupId: Long) =
-            GuestStartBottomDialogFragment().apply {
-                arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
-            }
+        fun newInstance(groupId: Long) = GuestStartBottomDialogFragment().apply {
+            arguments = Bundle().apply { putLong(ARG_GROUP_ID, groupId) }
+        }
     }
 
     override fun getTheme(): Int {

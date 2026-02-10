@@ -128,13 +128,13 @@ class HostShippingInputDialogFragment : DialogFragment() {
                         }
 
                         is UiState.Success -> {
-                            (parentFragmentManager.findFragmentByTag(
-                                HostShippingBottomDialogFragment.TAG
-                            ) as? DialogFragment)?.dismissAllowingStateLoss()
+                            (parentFragmentManager.findFragmentByTag("tracker_sheet") as? DialogFragment)
+                                ?.dismissAllowingStateLoss()
 
                             dismissAllowingStateLoss()
 
-                            HostShippingStatusBottomDialogFragment()
+                            HostShippingStatusBottomDialogFragment
+                                .newInstance(groupId)
                                 .show(parentFragmentManager, HostShippingStatusBottomDialogFragment.TAG)
                         }
 

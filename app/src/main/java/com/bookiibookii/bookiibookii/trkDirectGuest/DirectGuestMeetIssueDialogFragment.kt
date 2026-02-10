@@ -12,6 +12,10 @@ class DirectGuestMeetIssueDialogFragment : DialogFragment() {
     private var _binding: FragmentDirectGuestMeetIssueDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -47,6 +51,15 @@ class DirectGuestMeetIssueDialogFragment : DialogFragment() {
 
     companion object {
         const val TAG = "DirectGuestMeetIssueDialogFragment"
+
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) =
+            DirectGuestMeetIssueDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_GROUP_ID, groupId)
+                }
+            }
     }
 }
 

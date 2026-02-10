@@ -44,6 +44,11 @@ class GuestViewModel : ViewModel() {
     private val _steps = MutableStateFlow<List<TradeStatusItem>>(emptyList())
     val steps: StateFlow<List<TradeStatusItem>> = _steps.asStateFlow()
 
+    private val _confirmReceptionState =
+        MutableStateFlow<UiState<TrackerDetailResponseDto>>(UiState.Idle)
+    val confirmReceptionState: StateFlow<UiState<TrackerDetailResponseDto>> =
+        _confirmReceptionState.asStateFlow()
+
     private val _receiveState =
         MutableStateFlow<UiState<TrackerReceiveResponseDto>>(UiState.Idle)
     val receiveState: StateFlow<UiState<TrackerReceiveResponseDto>> =
@@ -250,6 +255,30 @@ class GuestViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 _readingStartState.value =
+                    UiState.Error(e.message ?: "network error")
+            }
+        }
+    }
+
+    fun patchConfirmReception(groupId: Long) {
+        viewModelScope.launch {
+            _confirmReceptionState.value = UiState.Loading
+
+            try {
+                val body = RetrofitClient.api().patchConfirmReception(groupId)
+
+                if (!body.isSuccess || body.result == null) {
+                    _confirmReceptionState.value =
+                        UiState.Error(body.message ?: "confirm reception API error")
+                    return@launch
+                }
+
+                _confirmReceptionState.value = UiState.Success(body.result)
+
+                loadTracker(groupId)
+
+            } catch (e: Exception) {
+                _confirmReceptionState.value =
                     UiState.Error(e.message ?: "network error")
             }
         }

@@ -13,6 +13,10 @@ class DirectTradeFinishBottomDialogFragment : BottomSheetDialogFragment() {
     private var _binding: FragmentDirectTradeFinishBottomDialogBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -33,6 +37,14 @@ class DirectTradeFinishBottomDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "DirectTradeFinishFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) =
+            DirectTradeFinishBottomDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_GROUP_ID, groupId)
+                }
+            }
     }
 
     override fun getTheme(): Int {

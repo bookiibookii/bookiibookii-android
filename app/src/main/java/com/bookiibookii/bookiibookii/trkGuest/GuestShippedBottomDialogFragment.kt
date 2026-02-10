@@ -4,14 +4,22 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentGuestShippedBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class GuestShippedBottomDialogFragment : BottomSheetDialogFragment() {
 
     private var _binding: FragmentGuestShippedBottomDialogBinding? = null
     private val binding get() = _binding!!
+
+    private val vm: GuestViewModel by activityViewModels()
 
     private val groupId: Long by lazy {
         requireArguments().getLong(ARG_GROUP_ID)
@@ -28,6 +36,19 @@ class GuestShippedBottomDialogFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        vm.loadTracker(groupId)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.uiState.collectLatest { state ->
+                    val info = state.data?.deliveryInfo
+
+                    binding.tvCourier.text = info?.deliveryCompany ?: "-"
+                    binding.tvTrackingNum.text = info?.trackingNumber ?: "-"
+                }
+            }
+        }
 
         binding.btnViewShippingPhoto.setOnClickListener {
             GuestShippingPhotoDialogFragment

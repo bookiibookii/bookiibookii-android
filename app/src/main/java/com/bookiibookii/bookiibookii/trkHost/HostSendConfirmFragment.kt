@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
 import com.bookiibookii.bookiibookii.databinding.FragmentHostSendConfirmBinding
 
 class HostSendConfirmFragment : DialogFragment() {
@@ -12,11 +13,17 @@ class HostSendConfirmFragment : DialogFragment() {
     private var _binding: FragmentHostSendConfirmBinding? = null
     private val binding get() = _binding!!
 
+    private val vm: HostViewModel by activityViewModels()
+
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentHostSendConfirmBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -37,22 +44,15 @@ class HostSendConfirmFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnConfirm.setOnClickListener{
-            parentFragmentManager.setFragmentResult(
-                HostReceiveConfirmDialogFragment.RESULT_KEY,
-                Bundle().apply {
-                    putString(HostReceiveConfirmDialogFragment.BUNDLE_ACTION, "GUEST_READING")
-                }
-            )
+        binding.btnConfirm.setOnClickListener {
+
+            vm.patchConfirmReception(groupId)
 
             (parentFragmentManager
                 .findFragmentByTag(HostShippingStatusBottomDialogFragment.TAG) as? DialogFragment)
                 ?.dismissAllowingStateLoss()
 
             dismissAllowingStateLoss()
-
-            HostReadingStatusBottomDialogFragment()
-                .show(parentFragmentManager, HostReadingStatusBottomDialogFragment.TAG)
         }
     }
 
@@ -65,5 +65,12 @@ class HostSendConfirmFragment : DialogFragment() {
         const val TAG = "SendConfirmFragment"
         const val RESULT_KEY = "host_action"
         const val BUNDLE_ACTION = "action"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) = HostSendConfirmFragment().apply {
+            arguments = Bundle().apply {
+                putLong(ARG_GROUP_ID, groupId)
+            }
+        }
     }
 }
