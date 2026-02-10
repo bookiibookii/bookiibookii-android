@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestReadingBottomDialogBinding
+import com.bookiibookii.bookiibookii.trkDirectHost.DateTimeUtils
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -51,8 +52,8 @@ class DirectGuestReadingBottomDialogFragment : BottomSheetDialogFragment() {
 
                         is UiState.Success -> {
                             val dto = state.data
-                            binding.tvStartDate.text = dto.startDate ?: "-"
-                            binding.tvEndDate.text = dto.endDate ?: "-"
+                            binding.tvStartDate.text = DateTimeUtils.formatMeetingTime(dto.startDate)
+                            binding.tvEndDate.text = DateTimeUtils.formatMeetingTime(dto.endDate)
 
                             val alreadyExtended = (dto.extensionCount ?: 0) >= 1
                             binding.btnExtendPeriod.isEnabled = !alreadyExtended

@@ -88,6 +88,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginLeft="5dp"
                 android:text="메가MGC커피 역삼초교교차로점"
                 android:textColor="@color/grey_900"
                 android:textSize="14sp"

@@ -20,7 +20,7 @@ class DirectGuestActivity : AppCompatActivity() {
     private val vm: DirectGuestViewModel by viewModels()
 
     private val groupId: Long by lazy {
-        intent.getLongExtra("groupId", -1L)
+        intent.getLongExtra("group_id", -1L)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

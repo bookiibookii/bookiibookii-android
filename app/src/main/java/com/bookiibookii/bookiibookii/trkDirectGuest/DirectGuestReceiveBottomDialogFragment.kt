@@ -11,7 +11,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestReceiveBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 class DirectGuestReceiveBottomDialogFragment : BottomSheetDialogFragment() {
 
@@ -35,6 +40,34 @@ class DirectGuestReceiveBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        vm.loadMeeting(groupId)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.meetingState.collectLatest { state ->
+                    when (state) {
+                        UiState.Idle -> Unit
+
+                        UiState.Loading -> {
+                            binding.tvAppointmentDatetime.text = "-"
+                            binding.tvAppointmentPlace.text = "-"
+                        }
+
+                        is UiState.Success -> {
+                            val dto = state.data
+                            binding.tvAppointmentDatetime.text = formatMeetingTime(dto.meetingTime)
+                            binding.tvAppointmentPlace.text = dto.meetingPlace ?: "-"
+                        }
+
+                        is UiState.Error -> {
+                            binding.tvAppointmentDatetime.text = "-"
+                            binding.tvAppointmentPlace.text = "-"
+                        }
+                    }
+                }
+            }
+        }
+
         binding.btnNoReceive.setOnClickListener {
             DirectGuestReceiveIssueDialogFragment
                 .newInstance(groupId)
@@ -52,7 +85,6 @@ class DirectGuestReceiveBottomDialogFragment : BottomSheetDialogFragment() {
                     when (ev) {
                         is DirectGuestEvent.ExchangeCompleteSuccess -> {
                             vm.loadTracker(groupId)
-
                             dismissAllowingStateLoss()
                         }
 
@@ -64,6 +96,24 @@ class DirectGuestReceiveBottomDialogFragment : BottomSheetDialogFragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun formatMeetingTime(raw: String?): String {
+        if (raw.isNullOrBlank()) return "-"
+
+        return try {
+            val dt = if (raw.endsWith("Z")) {
+                OffsetDateTime.parse(raw)
+                    .atZoneSameInstant(ZoneId.systemDefault())
+                    .toLocalDateTime()
+            } else {
+                LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            }
+
+            dt.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))
+        } catch (_: Exception) {
+            "-"
         }
     }
 

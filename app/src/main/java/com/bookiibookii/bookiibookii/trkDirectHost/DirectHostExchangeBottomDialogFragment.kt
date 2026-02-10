@@ -11,7 +11,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectHostExchangeBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class DirectHostExchangeBottomDialogFragment : BottomSheetDialogFragment() {
 
@@ -34,6 +37,31 @@ class DirectHostExchangeBottomDialogFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        vm.loadMeeting(groupId)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.meetingState.collectLatest { state ->
+                    when (state) {
+                        UiState.Idle -> Unit
+                        UiState.Loading -> {
+                            binding.tvAppointmentDatetime.text = "-"
+                            binding.tvAppointmentPlace.text = "-"
+                        }
+                        is UiState.Success -> {
+                            val dto = state.data
+                            binding.tvAppointmentDatetime.text = formatMeetingTime(dto.meetingTime)
+                            binding.tvAppointmentPlace.text = dto.meetingPlace ?: "-"
+                        }
+                        is UiState.Error -> {
+                            binding.tvAppointmentDatetime.text = "-"
+                            binding.tvAppointmentPlace.text = "-"
+                        }
+                    }
+                }
+            }
+        }
 
         binding.btnNoSend.setOnClickListener {
             DirectHostMeetIssueDialogFragment
@@ -64,6 +92,24 @@ class DirectHostExchangeBottomDialogFragment : BottomSheetDialogFragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun formatMeetingTime(raw: String?): String {
+        if (raw.isNullOrBlank()) return "-"
+
+        return try {
+            val dt = if (raw.endsWith("Z")) {
+                java.time.OffsetDateTime.parse(raw)
+                    .atZoneSameInstant(java.time.ZoneId.systemDefault())
+                    .toLocalDateTime()
+            } else {
+                LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            }
+
+            dt.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))
+        } catch (e: Exception) {
+            "-"
         }
     }
 
