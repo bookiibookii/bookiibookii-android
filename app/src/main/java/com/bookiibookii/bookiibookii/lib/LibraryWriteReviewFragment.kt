@@ -24,6 +24,7 @@ class LibraryWriteReviewFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var userBookId: Int = -1
+    private var groupId: Int = -1 // TogetherFragment로 넘겨주기 위해 받음
     private var bookTitle = ""
     private var bookAuthor = ""
     private var bookCover = ""
@@ -33,6 +34,7 @@ class LibraryWriteReviewFragment : Fragment() {
         super.onCreate(savedInstanceState)
         arguments?.let {
             userBookId = it.getInt("userBookId", -1)
+            groupId = it.getInt("groupId", -1)
             bookTitle = it.getString("bookTitle", "") ?: ""
             bookAuthor = it.getString("bookAuthor", "") ?: ""
             bookCover = it.getString("bookCover", "") ?: ""
@@ -51,11 +53,7 @@ class LibraryWriteReviewFragment : Fragment() {
         initInputListener()
 
         binding.libDetailBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
-
-        // [후기 남기기 버튼]
-        binding.libReviewAddBtn.setOnClickListener {
-            postReview()
-        }
+        binding.libReviewAddBtn.setOnClickListener { postReview() }
     }
 
     private fun initView() {
@@ -71,17 +69,26 @@ class LibraryWriteReviewFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                // 리뷰 API 호출
                 val request = ReviewRequest(rating, comment)
                 val response = RetrofitClient.api().postBookReview(userBookId, request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     // ★ 성공 시: Together(결과) 화면으로 이동
-                    navigateToTogetherFragment()
+                    val togetherFragment = LibraryBookDetailTogetherFragment().apply {
+                        arguments = Bundle().apply {
+                            putInt("userBookId", userBookId)
+                            putInt("groupId", groupId) // groupId 전달
+                            putString("bookTitle", bookTitle)
+                            putString("bookAuthor", bookAuthor)
+                            putString("bookCover", bookCover)
+                        }
+                    }
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, togetherFragment)
+                        // .addToBackStack(null) // 결과 화면에서 뒤로가기 시 목록으로 가려면 주석 처리
+                        .commit()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.myPage
 
+import MypReview
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
@@ -16,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.MypMyReviewFragment
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.Data.MypReview
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.MypageResult

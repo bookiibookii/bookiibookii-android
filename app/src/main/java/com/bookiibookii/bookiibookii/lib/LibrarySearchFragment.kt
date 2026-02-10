@@ -12,9 +12,12 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.data.model.LibBook
 import com.bookiibookii.bookiibookii.data.model.ReadStatus
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryViewModel
@@ -26,33 +29,40 @@ import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.launch
 
 class LibrarySearchFragment : Fragment() {
 
     private var _binding: FragmentLibSearchBinding? = null
     private val binding get() = _binding!!
 
-    // ViewModel 공유 (LibraryFragment와 같은 데이터 사용)
     private val viewModel: LibraryViewModel by activityViewModels()
 
-    // 어댑터
-    private lateinit var libResultAdapter: LibraryBookAdapter
-    private lateinit var recentSearchAdapter: RecentSearchAdapter
+    // 모드 ("LIBRARY" 또는 "BOOKMARK")
+    private var source: String = "LIBRARY"
 
-    // 데이터
+    // 어댑터 (상황에 따라 초기화)
+    private lateinit var libraryAdapter: LibraryBookAdapter       // 내 서재용
+    private lateinit var bookmarkAdapter: LibraryBookmarkAdapter  // 북마크용
+    private lateinit var recentSearchAdapter: RecentSearchAdapter // 최근 검색어용
+
+    // 데이터 저장소
     private var allMyBooks: List<LibBook> = emptyList()
+    private var allBookmarks: List<CardItem> = emptyList() // ★ CardItem 사용
     private val recentSearches = mutableListOf<String>()
 
-    // [추가] SharedPreferences 관련 상수
+    // SharedPreferences
     private val PREF_NAME = "search_pref"
     private val KEY_RECENT_SEARCH = "recent_search_list"
     private lateinit var sharedPreferences: SharedPreferences
-    private val gson = Gson() // 리스트 저장용 (build.gradle에 gson 추가 필요)
+    private val gson = Gson()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        source = arguments?.getString("SOURCE", "LIBRARY") ?: "LIBRARY"
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentLibSearchBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -60,71 +70,45 @@ class LibrarySearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // SharedPreferences 초기화
         sharedPreferences = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
-        initData()
-        initRecyclerView()
-        initListeners()
+        initData()         // 데이터 로드 (API or ViewModel)
+        initRecentSearch() // 최근 검색어 로드
+        initRecyclerView() // 어댑터 설정
+        initListeners()    // 이벤트 리스너
 
+        // 키보드 올리기
         showKeyboard()
         updateSearchState(isSearching = false)
     }
 
+    // [1] 데이터 로드
     private fun initData() {
-        // 1. 책 리스트 가져오기 (ViewModel 공유)
-        viewModel.bookList.observe(viewLifecycleOwner) { books ->
-            allMyBooks = books
-        }
-
-        // 2. [수정] 최근 검색어 불러오기 (SharedPreferences)
-        loadRecentSearches()
-    }
-
-    // ★★★ [추가] 저장된 검색어 불러오기
-    private fun loadRecentSearches() {
-        val json = sharedPreferences.getString(KEY_RECENT_SEARCH, null)
-        recentSearches.clear()
-        if (json != null) {
-            val type = object : TypeToken<MutableList<String>>() {}.type
-            val savedList: List<String> = gson.fromJson(json, type)
-            recentSearches.addAll(savedList)
+        if (source == "LIBRARY") {
+            // 내 서재: ViewModel에 이미 로드된 데이터 사용
+            viewModel.bookList.observe(viewLifecycleOwner) { books ->
+                allMyBooks = books
+            }
+        } else {
+            // 북마크: API 직접 호출하여 전체 목록 가져오기
+            lifecycleScope.launch {
+                try {
+                    val response = RetrofitClient.api().getBookmarkedCards()
+                    if (response.isSuccessful && response.body()?.isSuccess == true) {
+                        allBookmarks = response.body()?.result ?: emptyList()
+                    }
+                } catch (e: Exception) { e.printStackTrace() }
+            }
         }
     }
 
-    // ★★★ [추가] 검색어 저장하기 (리스트 -> JSON 문자열 -> Pref 저장)
-    private fun saveRecentSearchesToPref() {
-        val json = gson.toJson(recentSearches)
-        sharedPreferences.edit().putString(KEY_RECENT_SEARCH, json).apply()
-    }
-
+    // [2] RecyclerView 설정 (어댑터 분기)
     private fun initRecyclerView() {
-        // [1] 검색 결과 어댑터
-        libResultAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
-            val targetFragment = if (clickedBook.readStatus == ReadStatus.READING) {
-                LibraryBookDetailIngFragment()
-            } else {
-                LibraryBookDetailFragment()
-            }
-            val bundle = Bundle().apply {
-                putInt("book_id", clickedBook.id)
-                putString("book_title", clickedBook.title)
-                putString("book_author", clickedBook.author)
-                putString("book_cover", clickedBook.coverUrl)
-            }
-            targetFragment.arguments = bundle
-
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, targetFragment)
-                .addToBackStack(null)
-                .commit()
-        }
-
-        // [2] 최근 검색어 어댑터
+        // A. 최근 검색어 어댑터
         recentSearchAdapter = RecentSearchAdapter(recentSearches,
             onDelete = { term ->
                 recentSearches.remove(term)
-                saveRecentSearchesToPref() // [추가] 삭제 시에도 저장
+                saveRecentSearchesToPref()
                 recentSearchAdapter.notifyDataSetChanged()
             },
             onClick = { term ->
@@ -132,14 +116,64 @@ class LibrarySearchFragment : Fragment() {
                 binding.searchInputEt.setSelection(term.length)
             }
         )
+
+        // B. 검색 결과 어댑터 (모드에 따라 다름)
+        if (source == "LIBRARY") {
+            // 1. 내 서재 모드
+            libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
+                // 상세 이동 로직
+                val targetFragment = if (clickedBook.readStatus == ReadStatus.READING) {
+                    LibraryBookDetailIngFragment()
+                } else {
+                    LibraryBookDetailFragment()
+                }
+                val bundle = Bundle().apply {
+                    putInt("userBookId", clickedBook.id)
+                    putInt("groupId", clickedBook.groupId)
+                    putString("bookTitle", clickedBook.title)
+                    putString("bookAuthor", clickedBook.author)
+                    putString("bookCover", clickedBook.coverUrl)
+                }
+                targetFragment.arguments = bundle
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragmentContainer, targetFragment)
+                    .addToBackStack(null)
+                    .commit()
+            }
+            binding.libSearchResultRv.adapter = libraryAdapter
+            binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 3)
+
+        } else {
+            // 2. 북마크 모드
+            bookmarkAdapter = LibraryBookmarkAdapter { clickedCard ->
+                // 카드 상세 이동 로직
+                val detailFragment = LibraryCardDetailFragment().apply {
+                    arguments = Bundle().apply {
+                        putLong("cardId", clickedCard.cardId.toLong())
+                        putBoolean("isMine", false) // 북마크 목록에선 수정 불가
+                        putString("writerName", clickedCard.creatorName)
+                    }
+                }
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragmentContainer, detailFragment)
+                    .addToBackStack(null)
+                    .commit()
+            }
+            binding.libSearchResultRv.adapter = bookmarkAdapter
+            binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 2)
+            // 간격 데코레이션 추가
+            binding.libSearchResultRv.addItemDecoration(LibDetailGridDecoration(2, dpToPx(10), dpToPx(12), false))
+        }
     }
 
     private fun initListeners() {
+        // 뒤로가기
         binding.libSearchBackIv.setOnClickListener {
             hideKeyboard()
             parentFragmentManager.popBackStack()
         }
 
+        // 검색어 입력 감지
         binding.searchInputEt.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val query = s.toString().trim()
@@ -147,13 +181,14 @@ class LibrarySearchFragment : Fragment() {
                     updateSearchState(isSearching = false)
                 } else {
                     updateSearchState(isSearching = true)
-                    filterBooks(query)
+                    filterList(query)
                 }
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
+        // 검색 버튼(키보드) 클릭 시 최근 검색어 저장
         binding.searchInputEt.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val query = binding.searchInputEt.text.toString().trim()
@@ -168,12 +203,42 @@ class LibrarySearchFragment : Fragment() {
         }
     }
 
+    // [3] 필터링 로직 (핵심)
+    private fun filterList(query: String) {
+        if (source == "LIBRARY") {
+            // 내 서재 필터링 (제목, 저자)
+            val filtered = allMyBooks.filter {
+                it.title.contains(query, true) || it.author.contains(query, true)
+            }
+            libraryAdapter.submitList(filtered)
+            binding.libSearchCountTv.text = "${filtered.size} 권"
+
+        } else {
+            // 북마크 필터링 (책제목, 메모, 작성자)
+            val filtered = allBookmarks.filter {
+                it.bookTitle.contains(query, true) ||
+                        it.memo.contains(query, true) ||
+                        it.creatorName.contains(query, true)
+            }
+            bookmarkAdapter.submitList(filtered)
+            binding.libSearchCountTv.text = "${filtered.size} 개"
+        }
+    }
+
     private fun updateSearchState(isSearching: Boolean) {
         if (isSearching) {
             binding.libSearchCountTv.visibility = View.VISIBLE
-            binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 3)
-            binding.libSearchResultRv.adapter = libResultAdapter
+            binding.libSearchResultRv.visibility = View.VISIBLE
+            // 어댑터 재설정은 initRecyclerView에서 했으므로 LayoutManager 등은 그대로 둠
+            if (source == "LIBRARY") {
+                binding.libSearchResultRv.adapter = libraryAdapter
+                binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 3)
+            } else {
+                binding.libSearchResultRv.adapter = bookmarkAdapter
+                binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 2)
+            }
         } else {
+            // 최근 검색어 모드
             binding.libSearchCountTv.visibility = View.GONE
             val flexboxLayoutManager = FlexboxLayoutManager(context).apply {
                 flexDirection = FlexDirection.ROW
@@ -185,30 +250,30 @@ class LibrarySearchFragment : Fragment() {
         }
     }
 
-    private fun filterBooks(query: String) {
-        // [답변 2번 관련] API 호출 없이 로컬 리스트에서 필터링
-        val filteredList = allMyBooks.filter { book ->
-            book.title.contains(query, ignoreCase = true) ||
-                    book.author.contains(query, ignoreCase = true)
+    // --- 최근 검색어 관련 로직 (기존 동일) ---
+    private fun initRecentSearch() {
+        val json = sharedPreferences.getString(KEY_RECENT_SEARCH, null)
+        recentSearches.clear()
+        if (json != null) {
+            val type = object : TypeToken<MutableList<String>>() {}.type
+            recentSearches.addAll(gson.fromJson(json, type))
         }
-        libResultAdapter.submitList(filteredList)
-        binding.libSearchCountTv.text = "${filteredList.size} 권"
     }
 
     private fun saveRecentSearch(query: String) {
-        if (recentSearches.contains(query)) {
-            recentSearches.remove(query)
-        }
+        if (recentSearches.contains(query)) recentSearches.remove(query)
         recentSearches.add(0, query)
-
-        if (recentSearches.size > 10) {
-            recentSearches.removeAt(recentSearches.lastIndex)
-        }
-
-        saveRecentSearchesToPref() // [추가] 변경사항 영구 저장
+        if (recentSearches.size > 10) recentSearches.removeAt(recentSearches.lastIndex)
+        saveRecentSearchesToPref()
         recentSearchAdapter.notifyDataSetChanged()
     }
 
+    private fun saveRecentSearchesToPref() {
+        val json = gson.toJson(recentSearches)
+        sharedPreferences.edit().putString(KEY_RECENT_SEARCH, json).apply()
+    }
+
+    // --- 유틸 ---
     private fun showKeyboard() {
         binding.searchInputEt.requestFocus()
         val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -220,12 +285,14 @@ class LibrarySearchFragment : Fragment() {
         imm.hideSoftInputFromWindow(binding.searchInputEt.windowToken, 0)
     }
 
+    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
-    // 내부 어댑터 클래스 (기존 동일)
+    // --- 최근 검색어 어댑터 (Inner Class) ---
     inner class RecentSearchAdapter(
         private val items: List<String>,
         private val onDelete: (String) -> Unit,

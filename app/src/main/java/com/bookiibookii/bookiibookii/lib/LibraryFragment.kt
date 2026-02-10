@@ -61,47 +61,64 @@ class LibraryFragment : Fragment() {
     private fun fetchBooks() {
         lifecycleScope.launch {
             try {
-                Log.d("LibraryFragment", "API 요청 시작")
                 val response = RetrofitClient.api().getLibraryBooks()
+
+                // 1. HTTP 응답 상태 확인 로그
+                Log.d("LibraryAPI", "Response Code: ${response.code()}")
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val resultList = response.body()?.result ?: emptyList()
-                    Log.d("LibraryFragment", "API 성공: ${resultList.size}권 받아옴")
+
+                    // 2. API에서 받아온 원본 데이터 리스트 로그 출력
+                    Log.d("LibraryAPI", "받아온 도서 개수: ${resultList.size}")
+                    resultList.forEachIndexed { index, apiData ->
+                        Log.d("LibraryAPI", "--- API 원본 Data [$index] ---")
+                        Log.d("LibraryAPI", "userBookId: ${apiData.userBookId}, groupId: ${apiData.groupId}")
+                        Log.d("LibraryAPI", "title: ${apiData.title}, author: ${apiData.author}")
+                        Log.d("LibraryAPI", "rating: ${apiData.rating}, duration: ${apiData.duration}")
+                        Log.d("LibraryAPI", "startDate: ${apiData.startDate}, endDate: ${apiData.endDate}")
+                        Log.d("LibraryAPI", "image: ${apiData.image}")
+                        Log.d("LibraryAPI", "groupType: ${apiData.groupType}")
+                    }
 
                     allMyBooks = resultList.map { apiData ->
-                        // 평점이 0.0 초과면 완독(DONE)으로 간주
+                        // 평점이 0보다 크면 완독/리뷰 작성한 것으로 간주
                         val status = if (apiData.rating > 0.0) ReadStatus.DONE else ReadStatus.READING
-                        val progressText = if (status == ReadStatus.READING) {
-                            "${apiData.duration}일째 독서 중"
-                        } else {
-                            "완독"
-                        }
+                        val reviewWritten = apiData.rating > 0.0
 
-                        LibBook(
+                        val mappedBook = LibBook(
                             id = apiData.userBookId,
+                            groupId = apiData.groupId,
                             title = apiData.title,
                             author = apiData.author,
                             coverUrl = apiData.image,
+                            hostName = apiData.hostId.toString(),
                             hostProfileUrl = apiData.hostProfileImageUrl,
+
+                            // [수정] 날짜 정보 매핑
+                            startDate = apiData.startDate,
+                            endDate = apiData.endDate,
+
+                            // [수정] 리뷰 작성 여부 매핑
+                            isReviewed = reviewWritten,
+
                             readStatus = status,
-                            progress = progressText,
+                            progress = if (status == ReadStatus.READING) "${apiData.duration}일째" else "완독",
                             rating = apiData.rating,
-                            groupType = apiData.groupType // "TOGETHER" or "RELAY"
+                            groupType = apiData.groupType
                         )
+
+                        // 3. 변환된 LibBook 객체 로그 출력
+                        Log.d("LibraryAPI", "=> 변환된 모델: $mappedBook")
+
+                        mappedBook
                     }
-
-                    // ViewModel에 원본 데이터 세팅 (선택 사항)
-                    viewModel.setBookList(allMyBooks)
-
-                    // 현재 탭 상태로 리스트 표시
-                    val currentSort = viewModel.sortType.value ?: SortType.TITLE
-                    applySort(currentSort)
-
+                    showBooksByStatus(currentTabStatus)
                 } else {
-                    Log.e("LibraryFragment", "API 오류: ${response.code()} ${response.message()}")
+                    Log.e("LibraryAPI", "API 호출 실패: ${response.body()?.message}")
                 }
             } catch (e: Exception) {
-                Log.e("LibraryFragment", "네트워크 오류: ${e.message}")
+                Log.e("LibraryAPI", "에러 발생: ${e.message}")
                 e.printStackTrace()
             }
         }
@@ -109,7 +126,6 @@ class LibraryFragment : Fragment() {
 
     private fun applySort(sortType: SortType) {
         if (allMyBooks.isEmpty()) {
-            Log.d("LibraryFragment", "정렬할 데이터가 없음")
             return
         }
 
@@ -128,8 +144,6 @@ class LibraryFragment : Fragment() {
 
     private fun showBooksByStatus(status: ReadStatus) {
         val filteredList = allMyBooks.filter { it.readStatus == status }
-        Log.d("LibraryFragment", "탭 필터링 결과: 상태=$status, 개수=${filteredList.size}")
-
         libraryAdapter.submitList(filteredList)
         binding.libTotalTv.text = "${filteredList.size}권"
         updateButtonStyles(status)
@@ -137,21 +151,36 @@ class LibraryFragment : Fragment() {
 
     private fun initRecyclerView() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
-            Log.d("LibraryFragment", "책 클릭됨: ${clickedBook.title}, 타입=${clickedBook.groupType}")
 
-            // ★ [핵심 분기] 함께읽기(TOGETHER) -> Ing 화면 / 이어읽기(RELAY) -> Detail 화면
-            val targetFragment = if (clickedBook.groupType == "TOGETHER") {
-                LibraryBookDetailIngFragment() // 함께읽기 (진행중)
+            val targetFragment: Fragment
+
+            // [수정된 로직]
+            if (clickedBook.groupType == "TOGETHER") {
+                // [함께 읽기] 기존 로직 유지
+                if (clickedBook.readStatus == ReadStatus.DONE) {
+                    targetFragment = LibraryBookDetailTogetherFragment() // 완료됨 -> 투게더 상세
+                } else {
+                    targetFragment = LibraryBookDetailIngFragment() // 진행중 -> Ing 상세
+                }
             } else {
-                LibraryBookDetailFragment()    // 이어읽기 (상세)
+                // [이어 읽기 (RELAY)]
+                // ★ 수정: 후기 유무와 상관없이 무조건 상세 화면으로 이동
+                targetFragment = LibraryBookDetailFragment()
             }
 
             val bundle = Bundle().apply {
                 putInt("userBookId", clickedBook.id)
+                putInt("groupId", clickedBook.groupId)
                 putString("bookTitle", clickedBook.title)
                 putString("bookAuthor", clickedBook.author)
                 putString("bookCover", clickedBook.coverUrl)
-                putBoolean("isMine", true)
+                putString("hostName", clickedBook.hostName)
+                putString("hostProfileUrl", clickedBook.hostProfileUrl)
+
+                // 날짜 및 평점 전달 (상세 화면에서 UI 분기 처리에 사용)
+                putString("startDate", clickedBook.startDate)
+                putString("endDate", clickedBook.endDate)
+                putDouble("rating", clickedBook.rating)
             }
             targetFragment.arguments = bundle
 
@@ -161,10 +190,10 @@ class LibraryFragment : Fragment() {
                 .commit()
         }
 
+        binding.libBookListRv.layoutManager = GridLayoutManager(context, 3)
         binding.libBookListRv.adapter = libraryAdapter
-        setCoverModeLayout() // 초기: 커버 모드
+        setCoverModeLayout()
     }
-
     private fun initClickListeners() {
         // [진행 중] 탭
         binding.libIngBtn.setOnClickListener {
@@ -222,7 +251,6 @@ class LibraryFragment : Fragment() {
         binding.libBookListRv.clipToPadding = false
         removeAllItemDecorations()
 
-        // 아이템 데코레이션 (기존 사용하시던 클래스)
         binding.libBookListRv.addItemDecoration(LibDetailGridDecoration(3, dpToPx(12), dpToPx(36), false))
     }
 

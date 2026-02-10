@@ -75,13 +75,13 @@ class LibraryBookAdapter(
     inner class CoverViewHolder(private val binding: ItemLibBookBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: LibBook) {
             binding.libItemBookTitleTv.text = item.title
-            binding.libItemProfileTv.text = item.author // 기획에 따라 작성자/호스트 이름 변경
+            binding.libItemProfileTv.text = item.hostName // 기획에 따라 작성자/호스트 이름 변경
 
             // 표지 이미지
             Glide.with(itemView.context)
                 .load(item.coverUrl)
                 .placeholder(R.color.grey_300)
-                .error(R.color.grey_300)
+                .error(R.drawable.img_profile_default)
                 .into(binding.libItemBookIv)
 
             // 호스트 프로필
@@ -89,7 +89,7 @@ class LibraryBookAdapter(
                 .load(item.hostProfileUrl)
                 .circleCrop()
                 .placeholder(R.drawable.bg_circle_gray500)
-                .error(R.drawable.bg_circle_gray500)
+                .error(R.drawable.img_profile_default)
                 .into(binding.libItemProfileIv)
 
             // 상태 표시

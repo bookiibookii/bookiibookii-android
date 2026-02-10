@@ -4,60 +4,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.Data.LibReview
-import com.bookiibookii.bookiibookii.databinding.ItemLibDetailReviewBinding
 import com.bumptech.glide.Glide
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.CardItem
+import com.bookiibookii.bookiibookii.databinding.ItemLibDetailReviewBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LibraryReviewAdapter(
-    private val onItemClick: (LibReview) -> Unit,
-    private val onBookmarkClick: (LibReview, Int) -> Unit // 북마크 클릭 콜백 추가 (아이템, 포지션)
+    private val onItemClick: (CardItem) -> Unit,
+    private val onBookmarkClick: (CardItem, Int) -> Unit
 ) : RecyclerView.Adapter<LibraryReviewAdapter.ReviewViewHolder>() {
 
-    private var items: List<LibReview> = emptyList()
-    // 간단한 로컬 상태 관리를 위해 북마크 ID 셋을 사용할 수도 있음 (실제로는 ViewModel 연동 권장)
+    private var items: List<CardItem> = emptyList()
 
-    inner class ReviewViewHolder(private val binding: ItemLibDetailReviewBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-
-        fun bind(item: LibReview) {
-            binding.itemReviewNameIv.text = item.userName
-            binding.itemReviewTextTv.text = item.content
-            binding.itemReviewPageTv.text = "${item.page}pg" // 페이지 추가됨
-
-            // 이미지 로드
-            if (item.reviewImageUri != null) {
-                binding.itemReviewPhotoIv.visibility = View.VISIBLE
-                Glide.with(itemView.context)
-                    .load(item.reviewImageUri)
-                    .into(binding.itemReviewPhotoIv)
-            } else {
-                // 이미지가 없으면 ImageView를 숨기거나 기본 이미지 처리
-                // XML 구조상 숨기는게 나을 수 있음
-                binding.itemReviewPhotoIv.visibility = View.GONE
-            }
-
-            if (item.profileImage != null) {
-                binding.itemReviewProfileIv.setImageResource(item.profileImage)
-            }
-
-            val isBookmarked = item.isBookmarked ?: false
-            binding.itemReviewBookmark.setImageResource(
-                if (isBookmarked) R.drawable.ic_bookmark_orange
-                else R.drawable.ic_bookmark_gray
-            )
-
-            // 아이템 전체 클릭
-            itemView.setOnClickListener { onItemClick(item) }
-
-            // [북마크 버튼 클릭]
-            binding.itemReviewBookmark.setOnClickListener {
-                val pos = bindingAdapterPosition
-                if (pos != RecyclerView.NO_POSITION) {
-                    onBookmarkClick(item, pos)
-                }
-            }
-        }
+    fun submitList(newItems: List<CardItem>) {
+        this.items = newItems
+        notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewViewHolder {
@@ -71,12 +37,88 @@ class LibraryReviewAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    fun submitList(newItems: List<LibReview>) {
-        this.items = newItems
-        notifyDataSetChanged()
-    }
+    inner class ReviewViewHolder(private val binding: ItemLibDetailReviewBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: CardItem) {
+            // 1. 기본 텍스트 정보
+            binding.itemReviewNameIv.text = item.creatorName
+            binding.itemReviewTextTv.text = item.memo
+            binding.itemReviewPageTv.text = "${item.page}pg"
 
-    fun notifyItemChangedAt(position: Int) {
-        notifyItemChanged(position)
+            // 2. 북마크 아이콘
+            binding.itemReviewBookmark.setImageResource(
+                if (item.isBookmarked) R.drawable.ic_bookmark_orange
+                else R.drawable.ic_bookmark_gray
+            )
+
+            // 3. 카드 이미지 (item_review_photo_iv)
+            // item.cardImage가 null이 아니고, URL이 있어야 함
+            val cardImageUrl = item.cardImage?.presignedGetUrl
+            if (!cardImageUrl.isNullOrEmpty()) {
+                binding.itemReviewPhotoIv.visibility = View.VISIBLE
+                Glide.with(itemView.context)
+                    .load(cardImageUrl)
+                    .placeholder(R.drawable.bg_round_8dp_gray300)
+                    .error(R.drawable.bg_round_8dp_gray300) // 에러 시 회색 배경
+                    .centerCrop()
+                    .into(binding.itemReviewPhotoIv)
+            } else {
+                // 이미지가 없으면 공간을 숨기거나 기본 이미지 처리
+                binding.itemReviewPhotoIv.visibility = View.GONE
+            }
+
+            // 4. [비동기] 작성자 프로필 이미지 가져오기
+            // 기본 이미지로 먼저 설정
+            binding.itemReviewProfileIv.setImageResource(R.drawable.bg_round_10dp_gray300)
+
+            // 뷰홀더에서 코루틴 실행 (API 호출)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = RetrofitClient.api().getUserProfile(item.creatorName)
+                    if (response.isSuccessful && response.body()?.isSuccess == true) {
+                        val userImageKey = response.body()?.result?.userImage?.s3Key // JSON 구조에 따라 경로 확인 필요
+
+                        // UI 업데이트는 Main 스레드에서
+                        withContext(Dispatchers.Main) {
+                            if (userImageKey != null) {
+                                Glide.with(itemView.context)
+                                    .load(userImageKey)
+                                    .circleCrop()
+                                    .placeholder(R.drawable.img_profile_default)
+                                    .into(binding.itemReviewProfileIv)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // 5. [비동기] 댓글 개수 가져오기
+            binding.itemReviewChatTv.text = "0" // 로딩 전 초기값
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = RetrofitClient.api().getCardComments(item.cardId.toLong())
+                    if (response.isSuccessful && response.body()?.isSuccess == true) {
+                        val count = response.body()?.result?.totalCount ?: 0
+                        withContext(Dispatchers.Main) {
+                            binding.itemReviewChatTv.text = count.toString()
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // 6. 클릭 리스너 (상세 이동)
+            itemView.setOnClickListener {
+                onItemClick(item)
+            }
+
+            // 7. 북마크 클릭
+            binding.itemReviewBookmark.setOnClickListener {
+                onBookmarkClick(item, bindingAdapterPosition)
+            }
+        }
     }
 }

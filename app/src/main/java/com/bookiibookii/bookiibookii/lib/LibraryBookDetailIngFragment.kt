@@ -4,40 +4,47 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.Data.LibReview
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailIngBinding
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class LibraryBookDetailIngFragment : Fragment() {
 
     private var _binding: FragmentLibBookDetailIngBinding? = null
     private val binding get() = _binding!!
 
-    // 데이터
     private var userBookId: Int = -1
+    private var groupId: Int = -1
     private var bookTitle = ""
     private var bookAuthor = ""
     private var bookCover = ""
+    private var hostName = ""
+    private var hostProfileUrl = ""
+    private var startDate = ""
 
     private lateinit var cardAdapter: LibraryReviewAdapter
+    private var originalList: List<CardItem> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             userBookId = it.getInt("userBookId", -1)
+            groupId = it.getInt("groupId", -1)
             bookTitle = it.getString("bookTitle", "") ?: ""
             bookAuthor = it.getString("bookAuthor", "") ?: ""
             bookCover = it.getString("bookCover", "") ?: ""
+            hostName = it.getString("hostName", "") ?: ""
+            hostProfileUrl = it.getString("hostProfileUrl", "") ?: ""
+            startDate = it.getString("startDate", "") ?: ""
         }
     }
 
@@ -48,45 +55,137 @@ class LibraryBookDetailIngFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         initView()
         initRecyclerView()
         initListeners()
-        fetchCardData() // 독서카드 목록 조회
 
-        // 뷰가 그려진 후 프로그레스 바 점 위치 계산 (기존 기능)
-        binding.readingProgressBar.post {
-            updateProgressDots()
-        }
+        // 데이터 호출
+        fetchCardList()  // 기존 fetchData 이름 변경 (명확하게)
+        fetchProgress()  // ★ [추가] 진행률 조회
     }
 
     private fun initView() {
-        binding.libDetailTitleTv.text = bookTitle
         binding.libDetailBookTitleTv.text = bookTitle
         binding.libDetailBookAuthorTv.text = bookAuthor
+        binding.libDetailTitleTv.text = bookTitle
+        binding.libDetailDateTv.text = "$startDate ~"
+
+        binding.libDetailBookTitleTv.isSelected = true
+        binding.libDetailBookAuthorTv.isSelected = true
+
         Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
+        binding.libDetailProfileTv.text = hostName
+        Glide.with(this)
+            .load(hostProfileUrl)
+            .placeholder(R.drawable.bg_circle_gray500)
+            .error(R.drawable.img_profile_default)
+            .circleCrop()
+            .into(binding.libDetailProfileIv)
 
-        // 프로그레스바 초기값 (더미 혹은 API 연동)
-        binding.readingProgressBar.progress = 79
-        binding.readingProgressBar.secondaryProgress = 81
-        binding.myPercent.text = "나의 독서율"
+        // 초기값 0%로 설정
+        updateProgressBar(0, 0)
 
-        // ★ [버튼 초기 상태]: '다 읽었어요' 보임, '후기 작성' 숨김
+        // 버튼 및 뷰 초기 상태
         binding.libWriteDoneBtn.visibility = View.VISIBLE
         binding.libWriteReviewBtn.visibility = View.GONE
-
-        // 카드 추가 버튼은 카드가 있을 때만 보이도록 초기엔 숨김 처리
-        binding.libReviewAddBtn.visibility = View.GONE
+        binding.groupDataExist.visibility = View.GONE
+        binding.layoutEmpty.visibility = View.GONE
     }
+
+    // ★ [핵심] 진행률 API 호출 및 반영
+    private fun fetchProgress() {
+        if (groupId == -1) return
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.api().getMyTrackers()
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val trackerList = response.body()?.result ?: emptyList()
+
+                    // 1. 현재 groupId와 일치하는 트래커 찾기
+                    val myTracker = trackerList.find { it.groupId == this@LibraryBookDetailIngFragment.groupId }
+
+                    // 2. 투게더(TOGETHER) 타입인지 확인 후 데이터 반영
+                    // (JSON 예시에는 tradeType이 DELIVERY로 되어있으나, 로직상 TOGETHER 체크 혹은 togetherDetail 존재 여부 확인)
+                    if (myTracker != null) {
+                        val detail = myTracker.togetherDetail
+                        if (detail != null) {
+                            val myRate = detail.myReadingRate
+                            val groupRate = detail.groupReadingRate
+
+                            // UI 업데이트
+                            updateProgressBar(myRate, groupRate)
+
+                            // 만약 이미 100%라면 버튼 상태 변경 등의 추가 로직 가능
+                            if (myRate >= 100) {
+                                binding.libWriteDoneBtn.visibility = View.GONE
+                                binding.libWriteReviewBtn.visibility = View.VISIBLE
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun updateProgressBar(myProgress: Int, groupProgress: Int) {
+        // 프로그레스 바 진행도
+        binding.readingProgressBar.progress = myProgress
+        binding.readingProgressBar.secondaryProgress = groupProgress
+
+        // 텍스트 업데이트
+        binding.myPercent.text = "$myProgress%"
+        binding.avgPercent.text = "$groupProgress%"
+
+        // 점(Dot) 위치 이동 (ConstraintLayout Guideline Percent)
+        val constraintLayout = binding.progressLayout
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(constraintLayout)
+
+        constraintSet.setGuidelinePercent(R.id.guideline_my_progress, myProgress / 100f)
+        constraintSet.setGuidelinePercent(R.id.guideline_group_progress, groupProgress / 100f)
+
+        constraintSet.applyTo(constraintLayout)
+    }
+
+    // 기존 fetchData -> fetchCardList로 이름 변경
+    private fun fetchCardList() {
+        if (groupId == -1) return
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.api().getGroupCards(groupId)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val result = response.body()?.result
+                    val apiCards = result?.cards ?: emptyList()
+
+                    originalList = apiCards
+                    cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
+                    binding.libDetailTotalTv.text = "${apiCards.size}개"
+
+                    if (apiCards.isNotEmpty()) {
+                        binding.groupDataExist.visibility = View.VISIBLE
+                        binding.layoutEmpty.visibility = View.GONE
+                    } else {
+                        binding.groupDataExist.visibility = View.GONE
+                        binding.layoutEmpty.visibility = View.VISIBLE
+                    }
+                    binding.libReviewAddBtn.visibility = View.VISIBLE
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    // ... (initRecyclerView, toggleBookmark, initListeners, dpToPx 등 기존 코드 유지) ...
 
     private fun initRecyclerView() {
         cardAdapter = LibraryReviewAdapter(
-            onItemClick = { clickedItem ->
+            onItemClick = { clickedCard ->
                 val detailFragment = LibraryCardDetailFragment().apply {
                     arguments = Bundle().apply {
-                        putLong("cardId", clickedItem.id)
-                        putBoolean("isMine", clickedItem.isMine)
-                        putString("writerName", clickedItem.userName)
+                        putLong("cardId", clickedCard.cardId.toLong())
+                        putBoolean("isMine", true)
+                        putString("writerName", clickedCard.creatorName)
                     }
                 }
                 parentFragmentManager.beginTransaction()
@@ -94,51 +193,70 @@ class LibraryBookDetailIngFragment : Fragment() {
                     .addToBackStack(null)
                     .commit()
             },
-            onBookmarkClick = { item, position ->
-                item.isBookmarked = !(item.isBookmarked ?: false)
-                cardAdapter.notifyItemChangedAt(position)
-            }
+            onBookmarkClick = { card, _ -> toggleBookmark(card) }
         )
-
         binding.libReviewListRv.layoutManager = GridLayoutManager(context, 2)
         binding.libReviewListRv.adapter = cardAdapter
         binding.libReviewListRv.addItemDecoration(LibDetailGridDecoration(2, dpToPx(10), dpToPx(12), false))
     }
 
+    private fun toggleBookmark(card: CardItem) {
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.api().toggleBookmark(card.cardId.toLong())
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val isBookmarked = response.body()?.result?.bookmarked ?: false
+                    val newList = originalList.toMutableList()
+                    val index = newList.indexOfFirst { it.cardId == card.cardId }
+                    if (index != -1) {
+                        newList[index] = newList[index].copy(isBookmarked = isBookmarked)
+                        originalList = newList
+                        cardAdapter.submitList(newList.sortedByDescending { it.createdAt })
+                    }
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
     private fun initListeners() {
         binding.libDetailBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
-        // [1] 다 읽었어요 -> 확인 -> 후기 작성 버튼 노출
+        binding.libDetailMoreIv.setOnClickListener {
+            LibraryGroupDeleteBottomSheet { showDeleteConfirmDialog() }.show(parentFragmentManager, "GroupDeleteSheet")
+        }
+
+        // [4번 요구사항 준비] 다 읽었어요 버튼 클릭 리스너 (아직 API 연결 전)
         binding.libWriteDoneBtn.setOnClickListener {
             CommonDialog(
                 context = requireContext(),
                 title = "독서 종료",
                 subtitle = "",
-                content = "이 책을 다 읽으셨나요?\n종료 후에는 되돌릴 수 없어요.",
+                content = "이 책을 다 읽으셨나요?\n확인을 누르면 후기를 작성할 수 있습니다.",
                 confirmBtnText = "확인",
-                confirmBtnColor = R.color.grey_900,
-                onConfirmClick = { finishReadingLogic() }
+                confirmBtnColor = R.color.pre_main,
+                onConfirmClick = {
+                    requestCompleteReading()
+                }
             ).show()
         }
 
-        // [2] 후기 작성하기 -> WriteReviewFragment 이동
         binding.libWriteReviewBtn.setOnClickListener {
-            val writeFragment = LibraryWriteReviewFragment().apply {
+            val fragment = LibraryWriteReviewFragment().apply {
                 arguments = Bundle().apply {
                     putInt("userBookId", userBookId)
+                    putInt("groupId", groupId)
                     putString("bookTitle", bookTitle)
                     putString("bookAuthor", bookAuthor)
                     putString("bookCover", bookCover)
                 }
             }
             parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, writeFragment)
+                .replace(R.id.fragmentContainer, fragment)
                 .addToBackStack(null)
                 .commit()
         }
 
-        // [3] 독서카드 추가
-        binding.libReviewAddBtn.setOnClickListener {
+        val goAdd = View.OnClickListener {
             val fragment = LibraryAddCardFragment().apply {
                 arguments = Bundle().apply { putInt("userBookId", userBookId) }
             }
@@ -147,84 +265,82 @@ class LibraryBookDetailIngFragment : Fragment() {
                 .addToBackStack(null)
                 .commit()
         }
+        binding.libReviewAddBtn.setOnClickListener(goAdd)
 
-        // 더보기 버튼 (삭제 등)
-        binding.libDetailMoreIv.setOnClickListener {
-            LibraryGroupDeleteBottomSheet { /* 삭제 로직 */ }.show(parentFragmentManager, "GroupDeleteSheet")
+        binding.libDetailLatelyTv.setOnClickListener { cardAdapter.submitList(originalList.sortedByDescending { it.createdAt }) }
+        binding.libDetailPageTv.setOnClickListener { cardAdapter.submitList(originalList.sortedBy { it.page }) }
+    }
+
+    private fun requestCompleteReading() {
+        if (groupId == -1) return
+
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.api().completeReading(groupId)
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val result = response.body()?.result
+
+                    Toast.makeText(context, "완독 처리가 완료되었습니다.", Toast.LENGTH_SHORT).show()
+
+                    // UI 업데이트: 버튼 교체
+                    binding.libWriteDoneBtn.visibility = View.GONE
+                    binding.libWriteReviewBtn.visibility = View.VISIBLE
+
+                    // UI 업데이트: 진행률 100%로 변경 (내 독서율만 100으로, 그룹은 유지하거나 서버값 사용)
+                    // 여기서는 시각적 피드백을 위해 내 독서율을 100으로 즉시 변경합니다.
+                    val currentGroupRate = binding.avgPercent.text.toString().replace("%", "").toIntOrNull() ?: 0
+                    updateProgressBar(100, currentGroupRate)
+
+                } else {
+                    Toast.makeText(context, "완독 처리에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    private fun finishReadingLogic() {
-        binding.readingProgressBar.progress = 100
-        binding.readingProgressBar.post { updateProgressDots() }
-
-        // ★ 버튼 교체 로직
-        binding.libWriteDoneBtn.visibility = View.GONE
-        binding.libWriteReviewBtn.visibility = View.VISIBLE
-
-        // 카드 추가 버튼도 활성화 (필요하다면)
-        binding.libReviewAddBtn.visibility = View.VISIBLE
-
-        val currentDate = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault()).format(Date())
-        val originalText = binding.libDetailDateTv.text.toString()
-        binding.libDetailDateTv.text = "$originalText $currentDate"
+    private fun showDeleteConfirmDialog() {
+        CommonDialog(
+            context = requireContext(),
+            title = "서재 내 그룹 삭제",
+            subtitle = bookTitle,
+            content = "그룹을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없고, 내 서재에서만 삭제됩니다.",
+            confirmBtnText = "삭제",
+            confirmBtnColor = R.color.ui_point_red,
+            onConfirmClick = { deleteGroup() }
+        ).show()
     }
 
-    private fun fetchCardData() {
+    private fun deleteGroup() {
         if (userBookId == -1) return
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().getBookCards(userBookId)
+                val response = RetrofitClient.api().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val result = response.body()?.result
-                    val apiCards = result?.cards ?: emptyList()
-
-                    val uiList = apiCards.map { card ->
-                        LibReview(
-                            id = card.cardId.toLong(),
-                            userName = "User",
-                            content = card.memo,
-                            page = card.page,
-                            reviewImageUri = card.cardImage?.presignedGetUrl,
-                            profileImage = null,
-                            isMine = true,
-                            isBookmarked = card.isBookmarked,
-                            date = card.createdAt // ★ Date 파라미터 매핑 필수
-                        )
-                    }
-                    cardAdapter.submitList(uiList)
-                    binding.libDetailTotalTv.text = "${uiList.size}개"
-
-                    if (uiList.isNotEmpty()) {
-                        binding.libReviewAddBtn.visibility = View.VISIBLE
-                    }
+                    Toast.makeText(context, "그룹이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    parentFragmentManager.popBackStack()
                 }
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
-    private fun updateProgressDots() {
-        if (_binding == null) return
-        val progressBar = binding.readingProgressBar
-        val width = progressBar.width.toFloat()
-        val max = progressBar.max.toFloat()
-        val marginPixel = dpToPx(1).toFloat()
-
-        val myProgress = progressBar.progress.toFloat()
-        val myDot = binding.myProgressDot
-        val myX = (width * (myProgress / max)) - marginPixel - myDot.width
-        myDot.translationX = myX.coerceAtLeast(0f)
-
-        val groupProgress = progressBar.secondaryProgress.toFloat()
-        val groupDot = binding.groupAvgDot
-        val groupX = (width * (groupProgress / max)) - marginPixel - groupDot.width
-        groupDot.translationX = groupX.coerceAtLeast(0f)
-    }
-
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+
+    override fun onResume() {
+        super.onResume()
+        hideBottomNavigation(true)
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        hideBottomNavigation(false)
         _binding = null
+    }
+
+    private fun hideBottomNavigation(shouldHide: Boolean) {
+        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
+        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
     }
 }
