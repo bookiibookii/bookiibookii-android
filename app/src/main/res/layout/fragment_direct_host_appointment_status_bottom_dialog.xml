@@ -79,11 +79,11 @@
                 android:id="@+id/tv_appointment_datetime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/pretendard_regular"
+                android:includeFontPadding="false"
                 android:text="2026. 01. 19. 14:00 "
                 android:textColor="@color/pre_main"
-                android:textSize="14sp"
-                android:fontFamily="@font/pretendard_regular"
-                android:includeFontPadding="false" />
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/tv_appointment_place"

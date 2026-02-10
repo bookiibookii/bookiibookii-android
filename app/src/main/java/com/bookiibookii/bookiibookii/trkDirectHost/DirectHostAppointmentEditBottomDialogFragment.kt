@@ -47,7 +47,7 @@ class DirectHostAppointmentEditBottomDialogFragment : BottomSheetDialogFragment(
                         UiState.Idle -> Unit
 
                         UiState.Loading -> {
-                            // 그대로 둠
+
                         }
 
                         is UiState.Success -> {

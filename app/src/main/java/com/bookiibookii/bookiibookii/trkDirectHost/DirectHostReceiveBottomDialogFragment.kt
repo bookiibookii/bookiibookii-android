@@ -10,7 +10,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectHostReceiveBottomDialogBinding
+import com.bookiibookii.bookiibookii.trkDirectHost.DateTimeUtils.formatMeetingTime
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class DirectHostReceiveBottomDialogFragment : BottomSheetDialogFragment() {
@@ -34,6 +36,35 @@ class DirectHostReceiveBottomDialogFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        vm.loadMeeting(groupId)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.meetingState.collectLatest { state ->
+                    when (state) {
+                        UiState.Idle -> Unit
+
+                        UiState.Loading -> {
+                            binding.tvAppointmentDatetime.text = "-"
+                            binding.tvAppointmentPlace.text = "-"
+                        }
+
+                        is UiState.Success -> {
+                            val dto = state.data
+                            binding.tvAppointmentDatetime.text = formatMeetingTime(dto.meetingTime)
+
+                            binding.tvAppointmentPlace.text = dto.meetingPlace ?: "-"
+                        }
+
+                        is UiState.Error -> {
+                            binding.tvAppointmentDatetime.text = "-"
+                            binding.tvAppointmentPlace.text = "-"
+                        }
+                    }
+                }
+            }
+        }
 
         binding.btnNoReceive.setOnClickListener{
             DirectHostReceiveIssueDialogFragment

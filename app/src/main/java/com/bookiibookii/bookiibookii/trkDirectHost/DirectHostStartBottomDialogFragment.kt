@@ -52,8 +52,8 @@ class DirectHostStartBottomDialogFragment : BottomSheetDialogFragment() {
                         is UiState.Success -> {
                             val dto = state.data
 
-                            binding.tvStartDate.text = dto.startDate ?: "-"
-                            binding.tvEndDate.text = dto.endDate ?: "-"
+                            binding.tvStartDate.text = DateTimeUtils.formatMeetingTime(dto.startDate)
+                            binding.tvEndDate.text = DateTimeUtils.formatMeetingTime(dto.endDate)
                         }
 
                         is UiState.Error -> {

@@ -24,6 +24,8 @@ class HostActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHostBinding
     private val vm: HostViewModel by viewModels()
 
+    private var currentIsVerified: Boolean? = null
+
     private var didAutoShowSheet = false
 
     private val groupId: Long by lazy {
@@ -123,6 +125,7 @@ class HostActivity : AppCompatActivity() {
                         android.util.Log.e("HOST", "loadTracker error=${state.errorMessage}")
 
                         binding.cardWidget.isEnabled = false
+                        currentIsVerified = null
                         currentStatus = TrackerStatus.UNKNOWN
                         vm.setPhaseFromApiStatus(null)
                         return@collectLatest
@@ -131,6 +134,7 @@ class HostActivity : AppCompatActivity() {
                     val dto = state.data ?: return@collectLatest
 
                     currentStatus = TrackerStatus.from(dto.trackerStatus)
+                    currentIsVerified = dto.deliveryInfo?.isVerified
 
                     binding.cardWidget.isEnabled = true
 
@@ -182,7 +186,15 @@ class HostActivity : AppCompatActivity() {
             TrackerStatus.SHIPPING_TO_GUEST,
             TrackerStatus.RECEIVED -> HostShippingStatusBottomDialogFragment.newInstance(groupId)
 
-            TrackerStatus.GUEST_READING,
+            TrackerStatus.GUEST_READING -> {
+                val verified = currentIsVerified ?: false
+                if (!verified) {
+                    HostShippingStatusBottomDialogFragment.newInstance(groupId)
+                } else {
+                    HostReadingStatusBottomDialogFragment.newInstance(groupId)
+                }
+            }
+
             TrackerStatus.GUEST_EXTENSION-> HostExtendRequestBottomDialogFragment.newInstance(groupId)
 
             TrackerStatus.GUEST_DONE -> HostReadingDoneBottomDialogFragment.newInstance(groupId)

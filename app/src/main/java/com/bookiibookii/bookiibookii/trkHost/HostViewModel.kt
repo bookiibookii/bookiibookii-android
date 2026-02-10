@@ -71,6 +71,11 @@ class HostViewModel : ViewModel() {
     val receiveState: StateFlow<UiState<TrackerReceiveResponseDto>> =
         _receiveState.asStateFlow()
 
+    private val _confirmReceptionState =
+        MutableStateFlow<UiState<TrackerDetailResponseDto>>(UiState.Idle)
+    val confirmReceptionState: StateFlow<UiState<TrackerDetailResponseDto>> = _confirmReceptionState
+
+
     init {
         recomputeSteps()
     }
@@ -251,6 +256,7 @@ class HostViewModel : ViewModel() {
         }
     }
 
+
     fun patchTrackerReceiveWithImage(
         groupId: Long,
         imageBytes: ByteArray,
@@ -302,6 +308,31 @@ class HostViewModel : ViewModel() {
             }
         }
     }
+
+    fun patchConfirmReception(groupId: Long) {
+        viewModelScope.launch {
+            _confirmReceptionState.value = UiState.Loading
+
+            try {
+                val body = RetrofitClient.api().patchConfirmReception(groupId)
+
+                if (!body.isSuccess || body.result == null) {
+                    _confirmReceptionState.value =
+                        UiState.Error(body.message ?: "confirm reception API error")
+                    return@launch
+                }
+
+                val dto = body.result
+                _confirmReceptionState.value = UiState.Success(dto)
+
+                loadTracker(groupId)
+
+            } catch (e: Exception) {
+                _confirmReceptionState.value = UiState.Error(e.message ?: "network error")
+            }
+        }
+    }
+
 
     private suspend fun uploadToPresignedUrl(
         putUrl: String,

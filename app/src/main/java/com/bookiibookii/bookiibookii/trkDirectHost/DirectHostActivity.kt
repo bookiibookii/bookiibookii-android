@@ -20,7 +20,7 @@ class DirectHostActivity : AppCompatActivity() {
     private val vm: DirectHostViewModel by viewModels()
 
     private val groupId: Long by lazy {
-        intent.getLongExtra("groupId", -1L)
+        intent.getLongExtra("group_id", -1L)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -160,7 +160,9 @@ class DirectHostActivity : AppCompatActivity() {
     private fun parseAnyDateTime(raw: String): LocalDateTime? {
         return try {
             if (raw.endsWith("Z")) {
-                java.time.OffsetDateTime.parse(raw).toLocalDateTime()
+                java.time.OffsetDateTime.parse(raw)
+                    .atZoneSameInstant(java.time.ZoneId.systemDefault())
+                    .toLocalDateTime()
             } else {
                 LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
             }

@@ -165,7 +165,7 @@ class DirectHostExtendPeriodDialogFragment : DialogFragment() {
 
     private fun displayDate(raw: String?): String {
         if (raw.isNullOrBlank()) return "-"
-        return raw.take(10) // "YYYY-MM-DD" 형태면 안전
+        return raw.take(10)
     }
 
     private fun calcExtendedDate(endDateRaw: String?, days: Int): String {
