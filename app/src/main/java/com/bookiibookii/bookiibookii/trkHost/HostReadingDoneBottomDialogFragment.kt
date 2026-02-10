@@ -37,9 +37,7 @@ class HostReadingDoneBottomDialogFragment : BottomSheetDialogFragment() {
                 }
             )
 
-            val next = HostShippedBottomDialogFragment.newInstance(groupId)
             dismiss()
-            next.show(parentFragmentManager, HostShippedBottomDialogFragment.TAG)
         }
     }
 

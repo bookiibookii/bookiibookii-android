@@ -25,9 +25,7 @@ class GuestReadingDoneBottomDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnGoCard.setOnClickListener{
-            val next = GuestShippedBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, GuestShippedBottomDialogFragment.TAG)
+            //Todo: 독서카드
         }
     }
 

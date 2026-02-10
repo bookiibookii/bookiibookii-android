@@ -71,6 +71,7 @@
                     android:textColor="@color/grey_900"/>
 
                 <TextView
+                    android:id="@+id/tv_receiver_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="000"
@@ -94,6 +95,7 @@
                     android:textColor="@color/grey_900" />
 
                 <TextView
+                    android:id="@+id/tv_receiver_phone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"

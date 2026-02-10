@@ -86,8 +86,8 @@
         android:layout_marginTop="16dp"
         android:text="확인"
         android:textSize="15sp"
-        android:textColor="@color/grey_100"
-        android:backgroundTint="@color/grey_900"
+        android:textColor="@color/grey_500"
+        android:backgroundTint="@color/grey_200"
         app:cornerRadius="16dp"
         android:fontFamily="@font/pretendard_medium" />
 

@@ -18,6 +18,7 @@ import com.bookiibookii.bookiibookii.trkHost.TrackerStatus
 import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class GuestActivity : AppCompatActivity() {
@@ -68,7 +69,12 @@ class GuestActivity : AppCompatActivity() {
         }
 
         binding.cardWidget.setOnClickListener {
-            showSheetOnceForStatus(currentStatus)
+            vm.loadTracker(groupId)
+
+            lifecycleScope.launch {
+                vm.uiState.first { !it.isLoading }
+                showSheetOnceForStatus(currentStatus)
+            }
         }
 
             lifecycleScope.launch {
@@ -126,8 +132,8 @@ class GuestActivity : AppCompatActivity() {
     private fun createSheetForStatus(status: TrackerStatus): BottomSheetDialogFragment {
         return when (status) {
             TrackerStatus.READY,
-            TrackerStatus.HOST_READING -> GuestReadingStatusBottomDialogFragment()
-            TrackerStatus.HOST_EXTENSION -> GuestExtendRequestBottomDialogFragment()
+            TrackerStatus.HOST_READING -> GuestReadingStatusBottomDialogFragment.newInstance(groupId)
+            TrackerStatus.HOST_EXTENSION -> GuestExtendRequestBottomDialogFragment.newInstance(groupId)
             TrackerStatus.HOST_DONE -> GuestReadingDoneBottomDialogFragment()
             TrackerStatus.SHIPPING_TO_GUEST -> GuestShippedBottomDialogFragment.newInstance(groupId)
 
@@ -136,7 +142,7 @@ class GuestActivity : AppCompatActivity() {
             TrackerStatus.GUEST_EXTENSION-> GuestReadingBottomDialogFragment.newInstance(groupId)
 
             TrackerStatus.GUEST_DONE -> GuestShippingBottomDialogFragment.newInstance(groupId)
-            TrackerStatus.SHIPPING_TO_HOST -> GuestShippingStatusBottomDialogFragment()
+            TrackerStatus.SHIPPING_TO_HOST -> GuestShippingStatusBottomDialogFragment.newInstance(groupId)
 
             TrackerStatus.RETURNED,
             TrackerStatus.COMPLETED,

@@ -49,58 +49,58 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingStart="16dp"
-            android:paddingEnd="16dp"
             android:paddingTop="14dp"
+            android:paddingEnd="16dp"
             android:paddingBottom="14dp">
 
             <TextView
                 android:id="@+id/tv_courier"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/pretendard_regular"
                 android:text="CJ대한통운"
                 android:textColor="@color/grey_900"
                 android:textSize="14sp"
-                android:fontFamily="@font/pretendard_regular"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/tv_tracking_num"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:fontFamily="@font/pretendard_regular"
                 android:text="1234123412"
                 android:textColor="@color/pre_main"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:fontFamily="@font/pretendard_regular"
+                app:layout_constraintBottom_toBottomOf="@id/tv_courier"
                 app:layout_constraintStart_toEndOf="@id/tv_courier"
-                app:layout_constraintTop_toTopOf="@id/tv_courier"
-                app:layout_constraintBottom_toBottomOf="@id/tv_courier"/>
+                app:layout_constraintTop_toTopOf="@id/tv_courier" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_status"
                 android:layout_width="wrap_content"
                 android:layout_height="28dp"
-                android:text="수령 전"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:minHeight="0dp"
-                android:minWidth="0dp"
+                android:clickable="false"
+                android:enabled="false"
+                android:focusable="false"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
-                android:clickable="false"
-                android:focusable="false"
-                android:enabled="false"
-                app:cornerRadius="12dp"
-                app:backgroundTint="@color/pre_main_pale"
+                android:text="수령 전"
                 android:textColor="@color/pre_main"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/pre_main_pale"
+                app:cornerRadius="12dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
