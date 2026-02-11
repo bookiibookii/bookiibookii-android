@@ -10,12 +10,14 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeMateBinding
+import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.home.notification.ui.NotificationActivity
 import kotlinx.coroutines.launch
 
@@ -37,6 +39,10 @@ class HomeFragment : Fragment() {
         // val intent = Intent(requireContext(), GroupDetailActivity::class.java)
         // intent.putExtra("groupId", item.groupId)
         // startActivity(intent)
+    }
+
+    private val mateAdapter = MateRecommendAdapter { item ->
+        // TODO: userId로 프로필/메이트 상세 이동
     }
 
     private val api by lazy { RetrofitClient.api() }
@@ -71,6 +77,15 @@ class HomeFragment : Fragment() {
             val spacing = resources.getDimensionPixelSize(R.dimen.spacing_12)
             addItemDecoration(GridSpacingItemDecoration(3, spacing))
         }
+
+        mateBinding.rvMate.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            adapter = mateAdapter
+
+            val spacing = resources.getDimensionPixelSize(R.dimen.spacing_12)
+            addItemDecoration(HorizontalSpacingItemDecoration(spacing))
+        }
+
         // empty 카드 문구 세팅
         setExchangeEmptyTexts()
         setGroupEmptyTexts()
@@ -86,6 +101,9 @@ class HomeFragment : Fragment() {
         groupBinding.btnRefresh.setOnClickListener {
             loadRecommendedGroups(refresh = true)
         }
+
+        // 부키메이트 추천 최초 로드
+        loadRecommendedBookmates()
     }
 
     override fun onDestroyView() {
@@ -124,7 +142,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun applyMateState(hasData: Boolean) {
-        mateBinding.includeMateCard.root.visibility = if (hasData) View.VISIBLE else View.GONE
+        mateBinding.rvMate.visibility = if (hasData) View.VISIBLE else View.GONE
         mateBinding.includeMateEmpty.root.visibility = if (hasData) View.GONE else View.VISIBLE
     }
 
@@ -151,15 +169,16 @@ class HomeFragment : Fragment() {
 
     private fun bindEmptyActions() {
         exchangeBinding.includeExchangeEmpty.btnHomeAction.setOnClickListener {
-            // TODO: GRP-001 이동
+            (activity as? MainActivity)?.moveToGroupTab()
         }
 
         groupBinding.includeGroupEmpty.btnHomeAction.setOnClickListener {
-            // TODO: GRP-020 이동
+            val intent = Intent(requireContext(), GroupGenerationActivity::class.java)
+            startActivity(intent)
         }
 
         mateBinding.includeMateEmpty.btnHomeAction.setOnClickListener {
-            // TODO: GRP-001 이동
+            (activity as? MainActivity)?.moveToGroupTab()
         }
     }
 
@@ -191,6 +210,49 @@ class HomeFragment : Fragment() {
             }.onFailure {
                 groupAdapter.submitList(emptyList())
                 applyGroupState(false)
+            }
+        }
+    }
+
+    private fun loadRecommendedBookmates() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                api.getRecommendedBookmates()
+            }.onSuccess { response ->
+                if (!response.isSuccessful) {
+                    mateAdapter.submitList(emptyList())
+                    applyMateState(false)
+                    return@onSuccess
+                }
+
+                //TODO: 추후 로그 삭제
+                android.util.Log.d("MATE_API", "http=${response.code()} ok=${response.isSuccessful}")
+
+                val body = response.body()
+
+                //TODO: 추후 로그 삭제
+                android.util.Log.d("MATE_API", "body=$body")
+                android.util.Log.d("MATE_API", "isSuccess=${body?.isSuccess} code=${body?.code}")
+                android.util.Log.d("MATE_API", "resultSize=${body?.result?.size} result=${body?.result}")
+
+                if (body?.isSuccess == false && body.code == "USERTAG404") {
+                    mateAdapter.submitList(emptyList())
+                    applyMateState(false)
+                    return@onSuccess
+                }
+
+                val list = body?.result.orEmpty().take(5)
+
+                if (list.isNotEmpty()) {
+                    mateAdapter.submitList(list)
+                    applyMateState(true)
+                } else {
+                    mateAdapter.submitList(emptyList())
+                    applyMateState(false)
+                }
+            }.onFailure {
+                mateAdapter.submitList(emptyList())
+                applyMateState(false)
             }
         }
     }

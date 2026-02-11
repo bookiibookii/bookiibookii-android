@@ -71,6 +71,10 @@ class MainActivity : AppCompatActivity() {
         replaceFragment(fragment)
     }
 
+    fun moveToGroupTab() {
+        selectTab(NavTab.GROUP, GroupFragment())
+    }
+
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
