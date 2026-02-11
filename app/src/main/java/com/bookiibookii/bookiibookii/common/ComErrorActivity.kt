@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.google.android.material.button.MaterialButton
 
 class ComErrorActivity : AppCompatActivity() {
@@ -100,12 +101,15 @@ class ComErrorActivity : AppCompatActivity() {
     private fun bindActions(type: Int) {
         // 다시 시도 (10/11에서만 노출)
         btnTop.setOnClickListener {
+            AuthInterceptor.unlockRouting()
+            ComRetryBus.emitRetry()
             setResult(RESULT_RETRY)
             finish()
         }
 
         // 하단 버튼: 이전으로(10/11) or 메인으로(12/13)
         btnBottom.setOnClickListener {
+            AuthInterceptor.unlockRouting()
             when (type) {
                 TYPE_NO_PERMISSION, TYPE_GROUP_DELETED -> setResult(RESULT_GO_MAIN)
                 else -> setResult(Activity.RESULT_CANCELED)

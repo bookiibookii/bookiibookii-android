@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.onboarding.login
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -17,6 +16,7 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.LoginRequest
 import com.bookiibookii.bookiibookii.data.model.MypageResult
@@ -25,7 +25,6 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.material.card.MaterialCardView
 import com.kakao.sdk.auth.model.OAuthToken
-import com.kakao.sdk.common.KakaoSdk.keyHash
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
@@ -39,65 +38,63 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // TODO: 온보딩까지 구현 후 삭제
-        Log.d("ONB_FLOW", "token=${hasAccessToken()} done=${isOnboardingDone()}")
+        // 공통 에러/로그아웃 라우팅 잠금 해제
+        AuthInterceptor.unlockRouting()
 
         setContentView(R.layout.activity_login)
-        RetrofitClient.init(this)
-        // =================================================================
-        // [TEST MODE] 하드코딩 토큰 주입 & 메인 강제 이동
-        // =================================================================
-//        Log.d("TEST_MODE", "🛠️ 테스트 모드 가동: 토큰 주입 중...")
-//
-//        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-//        prefs.edit().apply {
-//            // 1. 개발자에게 받은 토큰을 저장소에 강제로 넣습니다.
-//            putString("access_token", TestTokenConfig.TEST_ACCESS_TOKEN)
-//            putString("refresh_token", TestTokenConfig.TEST_REFRESH_TOKEN)
-//            putInt("user_id", TestTokenConfig.TEST_USER_ID)
-//
-//            // 2. 온보딩도 끝난 것으로 처리합니다.
-//            putBoolean("onboarding_done", true)
-//
-//            // 저장 실행
-//            apply()
-//        }
-//
-//        Log.d("TEST_MODE", "🚀 토큰 주입 완료. 메인으로 이동합니다.")
-//        moveToMain()
-//        return // ★ 중요: 아래 기존 로그인 로직이 실행되지 않도록 여기서 종료
-//         =================================================================
 
-        // 1. 자동 로그인 체크 (토큰이 이미 있으면 메인으로)
-        if (hasAccessToken()) {
-            if (isOnboardingDone()) {
-                moveToMain()
-            } else {
-                moveToOnboarding()
-            }
-            return
-        }
+        // TODO: 추후 로그 삭제 (온보딩/토큰 분기 디버깅용)
+        Log.d(
+            "ONB_FLOW",
+            "token=${TokenManager.hasAccessToken(this)} done=${TokenManager.isOnboardingDone(this)}"
+        )
 
-        // 2. Credential Manager 초기화
+        // 자동 로그인 분기
+        if (routeAutoLoginIfPossible()) return
+
         credentialManager = CredentialManager.create(this)
 
-        setupLoginButtons()
-        Log.e("APP_CHECK", "MyApplication onCreate called")
+        bindLoginButtons()
 
-        Log.e("KeyHash_Check", "내 앱의 현재 키 해시: $keyHash")
+        // TODO: 추후 로그 삭제 (카카오 키해시 확인용)
+        Log.e("KeyHash_Check", "내 앱의 현재 키 해시: ${com.kakao.sdk.common.KakaoSdk.keyHash}")
     }
 
-    private fun setupLoginButtons() {
-        val kakaoButton = findViewById<View>(R.id.btn_kakao_login)
+    private fun routeAutoLoginIfPossible(): Boolean {
+        if (!TokenManager.hasAccessToken(this)) return false
 
-        // [수정] 람다 안에서 함수 호출
-        setupButtonUI(kakaoButton, "카카오로 시작하기", R.drawable.ic_kakao, R.color.kakao, R.color.grey_900) {
+        if (TokenManager.isOnboardingDone(this)) {
+            moveToMain()
+        } else {
+            moveToOnboarding()
+        }
+        return true
+    }
+
+    private fun bindLoginButtons() {
+        val kakaoButton = findViewById<View>(R.id.btn_kakao_login)
+        val googleButton = findViewById<View>(R.id.btn_google_login)
+
+        setupButtonUI(
+            root = kakaoButton,
+            text = "카카오로 시작하기",
+            iconRes = R.drawable.ic_kakao,
+            bgRes = R.color.kakao,
+            textRes = R.color.grey_900
+        ) {
+            if (isNavigating) return@setupButtonUI
+            showLoadingState(true)
             loginToKakao()
         }
 
-        // 구글 버튼은 기존 그대로 둠
-        val googleButton = findViewById<View>(R.id.btn_google_login)
-        setupButtonUI(googleButton, "구글로 시작하기", R.drawable.ic_google, R.color.grey_100, R.color.grey_900) {
+        setupButtonUI(
+            root = googleButton,
+            text = "구글로 시작하기",
+            iconRes = R.drawable.ic_google,
+            bgRes = R.color.grey_100,
+            textRes = R.color.grey_900
+        ) {
+            if (isNavigating) return@setupButtonUI
             showLoadingState(true)
             signInWithGoogle()
         }
@@ -105,12 +102,11 @@ class LoginActivity : AppCompatActivity() {
 
     private fun signInWithGoogle() {
         val webClientId = getString(R.string.web_client_id)
-        Log.d("Login", "Using Web Client ID: $webClientId") // ID 확인용 로그
 
         val googleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false) // 이전에 로그인한 적 없는 계정도 표시
+            .setFilterByAuthorizedAccounts(false)
             .setServerClientId(webClientId)
-            .setAutoSelectEnabled(true) // 가능한 경우 자동 선택
+            .setAutoSelectEnabled(true)
             .build()
 
         val request = GetCredentialRequest.Builder()
@@ -119,95 +115,127 @@ class LoginActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                Log.d("Login", "getCredential 요청 시작")
                 val result: GetCredentialResponse = credentialManager.getCredential(
                     request = request,
                     context = this@LoginActivity
                 )
-                Log.d("Login", "getCredential 응답 받음")
-                handleSignIn(result)
+                handleGoogleSignIn(result)
             } catch (e: GetCredentialException) {
+                // TODO: 추후 로그 삭제 (Credential Manager 예외 확인용)
                 Log.e("Login", "Credential Manager 에러: ${e.message}", e)
                 showLoadingState(false)
             } catch (e: Exception) {
+                // TODO: 추후 로그 삭제 (예상치 못한 예외 확인용)
                 Log.e("Login", "예상치 못한 에러", e)
                 showLoadingState(false)
             }
         }
     }
-    private fun handleSignIn(result: GetCredentialResponse) {
+
+    private fun handleGoogleSignIn(result: GetCredentialResponse) {
         val credential = result.credential
 
-        // 구글 인증 정보인지 확인
-        if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-            try {
-                // 토큰 추출
-                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                val idToken = googleIdTokenCredential.idToken
+        val isGoogleToken =
+            credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 
-                Log.d("Login", "Google ID Token 획득 성공: $idToken")
-
-                //백엔드로 정보 전달
-                // [수정 전] sendTokenToBackend(idToken)
-                // [수정 후] "GOOGLE" 이라고 명찰을 달아서 보냄
-                sendTokenToBackend("GOOGLE", idToken)
-            } catch (e: Exception) {
-                Log.e("Login", "인증 정보 파싱 실패", e)
-                showLoadingState(false)
-            }
-        } else {
+        if (!isGoogleToken) {
+            // TODO: 추후 로그 삭제 (인증 타입 분기 확인용)
             Log.e("Login", "알 수 없는 인증 타입: ${credential.type}")
+            showLoadingState(false)
+            return
+        }
+
+        try {
+            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+            val idToken = googleIdTokenCredential.idToken
+            sendTokenToBackend(socialType = "GOOGLE", token = idToken)
+        } catch (e: Exception) {
+            // TODO: 추후 로그 삭제 (구글 토큰 파싱 실패 확인용)
+            Log.e("Login", "인증 정보 파싱 실패", e)
             showLoadingState(false)
         }
     }
 
-    // [수정] socialType 파라미터 추가
-    private fun sendTokenToBackend(socialType: String, token: String) {
+    private fun loginToKakao() {
+        val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
+            if (error != null) {
+                // TODO: 추후 로그 삭제 (카카오 로그인 실패 원인 확인용)
+                Log.e("KakaoLogin", "카카오 로그인 실패", error)
+                showLoadingState(false)
+            } else if (token != null) {
+                sendTokenToBackend("KAKAO", token.accessToken)
+            } else {
+                showLoadingState(false)
+            }
+        }
 
-        Log.e("CheckToken", "=========================================")
-        Log.e("CheckToken", "[보내는 타입]: $socialType") // 여기가 GOOGLE 또는 KAKAO로 찍힘
-        Log.e("CheckToken", "[보내는 토큰]: $token")
-        Log.e("CheckToken", "=========================================")
+        if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
+            UserApiClient.instance.loginWithKakaoTalk(this) { token, error ->
+                if (error != null) {
+                    // TODO: 추후 로그 삭제 (카카오톡 앱 로그인 실패 원인 확인용)
+                    Log.e("KakaoLogin", "카카오톡 앱 로그인 실패", error)
+
+                    if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
+                        showLoadingState(false)
+                        return@loginWithKakaoTalk
+                    }
+
+                    UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
+                    return@loginWithKakaoTalk
+                }
+
+                if (token != null) {
+                    sendTokenToBackend(socialType = "KAKAO", token = token.accessToken)
+                } else {
+                    showLoadingState(false)
+                }
+            }
+        } else {
+            UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
+        }
+    }
+
+    private fun sendTokenToBackend(socialType: String, token: String) {
+        // TODO: 추후 로그 삭제 (서버 전송 파라미터 확인용)
+        Log.d("CheckToken", "[보내는 타입]=$socialType, tokenLength=${token.length}")
 
         lifecycleScope.launch {
             try {
-                // "GOOGLE" 대신 받아온 socialType 변수를 넣습니다.
                 val request = LoginRequest(socialType = socialType, token = token)
                 val response = RetrofitClient.api().postLogin(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
-                    Log.d("Login", "로그인 메시지 : $response")
                     if (result != null) {
-                        Log.d("Login", "$socialType 로그인 성공! UserID: ${result.userId}")
-
-                        saveTokens(
+                        TokenManager.saveTokens(
+                            this@LoginActivity,
                             result.accessToken,
                             result.refreshToken,
-                            result.userId,
-                            result.onboardingDone
+                            result.userId
                         )
+                        TokenManager.saveOnboardingDone(this@LoginActivity, result.onboardingDone)
 
-                       onLoginSuccess()
-
+                        onLoginSuccess()
                     } else {
                         showLoadingState(false)
                     }
                 } else {
+                    // TODO: 추후 로그 삭제 (서버 응답 실패 디버깅용)
                     Log.e("Login", "백엔드 에러: ${response.code()} ${response.errorBody()?.string()}")
                     showLoadingState(false)
                 }
             } catch (e: Exception) {
+                // TODO: 추후 로그 삭제 (네트워크/예외 디버깅용)
                 Log.e("Login", "네트워크 오류", e)
                 showLoadingState(false)
             }
         }
     }
 
-    // --- 유틸리티 함수들 ---
-
     private fun onLoginSuccess() {
-        if (isOnboardingDone()) {
+        isNavigating = true
+        if (TokenManager.isOnboardingDone(this)) {
             moveToMain()
         } else {
             moveToOnboarding()
@@ -216,17 +244,17 @@ class LoginActivity : AppCompatActivity() {
 
     private fun showLoadingState(isLoading: Boolean) {
         val buttonsGroup = findViewById<Group>(R.id.group_login_buttons)
-
-        if (isLoading) {
-            buttonsGroup.visibility = View.GONE
-            // progressBar?.visibility = View.VISIBLE
-        } else {
-            buttonsGroup.visibility = View.VISIBLE
-            // progressBar?.visibility = View.GONE
-        }
+        buttonsGroup.visibility = if (isLoading) View.GONE else View.VISIBLE
     }
 
-    private fun setupButtonUI(root: View, text: String, iconRes: Int, bgRes: Int, textRes: Int, onClick: () -> Unit) {
+    private fun setupButtonUI(
+        root: View,
+        text: String,
+        iconRes: Int,
+        bgRes: Int,
+        textRes: Int,
+        onClick: () -> Unit
+    ) {
         val card = root as MaterialCardView
         val tv = root.findViewById<TextView>(R.id.tv_login_text)
         val iv = root.findViewById<ImageView>(R.id.iv_login_icon)
@@ -236,100 +264,33 @@ class LoginActivity : AppCompatActivity() {
         iv.setImageResource(iconRes)
         card.setCardBackgroundColor(getColor(bgRes))
 
-        root.setOnClickListener {
-            if (!isNavigating) onClick()
-        }
+        root.setOnClickListener { onClick() }
     }
 
-    private fun saveTokens(access: String, refresh: String, userId: Int, onboardingDone: Boolean) {
-        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        prefs.edit().apply {
-            putString("access_token", access)
-            putString("refresh_token", refresh)
-            putInt("user_id", userId)
-            putBoolean("onboarding_done", onboardingDone)
-            apply()
-        }
-    }
-
-    private fun isOnboardingDone(): Boolean {
-        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        return prefs.getBoolean("onboarding_done", false)
-    }
-
-    private fun hasAccessToken(): Boolean {
-        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        return !prefs.getString("access_token", null).isNullOrEmpty()
-    }
-
-    // 여기부터 ~~~~~
-
-    private fun loginToKakao() {
-        showLoadingState(true) // 로딩 시작
-
-        // 공통 콜백 함수
-        val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
-            if (error != null) {
-                Log.e("KakaoLogin", "카카오 로그인 실패", error)
-                showLoadingState(false)
-            } else if (token != null) {
-                Log.i("KakaoLogin", "카카오 로그인 성공 -> 서버 전송")
-
-                // ★★★ 여기가 핵심! 카카오 토큰을 서버로 보냄 ★★★
-                sendTokenToBackend("KAKAO", token.accessToken)
-            }
-        }
-
-        // 카카오톡 앱이 있으면 앱으로, 없으면 웹으로 로그인
-        if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
-            UserApiClient.instance.loginWithKakaoTalk(this) { token, error ->
-                if (error != null) {
-                    Log.e("KakaoLogin", "카카오톡 앱 로그인 실패", error)
-
-                    // 사용자가 취소했을 때
-                    if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
-                        showLoadingState(false)
-                        return@loginWithKakaoTalk
-                    }
-                    // 실패하면 웹으로 재시도
-                    UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
-                } else if (token != null) {
-                    Log.i("KakaoLogin", "카카오톡 앱 로그인 성공")
-
-                    // ★★★ 앱 로그인 성공 시 서버 전송 ★★★
-                    sendTokenToBackend("KAKAO", token.accessToken)
-                }
-            }
-        } else {
-            UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
-        }
-    }
-
-    // 메인 화면으로 이동하는 함수
     private fun moveToMain() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
         startActivity(intent)
         finish()
     }
 
     private fun moveToOnboarding() {
-        val intent = Intent(this, OnbProfileActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val intent = Intent(this, OnbProfileActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
         startActivity(intent)
         finish()
     }
-//    object TestTokenConfig {
-//        // 백엔드 개발자에게 받은 토큰을 여기에 붙여넣으세요 (공백 주의)
-//        const val TEST_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwidHlwZSI6ImFjY2VzcyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzcwNjg5NDUyLCJleHAiOjE3NzA2OTEyNTJ9.Mgm81NRBGDy-er_-P8wrR7roV-WkmgY0JsGSLu_GLIg"
-//        const val TEST_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NzA2MjU5MzEsImV4cCI6MTc3MTgzNTUzMX0.V_OEoWL4jJt2JQ36ZwVzn7ypPd7P6Z8ioRXbPYnH23g"
-//        const val TEST_USER_ID = 1 // 테스트할 유저 ID (임의로 1 또는 실제 ID)
-//    }
 
     data class ProfileResponse(
         val isSuccess: Boolean,
         val code: String,
         val message: String,
-        val result: MypageResult? // 기존 MypageResult를 재사용하거나 아래 구조로 수정
+        val result: MypageResult?
     )
 }

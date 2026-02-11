@@ -1,4 +1,5 @@
 package com.bookiibookii.bookiibookii.onboarding.login
+
 import android.app.Application
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
