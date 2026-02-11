@@ -10,10 +10,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestStartBottomDialogBinding
-import com.bookiibookii.bookiibookii.trkDirectHost.DateTimeUtils
+import com.bookiibookii.bookiibookii.trkHost.TrackerDateUtil.prettyDate
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 class DirectGuestStartBottomDialogFragment : BottomSheetDialogFragment() {
 
@@ -52,8 +55,13 @@ class DirectGuestStartBottomDialogFragment : BottomSheetDialogFragment() {
 
                         is UiState.Success -> {
                             val dto = state.data
-                            binding.tvStartDate.text = DateTimeUtils.formatMeetingTime(dto.startDate)
-                            binding.tvEndDate.text = DateTimeUtils.formatMeetingTime(dto.endDate)
+                            val startRaw = dto?.startDate
+                            val periodDays = dto?.readingPeriod ?: 0
+
+                            binding.tvStartDate.text = prettyDate(dto?.startDate)
+
+                            val endRaw = addDaysFromStartDate(startRaw, periodDays)
+                            binding.tvEndDate.text = prettyDate(endRaw)
                         }
 
                         is UiState.Error -> {
@@ -88,6 +96,24 @@ class DirectGuestStartBottomDialogFragment : BottomSheetDialogFragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun addDaysFromStartDate(raw: String?, days: Int): String? {
+        if (raw.isNullOrBlank()) return raw
+        if (days <= 0) return raw
+
+        return try {
+            if (raw.endsWith("Z")) {
+                OffsetDateTime.parse(raw).plusDays(days.toLong()).toString()
+            } else {
+                val datePart = raw.substring(0, 10)
+                val d = LocalDate.parse(datePart, DateTimeFormatter.ISO_LOCAL_DATE)
+                val newDate = d.plusDays(days.toLong())
+                newDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + raw.substring(10)
+            }
+        } catch (_: Exception) {
+            raw
         }
     }
 
