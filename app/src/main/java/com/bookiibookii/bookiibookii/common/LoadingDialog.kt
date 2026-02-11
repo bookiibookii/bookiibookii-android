@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Window
+import android.view.WindowManager
 import com.bookiibookii.bookiibookii.R
 
 class LoadingDialog(context: Context) : Dialog(context) {
@@ -17,7 +18,11 @@ class LoadingDialog(context: Context) : Dialog(context) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.dialog_loading)
 
-g        window?.setBackgroundDrawable(ColorDrawable(Color.WHITE))
+        window?.setBackgroundDrawable(ColorDrawable(Color.WHITE))
+        window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT
+        )
 
         // 로딩 중에 뒤로가기나 바깥 화면 터치로 로딩창이 꺼지지 않도록 막음
         setCancelable(false)
