@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,11 +25,18 @@ class LibraryWriteReviewFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var userBookId: Int = -1
-    private var groupId: Int = -1 // TogetherFragment로 넘겨주기 위해 받음
+    private var groupId: Int = -1
     private var bookTitle = ""
     private var bookAuthor = ""
     private var bookCover = ""
-    private var currentRating = 0
+
+    // ★ 새로 받을 정보들
+    private var hostName = ""
+    private var hostProfileUrl = ""
+    private var startDate = ""
+    private var endDate = ""
+
+    private var currentRating : Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +46,10 @@ class LibraryWriteReviewFragment : Fragment() {
             bookTitle = it.getString("bookTitle", "") ?: ""
             bookAuthor = it.getString("bookAuthor", "") ?: ""
             bookCover = it.getString("bookCover", "") ?: ""
+            hostName = it.getString("hostName", "") ?: ""
+            hostProfileUrl = it.getString("hostProfileUrl", "") ?: ""
+            startDate = it.getString("startDate", "") ?: ""
+            endDate = it.getString("endDate", "") ?: ""
         }
     }
 
@@ -52,7 +64,7 @@ class LibraryWriteReviewFragment : Fragment() {
         initStarRating()
         initInputListener()
 
-        binding.libDetailBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.libDetailBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
         binding.libReviewAddBtn.setOnClickListener { postReview() }
     }
 
@@ -61,56 +73,53 @@ class LibraryWriteReviewFragment : Fragment() {
         binding.libWriteTitleTv.text = bookTitle
         binding.libDetailBookAuthorTv.text = bookAuthor
         Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
+
+        // ★ 프로필과 날짜 세팅 적용
+        binding.libDetailProfileTv.text = hostName
+        Glide.with(this).load(hostProfileUrl)
+            .placeholder(R.drawable.bg_circle_gray500)
+            .error(R.drawable.img_profile_default)
+            .circleCrop()
+            .into(binding.libDetailProfileIv)
+
+        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
     }
 
     private fun postReview() {
         val comment = binding.libWriteReviewEt.text.toString()
-        val rating = currentRating.toDouble()
+        val rating = currentRating
 
         lifecycleScope.launch {
             try {
                 val request = ReviewRequest(rating, comment)
                 val response = RetrofitClient.api().postBookReview(userBookId, request)
+                Log.d("Library", "${response.body()}")
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    // ★ 성공 시: Together(결과) 화면으로 이동
                     val togetherFragment = LibraryBookDetailTogetherFragment().apply {
                         arguments = Bundle().apply {
                             putInt("userBookId", userBookId)
-                            putInt("groupId", groupId) // groupId 전달
+                            putInt("groupId", groupId)
                             putString("bookTitle", bookTitle)
                             putString("bookAuthor", bookAuthor)
                             putString("bookCover", bookCover)
+
+                            // ★ [핵심] 결과 화면이 하얗게 뜨지 않도록 내가 가진 정보를 모두 다시 담아 넘겨줍니다.
+                            putString("hostName", hostName)
+                            putString("hostProfileUrl", hostProfileUrl)
+                            putString("startDate", startDate)
+                            putString("endDate", endDate)
+                            putDouble("rating", rating) // 내가 방금 적은 별점 적용!
                         }
                     }
-                    parentFragmentManager.beginTransaction()
+                    requireActivity().supportFragmentManager.beginTransaction()
                         .replace(R.id.fragmentContainer, togetherFragment)
-                        // .addToBackStack(null) // 결과 화면에서 뒤로가기 시 목록으로 가려면 주석 처리
                         .commit()
                 }
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
-    private fun navigateToTogetherFragment() {
-        // 결과 화면(Together) 프래그먼트 생성
-        val togetherFragment = LibraryBookDetailTogetherFragment().apply {
-            arguments = Bundle().apply {
-                putInt("userBookId", userBookId)
-                putString("bookTitle", bookTitle)
-                putString("bookAuthor", bookAuthor)
-                putString("bookCover", bookCover)
-            }
-        }
-
-        // 현재 화면(WriteReview)을 대체하여 이동
-        parentFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, togetherFragment)
-            // .addToBackStack(null) // 결과 화면에서 뒤로가기 시 다시 목록으로 가고 싶다면 스택에 추가 X
-            .commit()
-    }
-
-    // --- (이하 별점 및 입력 감지 UI 로직) ---
     private fun initStarRating() {
         val stars = listOf(
             binding.libDetailRateList.getChildAt(0) as ImageView,
@@ -122,17 +131,26 @@ class LibraryWriteReviewFragment : Fragment() {
 
         stars.forEachIndexed { index, imageView ->
             imageView.setOnClickListener {
-                currentRating = index + 1
+                val targetHalf = index + 0.5
+                val targetFull = index + 1.0
+                if (currentRating == targetHalf) {
+                    currentRating = targetFull
+                } else {
+                    currentRating = targetHalf
+                }
                 updateStarUI(stars, currentRating)
                 checkValidation()
             }
         }
     }
 
-    private fun updateStarUI(stars: List<ImageView>, rating: Int) {
+    private fun updateStarUI(stars: List<ImageView>, rating: Double) {
         stars.forEachIndexed { index, imageView ->
-            if (index < rating) {
+            val starValue = index + 1.0
+            if (rating >= starValue) {
                 imageView.setImageResource(R.drawable.ic_star_filled)
+            } else if (rating >= starValue - 0.5) {
+                imageView.setImageResource(R.drawable.ic_star_half)
             } else {
                 imageView.setImageResource(R.drawable.ic_star_none)
             }

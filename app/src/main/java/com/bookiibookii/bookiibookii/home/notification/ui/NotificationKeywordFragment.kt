@@ -3,7 +3,6 @@ package com.bookiibookii.bookiibookii.home.notification.ui
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -12,7 +11,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.common.ComErrorActivity
+import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.NotificationCategory
 import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
@@ -20,6 +19,7 @@ import com.bookiibookii.bookiibookii.home.notification.adapter.SystemAdapter
 import com.bookiibookii.bookiibookii.home.notification.data.NotificationRepository
 import com.bookiibookii.bookiibookii.home.notification.model.NotificationItem
 import com.bookiibookii.bookiibookii.home.notification.model.NotificationType
+import com.bookiibookii.bookiibookii.home.notification.util.NotificationPayloadParser
 import com.bookiibookii.bookiibookii.home.notification.util.TimeAgoFormatter
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModel
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModelFactory
@@ -33,13 +33,6 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) 
         }
         handleKeywordNotificationClick(item.notification)
     }
-
-    private val errorLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == ComErrorActivity.RESULT_RETRY) {
-                viewModel.loadFirstPage()
-            }
-        }
 
     private val viewModel: NotificationViewModel by viewModels {
         val api = RetrofitClient.api()
@@ -71,6 +64,14 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) 
             }
         })
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                ComRetryBus.retryFlow.collect {
+                    viewModel.loadFirstPage()
+                }
+            }
+        }
+
         // 첫 로딩
         viewModel.loadFirstPage()
 
@@ -80,12 +81,6 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) 
 
                     val uiItems = s.items.map { it.toUiItem() }
                     bind(uiItems, rv, empty)
-
-                    if (s.errorType != null) {
-                        errorLauncher.launch(
-                            ComErrorActivity.newIntent(requireContext(), s.errorType)
-                        )
-                    }
                 }
             }
         }

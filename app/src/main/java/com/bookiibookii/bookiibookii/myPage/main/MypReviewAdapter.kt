@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.myPage.main
 
-import MypReview
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
@@ -9,6 +8,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.MypReview
 import com.bookiibookii.bookiibookii.databinding.ItemMypReviewTagBinding
 
 class MypReviewAdapter(private val items: List<MypReview>) :

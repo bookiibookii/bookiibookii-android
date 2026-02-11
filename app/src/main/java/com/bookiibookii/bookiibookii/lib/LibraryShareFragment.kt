@@ -165,34 +165,102 @@ class LibraryShareFragment : DialogFragment() {
 
     private fun getShareUrl(): String = "https://bookiibookii.com/card/$cardId"
 
+    // ★ 1. 공유 버튼 함수 (post 복구 및 색상 코드 완전 수정)
     private fun shareToInstagramStory() {
         val targetView = if (isTypeA) binding.typeACard else binding.typeBCard
+
+        // 뷰가 화면에 완전히 그려진 후 안전하게 캡처하도록 targetView.post 블록을 사용합니다.
         targetView.post {
             val uri = getViewBitmapUri(targetView)
+
             if (uri != null) {
                 val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
-                    // ★ [수정 1] 배경 이미지 설정 제거
-                    // 기존: setDataAndType(uri, "image/*") -> 배경으로 설정됨
-                    // 변경: setType("image/*") -> 데이터 타입만 명시 (배경 안 깔림)
                     type = "image/*"
-
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
-                    // ★ [수정 2] 스티커(내용)로만 이미지 전달
+                    setPackage("com.instagram.android")
                     putExtra("interactive_asset_uri", uri)
 
-                    // (선택 사항) 배경색을 지정하고 싶다면 아래 주석 해제 (기본값: 이미지에서 추출한 그라데이션)
-                    // putExtra("top_background_color", "#333333")
-                    // putExtra("bottom_background_color", "#333333")
+                    // ★ [핵심] HEX 코드 6자리 (#FFFFFF) 정확히 기입
+                    putExtra("top_background_color", "#FAE0D4")
+                    putExtra("bottom_background_color", "#FFFFFF")
                 }
+
+                requireActivity().grantUriPermission(
+                    "com.instagram.android",
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+
                 try {
                     startActivity(intent)
                 } catch (e: Exception) {
-                    Toast.makeText(context, "인스타그램이 설치되어 있지 않습니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "인스타그램이 설치되어 있지 않거나 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(context, "이미지 생성 실패", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "이미지 캡처에 실패했습니다.", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    // ★ 2. 뷰 캡처 함수 (Type A 크기 측정 완전 보장)
+    private fun getViewBitmapUri(view: View): Uri? {
+        try {
+            // [강제 측정 로직 강화]
+            // Type A처럼 wrap_content인 뷰가 찰나의 순간 크기가 0으로 잡히는 것을 막기 위해,
+            // 340dp(다이얼로그 가로) - 48dp(좌우 패딩) = 292dp 로 가로 크기를 명확히 못 박고 측정합니다.
+            val targetWidthPx = (292 * resources.displayMetrics.density).toInt()
+
+            if (view.width == 0 || view.height == 0) {
+                view.measure(
+                    View.MeasureSpec.makeMeasureSpec(targetWidthPx, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                )
+                view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            }
+
+            val width = view.width.takeIf { it > 0 } ?: view.measuredWidth
+            val height = view.height.takeIf { it > 0 } ?: view.measuredHeight
+
+            // 비정상적인 크기일 경우 캡처 중단
+            if (width <= 0 || height <= 0) return null
+
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+
+            // 배경 투명 초기화 후 둥글게 자르기
+            canvas.drawColor(Color.TRANSPARENT)
+            val radius = 20f * resources.displayMetrics.density
+            val path = android.graphics.Path().apply {
+                addRoundRect(
+                    android.graphics.RectF(0f, 0f, width.toFloat(), height.toFloat()),
+                    radius,
+                    radius,
+                    android.graphics.Path.Direction.CW
+                )
+            }
+            canvas.clipPath(path)
+
+            // 본문 배경색 화이트 깔고 뷰 그리기
+            canvas.drawColor(Color.WHITE)
+            view.draw(canvas)
+
+            // 파일 저장
+            val imagesFolder = File(requireContext().cacheDir, "images")
+            if (!imagesFolder.exists()) imagesFolder.mkdirs()
+
+            val file = File(imagesFolder, "share_${System.currentTimeMillis()}.png")
+            val stream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            stream.flush()
+            stream.close()
+
+            return FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.fileprovider",
+                file
+            )
+        } catch (e: Exception) {
+            Log.e("ShareError", "Bitmap Capture Error", e)
+            return null
         }
     }
     private fun shareLinkToApp(packageName: String) {
@@ -232,35 +300,6 @@ class LibraryShareFragment : DialogFragment() {
             putExtra(Intent.EXTRA_TEXT, getShareUrl())
         }
         startActivity(Intent.createChooser(intent, "공유하기"))
-    }
-
-    // ★ 뷰 캡처 (흰 화면 방지 로직)
-    private fun getViewBitmapUri(view: View): Uri? {
-        try {
-            if (view.width == 0 || view.height == 0) return null
-
-            val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            canvas.drawColor(Color.TRANSPARENT)
-            view.draw(canvas)
-
-            val imagesFolder = File(requireContext().cacheDir, "images")
-            if (!imagesFolder.exists()) imagesFolder.mkdirs()
-
-            val file = File(imagesFolder, "share_${System.currentTimeMillis()}.png")
-            val stream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            stream.flush()
-            stream.close()
-
-            return FileProvider.getUriForFile(
-                requireContext(),
-                "${requireContext().packageName}.fileprovider",
-                file
-            )
-        } catch (e: Exception) {
-            return null
-        }
     }
 
     override fun onResume() {

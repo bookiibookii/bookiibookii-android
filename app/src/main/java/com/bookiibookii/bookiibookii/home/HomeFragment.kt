@@ -7,28 +7,58 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeMateBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
+import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.home.notification.ui.NotificationActivity
+import kotlinx.coroutines.launch
+import kotlin.jvm.java
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    // section Binding
     private lateinit var exchangeBinding: SectionHomeExchangeProgressBinding
     private lateinit var groupBinding: SectionHomeGroupBinding
     private lateinit var mateBinding: SectionHomeMateBinding
 
-    // TODO: 나중에 서버 데이터 연결 시 어댑터에 리스트 주입 로직 추가 필요
-    private val exchangeAdapter = ExchangeProgressAdapter()
-    private val groupAdapter = GroupRecommendAdapter()
+    private val api by lazy { RetrofitClient.api() }
+    private val trkApi by lazy { RetrofitClient.trkApi() } // ✅ 여기로 받기
+
+    private var notiBadge: View? = null
+
+    private val exchangeAdapter = ExchangeProgressAdapter { item ->
+        (activity as? MainActivity)?.moveToTrackerDetail(item.groupId, item.role)
+    }
+
+    private val groupAdapter = GroupRecommendAdapter { item ->
+        android.util.Log.d("HOME_GROUP", "click groupId=${item.groupId}")
+
+        val intent = Intent(requireContext(), GroupDetailActivity::class.java)
+        intent.putExtra("GROUP_ID", item.groupId)
+        startActivity(intent)
+    }
+
+    private val mateAdapter = MateRecommendAdapter { _ ->
+        // TODO
+    }
+
+    private var exchangeTotal = 0
+
+    override fun onResume() {
+        super.onResume()
+        refreshNotiBadge()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,37 +72,41 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // section binding
         exchangeBinding = binding.sectionExchange
         groupBinding = binding.sectionGroup
         mateBinding = binding.sectionMate
 
-        // RecyclerView 세팅
-        exchangeBinding.rvExchangeProgress.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = exchangeAdapter
-        }
-
+        // 그룹/메이트 리사이클러
         groupBinding.rvGroupCard.apply {
             layoutManager = GridLayoutManager(requireContext(), 3)
             adapter = groupAdapter
+            val spacing = resources.getDimensionPixelSize(R.dimen.spacing_12)
+            addItemDecoration(GridSpacingItemDecoration(3, spacing))
         }
 
-        // empty 카드 문구 세팅
+        mateBinding.rvMate.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            adapter = mateAdapter
+            val spacing = resources.getDimensionPixelSize(R.dimen.spacing_12)
+            addItemDecoration(HorizontalSpacingItemDecoration(spacing))
+        }
+
+        // empty 카드 문구
         setExchangeEmptyTexts()
         setGroupEmptyTexts()
         setMateEmptyTexts()
 
-        // TODO: 나중에 서버 응답으로 교체
-        val exchangeHasData = false
-        val groupHasData = false
-        val mateHasData = false
-
-        applyExchangeState(exchangeHasData)
-        applyGroupState(groupHasData)
-        applyMateState(mateHasData)
+        // 진행 중 교환: ViewPager2 세팅 + 로드
+        setupExchangePager()
+        loadExchangeProgress()
 
         bindHeaderActions()
+        bindEmptyActions()
+
+        loadRecommendedGroups(refresh = false)
+        groupBinding.btnRefresh.setOnClickListener { loadRecommendedGroups(refresh = true) }
+
+        loadRecommendedBookmates()
     }
 
     override fun onDestroyView() {
@@ -81,25 +115,56 @@ class HomeFragment : Fragment() {
     }
 
     private fun bindHeaderActions() {
-
-        // include된 헤더(root)에서 알림 아이콘 찾기
         val headerRoot = binding.sectionHomeHeader.root
         val ivNoti = headerRoot.findViewById<ImageView>(R.id.iv_home_notification)
+        notiBadge = headerRoot.findViewById(R.id.view_home_notification_badge)
 
         ivNoti.setOnClickListener {
-            val intent = Intent(requireContext(), NotificationActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), NotificationActivity::class.java))
         }
     }
 
-    private fun setNotificationBadgeVisible(visible: Boolean) {
-        val headerRoot = binding.sectionHomeHeader.root
-        val badge = headerRoot.findViewById<View>(R.id.view_home_notification_badge)
-        badge.visibility = if (visible) View.VISIBLE else View.INVISIBLE
+    private fun setNotiBadgeVisible(visible: Boolean) {
+        notiBadge?.visibility = if (visible) View.VISIBLE else View.INVISIBLE
+    }
+
+    private fun refreshNotiBadge() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                val size = 20
+
+                // SYSTEM 1페이지
+                val systemRes = api.getNotifications(
+                    category = "SYSTEM",
+                    cursor = null,
+                    size = size
+                )
+
+                // KEYWORD 1페이지
+                val keywordRes = api.getNotifications(
+                    category = "KEYWORD",
+                    cursor = null,
+                    size = size
+                )
+
+                val systemItems = if (systemRes.isSuccessful) systemRes.body()?.result?.items.orEmpty() else emptyList()
+                val keywordItems = if (keywordRes.isSuccessful) keywordRes.body()?.result?.items.orEmpty() else emptyList()
+
+                val hasUnreadSystem = systemItems.any { !it.isRead }
+                val hasUnreadKeyword = keywordItems.any { !it.isRead }
+
+                hasUnreadSystem || hasUnreadKeyword
+            }.onSuccess { hasUnread ->
+                setNotiBadgeVisible(hasUnread)
+            }.onFailure {
+                // 실패 시는 일단 숨김(원하면 "이전 상태 유지"로 바꿔도 됨)
+                setNotiBadgeVisible(false)
+            }
+        }
     }
 
     private fun applyExchangeState(hasData: Boolean) {
-        exchangeBinding.rvExchangeProgress.visibility = if (hasData) View.VISIBLE else View.GONE
+        exchangeBinding.vpExchangeProgress.visibility = if (hasData) View.VISIBLE else View.GONE
         exchangeBinding.includeExchangeEmpty.root.visibility = if (hasData) View.GONE else View.VISIBLE
         exchangeBinding.layoutPageControl.visibility = if (hasData) View.VISIBLE else View.GONE
     }
@@ -111,7 +176,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun applyMateState(hasData: Boolean) {
-        mateBinding.includeMateCard.root.visibility = if (hasData) View.VISIBLE else View.GONE
+        mateBinding.rvMate.visibility = if (hasData) View.VISIBLE else View.GONE
         mateBinding.includeMateEmpty.root.visibility = if (hasData) View.GONE else View.VISIBLE
     }
 
@@ -138,17 +203,172 @@ class HomeFragment : Fragment() {
 
     private fun bindEmptyActions() {
         exchangeBinding.includeExchangeEmpty.btnHomeAction.setOnClickListener {
-            // TODO: GRP-001 이동
+            (activity as? MainActivity)?.moveToGroupTab()
         }
 
         groupBinding.includeGroupEmpty.btnHomeAction.setOnClickListener {
-            // TODO: GRP-020 이동
+            startActivity(Intent(requireContext(), GroupGenerationActivity::class.java))
         }
 
         mateBinding.includeMateEmpty.btnHomeAction.setOnClickListener {
-            // TODO: GRP-001 이동
+            (activity as? MainActivity)?.moveToGroupTab()
         }
     }
 
+    private fun loadRecommendedGroups(refresh: Boolean) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching { api.getRecommendedGroups(refresh = refresh) }
+                .onSuccess { response ->
+                    val list = if (response.isSuccessful) response.body()?.result.orEmpty() else emptyList()
+                    android.util.Log.d("HOME_API", "groups=$list")
 
+                    groupAdapter.submitList(list)
+                    applyGroupState(list.isNotEmpty())
+                }
+                .onFailure {
+                    groupAdapter.submitList(emptyList())
+                    applyGroupState(false)
+                }
+        }
+    }
+
+    private fun loadRecommendedBookmates() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching { api.getRecommendedBookmates() }
+                .onSuccess { response ->
+                    if (!response.isSuccessful) {
+                        android.util.Log.e("MATE_API", "http fail code=${response.code()}")
+                        mateAdapter.submitList(emptyList())
+                        applyMateState(false)
+                        return@onSuccess
+                    }
+
+                    val body = response.body()
+                    if (body == null) {
+                        android.util.Log.e("MATE_API", "body is null (parsing fail 가능)")
+                        mateAdapter.submitList(emptyList())
+                        applyMateState(false)
+                        return@onSuccess
+                    }
+
+                    android.util.Log.d("MATE_API", "isSuccess=${body.isSuccess} code=${body.code} resultSize=${body.result?.size ?: -1}")
+
+                    // 공통 응답 실패 처리
+                    if (!body.isSuccess) {
+                        // USERTAG404면 empty로 보여주는 정책 OK
+                        if (body.code == "USERTAG404") {
+                            mateAdapter.submitList(emptyList())
+                            applyMateState(false)
+                            return@onSuccess
+                        }
+
+                        // 그 외 실패는 로그 남기고 empty 처리
+                        android.util.Log.e("MATE_API", "api fail code=${body.code} msg=${body.message}")
+                        mateAdapter.submitList(emptyList())
+                        applyMateState(false)
+                        return@onSuccess
+                    }
+
+                    val list = body.result.orEmpty().take(5)
+
+                    mateAdapter.submitList(list)
+                    applyMateState(list.isNotEmpty())
+                }
+                .onFailure { e ->
+                    android.util.Log.e("MATE_API", "exception", e)
+                    mateAdapter.submitList(emptyList())
+                    applyMateState(false)
+                }
+        }
+    }
+
+    // ----------------------------
+    // 진행 중인 교환(ViewPager2)
+    // ----------------------------
+    private fun setupExchangePager() {
+        exchangeBinding.vpExchangeProgress.adapter = exchangeAdapter
+        exchangeBinding.vpExchangeProgress.offscreenPageLimit = 1
+        exchangeBinding.vpExchangeProgress.orientation =
+            androidx.viewpager2.widget.ViewPager2.ORIENTATION_HORIZONTAL
+
+        exchangeBinding.vpExchangeProgress.registerOnPageChangeCallback(
+            object : androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    updateExchangeIndicator(position, exchangeTotal)
+                    updateExchangeArrowState(position, exchangeTotal)
+                }
+            }
+        )
+
+        exchangeBinding.btnPrev.setOnClickListener {
+            val cur = exchangeBinding.vpExchangeProgress.currentItem
+            if (cur > 0) exchangeBinding.vpExchangeProgress.setCurrentItem(cur - 1, true)
+        }
+
+        exchangeBinding.btnNext.setOnClickListener {
+            val cur = exchangeBinding.vpExchangeProgress.currentItem
+            if (cur < exchangeTotal - 1) exchangeBinding.vpExchangeProgress.setCurrentItem(cur + 1, true)
+        }
+    }
+
+    private fun loadExchangeProgress() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                val guestRes = trkApi.getGuestTrackers()
+                val hostRes = trkApi.getHostTrackers()
+
+                val guestList = if (guestRes.isSuccessful) guestRes.body()?.result.orEmpty() else emptyList()
+                val hostList = if (hostRes.isSuccessful) hostRes.body()?.result.orEmpty() else emptyList()
+
+                android.util.Log.d("EXC_API", "guest=${guestList.size} host=${hostList.size}")
+
+                val guestUi = guestList.map { it.toHomeExchangeItem() }
+                val hostUi = hostList.map { it.toHomeExchangeItem() }
+
+                // ✅ 최종 리스트를 여기서 확정해서 반환
+                hostUi + guestUi
+            }.onSuccess { list ->
+                exchangeTotal = list.size
+
+                if (exchangeTotal > 0) {
+                    exchangeAdapter.submitList(list)
+                    applyExchangeState(true)
+
+                    exchangeBinding.vpExchangeProgress.setCurrentItem(0, false)
+                    updateExchangeIndicator(0, exchangeTotal)
+                    updateExchangeArrowState(0, exchangeTotal)
+                } else {
+                    exchangeAdapter.submitList(emptyList())
+                    applyExchangeState(false)
+                    updateExchangeIndicator(0, 0)
+                }
+            }.onFailure { e ->
+                android.util.Log.e("EXC_API", "fail", e)
+                exchangeAdapter.submitList(emptyList())
+                applyExchangeState(false)
+                updateExchangeIndicator(0, 0)
+            }
+        }
+    }
+
+    private fun updateExchangeIndicator(position: Int, total: Int) {
+        if (total <= 0) {
+            exchangeBinding.tvPageIndicator.text = "0"
+            exchangeBinding.tvPageIndicatorTotal.text = "/0"
+            return
+        }
+        exchangeBinding.tvPageIndicator.text = (position + 1).toString()
+        exchangeBinding.tvPageIndicatorTotal.text = "/$total"
+    }
+
+    private fun updateExchangeArrowState(position: Int, total: Int) {
+        val hasPrev = position > 0
+        val hasNext = position < total - 1
+
+        exchangeBinding.btnPrev.isEnabled = hasPrev
+        exchangeBinding.btnNext.isEnabled = hasNext
+
+        exchangeBinding.btnPrev.alpha = if (hasPrev) 1f else 0.3f
+        exchangeBinding.btnNext.alpha = if (hasNext) 1f else 0.3f
+    }
 }

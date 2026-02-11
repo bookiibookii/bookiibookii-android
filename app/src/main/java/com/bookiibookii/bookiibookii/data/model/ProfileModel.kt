@@ -13,7 +13,7 @@ data class MypageResponse(
 // 메인 데이터
 data class MypageResult(
     val userId: Int,
-    val userImage: UserImageInfo?, // 프로필 이미지 등
+    val profileImageUrl: String?, // 프로필 이미지 등
     val nickname: String,
     val manner: Double,
     val topTags: List<String>,     // 획득한 후기
@@ -35,10 +35,10 @@ data class MypageResult(
 )
 
 // 프로필 이미지 및 유저 상세
-data class UserImageInfo(
-    val s3Key: String?,
-    val user: MypageUserDetail?
-)
+//data class UserImageInfo(
+//    val s3Key: String?,
+//    val user: MypageUserDetail?
+//)
 
 data class MypageUserDetail(
     val id: Int,

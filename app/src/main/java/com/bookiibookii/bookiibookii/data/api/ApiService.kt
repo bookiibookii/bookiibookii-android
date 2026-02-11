@@ -25,6 +25,7 @@ import com.bookiibookii.bookiibookii.data.model.LoginRequest
 import com.bookiibookii.bookiibookii.data.model.LoginResponse
 import com.bookiibookii.bookiibookii.data.model.LogoutResponse
 import com.bookiibookii.bookiibookii.data.model.MyGroupResponse
+import com.bookiibookii.bookiibookii.data.model.MypRelayReviewResponse
 import com.bookiibookii.bookiibookii.data.model.MypageResponse
 import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
@@ -35,6 +36,9 @@ import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentResponse
 import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
+import com.bookiibookii.bookiibookii.data.model.RecommendedBookmateDto
+import com.bookiibookii.bookiibookii.data.model.RecommendedGroupDto
+import com.bookiibookii.bookiibookii.data.model.RelayReviewRequest
 import com.bookiibookii.bookiibookii.data.model.ReportCreateResponse
 import com.bookiibookii.bookiibookii.data.model.ReportListResponse
 import com.bookiibookii.bookiibookii.data.model.ReportRequest
@@ -50,12 +54,10 @@ import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import okhttp3.RequestBody
 import com.bookiibookii.bookiibookii.trkData.api.TrkApi
 import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
-import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -104,10 +106,10 @@ interface ApiService: TrkApi {
     @POST("api/report")
     suspend fun postReport(@Body request: ReportRequest): Response<ReportCreateResponse>
 
-    @POST("api/auth/refresh")
-    fun refreshToken(
+    @POST("/api/auth/refresh")
+    suspend fun postRefresh(
         @Body request: TokenRefreshRequest
-    ): retrofit2.Call<TokenRefreshResponse>
+    ): Response<TokenRefreshResponse>
 
     @GET("api/report/groups/my")
     suspend fun getMyGroups(): Response<MyGroupResponse>
@@ -145,12 +147,6 @@ interface ApiService: TrkApi {
     suspend fun getCardComments(
         @Path("cardId") cardId: Long
     ): Response<CommentListResponse>
-
-    //  Presigned URL 발급
-    @POST("api/card/{userBookId}/presigned-url")
-    suspend fun getPresignedUrl(
-        @Path("userBookId") userBookId: Int
-    ): Response<PresignedUrlResponse>
 
 
     // 닉네임 중복 검증
@@ -332,10 +328,19 @@ interface ApiService: TrkApi {
     suspend fun deleteKeyword(
         @Path("keywordId") keywordId: Long
     ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<String>>
-  
+
     @DELETE("api/cards/{cardId}")
     suspend fun deleteCard(
         @Path("cardId") cardId: Long
+    ): Response<BaseResponse>
+
+    @GET("/api/reviews/me/relay")
+    suspend fun getRelayReviews(): Response<MypRelayReviewResponse>
+
+    @POST("/api/reviews/relay/{userBookId}")
+    suspend fun postRelayReview(
+        @Path("userBookId") userBookId: Int,
+        @Body request: RelayReviewRequest
     ): Response<BaseResponse>
 
     //그룹 삭제하기
@@ -363,5 +368,15 @@ interface ApiService: TrkApi {
     suspend fun getComments(
         @Path("groupId") groupId: Long
     ): Response<GroupItemDto.CommentListResponse>
+
+    // 홈 추천 그룹 (3개)
+    @GET("/api/recommendations/groups")
+    suspend fun getRecommendedGroups(
+        @Query("refresh") refresh: Boolean = false
+    ): Response<CommonResponse<List<RecommendedGroupDto>>>
+
+    // 부키메이트 추천 (최대 5명)
+    @GET("/api/recommendations/bookmates")
+    suspend fun getRecommendedBookmates(): Response<CommonResponse<List<RecommendedBookmateDto>>>
 
 }

@@ -7,11 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.MypageResult
-import com.bookiibookii.bookiibookii.data.model.NicknameCheckRequest
 import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
@@ -26,7 +27,7 @@ class MyPageViewModel : ViewModel() {
     private val _isNicknameChecked = MutableLiveData<Boolean>(true)
     val isNicknameChecked: LiveData<Boolean> get() = _isNicknameChecked
 
-    // [추가] 검증 완료된 닉네임 저장소 (화면 이동 후 복귀 시 상태 유지용)
+    // 검증 완료된 닉네임 저장소 (화면 이동 후 복귀 시 상태 유지용)
     var confirmedNickname: String? = null
 
     // 3. 이벤트 처리
@@ -54,7 +55,6 @@ class MyPageViewModel : ViewModel() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     response.body()!!.result?.let {
                         _profileData.value = it
-                        // 초기 데이터를 불러오면, 현재 닉네임은 '검증된 상태'임
                         confirmedNickname = it.nickname
                     }
                 } else {
@@ -67,20 +67,16 @@ class MyPageViewModel : ViewModel() {
         }
     }
 
-// 2. 닉네임 중복 확인
+    // 2. 닉네임 중복 확인
     fun checkNickname(nickname: String) {
         viewModelScope.launch {
             try {
-                // ★ [수정] DTO 없이 String 그대로 전송 (@Query 방식)
                 val response = RetrofitClient.api().postNicknameValidation(nickname)
-
                 val serverMsg = response.body()?.message ?: "확인 불가"
 
-                // 로그를 Error 레벨로 찍어서 강제로 보이게 함 (디버깅용)
                 Log.e("NickCheck", "결과코드: ${response.code()}, Body: ${response.body()}")
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    // result가 null이 아닐 때 isAvailable 확인
                     val isAvailable = response.body()?.result?.isAvailable ?: false
 
                     if (isAvailable) {
@@ -93,7 +89,6 @@ class MyPageViewModel : ViewModel() {
                     }
                 } else {
                     _isNicknameChecked.value = false
-                    // 실패 시 메시지 (DUPLICATE 등)
                     _eventFlow.emit(Event.NicknameCheckResult(false, serverMsg))
                 }
             } catch (e: Exception) {
@@ -102,6 +97,7 @@ class MyPageViewModel : ViewModel() {
             }
         }
     }
+
     // 3. 프로필 수정 (이미지 S3 업로드 -> 정보 수정 PATCH)
     fun updateProfile(
         request: UserUpdateRequest, // 텍스트 정보
@@ -111,49 +107,60 @@ class MyPageViewModel : ViewModel() {
             try {
                 var finalRequest = request
 
-                // 3-1. 이미지가 있다면 S3 업로드 진행 (주석 해제 및 로직 연결)
-//                if (imageFile != null) {
-//                    Log.d("UpdateProfile", "1. Presigned URL 발급 요청 (POST)")
-//
-//                    val presignedRes = RetrofitClient.api().postPresignedUrl()
-//
-//                    if (presignedRes.isSuccessful && presignedRes.body()?.isSuccess == true) {
-//                        val result = presignedRes.body()!!.result
-//
-//                        if (result != null) {
-//                            val uploadUrl = result.presignedPutUrl
-//                            val issuedS3Key = result.s3Key // 서버가 발급해준 키
-//
-//                            Log.d("UpdateProfile", "2. URL 획득 완료. S3 업로드 시작")
-//
-//                            // S3에 실제 이미지 업로드 (PUT)
-//                            val requestBody = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
-//                            val uploadRes = RetrofitClient.api().uploadImageToS3(uploadUrl, requestBody)
-//
-//                            if (!uploadRes.isSuccessful) {
-//                                Log.e("UpdateProfile", "S3 업로드 실패: ${uploadRes.code()}")
-//                                _eventFlow.emit(Event.ShowToast("이미지 업로드 실패"))
-//                                return@launch
-//                            }
-//                            Log.d("UpdateProfile", "3. S3 업로드 성공. Key: $issuedS3Key")
-//
-//                            // ★★★ [핵심] 발급받은 키를 request에 담기 ★★★
-//                            // UserUpdateRequest DTO에 userImage 필드가 존재해야 함
-//                            finalRequest = request.copy(userImage = issuedS3Key)
-//                        }
-//                    } else {
-//                        Log.e("UpdateProfile", "Presigned URL 발급 실패: ${presignedRes.code()}")
-//                        _eventFlow.emit(Event.ShowToast("이미지 서버 연결 실패"))
-//                        return@launch
-//                    }
-//                }
+                // 3-1. 이미지가 있다면 S3 업로드 진행
+                if (imageFile != null) {
+                    Log.d("UpdateProfile", "1. Presigned URL 발급 요청 (POST)")
 
-                // 3-2. 프로필 텍스트 정보 수정 요청 (PATCH)
+                    val presignedRes = RetrofitClient.api().postPresignedUrl()
+
+                    if (presignedRes.isSuccessful && presignedRes.body()?.isSuccess == true) {
+                        val result = presignedRes.body()?.result
+
+                        if (result != null) {
+                            val uploadUrl = result.presignedPutUrl
+                            val issuedS3Key = result.s3Key
+
+                            Log.d("UpdateProfile", "2. URL 획득 완료. S3 업로드 시작")
+
+                            // ★ [핵심 수정] Retrofit 대신 순수한 OkHttpClient를 생성하여 400 에러 원천 차단
+                            val mimeType = "image/jpeg"
+                            val requestBody = imageFile.asRequestBody(mimeType.toMediaTypeOrNull())
+                            val cleanClient = okhttp3.OkHttpClient()
+
+                            // S3 PUT 요청 생성 (헤더에 Content-Type을 정확히 명시)
+                            val requestS3 = okhttp3.Request.Builder()
+                                .url(uploadUrl)
+                                .put(requestBody)
+                                .addHeader("Content-Type", mimeType) // 400 에러 해결의 핵심
+                                .build()
+
+                            // 네트워크 요청 실행
+                            val uploadRes = withContext(Dispatchers.IO) {
+                                cleanClient.newCall(requestS3).execute()
+                            }
+
+                            if (!uploadRes.isSuccessful) {
+                                Log.e("UpdateProfile", "S3 업로드 실패: ${uploadRes.code}")
+                                _eventFlow.emit(Event.ShowToast("이미지 업로드에 실패했습니다."))
+                                return@launch
+                            }
+                            Log.d("UpdateProfile", "3. S3 업로드 성공. Key: $issuedS3Key")
+
+                            finalRequest = request.copy(s3Key = issuedS3Key)
+                        }
+                    } else {
+                        Log.e("UpdateProfile", "Presigned URL 발급 실패: ${presignedRes.code()}")
+                        _eventFlow.emit(Event.ShowToast("이미지 서버 연결에 실패했습니다."))
+                        return@launch
+                    }
+                }
+
+                // 3-2. 프로필 정보 수정 요청 (PATCH)
                 Log.d("UpdateProfile", "4. 최종 수정 요청 전송: $finalRequest")
                 val updateRes = RetrofitClient.api().updateProfile(finalRequest)
 
                 if (updateRes.isSuccessful && updateRes.body()?.isSuccess == true) {
-                    _eventFlow.emit(Event.ShowToast("프로필이 수정되었습니다."))
+                    _eventFlow.emit(Event.ShowToast("프로필이 성공적으로 수정되었습니다."))
                     fetchMypageData() // 데이터 갱신
                     _eventFlow.emit(Event.NavigateBack)
                 } else {
@@ -165,7 +172,7 @@ class MyPageViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 Log.e("UpdateProfile", "Exception", e)
-                _eventFlow.emit(Event.ShowToast("오류가 발생했습니다."))
+                _eventFlow.emit(Event.ShowToast("요청 중 오류가 발생했습니다."))
             }
         }
     }

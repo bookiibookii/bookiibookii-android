@@ -22,7 +22,7 @@
             android:id="@+id/iv_mate_profile"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/bg_circle_grey100"
+            android:background="@drawable/img_profile_default"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />

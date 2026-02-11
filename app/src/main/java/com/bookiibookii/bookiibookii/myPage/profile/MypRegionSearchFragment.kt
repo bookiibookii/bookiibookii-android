@@ -73,7 +73,7 @@ class MypRegionSearchFragment : Fragment() {
             rightAdapter.submitList(mockData[0].districts)
         }
 
-        binding.mypSearchCloseIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.mypSearchCloseIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
         // [완료 버튼] 선택 결과 반환
         binding.mypSearchSearchBtn.setOnClickListener {
@@ -81,7 +81,7 @@ class MypRegionSearchFragment : Fragment() {
                 val result = "$currentCity $currentDistrict"
                 // 결과 전달
                 setFragmentResult("requestKeyRegion", bundleOf("regionResult" to result))
-                parentFragmentManager.popBackStack()
+                requireActivity().supportFragmentManager.popBackStack()
             } else {
                 // 구/군을 선택하지 않았을 때 처리
             }
