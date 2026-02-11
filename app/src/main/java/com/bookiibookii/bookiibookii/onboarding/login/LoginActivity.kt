@@ -19,6 +19,7 @@ import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.LoginRequest
+import com.bookiibookii.bookiibookii.data.model.MypageResult
 import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -65,7 +66,7 @@ class LoginActivity : AppCompatActivity() {
 //        Log.d("TEST_MODE", "🚀 토큰 주입 완료. 메인으로 이동합니다.")
 //        moveToMain()
 //        return // ★ 중요: 아래 기존 로그인 로직이 실행되지 않도록 여기서 종료
-        // =================================================================
+//         =================================================================
 
         // 1. 자동 로그인 체크 (토큰이 이미 있으면 메인으로)
         if (hasAccessToken()) {
@@ -103,10 +104,13 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun signInWithGoogle() {
+        val webClientId = getString(R.string.web_client_id)
+        Log.d("Login", "Using Web Client ID: $webClientId") // ID 확인용 로그
+
         val googleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(getString(R.string.web_client_id))
-            .setAutoSelectEnabled(true)
+            .setFilterByAuthorizedAccounts(false) // 이전에 로그인한 적 없는 계정도 표시
+            .setServerClientId(webClientId)
+            .setAutoSelectEnabled(true) // 가능한 경우 자동 선택
             .build()
 
         val request = GetCredentialRequest.Builder()
@@ -115,24 +119,22 @@ class LoginActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
+                Log.d("Login", "getCredential 요청 시작")
                 val result: GetCredentialResponse = credentialManager.getCredential(
                     request = request,
                     context = this@LoginActivity
                 )
+                Log.d("Login", "getCredential 응답 받음")
                 handleSignIn(result)
             } catch (e: GetCredentialException) {
-                Log.e("Login", "로그인 실패 또는 취소: ${e.message}")
-                if (!e.type.contains("Cancellation")) {
-                    Log.e("Login", "로그인 실패", e)
-                }
+                Log.e("Login", "Credential Manager 에러: ${e.message}", e)
                 showLoadingState(false)
             } catch (e: Exception) {
-                Log.e("Login", "예상치 못한 오류", e)
+                Log.e("Login", "예상치 못한 에러", e)
                 showLoadingState(false)
             }
         }
     }
-
     private fun handleSignIn(result: GetCredentialResponse) {
         val credential = result.credential
 
@@ -317,10 +319,17 @@ class LoginActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
-    object TestTokenConfig {
-        // 백엔드 개발자에게 받은 토큰을 여기에 붙여넣으세요 (공백 주의)
-        const val TEST_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidHlwZSI6ImFjY2VzcyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzcwNTM1NDIyLCJleHAiOjE3NzA1MzcyMjJ9.0zJDeBJevN_wGH7J0KcsrGfqLcRE28mSmtE9gHfNB00"
-        const val TEST_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NzA1MzU0MjIsImV4cCI6MTc3MTc0NTAyMn0.TiCSCGP30gWqQ1jRPrjylJTaUxlGL5Ym9NcAdq0u22k"
-        const val TEST_USER_ID = 1 // 테스트할 유저 ID (임의로 1 또는 실제 ID)
-    }
+//    object TestTokenConfig {
+//        // 백엔드 개발자에게 받은 토큰을 여기에 붙여넣으세요 (공백 주의)
+//        const val TEST_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwidHlwZSI6ImFjY2VzcyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzcwNjg5NDUyLCJleHAiOjE3NzA2OTEyNTJ9.Mgm81NRBGDy-er_-P8wrR7roV-WkmgY0JsGSLu_GLIg"
+//        const val TEST_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NzA2MjU5MzEsImV4cCI6MTc3MTgzNTUzMX0.V_OEoWL4jJt2JQ36ZwVzn7ypPd7P6Z8ioRXbPYnH23g"
+//        const val TEST_USER_ID = 1 // 테스트할 유저 ID (임의로 1 또는 실제 ID)
+//    }
+
+    data class ProfileResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: MypageResult? // 기존 MypageResult를 재사용하거나 아래 구조로 수정
+    )
 }

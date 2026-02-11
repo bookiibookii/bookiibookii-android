@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/medium20"
                 android:textColor="@color/grey_900"
-                android:text="괴테는 모든 것을 말했다"
+                android:text="북마크"
                 app:layout_constraintStart_toStartOf="@id/lib_detail_back_iv"
                 app:layout_constraintEnd_toEndOf="@id/lib_search"
                 app:layout_constraintBottom_toBottomOf="parent"

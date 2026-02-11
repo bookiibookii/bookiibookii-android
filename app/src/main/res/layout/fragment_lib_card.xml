@@ -11,12 +11,14 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="80dp"> <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_start"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.08" />
+        android:paddingBottom="80dp">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.08" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline_end"
@@ -76,7 +78,7 @@
                     android:id="@+id/lib_card_share_iv"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:src="@drawable/ic_share_read"
+                    android:src="@drawable/ic_share"
                     android:background="@android:color/transparent"
                     app:layout_constraintEnd_toEndOf="@id/guideline_end_inner"
                     app:layout_constraintTop_toTopOf="parent"
@@ -109,7 +111,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/medium20"
                 android:textColor="@color/grey_800"
-                android:text="noshel"
+                android:text="작성자"
                 android:layout_marginStart="12dp"
                 app:layout_constraintStart_toEndOf="@id/lib_card_profile_iv"
                 app:layout_constraintTop_toTopOf="@id/lib_card_profile_iv"
@@ -129,8 +131,11 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/regular14"
                 android:textColor="@color/grey_500"
-                android:text="살인자의 기억법"
+                android:text="책 제목"
                 android:layout_marginTop="16dp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:maxEms="7"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/lib_card_profile_iv"/>
 
@@ -140,7 +145,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/regular14"
                 android:textColor="@color/grey_500"
-                android:text="p.72"
+                android:text="p.0"
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="16dp"
                 app:layout_constraintStart_toEndOf="@id/lib_card_book_title_tv"
@@ -152,7 +157,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/regular14"
                 android:textColor="@color/grey_500"
-                android:text="2025.12.05"
+                android:text="YYYY.MM.DD"
                 android:layout_marginTop="16dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/lib_card_profile_iv"/>
@@ -176,6 +181,18 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/view"/>
+
+            <TextView
+                android:id="@+id/lib_card_content_tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="여기에 메모 내용이 들어갑니다."
+                android:textColor="@color/grey_900"
+                android:textAppearance="@style/regular14"
+                android:layout_marginTop="16dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/lib_card_image_iv"/>
 
             <ImageView
                 android:id="@+id/lib_card_edit_iv"

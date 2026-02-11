@@ -164,18 +164,20 @@ android:background="@color/ui_bg">
     app:layout_constraintTop_toBottomOf="@id/lib_add_page_et"
     app:layout_constraintStart_toStartOf="@id/guideline_start" />
 
-<EditText
-    android:id="@+id/lib_add_memo_et"
-    android:layout_width="0dp"
-    android:layout_height="44dp"
-    android:layout_marginTop="12dp"
-    android:background="@drawable/bg_input_round_20dp_white"
-    android:paddingHorizontal="12dp"
-    android:textColor="@color/grey_900"
-    android:inputType="text"
-    app:layout_constraintTop_toBottomOf="@id/lib_add_memo_tv"
-    app:layout_constraintStart_toStartOf="@id/guideline_start"
-    app:layout_constraintEnd_toEndOf="@id/guideline_end" />
+    <EditText
+        android:id="@+id/lib_add_memo_et"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minHeight="44dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_input_round_20dp_white"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="10dp"
+        android:textColor="@color/grey_900"
+        android:inputType="textMultiLine|text"
+        app:layout_constraintTop_toBottomOf="@id/lib_add_memo_tv"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end" />
 
 <androidx.appcompat.widget.AppCompatButton
     android:id="@+id/lib_add_btn"
