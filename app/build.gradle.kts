@@ -119,4 +119,5 @@ dependencies {
 
     implementation("io.coil-kt:coil:2.6.0")
 
+
 }

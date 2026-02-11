@@ -17,9 +17,11 @@ import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeMateBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.home.notification.ui.NotificationActivity
 import kotlinx.coroutines.launch
+import kotlin.jvm.java
 
 class HomeFragment : Fragment() {
 
@@ -34,11 +36,15 @@ class HomeFragment : Fragment() {
     private val trkApi by lazy { RetrofitClient.trkApi() } // ✅ 여기로 받기
 
     private val exchangeAdapter = ExchangeProgressAdapter { item ->
-        (activity as? MainActivity)?.moveToTrackerDetail(item.groupId)
+        (activity as? MainActivity)?.moveToTrackerDetail(item.groupId, item.role)
     }
 
-    private val groupAdapter = GroupRecommendAdapter { _ ->
-        // TODO
+    private val groupAdapter = GroupRecommendAdapter { item ->
+        android.util.Log.d("HOME_GROUP", "click groupId=${item.groupId}")
+
+        val intent = Intent(requireContext(), GroupDetailActivity::class.java)
+        intent.putExtra("GROUP_ID", item.groupId)
+        startActivity(intent)
     }
 
     private val mateAdapter = MateRecommendAdapter { _ ->
@@ -166,6 +172,8 @@ class HomeFragment : Fragment() {
             runCatching { api.getRecommendedGroups(refresh = refresh) }
                 .onSuccess { response ->
                     val list = if (response.isSuccessful) response.body()?.result.orEmpty() else emptyList()
+                    android.util.Log.d("HOME_API", "groups=$list")
+
                     groupAdapter.submitList(list)
                     applyGroupState(list.isNotEmpty())
                 }

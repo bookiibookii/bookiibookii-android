@@ -16,7 +16,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintDimensionRatio="3:4" />
+        app:layout_constraintDimensionRatio="3:4"
+        android:clipToOutline="true" />
 
     <!-- 제목 (한 줄, 말줄임) -->
     <TextView

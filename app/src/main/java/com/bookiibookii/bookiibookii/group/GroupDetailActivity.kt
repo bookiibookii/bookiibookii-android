@@ -45,7 +45,7 @@ class GroupDetailActivity : AppCompatActivity() {
     }
 
     private val viewModel: GroupDetailViewModel by viewModels()
-    private var currentGroupId: Int = 0
+    private var currentGroupId: Long = -1L
 
     // ★ 대댓글 타겟 ID (null이면 일반 댓글)
     private var targetParentId: Long? = null
@@ -55,8 +55,8 @@ class GroupDetailActivity : AppCompatActivity() {
         binding = ActivityGrpHostBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        currentGroupId = intent.getIntExtra("GROUP_ID", 0)
-        if (currentGroupId == 0) {
+        currentGroupId = intent.getLongExtra("GROUP_ID", -1L)
+        if (currentGroupId <= 0L) {
             Toast.makeText(this, "잘못된 접근입니다.", Toast.LENGTH_SHORT).show()
             finish()
             return
@@ -67,8 +67,8 @@ class GroupDetailActivity : AppCompatActivity() {
         setupObserver()
 
         // 화면 진입 시 데이터 로드 (그룹 정보 + 댓글 목록)
-        viewModel.fetchGroupDetail(currentGroupId)
-        viewModel.fetchComments(currentGroupId.toLong()) // ★ 댓글 불러오기
+        viewModel.fetchGroupDetail(currentGroupId.toInt())   // ✅ Int로 변환해서 호출
+        viewModel.fetchComments(currentGroupId)              // ✅ Long 그대로
     }
 
     private fun initView() {
@@ -336,7 +336,8 @@ class GroupDetailActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(this@GroupDetailActivity, "신청되었습니다!", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
-                    viewModel.fetchGroupDetail(currentGroupId)
+                    viewModel.fetchGroupDetail(currentGroupId.toInt())
+
                 } else {
                     val msg = try { JSONObject(response.errorBody()?.string() ?: "{}").getString("message") } catch (e: Exception) { "신청 실패" }
                     Toast.makeText(this@GroupDetailActivity, msg, Toast.LENGTH_SHORT).show()
@@ -353,7 +354,7 @@ class GroupDetailActivity : AppCompatActivity() {
                 val response = RetrofitClient.api().cancelGroupApplication(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(this@GroupDetailActivity, "신청 취소 완료", Toast.LENGTH_SHORT).show()
-                    viewModel.fetchGroupDetail(currentGroupId)
+                    viewModel.fetchGroupDetail(currentGroupId.toInt())
                 } else {
                     val msg = try { JSONObject(response.errorBody()?.string() ?: "{}").getString("message") } catch (e: Exception) { "취소 실패" }
                     Toast.makeText(this@GroupDetailActivity, msg, Toast.LENGTH_SHORT).show()
@@ -373,7 +374,7 @@ class GroupDetailActivity : AppCompatActivity() {
                         if (currentData != null) {
                             val intent = Intent(this, GroupGenerationActivity::class.java)
                             intent.putExtra("IS_EDIT_MODE", true)
-                            intent.putExtra("GROUP_ID", currentGroupId)
+                            intent.putExtra("GROUP_ID", currentGroupId.toInt())
                             intent.putExtra("BOOK_TITLE", currentData.bookTitle)
                             intent.putExtra("START_DATE", currentData.startDate)
                             intent.putExtra("PERIOD", currentData.readingPeriod)
@@ -433,10 +434,9 @@ class GroupDetailActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (currentGroupId != 0) {
-            viewModel.fetchGroupDetail(currentGroupId)
-            // 화면 돌아올 때마다 댓글도 새로고침하려면 여기 추가
-            viewModel.fetchComments(currentGroupId.toLong())
+        if (currentGroupId > 0L) {
+            viewModel.fetchGroupDetail(currentGroupId.toInt())
+            viewModel.fetchComments(currentGroupId)
         }
     }
 

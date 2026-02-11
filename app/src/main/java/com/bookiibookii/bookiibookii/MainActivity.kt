@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii
 
 import LoadingDialog
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -9,9 +10,12 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.group.main.GroupFragment
+import com.bookiibookii.bookiibookii.home.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment
+import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
+import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
 
 class MainActivity : AppCompatActivity() {
@@ -75,10 +79,15 @@ class MainActivity : AppCompatActivity() {
         selectTab(NavTab.GROUP, GroupFragment())
     }
 
-    fun moveToTrackerDetail(groupId: Long) {
-        selectTab(NavTab.TRACKER, TrkHostMainFragment())
+    fun moveToTrackerDetail(groupId: Long, role: ExchangeRole) {
 
-        // TODO: 트래커 상세 화면/네비 구조에 맞게 groupId 전달하여 TRK-010으로 이동
+        val intent = when (role) {
+            ExchangeRole.GUEST -> Intent(this, GuestActivity::class.java)
+            ExchangeRole.HOST -> Intent(this, HostActivity::class.java)
+        }
+
+        intent.putExtra("group_id", groupId) // ✅ 여기 키가 핵심
+        startActivity(intent)
     }
 
     private fun replaceFragment(fragment: Fragment) {
