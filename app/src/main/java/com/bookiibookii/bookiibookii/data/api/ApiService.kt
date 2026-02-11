@@ -49,13 +49,10 @@ import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import okhttp3.RequestBody
 import com.bookiibookii.bookiibookii.trkData.api.TrkApi
-import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
-import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -104,10 +101,10 @@ interface ApiService: TrkApi {
     @POST("api/report")
     suspend fun postReport(@Body request: ReportRequest): Response<ReportCreateResponse>
 
-    @POST("api/auth/refresh")
-    fun refreshToken(
+    @POST("/api/auth/refresh")
+    suspend fun postRefresh(
         @Body request: TokenRefreshRequest
-    ): retrofit2.Call<TokenRefreshResponse>
+    ): Response<TokenRefreshResponse>
 
     @GET("api/report/groups/my")
     suspend fun getMyGroups(): Response<MyGroupResponse>
