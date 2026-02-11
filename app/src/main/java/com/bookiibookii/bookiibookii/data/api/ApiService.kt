@@ -29,6 +29,8 @@ import com.bookiibookii.bookiibookii.data.model.MypageResponse
 import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
+import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
+import com.bookiibookii.bookiibookii.data.model.NotificationListResultDto
 import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentResponse
@@ -47,6 +49,7 @@ import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import okhttp3.RequestBody
 import com.bookiibookii.bookiibookii.trkData.api.TrkApi
+import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -303,6 +306,33 @@ interface ApiService: TrkApi {
         @Body request: GroupItemDto.GroupAppStatusRequest
     ): Response<GroupItemDto.GroupAppStatusResponse>
 
+    @GET("api/notifications")
+    suspend fun getNotifications(
+        @Query("category") category: String,
+        @Query("cursor") cursor: String?,
+        @Query("size") size: Int
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<NotificationListResultDto>>
+
+    @PATCH("api/notifications/{notificationId}/read")
+    suspend fun readNotification(
+        @Path("notificationId") notificationId: Long
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<NotificationItemDto>>
+
+    @GET("/api/keywords")
+    suspend fun getKeywords(
+        @Query("sort") sort: String // "LATEST" | "ALPHABETICAL"
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<com.bookiibookii.bookiibookii.data.model.KeywordListResultDto>>
+
+    @POST("/api/keywords")
+    suspend fun createKeyword(
+        @Body request: com.bookiibookii.bookiibookii.data.model.KeywordCreateRequest
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<com.bookiibookii.bookiibookii.data.model.KeywordCreateResultDto>>
+
+    @DELETE("/api/keywords/{keywordId}")
+    suspend fun deleteKeyword(
+        @Path("keywordId") keywordId: Long
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<String>>
+  
     @DELETE("api/cards/{cardId}")
     suspend fun deleteCard(
         @Path("cardId") cardId: Long
