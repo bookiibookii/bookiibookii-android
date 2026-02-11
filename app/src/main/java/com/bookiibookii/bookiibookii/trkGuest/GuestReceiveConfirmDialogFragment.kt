@@ -135,7 +135,8 @@ class GuestReceiveConfirmDialogFragment : DialogFragment() {
                             prev?.dismissAllowingStateLoss()
                             dismissAllowingStateLoss()
 
-                            GuestStartBottomDialogFragment()
+                            GuestStartBottomDialogFragment
+                                .newInstance(groupId)
                                 .show(parentFragmentManager, GuestStartBottomDialogFragment.TAG)
                         }
 

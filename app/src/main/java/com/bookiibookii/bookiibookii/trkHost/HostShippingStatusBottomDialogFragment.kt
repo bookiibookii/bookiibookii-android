@@ -41,6 +41,10 @@ class HostShippingStatusBottomDialogFragment : BottomSheetDialogFragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.uiState.collectLatest { state ->
                     val info = state.data?.deliveryInfo
+
+                    android.util.Log.d("IMG_UI", "deliveryInfo=$info")
+                    android.util.Log.d("IMG_UI", "full dto=${state.data}")
+
                     binding.tvCourier.text = info?.deliveryCompany ?: "-"
                     binding.tvTrackingNum.text = info?.trackingNumber ?: "-"
                 }
@@ -48,6 +52,8 @@ class HostShippingStatusBottomDialogFragment : BottomSheetDialogFragment() {
         }
 
         binding.btnFinish.setOnClickListener {
+            android.util.Log.d("IMG_UI", "finish clicked, current dto=${vm.uiState.value.data}")
+
             dismiss()
             HostSendConfirmFragment
                 .newInstance(groupId)

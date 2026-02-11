@@ -1,18 +1,24 @@
 package com.bookiibookii.bookiibookii.trkDirectGuest
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityDirectGuestBinding
+import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.ResolverStyle
 
 class DirectGuestActivity : AppCompatActivity() {
 
@@ -39,21 +45,32 @@ class DirectGuestActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                vm.trackerState.collectLatest { state ->
-                    when (state) {
-                        UiState.Idle -> Unit
-                        UiState.Loading -> Unit
 
-                        is UiState.Success -> {
-                            val dto = state.data
-                            val status = dto.trackerStatus
-                            val meetingTime = dto.meetingInfo?.meetingTime
+                launch {
+                    vm.tradeStepList.collectLatest { list: List<TradeStatusItem> ->
+                        updateStatusList(list)
+                    }
+                }
 
-                            showOrReplaceBottomSheetByStatus(groupId, status, meetingTime)
-                        }
+                launch {
+                    vm.trackerState.collectLatest { state ->
+                        when (state) {
+                            UiState.Idle -> Unit
+                            UiState.Loading -> Unit
 
-                        is UiState.Error -> {
-                            showOrReplaceBottomSheetByStatus(groupId, null, null)
+                            is UiState.Success -> {
+                                val dto = state.data
+                                val status = dto.trackerStatus
+                                val meetingTime = dto.meetingInfo?.meetingTime
+
+                                binding.tvToolbarTitle.text = dto.bookTitle.orEmpty()
+
+                                showOrReplaceBottomSheetByStatus(groupId, status, meetingTime)
+                            }
+
+                            is UiState.Error -> {
+                                showOrReplaceBottomSheetByStatus(groupId, null, null)
+                            }
                         }
                     }
                 }
@@ -67,6 +84,23 @@ class DirectGuestActivity : AppCompatActivity() {
             val status = dto?.trackerStatus
             val meetingTime = dto?.meetingInfo?.meetingTime
             showOrReplaceBottomSheetByStatus(groupId, status, meetingTime)
+        }
+    }
+
+    private fun updateStatusList(steps: List<TradeStatusItem>) {
+        binding.stepContainer.removeAllViews()
+        val inflater = LayoutInflater.from(this)
+
+        steps.forEachIndexed { index, item ->
+            val row = inflater.inflate(R.layout.item_trade_status, binding.stepContainer, false)
+            row.findViewById<TextView>(R.id.tv_title).text = item.title
+            row.findViewById<TextView>(R.id.tv_desc).text = item.description  // TradeStatusItem에 description이 있을 때
+            row.findViewById<TextView>(R.id.tv_badge).text = item.badge
+
+            row.findViewById<View>(R.id.divider).visibility =
+                if (index == steps.lastIndex) View.GONE else View.VISIBLE
+
+            binding.stepContainer.addView(row)
         }
     }
 
@@ -94,10 +128,9 @@ class DirectGuestActivity : AppCompatActivity() {
 
     private fun dismissExistingSheetIfAny() {
         val existing = supportFragmentManager.findFragmentByTag(DIRECT_GUEST_SHEET_TAG)
-        if (existing is BottomSheetDialogFragment) {
-            existing.dismissAllowingStateLoss()
-        } else if (existing is androidx.fragment.app.DialogFragment) {
-            existing.dismissAllowingStateLoss()
+        when (existing) {
+            is BottomSheetDialogFragment -> existing.dismissAllowingStateLoss()
+            is androidx.fragment.app.DialogFragment -> existing.dismissAllowingStateLoss()
         }
     }
 
@@ -106,7 +139,6 @@ class DirectGuestActivity : AppCompatActivity() {
         status: String?,
         meetingTime: String?
     ): BottomSheetDialogFragment? {
-
         return when (status) {
             "READY",
             "HOST_READING" -> DirectGuestReadingStatusBottomDialogFragment.newInstance(groupId)
@@ -146,27 +178,18 @@ class DirectGuestActivity : AppCompatActivity() {
         }
     }
 
+    private val meetingFormatterNoShift: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss'Z'")
+            .withResolverStyle(ResolverStyle.STRICT)
+
     private fun isMeetingPassed(meetingTime: String?): Boolean {
         if (meetingTime.isNullOrBlank()) return false
+
         return try {
-            val meeting = parseAnyDateTime(meetingTime) ?: return false
-            meeting.isBefore(LocalDateTime.now())
+            val meetingLocal = LocalDateTime.parse(meetingTime.trim(), meetingFormatterNoShift)
+            meetingLocal.isBefore(LocalDateTime.now())
         } catch (e: Exception) {
             false
-        }
-    }
-
-    private fun parseAnyDateTime(raw: String): LocalDateTime? {
-        return try {
-            if (raw.endsWith("Z")) {
-                java.time.OffsetDateTime.parse(raw)
-                    .atZoneSameInstant(java.time.ZoneId.systemDefault())
-                    .toLocalDateTime()
-            } else {
-                LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-            }
-        } catch (e: Exception) {
-            null
         }
     }
 
