@@ -237,23 +237,45 @@ class HomeFragment : Fragment() {
             runCatching { api.getRecommendedBookmates() }
                 .onSuccess { response ->
                     if (!response.isSuccessful) {
+                        android.util.Log.e("MATE_API", "http fail code=${response.code()}")
                         mateAdapter.submitList(emptyList())
                         applyMateState(false)
                         return@onSuccess
                     }
 
                     val body = response.body()
-                    if (body?.isSuccess == false && body.code == "USERTAG404") {
+                    if (body == null) {
+                        android.util.Log.e("MATE_API", "body is null (parsing fail 가능)")
                         mateAdapter.submitList(emptyList())
                         applyMateState(false)
                         return@onSuccess
                     }
 
-                    val list = body?.result.orEmpty().take(5)
+                    android.util.Log.d("MATE_API", "isSuccess=${body.isSuccess} code=${body.code} resultSize=${body.result?.size ?: -1}")
+
+                    // 공통 응답 실패 처리
+                    if (!body.isSuccess) {
+                        // USERTAG404면 empty로 보여주는 정책 OK
+                        if (body.code == "USERTAG404") {
+                            mateAdapter.submitList(emptyList())
+                            applyMateState(false)
+                            return@onSuccess
+                        }
+
+                        // 그 외 실패는 로그 남기고 empty 처리
+                        android.util.Log.e("MATE_API", "api fail code=${body.code} msg=${body.message}")
+                        mateAdapter.submitList(emptyList())
+                        applyMateState(false)
+                        return@onSuccess
+                    }
+
+                    val list = body.result.orEmpty().take(5)
+
                     mateAdapter.submitList(list)
                     applyMateState(list.isNotEmpty())
                 }
-                .onFailure {
+                .onFailure { e ->
+                    android.util.Log.e("MATE_API", "exception", e)
                     mateAdapter.submitList(emptyList())
                     applyMateState(false)
                 }

@@ -49,7 +49,7 @@ class MateRecommendAdapter(
             tvName.text = item.nickname
             tvRecent.text = item.recentBookTitle ?: "최근 완독한 책이 없어요"
 
-            val tags = item.matchedTags
+            val tags = item.matchedTags.orEmpty()
 
             if (tags.isNotEmpty()) {
                 tvTag1.visibility = View.VISIBLE
