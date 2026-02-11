@@ -4,8 +4,6 @@ import com.bookiibookii.bookiibookii.data.api.ApiService
 import com.bookiibookii.bookiibookii.data.model.KeywordCreateRequest
 import com.bookiibookii.bookiibookii.data.model.KeywordCreateResultDto
 import com.bookiibookii.bookiibookii.data.model.KeywordListResultDto
-import com.bookiibookii.bookiibookii.data.model.NotificationCategory
-import com.bookiibookii.bookiibookii.data.model.NotificationListResultDto
 import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
 import retrofit2.Response
 

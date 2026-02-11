@@ -7,7 +7,7 @@ import com.bookiibookii.bookiibookii.R
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 
-class HomNotificationActivity : AppCompatActivity() {
+class NotificationActivity : AppCompatActivity() {
 
     private lateinit var toolbar: MaterialToolbar
     private lateinit var btnSystem: MaterialButton
@@ -15,7 +15,7 @@ class HomNotificationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_hom_notification)
+        setContentView(R.layout.activity_notification)
 
         toolbar = findViewById(R.id.toolbar)
 
@@ -26,7 +26,7 @@ class HomNotificationActivity : AppCompatActivity() {
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_plus -> {
-                    val intent = Intent(this, HomKeywordNotiSettingActivity::class.java)
+                    val intent = Intent(this, NotificationKeywordSettingActivity::class.java)
                     startActivity(intent)
                     true
                 }
@@ -51,7 +51,7 @@ class HomNotificationActivity : AppCompatActivity() {
     private fun showSystem() {
         setTabSelected(isSystem = true)
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fcv_noti, HomSystemNotiFragment())
+            .replace(R.id.fcv_noti, NotificationSystemFragment())
             .commit()
     }
 

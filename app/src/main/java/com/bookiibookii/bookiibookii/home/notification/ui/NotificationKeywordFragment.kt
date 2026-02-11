@@ -1,8 +1,9 @@
 package com.bookiibookii.bookiibookii.home.notification.ui
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -11,28 +12,34 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.ComErrorActivity
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.NotificationCategory
 import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
-import com.bookiibookii.bookiibookii.home.notification.adapter.HomNotiAdapter
+import com.bookiibookii.bookiibookii.home.notification.adapter.SystemAdapter
 import com.bookiibookii.bookiibookii.home.notification.data.NotificationRepository
-import com.bookiibookii.bookiibookii.home.notification.model.HomNotiItem
+import com.bookiibookii.bookiibookii.home.notification.model.NotificationItem
+import com.bookiibookii.bookiibookii.home.notification.model.NotificationType
+import com.bookiibookii.bookiibookii.home.notification.util.TimeAgoFormatter
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModel
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModelFactory
 import kotlinx.coroutines.launch
 
-class HomKeywordNotiFragment : Fragment(R.layout.fragment_hom_keyword_noti) {
+class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) {
 
-    private val adapter = HomNotiAdapter { item ->
+    private val adapter = SystemAdapter { item ->
         if (item.isUnread) {
             viewModel.markAsRead(item.id)
         }
-
-        // TODO: 키워드 알림 type/payload 기반 이동 분기
-        // 일단 설정 화면으로 보내거나, 그룹 상세로 보내는 식으로 임시 처리 가능
-        val intent = Intent(requireContext(), HomKeywordNotiSettingActivity::class.java)
-        startActivity(intent)
+        handleKeywordNotificationClick(item.notification)
     }
+
+    private val errorLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == ComErrorActivity.RESULT_RETRY) {
+                viewModel.loadFirstPage()
+            }
+        }
 
     private val viewModel: NotificationViewModel by viewModels {
         val api = RetrofitClient.api()
@@ -58,7 +65,7 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_hom_keyword_noti) {
                 val lastVisible = lm.findLastVisibleItemPosition()
                 val total = lm.itemCount
 
-                if (lastVisible >= total - 3) {
+                if (lastVisible >= total - 3 && !viewModel.state.value.isLoadingMore) {
                     viewModel.loadNextPage()
                 }
             }
@@ -70,27 +77,54 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_hom_keyword_noti) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { s ->
+
                     val uiItems = s.items.map { it.toUiItem() }
                     bind(uiItems, rv, empty)
-                    // TODO: s.errorMessage 필요하면 Toast로 표시
+
+                    if (s.errorType != null) {
+                        errorLauncher.launch(
+                            ComErrorActivity.newIntent(requireContext(), s.errorType)
+                        )
+                    }
                 }
             }
         }
     }
 
-    private fun NotificationItemDto.toUiItem(): HomNotiItem {
-        return HomNotiItem(
+    private fun NotificationItemDto.toUiItem(): NotificationItem {
+        return NotificationItem(
             notification = this,
-            timeText = createdAt,
+            timeText = TimeAgoFormatter.format(createdAt),
             bookTitle = "",
             isUnread = !isRead
         )
     }
 
-    private fun bind(items: List<HomNotiItem>, rv: RecyclerView, empty: View) {
+    private fun bind(items: List<NotificationItem>, rv: RecyclerView, empty: View) {
         val hasData = items.isNotEmpty()
         rv.visibility = if (hasData) View.VISIBLE else View.GONE
         empty.visibility = if (hasData) View.GONE else View.VISIBLE
         if (hasData) adapter.setItems(items)
+    }
+
+    private fun handleKeywordNotificationClick(dto: NotificationItemDto) {
+        val type = NotificationType.from(dto.type)
+
+        when (type) {
+            NotificationType.KEYWORD_GROUP_CREATED -> {
+                val groupId = NotificationPayloadParser.getGroupId(dto)
+                if (groupId == null) {
+                    Toast.makeText(requireContext(), "알림 이동에 필요한 정보가 없습니다.", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                // TODO: GRP-010 해당 그룹 상세로 이동
+                Toast.makeText(requireContext(), "TODO: GRP-010(해당 그룹) 이동 groupId=$groupId", Toast.LENGTH_SHORT).show()
+            }
+
+            else -> {
+                Toast.makeText(requireContext(), "지원하지 않는 키워드 알림입니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

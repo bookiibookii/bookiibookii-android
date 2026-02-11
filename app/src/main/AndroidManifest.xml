@@ -53,11 +53,11 @@
         </activity>
 
         <activity
-            android:name=".home.notification.ui.HomNotificationActivity"
+            android:name=".home.notification.ui.NotificationActivity"
             android:exported="false" />
 
         <activity
-            android:name=".home.notification.ui.HomKeywordNotiSettingActivity"
+            android:name=".home.notification.ui.NotificationKeywordSettingActivity"
             android:exported="false" />
 
         <activity

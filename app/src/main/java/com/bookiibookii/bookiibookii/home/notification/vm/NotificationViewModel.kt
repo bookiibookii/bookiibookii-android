@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.home.notification.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.common.ComErrorActivity
 import com.bookiibookii.bookiibookii.home.notification.data.NotificationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,7 @@ class NotificationViewModel(
 
     fun loadFirstPage() {
         viewModelScope.launch {
+
             _state.update {
                 it.copy(
                     items = emptyList(),
@@ -27,26 +29,40 @@ class NotificationViewModel(
                     hasNext = false,
                     isLoading = true,
                     isLoadingMore = false,
-                    errorMessage = null
+                    errorType = null
                 )
             }
 
-            val http = repo.fetchNotifications(category = category, cursor = null, size = pageSize)
-            val body = http.body()
+            try {
+                val http = repo.fetchNotifications(category, null, pageSize)
+                val body = http.body()
 
-            if (http.isSuccessful && body != null && body.isSuccess && body.result != null) {
-                val r = body.result
+                if (http.isSuccessful && body?.isSuccess == true && body.result != null) {
+                    val r = body.result
+                    _state.update {
+                        it.copy(
+                            items = r.items,
+                            nextCursor = r.nextCursor,
+                            hasNext = r.hasNext,
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            errorType = ComErrorActivity.TYPE_SYSTEM_ERROR
+                        )
+                    }
+                }
+
+            } catch (e: Exception) {
                 _state.update {
                     it.copy(
-                        items = r.items,
-                        nextCursor = r.nextCursor,
-                        hasNext = r.hasNext,
-                        isLoading = false
+                        isLoading = false,
+                        errorType = ComErrorActivity.TYPE_NETWORK_ERROR
                     )
                 }
-            } else {
-                val msg = body?.message ?: "알림 목록 조회에 실패했습니다."
-                _state.update { it.copy(isLoading = false, errorMessage = msg) }
             }
         }
     }
@@ -58,45 +74,61 @@ class NotificationViewModel(
         if (s.nextCursor.isNullOrBlank()) return
 
         viewModelScope.launch {
-            _state.update { it.copy(isLoadingMore = true, errorMessage = null) }
 
-            val http = repo.fetchNotifications(category = category, cursor = s.nextCursor, size = pageSize)
-            val body = http.body()
+            _state.update { it.copy(isLoadingMore = true, errorType = null) }
 
-            if (http.isSuccessful && body != null && body.isSuccess && body.result != null) {
-                val r = body.result
+            try {
+                val http = repo.fetchNotifications(category, s.nextCursor, pageSize)
+                val body = http.body()
+
+                if (http.isSuccessful && body?.isSuccess == true && body.result != null) {
+                    val r = body.result
+                    _state.update {
+                        it.copy(
+                            items = it.items + r.items,
+                            nextCursor = r.nextCursor,
+                            hasNext = r.hasNext,
+                            isLoadingMore = false
+                        )
+                    }
+                } else {
+                    _state.update {
+                        it.copy(
+                            isLoadingMore = false,
+                            errorType = ComErrorActivity.TYPE_SYSTEM_ERROR
+                        )
+                    }
+                }
+
+            } catch (e: Exception) {
                 _state.update {
                     it.copy(
-                        items = it.items + r.items,
-                        nextCursor = r.nextCursor,
-                        hasNext = r.hasNext,
-                        isLoadingMore = false
+                        isLoadingMore = false,
+                        errorType = ComErrorActivity.TYPE_NETWORK_ERROR
                     )
                 }
-            } else {
-                val msg = body?.message ?: "알림 추가 조회에 실패했습니다."
-                _state.update { it.copy(isLoadingMore = false, errorMessage = msg) }
             }
         }
     }
 
     fun markAsRead(notificationId: Long) {
         viewModelScope.launch {
-            val http = repo.read(notificationId)
-            val body = http.body()
+            try {
+                val http = repo.read(notificationId)
+                val body = http.body()
 
-            if (http.isSuccessful && body != null && body.isSuccess && body.result != null) {
-                val updated = body.result
-                _state.update { cur ->
-                    cur.copy(
-                        items = cur.items.map { item ->
-                            if (item.id == notificationId) updated else item
-                        }
-                    )
+                if (http.isSuccessful && body?.isSuccess == true && body.result != null) {
+                    val updated = body.result
+                    _state.update { cur ->
+                        cur.copy(
+                            items = cur.items.map { item ->
+                                if (item.id == notificationId) updated else item
+                            }
+                        )
+                    }
                 }
-            } else {
-                val msg = body?.message ?: "알림 읽음 처리에 실패했습니다."
-                _state.update { it.copy(errorMessage = msg) }
+            } catch (_: Exception) {
+                // 읽음 실패는 에러 화면 안 띄움
             }
         }
     }

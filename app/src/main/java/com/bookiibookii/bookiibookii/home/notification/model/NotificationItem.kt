@@ -2,7 +2,7 @@ package com.bookiibookii.bookiibookii.home.notification.model
 
 import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
 
-data class HomNotiItem(
+data class NotificationItem(
     val notification: NotificationItemDto,
     val timeText: String,
     val bookTitle: String = "",

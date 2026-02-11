@@ -30,7 +30,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 
-class HomKeywordNotiSettingActivity : AppCompatActivity() {
+class NotificationKeywordSettingActivity : AppCompatActivity() {
 
     private lateinit var toolbar: MaterialToolbar
 
@@ -66,7 +66,7 @@ class HomKeywordNotiSettingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_hom_keyword_noti_setting)
+        setContentView(R.layout.activity_notification_keyword_setting)
 
         bindViews()
         bindToolbar()
