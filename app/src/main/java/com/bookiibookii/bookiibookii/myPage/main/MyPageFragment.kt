@@ -99,15 +99,16 @@ class MypageFragment : Fragment() {
         binding.rvBooks.isNestedScrollingEnabled = false
     }
 
+    // ★ [수정됨] 제공된 이미지 규칙에 맞게 매핑 로직 추가
     private fun translateBadge(englishText: String): String {
         return when (englishText.uppercase()) {
-            "PASSIONATE" -> "열정적인"
-            "COMMUNICATOR" -> "소통왕"
-            "FAST_READER" -> "스피드 리더"
-            "KIND" -> "친절해요"
-            "PUNCTUAL" -> "시간을 잘 지켜요"
-            "GOOD_LISTENER" -> "경청을 잘해요"
-            else -> englishText
+            "MEMO" -> "메모환영"
+            "POSTIT" -> "포스트잇"
+            "CLEAN" -> "깔끔"
+            "SERIOUS" -> "진지함"
+            "LIGHT_FUN" -> "재미있게"
+            "INSIGHT" -> "인사이트"
+            else -> englishText // 매핑되는 단어가 없으면 원래 영어 그대로 출력
         }
     }
 
@@ -135,7 +136,6 @@ class MypageFragment : Fragment() {
                         target: Target<Drawable>,
                         isFirstResource: Boolean
                     ): Boolean {
-                        // 이미지 로딩 실패 (또는 URL이 null일 때) 로딩창 종료
                         if (loadingDialog.isShowing) loadingDialog.dismiss()
                         return false
                     }
@@ -147,7 +147,6 @@ class MypageFragment : Fragment() {
                         dataSource: DataSource,
                         isFirstResource: Boolean
                     ): Boolean {
-                        // 이미지 로딩 성공 시 로딩창 종료
                         if (loadingDialog.isShowing) loadingDialog.dismiss()
                         return false
                     }
@@ -157,7 +156,9 @@ class MypageFragment : Fragment() {
             mypTagsLayout.removeAllViews()
             data.topTags.forEach { tagText ->
                 val textView = TextView(root.context).apply {
-                    text = "#$tagText"
+                    // ★ [핵심] translateBadge 함수를 사용해서 한글로 변환 후 적용
+                    text = "#${translateBadge(tagText)}"
+
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                     setTextColor(ContextCompat.getColor(context, R.color.ui_main_sub))
                     setBackgroundResource(R.drawable.bg_round_8dp_gray300)
@@ -176,8 +177,9 @@ class MypageFragment : Fragment() {
             }
         }
 
+        // ★ [핵심] 획득한 후기(뱃지) 리스트도 한글로 변환
         val badgeList = data.userBadge?.map {
-            MypReview(content = it.userBadge, count = it.count)
+            MypReview(content = translateBadge(it.userBadge), count = it.count)
         } ?: emptyList()
         binding.mypReviewsRv.adapter = MypReviewAdapter(badgeList)
 
@@ -189,7 +191,6 @@ class MypageFragment : Fragment() {
         lifecycleScope.launch {
             loadingDialog.show() // API 호출 전 로딩 시작
 
-            // ★ API 통신 자체가 실패했을 때를 대비한 플래그 변수
             var isApiSuccess = false
 
             try {
@@ -201,7 +202,6 @@ class MypageFragment : Fragment() {
                     val result = response.body()!!.result
                     if (result != null) {
                         isApiSuccess = true
-                        // 성공했다면 updateUI 내부의 Glide Listener가 로딩창을 꺼줍니다.
                         updateUI(result)
                     }
                 } else {
@@ -210,7 +210,6 @@ class MypageFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e("Mypage", "Network Error", e)
             } finally {
-                // ★ API 호출에 실패해서 updateUI(Glide)까지 도달하지 못한 경우에만 여기서 안전하게 닫아줍니다.
                 if (!isApiSuccess) {
                     if (loadingDialog.isShowing) loadingDialog.dismiss()
                 }

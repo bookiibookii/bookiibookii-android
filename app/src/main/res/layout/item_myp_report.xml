@@ -9,10 +9,10 @@
     android:padding="16dp">
 
     <ImageView
-        android:id="@+id/item_report_profile_iv"
+        android:id="@+id/item_report_iv"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:background="@drawable/bg_round_5dp_gray300"
+        android:background="@drawable/ic_question"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
     <TextView
@@ -23,9 +23,9 @@
         android:text="noshel"
         android:textAppearance="@style/medium11"
         android:textColor="@color/grey_900"
-        app:layout_constraintStart_toEndOf="@id/item_report_profile_iv"
-        app:layout_constraintTop_toTopOf="@id/item_report_profile_iv"
-        app:layout_constraintBottom_toBottomOf="@id/item_report_profile_iv"/>
+        app:layout_constraintStart_toEndOf="@id/item_report_iv"
+        app:layout_constraintTop_toTopOf="@id/item_report_iv"
+        app:layout_constraintBottom_toBottomOf="@id/item_report_iv"/>
 
     <TextView
         android:id="@+id/item_report_date_tv"
@@ -35,23 +35,10 @@
         tools:text="2024. 11. 29."
         android:textAppearance="@style/regular11"
         android:textColor="@color/grey_400"
-        app:layout_constraintStart_toEndOf="@id/item_report_name_tv"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/item_report_name_tv"
         app:layout_constraintTop_toTopOf="@id/item_report_name_tv"/>
 
-    <TextView
-        android:id="@+id/item_report_state_ing_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="답변 대기 중"
-        android:textAppearance="@style/regular11"
-        android:textColor="@color/pre_main"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="4dp"
-        android:visibility="visible"
-        android:background="@drawable/bg_round_8dp_orange_stroke"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
 
     <TextView
         android:id="@+id/item_report_state_ed_tv"
@@ -76,7 +63,7 @@
         android:textAppearance="@style/regular14"
         android:textColor="@color/grey_900"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/item_report_profile_iv"/>
+        app:layout_constraintTop_toBottomOf="@id/item_report_iv"/>
 
     <ImageView
         android:id="@+id/item_report_arrow_iv"

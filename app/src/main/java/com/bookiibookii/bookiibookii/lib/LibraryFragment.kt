@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.lib
 
-import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,7 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.LoadingDialog
@@ -105,7 +103,6 @@ class LibraryFragment : Fragment() {
                             isMine = (apiData.hostNickName == myNickname)
                         )
                     }
-                    // ★ 데이터 통신 후 현재 탭 상태에 맞춰 화면 갱신
                     showBooksByStatus(currentTabStatus)
                 }
             } catch (e: Exception) {
@@ -129,14 +126,12 @@ class LibraryFragment : Fragment() {
         showBooksByStatus(currentTabStatus)
     }
 
-    // ★ 수정된 부분: 데이터 유무에 따른 빈 화면(Empty View) 처리 로직 추가
     private fun showBooksByStatus(status: ReadStatus) {
         val filteredList = allMyBooks.filter { it.readStatus == status }
         libraryAdapter.submitList(filteredList)
         binding.libTotalTv.text = "${filteredList.size}권"
         updateButtonStyles(status)
 
-        // 리스트가 비어있을 때 Empty Layout 표시 및 텍스트 변경
         if (filteredList.isEmpty()) {
             binding.mypNoBookCl.visibility = View.VISIBLE
             binding.libBookListRv.visibility = View.GONE
@@ -150,7 +145,6 @@ class LibraryFragment : Fragment() {
                 binding.mypNoText.text = "완료한 독서가 없어요"
             }
         } else {
-            // 리스트에 데이터가 있을 때 정상적으로 리스트 표시
             binding.mypNoBookCl.visibility = View.GONE
             binding.libBookListRv.visibility = View.VISIBLE
             binding.libGridIv.visibility = View.VISIBLE
@@ -161,6 +155,9 @@ class LibraryFragment : Fragment() {
 
     private fun initRecyclerView() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
+            // ★ 여기에 로그 추가
+            Log.d("LibraryClick", "클릭된 책: ${clickedBook.title}, isMine 값: ${clickedBook.isMine}")
+
             val targetFragment: Fragment
 
             if (clickedBook.groupType == "TOGETHER") {

@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypReportBinding
 import kotlinx.coroutines.launch
@@ -18,9 +18,8 @@ class MypReportFragment : Fragment() {
     private var _binding: FragmentMypReportBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
-
-    private val adapter = MypReportAdapter()
+    private lateinit var loadingDialog: LoadingDialog
+    private lateinit var adapter: MypReportAdapter // ★ 지연 초기화로 변경
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMypReportBinding.inflate(inflater, container, false)
@@ -29,13 +28,28 @@ class MypReportFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
-        binding.mypReportBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
+        binding.mypReportBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
         binding.mypReportBtn.setOnClickListener {
-            requireActivity().supportFragmentManager.beginTransaction()
+            parentFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, MypReportWriteFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
+        // ★ 어댑터에 클릭 리스너 달아주기
+        adapter = MypReportAdapter { clickedItem ->
+            val detailFragment = MypReportDetailFragment().apply {
+                arguments = Bundle().apply {
+                    putString("groupName", clickedItem.groupName)
+                    putString("reportType", clickedItem.reportType)
+                    putString("content", clickedItem.content)
+                }
+            }
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, detailFragment)
                 .addToBackStack(null)
                 .commit()
         }
@@ -48,7 +62,7 @@ class MypReportFragment : Fragment() {
 
     private fun fetchReportList() {
         lifecycleScope.launch {
-            loadingDialog.show() // ★ API 호출 전 로딩 시작
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getReportList()
 
@@ -71,7 +85,7 @@ class MypReportFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e("Report", "네트워크 오류", e)
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
