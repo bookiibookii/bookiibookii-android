@@ -7,14 +7,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeMateBinding
 import com.bookiibookii.bookiibookii.home.notification.ui.NotificationActivity
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
 
@@ -28,7 +31,15 @@ class HomeFragment : Fragment() {
 
     // TODO: 나중에 서버 데이터 연결 시 어댑터에 리스트 주입 로직 추가 필요
     private val exchangeAdapter = ExchangeProgressAdapter()
-    private val groupAdapter = GroupRecommendAdapter()
+
+    private val groupAdapter = GroupRecommendAdapter { item ->
+        // TODO: groupId로 그룹 상세 이동
+        // val intent = Intent(requireContext(), GroupDetailActivity::class.java)
+        // intent.putExtra("groupId", item.groupId)
+        // startActivity(intent)
+    }
+
+    private val api by lazy { RetrofitClient.api() }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -56,23 +67,25 @@ class HomeFragment : Fragment() {
         groupBinding.rvGroupCard.apply {
             layoutManager = GridLayoutManager(requireContext(), 3)
             adapter = groupAdapter
-        }
 
+            val spacing = resources.getDimensionPixelSize(R.dimen.spacing_12)
+            addItemDecoration(GridSpacingItemDecoration(3, spacing))
+        }
         // empty 카드 문구 세팅
         setExchangeEmptyTexts()
         setGroupEmptyTexts()
         setMateEmptyTexts()
 
-        // TODO: 나중에 서버 응답으로 교체
-        val exchangeHasData = false
-        val groupHasData = false
-        val mateHasData = false
-
-        applyExchangeState(exchangeHasData)
-        applyGroupState(groupHasData)
-        applyMateState(mateHasData)
-
         bindHeaderActions()
+        bindEmptyActions()
+
+        // 그룹 추천 최초 로드
+        loadRecommendedGroups(refresh = false)
+
+        // 그룹 새로고침 버튼
+        groupBinding.btnRefresh.setOnClickListener {
+            loadRecommendedGroups(refresh = true)
+        }
     }
 
     override fun onDestroyView() {
@@ -150,5 +163,35 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun loadRecommendedGroups(refresh: Boolean) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                api.getRecommendedGroups(refresh = refresh)
+            }.onSuccess { response ->
+                if (response.isSuccessful) {
+                    val body = response.body()
 
+                    //TODO: 추후 로그 삭제
+                    android.util.Log.d("GROUP_API", "body=$body")
+                    android.util.Log.d("GROUP_API", "first=${body?.result?.firstOrNull()}")
+
+                    val list = body?.result.orEmpty()
+
+                    if (list.isNotEmpty()) {
+                        groupAdapter.submitList(list)
+                        applyGroupState(true)
+                    } else {
+                        groupAdapter.submitList(emptyList())
+                        applyGroupState(false)
+                    }
+                } else {
+                    groupAdapter.submitList(emptyList())
+                    applyGroupState(false)
+                }
+            }.onFailure {
+                groupAdapter.submitList(emptyList())
+                applyGroupState(false)
+            }
+        }
+    }
 }

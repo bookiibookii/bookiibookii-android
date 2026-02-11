@@ -5,6 +5,7 @@
     android:id="@+id/section_exchange_progress"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:backgroundTint="@color/ui_bg"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
     android:paddingTop="16dp"
@@ -28,6 +29,10 @@
         layout="@layout/item_home_mate_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+
+        android:visibility="gone"
+        tools:visibility="gone"
+
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_group_section_title"/>
