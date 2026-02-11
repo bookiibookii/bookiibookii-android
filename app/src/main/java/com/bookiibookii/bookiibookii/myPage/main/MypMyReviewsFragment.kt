@@ -1,26 +1,31 @@
 package com.bookiibookii.bookiibookii
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.bookData.Data.MyReceivedReview
+import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.MypRelayReview
 import com.bookiibookii.bookiibookii.databinding.FragmentMypMyReviewsBinding
 import com.bookiibookii.bookiibookii.myPage.review.MypMyReviewAdapter
+import kotlinx.coroutines.launch
 
 class MypMyReviewFragment : Fragment() {
 
     private var _binding: FragmentMypMyReviewsBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var reviewAdapter: MypMyReviewAdapter
+    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
 
-    // 리스트 타입 명시
-    private var reviewList: List<MyReceivedReview> = listOf()
+    private lateinit var reviewAdapter: MypMyReviewAdapter
+    private var reviewList: List<MypRelayReview> = listOf()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMypMyReviewsBinding.inflate(inflater, container, false)
@@ -29,48 +34,57 @@ class MypMyReviewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
 
-        initData()
         initRecyclerView()
         initListeners()
-        binding.mypReviewBackIv.setOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
-
-    }
-
-    private fun initData() {
-        reviewList = listOf(
-            MyReceivedReview(1, "noshel", "괴테는 모든 것을 말했다", "스즈키 유이", "2025.12.18~2026.01.12",
-                listOf("#글씨가 예뻐요", "#코멘트가 다정해요"), "이동진 평론가도 추천한...", "파트너의 한줄평 내용...", System.currentTimeMillis()),
-            MyReceivedReview(2, "kanghun", "총 균 쇠", "제러드", "2025.11.01~2025.11.20",
-                listOf("#글씨가 예뻐요", "#코멘트가 다정해요", "#코멘트가 재미있어요"), "정말 좋은 책이었습니다.", "재밌었어요!", System.currentTimeMillis() - 1000000)
-        )
-        binding.mypReviewCountTv.text = "${reviewList.size} 개"
+        fetchReviewData()
     }
 
     private fun initRecyclerView() {
-        // 어댑터 생성 시 List<MyReceivedReview> 타입을 전달
         reviewAdapter = MypMyReviewAdapter(reviewList)
-
         binding.mypReviewsRv.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = reviewAdapter
         }
-        sortReviews(true)
+    }
+
+    private fun fetchReviewData() {
+        lifecycleScope.launch {
+            loadingDialog.show() // ★ API 호출 전 로딩 시작
+            try {
+                val response = RetrofitClient.api().getRelayReviews()
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val result = response.body()?.result
+                    if (result != null) {
+                        reviewList = result.reviews
+
+                        binding.mypReviewCountTv.text = "${reviewList.size} 개"
+                        sortReviews(true)
+                    }
+                } else {
+                    Log.e("ReviewFragment", "API Error: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("ReviewFragment", "Network Error", e)
+            } finally {
+                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
+            }
+        }
     }
 
     private fun initListeners() {
-        binding.mypReviewBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.mypReviewBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
         binding.mypReviewRateTv.setOnClickListener { sortReviews(true) }
         binding.mypReviewTimeTv.setOnClickListener { sortReviews(false) }
     }
 
     private fun sortReviews(isNewest: Boolean) {
         val sortedList = if (isNewest) {
-            reviewList.sortedByDescending { it.timestamp }
+            reviewList.sortedByDescending { it.finishedDate }
         } else {
-            reviewList.sortedBy { it.timestamp }
+            reviewList.sortedBy { it.finishedDate }
         }
         reviewAdapter.submitList(sortedList)
 

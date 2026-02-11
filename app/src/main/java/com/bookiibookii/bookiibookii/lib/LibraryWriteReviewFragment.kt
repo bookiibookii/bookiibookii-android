@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,7 +29,7 @@ class LibraryWriteReviewFragment : Fragment() {
     private var bookTitle = ""
     private var bookAuthor = ""
     private var bookCover = ""
-    private var currentRating = 0
+    private var currentRating : Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +53,7 @@ class LibraryWriteReviewFragment : Fragment() {
         initStarRating()
         initInputListener()
 
-        binding.libDetailBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.libDetailBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
         binding.libReviewAddBtn.setOnClickListener { postReview() }
     }
 
@@ -65,12 +66,13 @@ class LibraryWriteReviewFragment : Fragment() {
 
     private fun postReview() {
         val comment = binding.libWriteReviewEt.text.toString()
-        val rating = currentRating.toDouble()
+        val rating = currentRating
 
         lifecycleScope.launch {
             try {
                 val request = ReviewRequest(rating, comment)
                 val response = RetrofitClient.api().postBookReview(userBookId, request)
+                Log.d("Library", "${response.body()}")
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     // ★ 성공 시: Together(결과) 화면으로 이동
@@ -83,7 +85,7 @@ class LibraryWriteReviewFragment : Fragment() {
                             putString("bookCover", bookCover)
                         }
                     }
-                    parentFragmentManager.beginTransaction()
+                    requireActivity().supportFragmentManager.beginTransaction()
                         .replace(R.id.fragmentContainer, togetherFragment)
                         // .addToBackStack(null) // 결과 화면에서 뒤로가기 시 목록으로 가려면 주석 처리
                         .commit()
@@ -104,7 +106,7 @@ class LibraryWriteReviewFragment : Fragment() {
         }
 
         // 현재 화면(WriteReview)을 대체하여 이동
-        parentFragmentManager.beginTransaction()
+        requireActivity().supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, togetherFragment)
             // .addToBackStack(null) // 결과 화면에서 뒤로가기 시 다시 목록으로 가고 싶다면 스택에 추가 X
             .commit()
@@ -122,18 +124,34 @@ class LibraryWriteReviewFragment : Fragment() {
 
         stars.forEachIndexed { index, imageView ->
             imageView.setOnClickListener {
-                currentRating = index + 1
+                val targetHalf = index + 0.5
+                val targetFull = index + 1.0
+                if (currentRating == targetHalf) {
+                    currentRating = targetFull
+                } else {
+                    // 처음 누르거나 다른 별을 누르면 일단 '반 개' 상태로 만듦
+                    currentRating = targetHalf
+                }
                 updateStarUI(stars, currentRating)
                 checkValidation()
             }
         }
     }
 
-    private fun updateStarUI(stars: List<ImageView>, rating: Int) {
+    private fun updateStarUI(stars: List<ImageView>, rating: Double) {
         stars.forEachIndexed { index, imageView ->
-            if (index < rating) {
+            val starValue = index + 1.0
+
+            // 🔹 4. 점수에 따라 아이콘 3가지 분기 처리
+            if (rating >= starValue) {
+                // 꽉 찬 별 (예: rating이 3.0인데 현재 별이 3번째(3.0)일 때)
                 imageView.setImageResource(R.drawable.ic_star_filled)
+            } else if (rating >= starValue - 0.5) {
+                // 반 개 별 (예: rating이 2.5인데 현재 별이 3번째(3.0)일 때)
+                // ⚠️ 주의: 프로젝트의 drawable 폴더에 ic_star_half 이미지가 꼭 있어야 합니다!
+                imageView.setImageResource(R.drawable.ic_star_half)
             } else {
+                // 빈 별
                 imageView.setImageResource(R.drawable.ic_star_none)
             }
         }

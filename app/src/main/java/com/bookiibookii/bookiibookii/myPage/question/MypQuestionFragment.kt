@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypQuestionBinding
 import kotlinx.coroutines.launch
@@ -17,7 +18,8 @@ class MypQuestionFragment : Fragment() {
     private var _binding: FragmentMypQuestionBinding? = null
     private val binding get() = _binding!!
 
-    // 어댑터 선언
+    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+
     private val adapter = MypQuestionAdapter()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -27,27 +29,26 @@ class MypQuestionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
 
-        binding.mypQuestionBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.mypQuestionBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
-        // 문의 작성하기 버튼
         binding.mypQuestionBtn.setOnClickListener {
-            parentFragmentManager.beginTransaction()
+            requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, MypQuestionWriteFragment())
                 .addToBackStack(null)
                 .commit()
         }
 
-        // 리사이클러뷰 설정
         binding.mypQuestionListRv.layoutManager = LinearLayoutManager(context)
         binding.mypQuestionListRv.adapter = adapter
 
-        // 데이터 불러오기
         fetchInquiryList()
     }
 
     private fun fetchInquiryList() {
         lifecycleScope.launch {
+            loadingDialog.show() // ★ API 호출 전 로딩 시작
             try {
                 val response = RetrofitClient.api().getInquiryList()
 
@@ -55,30 +56,28 @@ class MypQuestionFragment : Fragment() {
                     val list = response.body()!!.result
 
                     if (list.isNullOrEmpty()) {
-                        // 데이터 없을 때
                         binding.mypQuestionListRv.visibility = View.GONE
                         binding.mypNoQuestionCl.visibility = View.VISIBLE
                     } else {
-                        // 데이터 있을 때
                         binding.mypQuestionListRv.visibility = View.VISIBLE
                         binding.mypNoQuestionCl.visibility = View.GONE
                         adapter.submitList(list)
                     }
                 } else {
                     Log.e("Inquiry", "리스트 조회 실패: ${response.code()}")
-                    // 실패 시에도 비어있는 화면 처리 (혹은 에러 토스트)
                     binding.mypQuestionListRv.visibility = View.GONE
                     binding.mypNoQuestionCl.visibility = View.VISIBLE
                 }
             } catch (e: Exception) {
                 Log.e("Inquiry", "네트워크 오류", e)
+            } finally {
+                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
             }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        // 작성 후 돌아왔을 때 리스트 갱신
         fetchInquiryList()
         requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }

@@ -167,35 +167,35 @@ class LibraryShareFragment : DialogFragment() {
 
     private fun shareToInstagramStory() {
         val targetView = if (isTypeA) binding.typeACard else binding.typeBCard
-        targetView.post {
-            val uri = getViewBitmapUri(targetView)
-            if (uri != null) {
-                val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
-                    // ★ [수정 1] 배경 이미지 설정 제거
-                    // 기존: setDataAndType(uri, "image/*") -> 배경으로 설정됨
-                    // 변경: setType("image/*") -> 데이터 타입만 명시 (배경 안 깔림)
-                    type = "image/*"
 
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        // post 제거: 버튼을 클릭한 시점에는 이미 뷰가 화면에 있으므로 즉시 캡처합니다.
+        val uri = getViewBitmapUri(targetView)
 
-                    // ★ [수정 2] 스티커(내용)로만 이미지 전달
-                    putExtra("interactive_asset_uri", uri)
-
-                    // (선택 사항) 배경색을 지정하고 싶다면 아래 주석 해제 (기본값: 이미지에서 추출한 그라데이션)
-                    // putExtra("top_background_color", "#333333")
-                    // putExtra("bottom_background_color", "#333333")
-                }
-                try {
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    Toast.makeText(context, "인스타그램이 설치되어 있지 않습니다.", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                Toast.makeText(context, "이미지 생성 실패", Toast.LENGTH_SHORT).show()
+        if (uri != null) {
+            val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
+                type = "image/*"
+                setPackage("com.instagram.android")
+                putExtra("interactive_asset_uri", uri)
+                // 인스타 배경색 (원하시는 색상으로 변경 가능)
+                putExtra("top_background_color", "#FAE0D4")
+                putExtra("bottom_background_color", "#FFFFF")
             }
+
+            requireActivity().grantUriPermission(
+                "com.instagram.android",
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "인스타그램이 설치되어 있지 않거나 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(context, "이미지 캡처에 실패했습니다.", Toast.LENGTH_SHORT).show()
         }
-    }
-    private fun shareLinkToApp(packageName: String) {
+    }    private fun shareLinkToApp(packageName: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, getShareUrl())
@@ -237,13 +237,43 @@ class LibraryShareFragment : DialogFragment() {
     // ★ 뷰 캡처 (흰 화면 방지 로직)
     private fun getViewBitmapUri(view: View): Uri? {
         try {
-            if (view.width == 0 || view.height == 0) return null
+            // 1. 타입 A(wrap_content)의 크기가 0으로 잡히는 현상 방지 (강제 측정)
+            if (view.width == 0 || view.height == 0) {
+                view.measure(
+                    View.MeasureSpec.makeMeasureSpec(binding.parentShareContainer.width, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                )
+                view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            }
 
-            val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+            val width = view.width.takeIf { it > 0 } ?: view.measuredWidth
+            val height = view.height.takeIf { it > 0 } ?: view.measuredHeight
+
+            if (width == 0 || height == 0) return null
+
+            // 2. 비트맵과 캔버스 생성
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
-            canvas.drawColor(Color.TRANSPARENT)
+
+            // ★ 3. [핵심] 캔버스 모서리 둥글게 자르기 (Software Canvas Clipping)
+            // XML의 CardView 설정과 동일하게 20dp를 픽셀로 변환
+            val radius = 20f * resources.displayMetrics.density
+            val path = android.graphics.Path().apply {
+                addRoundRect(
+                    android.graphics.RectF(0f, 0f, width.toFloat(), height.toFloat()),
+                    radius,
+                    radius,
+                    android.graphics.Path.Direction.CW
+                )
+            }
+            // 이 코드를 적용하면 이후에 그려지는 모든 것들이 둥근 테두리 밖으로 삐져나가지 않습니다.
+            canvas.clipPath(path)
+
+            // 4. 배경색을 깔고(투명 방지) 뷰 그리기
+            canvas.drawColor(Color.WHITE)
             view.draw(canvas)
 
+            // 5. 파일로 저장
             val imagesFolder = File(requireContext().cacheDir, "images")
             if (!imagesFolder.exists()) imagesFolder.mkdirs()
 
@@ -259,10 +289,10 @@ class LibraryShareFragment : DialogFragment() {
                 file
             )
         } catch (e: Exception) {
+            Log.e("ShareError", "Bitmap Capture Error", e)
             return null
         }
     }
-
     override fun onResume() {
         super.onResume()
         dialog?.window?.setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)

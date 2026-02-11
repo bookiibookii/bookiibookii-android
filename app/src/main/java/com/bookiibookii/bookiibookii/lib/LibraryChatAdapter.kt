@@ -28,7 +28,7 @@ class LibraryChatAdapter(
             }
 
             Glide.with(itemView.context)
-                .load(item.writer.profileImage)
+                .load(item.writer.profileImageUrl)
                 .placeholder(R.drawable.bg_round_20dp_gray200)
                 .circleCrop()
                 .into(binding.libChatProfileIv)

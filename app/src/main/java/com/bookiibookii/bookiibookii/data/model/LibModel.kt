@@ -24,7 +24,8 @@ data class BookResult(
     val duration: Int,
     val rating: Double,
     val comment: String?,
-    val groupType: String            // "RELAY" or "TOGETHER"
+    val groupType: String ,           // "RELAY" or "TOGETHER"
+    val groupState : String,
 )
 
 // UI에서 사용하는 모델 (Adapter용)
@@ -42,7 +43,9 @@ data class LibBook(
     val readStatus: ReadStatus,
     val progress: String?,
     val rating: Double,
-    val groupType: String // ★ 추가됨: 프래그먼트 분기 처리를 위해 필요
+    val groupType: String, // ★ 추가됨: 프래그먼트 분기 처리를 위해 필요
+    val groupState : String,
+    val isMine: Boolean
 )
 
 enum class ReadStatus { READING, DONE }
@@ -143,7 +146,7 @@ data class CommentItem(
 data class CommentWriter(
     val userId: Int,
     val name: String,
-    val profileImage: String?
+    val profileImageUrl: String?
 )
 
 // ==========================================
@@ -283,4 +286,12 @@ data class CompleteReadingResult(
     val matchedMemberId: Int,
     val currentReadingRate: Int,
     val completedAt: String
+)
+
+data class RelayReviewRequest(
+    val bookRating: Double,      // 책 별점 (0.5 단위)
+    val bookComment: String,     // 책 코멘트
+    val partnerRating: Double,   // 파트너 별점 (0.5 단위)
+    val partnerComment: String,  // 파트너 코멘트
+    val badgeCodes: List<String> // 선택된 배지(태그) 영문 코드 리스트
 )

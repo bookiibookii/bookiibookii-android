@@ -13,6 +13,7 @@ import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.CommonDialog
+import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailTogetherBinding
@@ -25,7 +26,8 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private var _binding: FragmentLibBookDetailTogetherBinding? = null
     private val binding get() = _binding!!
 
-    // 내 닉네임 가져오기용
+    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+
     private val myPageViewModel: MyPageViewModel by activityViewModels()
 
     private var userBookId: Int = -1
@@ -64,9 +66,9 @@ class LibraryBookDetailTogetherFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingDialog = LoadingDialog(requireContext()) // ★ 초기화
 
         setupMyProfileData()
-
         initView()
         initRecyclerView()
         initListeners()
@@ -84,36 +86,22 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     }
 
     private fun initView() {
-        // 책 정보
         binding.libDetailBookTitleTv.text = bookTitle
         binding.libDetailBookAuthorTv.text = bookAuthor
         binding.libDetailTitleTv.text = bookTitle
-        val dateText = if (endDate.isNotEmpty()) {
-            "$startDate ~ $endDate"
-        } else {
-            "$startDate ~"
-        }
-        binding.libDetailDateTv.text = dateText
+        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
 
-        // 마키 효과
         binding.libDetailBookTitleTv.isSelected = true
         binding.libDetailBookAuthorTv.isSelected = true
 
         Glide.with(this).load(bookCover).transform(CenterCrop(), RoundedCorners(dpToPx(10))).into(binding.libDetailImageIv)
 
-        // 호스트 정보
         binding.libDetailProfileTv.text = hostName
-        Glide.with(this)
-            .load(hostProfileUrl)
-            .placeholder(R.drawable.bg_circle_gray500)
-            .error(R.drawable.img_profile_default)
-            .circleCrop()
-            .into(binding.libDetailProfileIv)
+        Glide.with(this).load(hostProfileUrl).placeholder(R.drawable.bg_circle_gray500)
+            .error(R.drawable.img_profile_default).circleCrop().into(binding.libDetailProfileIv)
 
-        // 초기 뷰 상태
         binding.groupPartnerReview.visibility = View.GONE
         binding.bookDetailDownArrowIv.rotation = 0f
-
         binding.groupDataExist.visibility = View.GONE
         binding.layoutEmpty.visibility = View.GONE
     }
@@ -128,10 +116,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
                         putString("writerName", clickedCard.creatorName)
                     }
                 }
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainer, detailFragment)
-                    .addToBackStack(null)
-                    .commit()
+                requireActivity().supportFragmentManager.beginTransaction().replace(R.id.fragmentContainer, detailFragment).addToBackStack(null).commit()
             },
             onBookmarkClick = { card, _ -> toggleBookmark(card) }
         )
@@ -143,25 +128,22 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private fun fetchData() {
         if (groupId == -1) return
         lifecycleScope.launch {
+            loadingDialog.show() // ★ 로딩 시작
             try {
                 val response = RetrofitClient.api().getGroupCards(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
 
-                    // 한줄평 바인딩
                     binding.libDetailReviewName1Tv.text = myNickname
                     binding.libDetailReviewText1Tv.text = result?.myComment ?: "\"아직 한줄 평을 남기지 않았어요.\""
-
                     binding.libDetailReviewName2Tv.text = "상대방"
                     binding.libDetailReviewText2Tv.text = result?.partnerComment ?: "작성된 내용이 없습니다."
 
-                    // 리스트 데이터
                     val apiCards = result?.cards ?: emptyList()
                     originalList = apiCards
                     cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
                     binding.libDetailTotalTv.text = "${apiCards.size}개"
 
-                    // 분기 처리
                     if (apiCards.isNotEmpty()) {
                         binding.groupDataExist.visibility = View.VISIBLE
                         binding.layoutEmpty.visibility = View.GONE
@@ -171,6 +153,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) { e.printStackTrace() }
+            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() } // ★ 로딩 끝
         }
     }
 
@@ -195,12 +178,10 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private fun initListeners() {
         binding.libDetailBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
 
-        // [삭제] 더보기 버튼
         binding.libDetailMoreIv.setOnClickListener {
             LibraryGroupDeleteBottomSheet { showDeleteConfirmDialog() }.show(parentFragmentManager, "GroupDeleteSheet")
         }
 
-        // [토글] 상대방 리뷰 보기
         binding.bookDetailDownArrowIv.setOnClickListener {
             if (binding.groupPartnerReview.visibility == View.GONE) {
                 binding.groupPartnerReview.visibility = View.VISIBLE
@@ -230,6 +211,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private fun deleteGroup() {
         if (userBookId == -1) return
         lifecycleScope.launch {
+            loadingDialog.show() // ★ 로딩 시작
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -237,6 +219,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
                     parentFragmentManager.popBackStack()
                 }
             } catch (e: Exception) { e.printStackTrace() }
+            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() } // ★ 로딩 끝
         }
     }
 

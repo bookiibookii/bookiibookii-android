@@ -135,7 +135,7 @@ class LibrarySearchFragment : Fragment() {
                     putString("bookCover", clickedBook.coverUrl)
                 }
                 targetFragment.arguments = bundle
-                parentFragmentManager.beginTransaction()
+                requireActivity().supportFragmentManager.beginTransaction()
                     .replace(R.id.fragmentContainer, targetFragment)
                     .addToBackStack(null)
                     .commit()
@@ -154,7 +154,7 @@ class LibrarySearchFragment : Fragment() {
                         putString("writerName", clickedCard.creatorName)
                     }
                 }
-                parentFragmentManager.beginTransaction()
+                requireActivity().supportFragmentManager.beginTransaction()
                     .replace(R.id.fragmentContainer, detailFragment)
                     .addToBackStack(null)
                     .commit()
@@ -170,7 +170,7 @@ class LibrarySearchFragment : Fragment() {
         // 뒤로가기
         binding.libSearchBackIv.setOnClickListener {
             hideKeyboard()
-            parentFragmentManager.popBackStack()
+            requireActivity().supportFragmentManager.popBackStack()
         }
 
         // 검색어 입력 감지

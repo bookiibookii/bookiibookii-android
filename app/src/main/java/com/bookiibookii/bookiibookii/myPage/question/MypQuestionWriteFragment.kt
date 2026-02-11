@@ -26,7 +26,7 @@ class MypQuestionWriteFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.mypWriteBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.mypWriteBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
         // 전송 버튼 클릭
         binding.mypWriteBtn.setOnClickListener {
@@ -54,7 +54,7 @@ class MypQuestionWriteFragment : Fragment() {
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "문의가 접수되었습니다.", Toast.LENGTH_SHORT).show()
-                    parentFragmentManager.popBackStack() // 목록 화면으로 돌아가기 (자동 갱신됨)
+                    requireActivity().supportFragmentManager.popBackStack() // 목록 화면으로 돌아가기 (자동 갱신됨)
                 } else {
                     Log.e("InquiryWrite", "전송 실패: ${response.code()}")
                     Toast.makeText(context, "문의 전송에 실패했습니다.", Toast.LENGTH_SHORT).show()

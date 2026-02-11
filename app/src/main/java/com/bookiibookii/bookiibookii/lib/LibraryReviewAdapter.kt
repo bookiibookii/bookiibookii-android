@@ -78,7 +78,7 @@ class LibraryReviewAdapter(
                 try {
                     val response = RetrofitClient.api().getUserProfile(item.creatorName)
                     if (response.isSuccessful && response.body()?.isSuccess == true) {
-                        val userImageKey = response.body()?.result?.userImage?.s3Key // JSON 구조에 따라 경로 확인 필요
+                        val userImageKey = response.body()?.result?.profileImageUrl
 
                         // UI 업데이트는 Main 스레드에서
                         withContext(Dispatchers.Main) {
