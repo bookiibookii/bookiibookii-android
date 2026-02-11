@@ -66,8 +66,8 @@
 
                 <ImageView
                     android:id="@+id/myp_setting_iv"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:src="@drawable/ic_setting"
                     app:layout_constraintEnd_toEndOf="@id/guideline_end_inner"
                     app:layout_constraintTop_toTopOf="parent"

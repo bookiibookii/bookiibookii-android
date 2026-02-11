@@ -110,13 +110,25 @@ class LibraryBookAdapter(
         }
 
         private fun setRatingStars(starContainer: LinearLayout, rating: Double) {
-            val ratingInt = rating.toInt()
+            val ratingInt = rating.toInt() // 예: 4.5 -> 4
+            val hasHalfStar = (rating - ratingInt) >= 0.5 // 예: 4.5 - 4 = 0.5 -> true
+
             for (i in 0 until starContainer.childCount) {
                 val starView = starContainer.getChildAt(i) as? ImageView ?: continue
-                if (i < ratingInt) {
-                    starView.setImageResource(R.drawable.ic_star_filled)
-                } else {
-                    starView.setImageResource(R.drawable.ic_star_none)
+
+                when {
+                    i < ratingInt -> {
+                        // 1. 꽉 찬 별
+                        starView.setImageResource(R.drawable.ic_star_filled)
+                    }
+                    i == ratingInt && hasHalfStar -> {
+                        // 2. 반 개 별 (정수부를 갓 넘고, 0.5 이상일 때)
+                        starView.setImageResource(R.drawable.ic_star_half)
+                    }
+                    else -> {
+                        // 3. 빈 별
+                        starView.setImageResource(R.drawable.ic_star_none)
+                    }
                 }
             }
         }
@@ -127,27 +139,36 @@ class LibraryBookAdapter(
         fun bind(item: LibBook, position: Int) {
             binding.itemBookGridTv.text = item.title
 
-            // [동적 높이 계산 로직]
+            // 1. 책등 동적 높이 계산 (px로 변환)
             val titleLength = item.title.length
             val calculatedHeight = (titleLength * 15) + 60
             val finalHeightDp = calculatedHeight.coerceIn(120, 260)
+            val finalHeightPx = dpToPx(binding.root.context, finalHeightDp)
 
-            // ★ 중요: root가 아닌 내부 컨테이너(spineContainer)의 높이만 변경합니다.
-            // XML의 root는 wrap_content여야 Flexbox에서 정상 작동합니다.
+            // 2. 부모(책등 컨테이너)의 높이 적용
             val spineParams = binding.spineContainer.layoutParams
-            spineParams.height = dpToPx(binding.root.context, finalHeightDp)
+            spineParams.height = finalHeightPx
             binding.spineContainer.layoutParams = spineParams
 
-            // 배경색
-            val colors = listOf(R.color.ui_main_105, R.color.ui_main_sub_pale)
+            // 3. ★ 핵심: 텍스트뷰의 너비(Width)를 책등의 높이(Height)와 똑같이 늘려줌 ★
+            val tvParams = binding.itemBookGridTv.layoutParams
+            tvParams.width = finalHeightPx
+            binding.itemBookGridTv.layoutParams = tvParams
+
+            // 4. 배경색 및 글자색 적용
+            val bgColorRes = if (item.isMine) R.color.ui_main_105 else R.color.ui_main_sub_pale
+            val textColorRes = if (item.isMine) R.color.pre_main else R.color.main
+
             binding.spineContainer.background.setTint(
-                ContextCompat.getColor(binding.root.context, colors[position % colors.size])
+                ContextCompat.getColor(binding.root.context, bgColorRes)
+            )
+            binding.itemBookGridTv.setTextColor(
+                ContextCompat.getColor(binding.root.context, textColorRes)
             )
 
             itemView.setOnClickListener { itemClickListener(item) }
         }
     }
-
     private fun dpToPx(context: Context, dp: Int): Int {
         return (dp * context.resources.displayMetrics.density).toInt()
     }

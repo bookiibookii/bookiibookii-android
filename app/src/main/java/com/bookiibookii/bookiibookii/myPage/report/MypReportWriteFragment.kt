@@ -49,7 +49,7 @@ class MypReportWriteFragment : Fragment() {
     }
 
     private fun initListeners() {
-        binding.mypReportBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.mypReportBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
         // 1. 그룹 선택 (+ 버튼)
         binding.mypReportGroupPlusIv.setOnClickListener {
@@ -229,7 +229,7 @@ class MypReportWriteFragment : Fragment() {
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "신고가 접수되었습니다.", Toast.LENGTH_SHORT).show()
-                    parentFragmentManager.popBackStack()
+                    requireActivity().supportFragmentManager.popBackStack()
                 } else {
                     Toast.makeText(context, "전송 실패", Toast.LENGTH_SHORT).show()
                 }

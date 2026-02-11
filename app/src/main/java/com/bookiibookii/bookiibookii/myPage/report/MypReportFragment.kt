@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypReportBinding
 import kotlinx.coroutines.launch
@@ -16,6 +17,8 @@ import kotlinx.coroutines.launch
 class MypReportFragment : Fragment() {
     private var _binding: FragmentMypReportBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
 
     private val adapter = MypReportAdapter()
 
@@ -26,12 +29,12 @@ class MypReportFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
 
-        binding.mypReportBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.mypReportBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
-        // 신고 작성하기 버튼
         binding.mypReportBtn.setOnClickListener {
-            parentFragmentManager.beginTransaction()
+            requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, MypReportWriteFragment())
                 .addToBackStack(null)
                 .commit()
@@ -45,6 +48,7 @@ class MypReportFragment : Fragment() {
 
     private fun fetchReportList() {
         lifecycleScope.launch {
+            loadingDialog.show() // ★ API 호출 전 로딩 시작
             try {
                 val response = RetrofitClient.api().getReportList()
 
@@ -66,6 +70,8 @@ class MypReportFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e("Report", "네트워크 오류", e)
+            } finally {
+                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
             }
         }
     }

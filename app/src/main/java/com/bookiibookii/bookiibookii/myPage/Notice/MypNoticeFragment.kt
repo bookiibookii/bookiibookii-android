@@ -9,14 +9,17 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.databinding.FragmentMypNoticeBinding // 공지 리스트용 XML (이름 확인 필요)
+import com.bookiibookii.bookiibookii.databinding.FragmentMypNoticeBinding
 import kotlinx.coroutines.launch
 
 class MypNoticeFragment : Fragment() {
 
-    private var _binding: FragmentMypNoticeBinding? = null // XML 이름이 다르면 수정하세요
+    private var _binding: FragmentMypNoticeBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -28,34 +31,32 @@ class MypNoticeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
 
-        binding.mypNoticeBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.mypNoticeBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
         fetchNoticeList()
     }
 
     private fun fetchNoticeList() {
         lifecycleScope.launch {
+            loadingDialog.show() // ★ API 호출 전 로딩 시작
             try {
                 val response = RetrofitClient.api().getNoticeList()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val noticeList = response.body()!!.result
 
                     val adapter = MypNoticeAdapter(noticeList) { noticeId ->
-                        // 클릭 시 상세 화면으로 이동 (ID 전달)
                         val fragment = MypNoticeDetailFragment().apply {
-                            arguments = Bundle().apply {
-                                putInt("noticeId", noticeId)
-                            }
+                            arguments = Bundle().apply { putInt("noticeId", noticeId) }
                         }
-
-                        parentFragmentManager.beginTransaction()
+                        requireActivity().supportFragmentManager.beginTransaction()
                             .replace(R.id.fragmentContainer, fragment)
                             .addToBackStack(null)
                             .commit()
                     }
 
-                    binding.rvNoticeList.adapter = adapter // XML 리사이클러뷰 ID 확인
+                    binding.rvNoticeList.adapter = adapter
                     binding.rvNoticeList.layoutManager = LinearLayoutManager(context)
 
                 } else {
@@ -63,6 +64,8 @@ class MypNoticeFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e("Notice", "네트워크 오류", e)
+            } finally {
+                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
             }
         }
     }
