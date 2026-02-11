@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -46,11 +47,11 @@
         app:cardBackgroundColor="@color/pre_sub_pale"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
-        app:strokeColor="@color/ui_main_sub"
-        app:strokeWidth="1dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_desc">
+        app:layout_constraintTop_toBottomOf="@id/tv_desc"
+        app:strokeColor="@color/ui_main_sub"
+        app:strokeWidth="1dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -67,16 +68,18 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="수령인"
-                    android:textSize="14dp"
-                    android:textColor="@color/grey_900"/>
+                    android:textColor="@color/grey_900"
+                    android:textSize="14sp" />
 
                 <TextView
+                    android:id="@+id/tv_receiver_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="000"
                     android:layout_marginStart="8dp"
+                    android:text="홍길동"
                     android:textColor="@color/grey_900"
-                    android:textSize="14dp"/>
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -90,16 +93,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="연락처"
-                    android:textSize="14dp"
-                    android:textColor="@color/grey_900" />
+                    android:textColor="@color/grey_900"
+                    android:textSize="14sp" />
 
                 <TextView
+                    android:id="@+id/tv_receiver_phone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="010-7903-2321"
-                    android:textSize="14dp"
-                    android:textColor="@color/grey_900" />
+                    android:text="010-0000-0000"
+                    android:textColor="@color/grey_900"
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
@@ -117,13 +121,15 @@
                     android:padding="12dp">
 
                     <TextView
-                        android:id="@+id/tv_address"
+                        android:id="@+id/tv_address_detail"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:text="[06234] 서울특별시 강남구 테헤란로 123 북키빌딩 456호"
+                        android:layout_marginEnd="12dp"
+                        android:text="[우편번호] 주소 정보가 여기에 표시됩니다."
                         android:textColor="@color/grey_900"
                         android:textSize="14sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/btn_copy"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
@@ -131,14 +137,14 @@
                         android:id="@+id/btn_copy"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@color/grey_200"
+                        android:background="@color/grey_300"
                         android:paddingHorizontal="8dp"
                         android:paddingVertical="4dp"
                         android:text="복사"
                         android:textColor="@color/grey_700"
                         android:textSize="12sp"
-                        app:layout_constraintTop_toBottomOf="@id/tv_address"
-                        app:layout_constraintEnd_toEndOf="parent" />
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
@@ -152,11 +158,11 @@
         app:cardBackgroundColor="@color/ui_point_green.pale"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
-        app:strokeColor="@color/ui_point_green150"
-        app:strokeWidth="1dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/card_address">
+        app:layout_constraintTop_toBottomOf="@id/card_address"
+        app:strokeColor="@color/ui_point_green150"
+        app:strokeWidth="1dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -168,7 +174,7 @@
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:src="@drawable/ic_info_circle"/>
+                android:src="@drawable/ic_info_circle" />
 
             <TextView
                 android:layout_width="wrap_content"

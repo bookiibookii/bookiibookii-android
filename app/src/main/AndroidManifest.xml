@@ -90,6 +90,9 @@
         <activity
             android:name=".group.GroupJoinManagementActivity"
             android:exported="false" />
+
+        <activity android:name=".group.GroupDetailReportContainerActivity"
+            android:screenOrientation="portrait" />
       
         <activity
             android:name=".trkHost.HostActivity"

@@ -84,7 +84,6 @@ class TrkHostMainFragment : Fragment() {
         }
 
         vm.loadHostTrackers()
-//        vm.loadHostTrackersDummy()
     }
 
     private fun setupToggleLogic() {

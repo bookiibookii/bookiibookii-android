@@ -19,7 +19,13 @@ import com.bookiibookii.bookiibookii.data.model.ReadStatus
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryViewModel
 import com.bookiibookii.bookiibookii.data.viewModel.SortType
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBinding
+import com.google.android.flexbox.AlignItems
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 class LibraryFragment : Fragment() {
 
@@ -59,77 +65,82 @@ class LibraryFragment : Fragment() {
     }
 
     private fun fetchBooks() {
+        // [변경] 로딩바 표시 (MainActivity 호출 대신 내부 뷰 제어)
+        binding.loadingProgressBar.visibility = View.VISIBLE
+
+        // (선택) 로딩 중엔 리스트를 잠깐 숨겨서 깜빡임 방지 (원치 않으시면 이 줄 삭제하세요)
+        binding.libBookListRv.visibility = View.INVISIBLE
+
         lifecycleScope.launch {
             try {
-                Log.d("LibraryFragment", "API 요청 시작")
                 val response = RetrofitClient.api().getLibraryBooks()
+
+                // HTTP 응답 상태 확인 로그
+                Log.d("LibraryAPI", "Response Code: ${response.code()}")
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val resultList = response.body()?.result ?: emptyList()
-                    Log.d("LibraryFragment", "API 성공: ${resultList.size}권 받아옴")
+
+                    // API에서 받아온 원본 데이터 리스트 로그 출력
+                    Log.d("LibraryAPI", "받아온 도서 개수: ${resultList.size}")
+                    Log.d("LibraryAPI", "받아온 도서 : ${resultList}")
 
                     allMyBooks = resultList.map { apiData ->
-                        // 평점이 0.0 초과면 완독(DONE)으로 간주
+                        // 평점이 0보다 크면 완독/리뷰 작성한 것으로 간주
                         val status = if (apiData.rating > 0.0) ReadStatus.DONE else ReadStatus.READING
-                        val progressText = if (status == ReadStatus.READING) {
-                            "${apiData.duration}일째 독서 중"
-                        } else {
-                            "완독"
-                        }
+                        val reviewWritten = apiData.rating > 0.0
 
-                        LibBook(
+                        val mappedBook = LibBook(
                             id = apiData.userBookId,
+                            groupId = apiData.groupId,
                             title = apiData.title,
                             author = apiData.author,
                             coverUrl = apiData.image,
+                            hostName = apiData.hostNickname,
                             hostProfileUrl = apiData.hostProfileImageUrl,
+                            startDate = apiData.startDate,
+                            endDate = apiData.endDate,
+                            isReviewed = reviewWritten,
                             readStatus = status,
-                            progress = progressText,
+                            progress = if (status == ReadStatus.READING) "${apiData.duration}일째" else "완독",
                             rating = apiData.rating,
-                            groupType = apiData.groupType // "TOGETHER" or "RELAY"
+                            groupType = apiData.groupType
                         )
+                        mappedBook
                     }
-
-                    // ViewModel에 원본 데이터 세팅 (선택 사항)
-                    viewModel.setBookList(allMyBooks)
-
-                    // 현재 탭 상태로 리스트 표시
-                    val currentSort = viewModel.sortType.value ?: SortType.TITLE
-                    applySort(currentSort)
-
+                    // 데이터 갱신
+                    showBooksByStatus(currentTabStatus)
                 } else {
-                    Log.e("LibraryFragment", "API 오류: ${response.code()} ${response.message()}")
+                    Log.e("LibraryAPI", "API 호출 실패: ${response.body()?.message}")
                 }
             } catch (e: Exception) {
-                Log.e("LibraryFragment", "네트워크 오류: ${e.message}")
+                Log.e("LibraryAPI", "에러 발생: ${e.message}")
                 e.printStackTrace()
+            } finally {
+                // [변경] 로딩 종료 (성공하든 실패하든 무조건 실행)
+                binding.loadingProgressBar.visibility = View.GONE
+                binding.libBookListRv.visibility = View.VISIBLE
             }
         }
     }
 
     private fun applySort(sortType: SortType) {
         if (allMyBooks.isEmpty()) {
-            Log.d("LibraryFragment", "정렬할 데이터가 없음")
             return
         }
 
-        // 1. 정렬 수행
         allMyBooks = when (sortType) {
             SortType.TITLE -> allMyBooks.sortedBy { it.title }
             SortType.RATING_HIGH -> allMyBooks.sortedByDescending { it.rating }
             SortType.RATING_LOW -> allMyBooks.sortedBy { it.rating }
-            SortType.RECENT -> allMyBooks.sortedByDescending { it.id } // ID 기준 최신순
+            SortType.RECENT -> allMyBooks.sortedByDescending { it.id }
             SortType.OLD -> allMyBooks.sortedBy { it.id }
         }
-
-        // 2. 현재 탭(읽는중/완독)에 맞춰 필터링 후 표시
         showBooksByStatus(currentTabStatus)
     }
 
     private fun showBooksByStatus(status: ReadStatus) {
         val filteredList = allMyBooks.filter { it.readStatus == status }
-        Log.d("LibraryFragment", "탭 필터링 결과: 상태=$status, 개수=${filteredList.size}")
-
         libraryAdapter.submitList(filteredList)
         binding.libTotalTv.text = "${filteredList.size}권"
         updateButtonStyles(status)
@@ -137,21 +148,36 @@ class LibraryFragment : Fragment() {
 
     private fun initRecyclerView() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
-            Log.d("LibraryFragment", "책 클릭됨: ${clickedBook.title}, 타입=${clickedBook.groupType}")
-
-            // ★ [핵심 분기] 함께읽기(TOGETHER) -> Ing 화면 / 이어읽기(RELAY) -> Detail 화면
-            val targetFragment = if (clickedBook.groupType == "TOGETHER") {
-                LibraryBookDetailIngFragment() // 함께읽기 (진행중)
+            val targetFragment: Fragment
+            if (clickedBook.groupType == "TOGETHER") {
+                if (clickedBook.readStatus == ReadStatus.DONE) {
+                    targetFragment = LibraryBookDetailTogetherFragment()
+                } else {
+                    targetFragment = LibraryBookDetailIngFragment()
+                }
             } else {
-                LibraryBookDetailFragment()    // 이어읽기 (상세)
+                if (clickedBook.readStatus == ReadStatus.DONE) {
+                    // 완료됨 -> 디테일 화면
+                    targetFragment = LibraryBookDetailFragment()
+                } else {
+                    // 진행중 -> 트래커 화면
+                    // ★ 주의: TrackerFragment의 정확한 패키지 경로와 클래스명을 확인해주세요.
+                    // 예: com.bookiibookii.bookiibookii.tracker.TrackerFragment
+                    targetFragment = LibraryFragment()
+                }
             }
 
             val bundle = Bundle().apply {
                 putInt("userBookId", clickedBook.id)
+                putInt("groupId", clickedBook.groupId)
                 putString("bookTitle", clickedBook.title)
                 putString("bookAuthor", clickedBook.author)
                 putString("bookCover", clickedBook.coverUrl)
-                putBoolean("isMine", true)
+                putString("hostName", clickedBook.hostName)
+                putString("hostProfileUrl", clickedBook.hostProfileUrl)
+                putString("startDate", clickedBook.startDate)
+                putString("endDate", clickedBook.endDate)
+                putDouble("rating", clickedBook.rating)
             }
             targetFragment.arguments = bundle
 
@@ -161,29 +187,23 @@ class LibraryFragment : Fragment() {
                 .commit()
         }
 
+        binding.libBookListRv.layoutManager = GridLayoutManager(context, 3)
         binding.libBookListRv.adapter = libraryAdapter
-        setCoverModeLayout() // 초기: 커버 모드
+        setCoverModeLayout()
     }
 
     private fun initClickListeners() {
-        // [진행 중] 탭
         binding.libIngBtn.setOnClickListener {
             currentTabStatus = ReadStatus.READING
             showBooksByStatus(ReadStatus.READING)
         }
-
-        // [종료] 탭
         binding.libEdBtn.setOnClickListener {
             currentTabStatus = ReadStatus.DONE
             showBooksByStatus(ReadStatus.DONE)
         }
-
-        // [정렬] 바텀시트
         binding.libSortIv.setOnClickListener {
             LibrarySortBottomSheet().show(parentFragmentManager, "LibrarySortBottomSheet")
         }
-
-        // [검색]
         binding.libSearchIv.setOnClickListener {
             val searchFragment = LibrarySearchFragment().apply {
                 arguments = Bundle().apply { putString("SOURCE", "LIBRARY") }
@@ -193,19 +213,14 @@ class LibraryFragment : Fragment() {
                 .addToBackStack(null)
                 .commit()
         }
-
-        // [북마크]
         binding.libBookIv.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, LibraryBookmarkFragment())
                 .addToBackStack(null)
                 .commit()
         }
-
-        // [뷰 모드 전환]
         binding.libGridIv.setOnClickListener {
             libraryAdapter.toggleMode()
-
             if (libraryAdapter.isSpineMode) {
                 setSpineModeLayout()
                 binding.libGridIv.setImageResource(R.drawable.ic_grid_list)
@@ -221,22 +236,29 @@ class LibraryFragment : Fragment() {
         binding.libBookListRv.setPadding(0, 0, 0, dpToPx(80))
         binding.libBookListRv.clipToPadding = false
         removeAllItemDecorations()
-
-        // 아이템 데코레이션 (기존 사용하시던 클래스)
         binding.libBookListRv.addItemDecoration(LibDetailGridDecoration(3, dpToPx(12), dpToPx(36), false))
     }
 
+
     private fun setSpineModeLayout() {
-        binding.libBookListRv.layoutManager = GridLayoutManager(context, 8)
-        binding.libBookListRv.setPadding(dpToPx(8), 0, dpToPx(8), dpToPx(80))
+        // ★ FlexboxLayoutManager 설정
+        val flexboxLayoutManager = FlexboxLayoutManager(context).apply {
+            flexDirection = FlexDirection.ROW        // 가로 방향
+            flexWrap = FlexWrap.WRAP                 // 자동 줄바꿈
+            justifyContent = JustifyContent.FLEX_START // 왼쪽 정렬
+            alignItems = AlignItems.FLEX_END         // ★ 핵심: 바닥(Bottom) 기준 정렬
+        }
+        binding.libBookListRv.layoutManager = flexboxLayoutManager
+
+        // 패딩 설정: XML에서 아이템 간격을 처리하므로 RV는 외곽 패딩만 잡습니다.
+        binding.libBookListRv.setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(80))
         binding.libBookListRv.clipToPadding = false
+
+        // Flexbox 모드에서는 ItemDecoration 없이 XML 마진으로 간격을 제어합니다.
         removeAllItemDecorations()
 
-        binding.libBookListRv.addItemDecoration(object : RecyclerView.ItemDecoration() {
-            override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-                outRect.left = dpToPx(4); outRect.right = dpToPx(4); outRect.top = dpToPx(16); outRect.bottom = 0
-            }
-        })
+        // 데이터 강제 갱신 (LayoutManager 교체 시 크기 재계산 유도)
+        libraryAdapter.notifyDataSetChanged()
     }
 
     private fun removeAllItemDecorations() {

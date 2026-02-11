@@ -18,6 +18,7 @@ import com.bookiibookii.bookiibookii.trkHost.TrackerStatus
 import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class GuestActivity : AppCompatActivity() {
@@ -26,6 +27,8 @@ class GuestActivity : AppCompatActivity() {
     private val vm: GuestViewModel by viewModels()
 
     private var didAutoShowSheet = false
+
+    private var currentIsVerified: Boolean? = null
 
     private val groupId: Long by lazy {
         intent.getLongExtra("group_id", -1L)
@@ -68,7 +71,12 @@ class GuestActivity : AppCompatActivity() {
         }
 
         binding.cardWidget.setOnClickListener {
-            showSheetOnceForStatus(currentStatus)
+            vm.loadTracker(groupId)
+
+            lifecycleScope.launch {
+                vm.uiState.first { !it.isLoading }
+                showSheetOnceForStatus(currentStatus)
+            }
         }
 
             lifecycleScope.launch {
@@ -87,7 +95,11 @@ class GuestActivity : AppCompatActivity() {
                         android.util.Log.d("GUEST", "mapped=${TrackerStatus.from(dto.trackerStatus)}")
 
                         currentStatus = TrackerStatus.from(dto.trackerStatus)
+                        currentIsVerified = dto.deliveryInfo?.isVerified
                         binding.cardWidget.isEnabled = true
+
+                        val title = dto.bookTitle?.trim().orEmpty()
+                        binding.tvToolbarTitle.text = if (title.isBlank()) " " else title
 
                         if (!didAutoShowSheet && savedInstanceState == null) {
                             didAutoShowSheet = true
@@ -126,8 +138,8 @@ class GuestActivity : AppCompatActivity() {
     private fun createSheetForStatus(status: TrackerStatus): BottomSheetDialogFragment {
         return when (status) {
             TrackerStatus.READY,
-            TrackerStatus.HOST_READING -> GuestReadingStatusBottomDialogFragment()
-            TrackerStatus.HOST_EXTENSION -> GuestExtendRequestBottomDialogFragment()
+            TrackerStatus.HOST_READING -> GuestReadingStatusBottomDialogFragment.newInstance(groupId)
+            TrackerStatus.HOST_EXTENSION -> GuestExtendRequestBottomDialogFragment.newInstance(groupId)
             TrackerStatus.HOST_DONE -> GuestReadingDoneBottomDialogFragment()
             TrackerStatus.SHIPPING_TO_GUEST -> GuestShippedBottomDialogFragment.newInstance(groupId)
 
@@ -136,9 +148,17 @@ class GuestActivity : AppCompatActivity() {
             TrackerStatus.GUEST_EXTENSION-> GuestReadingBottomDialogFragment.newInstance(groupId)
 
             TrackerStatus.GUEST_DONE -> GuestShippingBottomDialogFragment.newInstance(groupId)
-            TrackerStatus.SHIPPING_TO_HOST -> GuestShippingStatusBottomDialogFragment()
+            TrackerStatus.SHIPPING_TO_HOST -> GuestShippingStatusBottomDialogFragment.newInstance(groupId)
 
-            TrackerStatus.RETURNED,
+            TrackerStatus.RETURNED -> {
+                val verified = currentIsVerified ?: false
+                if (!verified) {
+                    GuestShippingStatusBottomDialogFragment.newInstance(groupId)
+                } else {
+                    GuestTradeFinishBottomDialogFragment.newInstance(groupId)
+                }
+            }
+
             TrackerStatus.COMPLETED,
             TrackerStatus.UNKNOWN -> GuestTradeFinishBottomDialogFragment()
         }
@@ -146,7 +166,9 @@ class GuestActivity : AppCompatActivity() {
 
     private fun showSheetOnceForStatus(status: TrackerStatus) {
         val tag = "tracker_sheet"
-        if (supportFragmentManager.findFragmentByTag(tag) != null) return
+
+        (supportFragmentManager.findFragmentByTag(tag) as? BottomSheetDialogFragment)
+            ?.dismissAllowingStateLoss()
 
         val sheet = createSheetForStatus(status)
         sheet.show(supportFragmentManager, tag)

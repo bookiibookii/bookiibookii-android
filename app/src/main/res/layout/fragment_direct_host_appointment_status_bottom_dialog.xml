@@ -18,16 +18,32 @@
         android:layout_gravity="center_horizontal"
         android:background="@color/grey_200" />
 
-    <TextView
-        android:id="@+id/tv_title"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="1월 19일 14:00 약속이 있어요."
-        android:textColor="@color/grey_900"
-        android:textSize="20sp"
-        android:fontFamily="@font/pretendard_medium"
-        android:includeFontPadding="false" />
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_title_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1월 19일 14:00 "
+            android:textColor="@color/grey_900"
+            android:textSize="20sp"
+            android:fontFamily="@font/pretendard_medium"
+            android:includeFontPadding="false" />
+
+        <TextView
+            android:id="@+id/tv_title_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="약속이 있어요."
+            android:textColor="@color/grey_900"
+            android:textSize="20sp"
+            android:fontFamily="@font/pretendard_medium"
+            android:includeFontPadding="false" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tv_desc"
@@ -63,11 +79,11 @@
                 android:id="@+id/tv_appointment_datetime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/pretendard_regular"
+                android:includeFontPadding="false"
                 android:text="2026. 01. 19. 14:00 "
                 android:textColor="@color/pre_main"
-                android:textSize="14sp"
-                android:fontFamily="@font/pretendard_regular"
-                android:includeFontPadding="false" />
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/tv_appointment_place"

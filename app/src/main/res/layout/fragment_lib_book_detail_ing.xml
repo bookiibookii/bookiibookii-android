@@ -21,7 +21,6 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.92" />
 
-    <!-- 상단 배경 영역 -->
     <LinearLayout
         android:id="@+id/lib_top_layout"
         android:layout_width="match_parent"
@@ -30,12 +29,10 @@
         android:background="@color/white"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- 내부 콘텐츠 정렬용 ConstraintLayout -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <!-- 🔹 내부 전용 가이드라인 (중요) -->
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline_start_inner"
                 android:layout_width="wrap_content"
@@ -57,20 +54,22 @@
                 android:src="@drawable/ic_back"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-
                 app:layout_constraintStart_toStartOf="@id/guideline_start_inner"/>
 
             <TextView
                 android:id="@+id/lib_detail_title_tv"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/medium20"
                 android:textColor="@color/grey_900"
                 android:text="괴테는 모든 것을 말했다"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:gravity="center"
+                android:layout_marginHorizontal="8dp"
                 app:layout_constraintStart_toEndOf="@id/lib_detail_back_iv"
                 app:layout_constraintEnd_toStartOf="@id/lib_detail_more_iv"
                 app:layout_constraintBottom_toBottomOf="parent"
-
                 app:layout_constraintTop_toTopOf="parent"/>
 
             <ImageView
@@ -96,8 +95,6 @@
         app:layout_constraintTop_toBottomOf="@id/lib_top_layout"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintEnd_toEndOf="@id/guideline_end">
-
-
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -148,29 +145,49 @@
                 app:layout_constraintTop_toTopOf="@id/lib_detail_profile_iv"
                 app:layout_constraintBottom_toBottomOf="@id/lib_detail_profile_iv"/>
 
-            <TextView
-                android:id="@+id/lib_detail_book_title_tv"
-                android:layout_width="wrap_content"
+            <HorizontalScrollView
+                android:id="@+id/lib_detail_book_title_scroll"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/regular14"
-                android:textColor="@color/grey_900"
-                android:text="괴테는 모든 것을 말했다."
                 android:layout_marginTop="11dp"
                 android:layout_marginStart="14dp"
+                android:scrollbars="none"
                 app:layout_constraintStart_toEndOf="@id/lib_detail_image_iv"
-                app:layout_constraintTop_toBottomOf="@id/lib_detail_profile_iv"/>
+                app:layout_constraintEnd_toEndOf="@id/card_guideline_end"
+                app:layout_constraintTop_toBottomOf="@id/lib_detail_profile_iv">
 
-            <TextView
-                android:id="@+id/lib_detail_book_author_tv"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/lib_detail_book_title_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/regular14"
+                    android:textColor="@color/grey_900"
+                    android:text="괴테는 모든 것을 말했다."
+                    android:maxLines="1"
+                    android:scrollHorizontally="true"/>
+            </HorizontalScrollView>
+
+            <HorizontalScrollView
+                android:id="@+id/lib_detail_book_author_scroll"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/regular12"
-                android:textColor="@color/grey_500"
-                android:text="스즈키 유이 (소설)"
                 android:layout_marginTop="4dp"
                 android:layout_marginStart="14dp"
+                android:scrollbars="none"
                 app:layout_constraintStart_toEndOf="@id/lib_detail_image_iv"
-                app:layout_constraintTop_toBottomOf="@id/lib_detail_book_title_tv"/>
+                app:layout_constraintEnd_toEndOf="@id/card_guideline_end"
+                app:layout_constraintTop_toBottomOf="@id/lib_detail_book_title_scroll">
+
+                <TextView
+                    android:id="@+id/lib_detail_book_author_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/regular12"
+                    android:textColor="@color/grey_500"
+                    android:text="스즈키 유이 (소설)"
+                    android:maxLines="1"
+                    android:scrollHorizontally="true"/>
+            </HorizontalScrollView>
 
             <TextView
                 android:id="@+id/lib_detail_date_tv"
@@ -185,7 +202,7 @@
                 app:layout_constraintStart_toEndOf="@id/lib_detail_image_iv"/>
 
             <TextView
-                android:id="@+id/my_percent"
+                android:id="@+id/my_percent_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/medium11"
@@ -196,6 +213,7 @@
                 app:layout_constraintTop_toBottomOf="@id/lib_detail_date_tv"/>
 
             <TextView
+                android:id="@+id/my_percent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/medium11"
@@ -205,10 +223,11 @@
                 app:layout_constraintEnd_toEndOf="@id/card_guideline_end"
                 app:layout_constraintTop_toBottomOf="@id/lib_detail_date_tv"/>
 
-            <FrameLayout
-                android:id="@+id/progress_container"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/progress_layout"
                 android:layout_width="0dp"
-                android:layout_height="8dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 app:layout_constraintTop_toBottomOf="@id/my_percent"
                 app:layout_constraintStart_toStartOf="@id/card_guideline_start"
                 app:layout_constraintEnd_toEndOf="@id/card_guideline_end">
@@ -217,35 +236,53 @@
                     android:id="@+id/reading_progress_bar"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="12dp"
-                    android:layout_gravity="center"
+                    android:layout_height="8dp"
                     android:max="100"
-                    android:progress="79"
-                    android:secondaryProgress="81"
-                    android:progressDrawable="@drawable/bg_reading_progress"/>
+                    android:progress="0"
+                    android:secondaryProgress="0"
+                    android:progressDrawable="@drawable/bg_reading_progress"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
 
-                <!-- 그룹 평균 끝 점 -->
-                <View
-                    android:id="@+id/group_avg_dot"
-                    android:layout_width="6dp"
-                    android:layout_height="6dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="@drawable/circle"
-                    android:backgroundTint="@color/grey_100"/>
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guideline_my_progress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.0" />
 
-                <!-- 나의 독서율 끝 점 -->
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guideline_group_progress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.0" />
+
                 <View
                     android:id="@+id/my_progress_dot"
                     android:layout_width="6dp"
                     android:layout_height="6dp"
-                    android:layout_gravity="center_vertical"
                     android:background="@drawable/circle"
-                    android:backgroundTint="@color/grey_100"/>
-            </FrameLayout>
+                    android:backgroundTint="@color/grey_100"
+                    android:translationX="-1dp"
+                    app:layout_constraintEnd_toEndOf="@id/guideline_my_progress"
+                    app:layout_constraintTop_toTopOf="@id/reading_progress_bar"
+                    app:layout_constraintBottom_toBottomOf="@id/reading_progress_bar"/>
 
+                <View
+                    android:id="@+id/group_avg_dot"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/circle"
+                    android:backgroundTint="@color/grey_100"
+                    android:translationX="-1dp"
+                    app:layout_constraintEnd_toEndOf="@id/guideline_group_progress"
+                    app:layout_constraintTop_toTopOf="@id/reading_progress_bar"
+                    app:layout_constraintBottom_toBottomOf="@id/reading_progress_bar"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <TextView
-                android:id="@+id/avg_percent"
+                android:id="@+id/avg_percent_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/medium11"
@@ -253,9 +290,10 @@
                 android:textColor="@color/grey_900"
                 android:layout_marginTop="8dp"
                 app:layout_constraintStart_toStartOf="@id/card_guideline_start"
-                app:layout_constraintTop_toBottomOf="@id/progress_container"/>
+                app:layout_constraintTop_toBottomOf="@id/progress_layout"/>
 
             <TextView
+                android:id="@+id/avg_percent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/medium11"
@@ -263,7 +301,7 @@
                 android:textColor="@color/grey_900"
                 android:layout_marginTop="8dp"
                 app:layout_constraintEnd_toEndOf="@id/card_guideline_end"
-                app:layout_constraintTop_toBottomOf="@id/progress_container"/>
+                app:layout_constraintTop_toBottomOf="@id/progress_layout"/>
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/lib_write_review_btn"
@@ -357,7 +395,40 @@
         tools:listitem="@layout/item_lib_detail_review"
         />
 
+    <LinearLayout
+        android:id="@+id/layout_empty"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintTop_toBottomOf="@id/lib_detail_cv"
+        android:padding="24dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_round_24dp_white"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="아직 독서카드가 없어요"
+            android:textAppearance="@style/medium16"
+            android:textColor="@color/grey_900"/>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="마음에 드는 내용을 기록으로 남겨요."
+            android:textAppearance="@style/regular14"
+            android:textColor="@color/grey_600"/>
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/group_data_exist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="lib_detail_total_tv, lib_detail_lately_tv, lib_detail_guid_tv, lib_detail_page_tv, lib_review_list_rv"
+        android:visibility="visible"/>
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/lib_review_add_btn"

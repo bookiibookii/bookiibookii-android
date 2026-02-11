@@ -15,6 +15,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentGuestExtendPeriodDialogBinding
+import com.bookiibookii.bookiibookii.trkHost.TrackerDateUtil.extendedEndDateText
+import com.bookiibookii.bookiibookii.trkHost.TrackerDateUtil.prettyDate
 import com.bookiibookii.bookiibookii.trkHost.UiState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -29,6 +31,8 @@ class GuestExtendPeriodDialogFragment : DialogFragment() {
     private val groupId: Long by lazy {
         requireArguments().getLong(ARG_GROUP_ID)
     }
+
+    private var originEndDateRaw: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,23 +75,48 @@ class GuestExtendPeriodDialogFragment : DialogFragment() {
             vm.patchTrackerExtension(groupId, days)
         }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.uiState.collectLatest { state ->
+                    val dto = state.data ?: return@collectLatest
+
+                    originEndDateRaw = dto.endDate
+                    binding.tvOriginDate.text = prettyDate(dto.endDate)
+
+                    val days = binding.etDays.text?.toString()?.trim().orEmpty().toIntOrNull() ?: 0
+                    binding.tvExtendedDate.text = extendedEndDateText(dto.endDate, days)
+                }
+            }
+        }
+
         binding.etDays.doAfterTextChanged { text ->
             val hasInput = !text.isNullOrEmpty()
             val context = binding.root.context
 
             binding.btnApply.apply {
                 isEnabled = hasInput
-
                 val btBgColor = if (hasInput) R.color.grey_900 else R.color.grey_100
                 backgroundTintList =
                     ColorStateList.valueOf(ContextCompat.getColor(context, btBgColor))
-
                 val txtColor = if (hasInput) R.color.grey_100 else R.color.grey_600
                 setTextColor(ContextCompat.getColor(context, txtColor))
             }
 
             val boxColor = if (hasInput) R.color.white else R.color.grey_100
             binding.boxDays.setCardBackgroundColor(ContextCompat.getColor(context, boxColor))
+
+            val days = text?.toString()?.trim().orEmpty().toIntOrNull() ?: 0
+            binding.tvExtendedDate.text = extendedEndDateText(originEndDateRaw, days)
+
+            if (hasInput && days > 0) {
+                binding.tvExtendedDate.setTextColor(
+                    ContextCompat.getColor(context, R.color.ui_main_sub)
+                )
+            } else {
+                binding.tvExtendedDate.setTextColor(
+                    ContextCompat.getColor(context, R.color.grey_600)
+                )
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -128,7 +157,6 @@ class GuestExtendPeriodDialogFragment : DialogFragment() {
 
     companion object {
         const val TAG = "GuestExtendPeriodDialogFragment"
-
         private const val ARG_GROUP_ID = "arg_group_id"
 
         fun newInstance(groupId: Long) = GuestExtendPeriodDialogFragment().apply {

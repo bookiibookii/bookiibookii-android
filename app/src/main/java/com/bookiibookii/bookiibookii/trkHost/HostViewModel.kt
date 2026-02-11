@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.trkHost
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerCheckImageResponseDto
 import com.bookiibookii.bookiibookii.trkData.dto.TrackerDetailResponseDto
 import com.bookiibookii.bookiibookii.trkData.dto.TrackerDoneResponseDto
 import com.bookiibookii.bookiibookii.trkData.dto.TrackerExtensionResponseDto
@@ -70,6 +71,19 @@ class HostViewModel : ViewModel() {
         MutableStateFlow<UiState<TrackerReceiveResponseDto>>(UiState.Idle)
     val receiveState: StateFlow<UiState<TrackerReceiveResponseDto>> =
         _receiveState.asStateFlow()
+
+    private val _confirmReceptionState =
+        MutableStateFlow<UiState<TrackerDetailResponseDto>>(UiState.Idle)
+    val confirmReceptionState: StateFlow<UiState<TrackerDetailResponseDto>> = _confirmReceptionState
+
+    private val _receivedImageState =
+        MutableStateFlow<UiState<TrackerCheckImageResponseDto>>(UiState.Idle)
+    val receivedImageState: StateFlow<UiState<TrackerCheckImageResponseDto>> =
+        _receivedImageState.asStateFlow()
+
+    private companion object {
+        const val TAG = "IMG_DEBUG"
+    }
 
     init {
         recomputeSteps()
@@ -251,6 +265,7 @@ class HostViewModel : ViewModel() {
         }
     }
 
+
     fun patchTrackerReceiveWithImage(
         groupId: Long,
         imageBytes: ByteArray,
@@ -299,6 +314,50 @@ class HostViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 _receiveState.value = UiState.Error(e.message ?: "network error")
+            }
+        }
+    }
+
+    fun patchConfirmReception(groupId: Long) {
+        viewModelScope.launch {
+            _confirmReceptionState.value = UiState.Loading
+
+            try {
+                val body = RetrofitClient.api().patchConfirmReception(groupId)
+
+                if (!body.isSuccess || body.result == null) {
+                    _confirmReceptionState.value =
+                        UiState.Error(body.message ?: "confirm reception API error")
+                    return@launch
+                }
+
+                val dto = body.result
+                _confirmReceptionState.value = UiState.Success(dto)
+
+                loadTracker(groupId)
+
+            } catch (e: Exception) {
+                _confirmReceptionState.value = UiState.Error(e.message ?: "network error")
+            }
+        }
+    }
+
+    fun loadReceivedCheckImage(groupId: Long) {
+        viewModelScope.launch {
+            _receivedImageState.value = UiState.Loading
+            try {
+                val body = RetrofitClient.api().getTrackerCheckReceivedImage(groupId)
+
+                if (!body.isSuccess || body.result == null) {
+                    _receivedImageState.value =
+                        UiState.Error(body.message ?: "received image API error")
+                    return@launch
+                }
+
+                _receivedImageState.value = UiState.Success(body.result)
+
+            } catch (e: Exception) {
+                _receivedImageState.value = UiState.Error(e.message ?: "network error")
             }
         }
     }

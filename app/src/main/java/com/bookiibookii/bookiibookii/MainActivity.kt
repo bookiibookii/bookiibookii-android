@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii
 
+import LoadingDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -14,7 +15,6 @@ import com.bookiibookii.bookiibookii.myPage.MypageFragment
 import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
 
 class MainActivity : AppCompatActivity() {
-
     private enum class NavTab { HOME, GROUP, TRACKER, LIBRARY, MY }
 
     override fun onCreate(savedInstanceState: Bundle?) {

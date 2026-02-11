@@ -13,6 +13,10 @@ class DirectHostMeetEmptyBottomSheetFragment : BottomSheetDialogFragment() {
     private var _binding: FragmentDirectHostMeetEmptyBottomSheetBinding? = null
     private val binding get() = _binding!!
 
+    private val groupId: Long by lazy {
+        requireArguments().getLong(ARG_GROUP_ID)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -25,9 +29,7 @@ class DirectHostMeetEmptyBottomSheetFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnConfirm.setOnClickListener{
-            val next = DirectHostAppointmentStatusBottomDialogFragment()
-            dismiss()
-            next.show(parentFragmentManager, DirectHostAppointmentStatusBottomDialogFragment.TAG)
+
         }
     }
 
@@ -38,6 +40,14 @@ class DirectHostMeetEmptyBottomSheetFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "DirectMeetEmptyFragment"
+        private const val ARG_GROUP_ID = "arg_group_id"
+
+        fun newInstance(groupId: Long) =
+            DirectHostMeetEmptyBottomSheetFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_GROUP_ID, groupId)
+                }
+            }
     }
 
     override fun getTheme(): Int {

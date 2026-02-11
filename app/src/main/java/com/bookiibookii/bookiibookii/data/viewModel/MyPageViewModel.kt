@@ -67,33 +67,41 @@ class MyPageViewModel : ViewModel() {
         }
     }
 
-    // 2. 닉네임 중복 확인
+// 2. 닉네임 중복 확인
     fun checkNickname(nickname: String) {
         viewModelScope.launch {
             try {
-                // API 명세에 따라 파라미터가 String인지 DTO인지 확인 필요 (여기선 String 가정)
-                // 만약 DTO라면: checkNickname(NicknameCheckRequest(nickname)) 사용
+                // ★ [수정] DTO 없이 String 그대로 전송 (@Query 방식)
                 val response = RetrofitClient.api().postNicknameValidation(nickname)
 
                 val serverMsg = response.body()?.message ?: "확인 불가"
 
+                // 로그를 Error 레벨로 찍어서 강제로 보이게 함 (디버깅용)
+                Log.e("NickCheck", "결과코드: ${response.code()}, Body: ${response.body()}")
+
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    _isNicknameChecked.value = true
-                    confirmedNickname = nickname
-                    // [수정] 성공 메시지 전달
-                    _eventFlow.emit(Event.NicknameCheckResult(true, serverMsg))
+                    // result가 null이 아닐 때 isAvailable 확인
+                    val isAvailable = response.body()?.result?.isAvailable ?: false
+
+                    if (isAvailable) {
+                        _isNicknameChecked.value = true
+                        confirmedNickname = nickname
+                        _eventFlow.emit(Event.NicknameCheckResult(true, "사용 가능한 닉네임입니다."))
+                    } else {
+                        _isNicknameChecked.value = false
+                        _eventFlow.emit(Event.NicknameCheckResult(false, "이미 사용 중인 닉네임입니다."))
+                    }
                 } else {
                     _isNicknameChecked.value = false
-                    // [수정] 실패 메시지 전달
+                    // 실패 시 메시지 (DUPLICATE 등)
                     _eventFlow.emit(Event.NicknameCheckResult(false, serverMsg))
                 }
             } catch (e: Exception) {
-                Log.e("MyPageViewModel", "CheckNick Error", e)
+                Log.e("NickCheck", "오류 발생", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류"))
             }
         }
     }
-
     // 3. 프로필 수정 (이미지 S3 업로드 -> 정보 수정 PATCH)
     fun updateProfile(
         request: UserUpdateRequest, // 텍스트 정보

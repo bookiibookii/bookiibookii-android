@@ -85,9 +85,7 @@
                     android:textSize="18sp"
                     android:textColor="@android:color/black"
                     android:includeFontPadding="false" />
-
             </LinearLayout>
-
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_widget"
@@ -107,7 +105,6 @@
                     android:paddingVertical="10dp"/>
 
             </com.google.android.material.card.MaterialCardView>
-
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

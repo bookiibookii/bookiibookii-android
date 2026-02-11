@@ -18,7 +18,8 @@ data class DeliveryInfoDto(
     val receiverPhone: String?,
     val receiverAddress: String?,
     val deliveryCompany: String?,
-    val trackingNumber: String?
+    val trackingNumber: String?,
+    val isVerified: Boolean?
 )
 
 data class MeetingInfoDto(

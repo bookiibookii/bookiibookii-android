@@ -14,6 +14,8 @@ data class GroupCreateRequest(
     @SerializedName("customTag") val customTag: String,
     @SerializedName("groupType") val groupType: String, // "TOGETHER" or "RELAY"
     @SerializedName("tradeType") val tradeType: String, // "DELIVERY" or "DIRECT"
+    @SerializedName("preferRegion") val preferRegion: String,
+    @SerializedName("meetPlace") val meetPlace: String,
     @SerializedName("tags") val tags: List<GroupTagRequest>
 )
 
@@ -271,5 +273,84 @@ data class GroupItemDto(
         val isSuccess: Boolean,
         val code: String,
         val message: String
+    )
+
+    //그룹 삭제
+    data class GroupDeleteResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: GroupDeleteResult?
+    )
+
+    // 2. 그룹 삭제 결과 (알맹이)
+    data class GroupDeleteResult(
+        val groupId: Long,
+        val deletedAt: String // "2026. 02. 10. 04:37"
+    )
+
+    //그룹수정하기
+    data class GroupModifyRequest(
+        val startDate: String,       // "2026-02-10"
+        val readingPeriod: Int,      // 0
+        val groupComment: String,    // "소개글"
+        val customTag: String?,      // "직접입력태그"
+        val tags: List<GroupTagRequest> // 태그 리스트
+    )
+    data class GroupModifyResponse(
+        @SerializedName("isSuccess") val isSuccess: Boolean,
+        @SerializedName("code") val code: String,
+        @SerializedName("message") val message: String,
+        @SerializedName("result") val result: Any?
+    )
+
+    //댓글작성
+    data class CommentCreateRequest(
+        val content: String,
+        val parentId: Long?  // 일반 댓글이면 null, 대댓글이면 부모 ID
+    )
+    // [전체 응답] 서버에서 주는 전체 JSON을 받아줄 그릇
+    data class CommentCreateResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: CommentCreateResult  // ★ 알맹이 데이터
+    )
+
+    // [알맹이] result 안에 들어가는 진짜 데이터
+    data class CommentCreateResult(
+        val commentId: Long,
+        val groupId: Long,
+        val parentId: Long?,
+        val content: String,
+        val createdAt: String,
+        val writer: CommentWriter
+    )
+
+    // [작성자 정보]
+    data class CommentWriter(
+        val userId: Long,
+        val name: String,
+        val profileImage: String?,
+        val role: String
+    )
+
+    //댓글 조회
+    data class CommentListResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: List<CommentItem> // ★ 부모 댓글들의 리스트
+    )
+
+    // [알맹이] 댓글 하나 (재귀 구조)
+    data class CommentItem(
+        val id: Long,
+        val deleted: Boolean,
+        val content: String,
+        val parentId: Long?, // 0 또는 null
+        val writer: CommentWriter,
+        val createdAt: String,
+        val children: List<CommentItem>? = null // ★ 대댓글 리스트 (없으면 null)
     )
 }

@@ -1,12 +1,17 @@
 package com.bookiibookii.bookiibookii.data.api
 
+import com.bookiibookii.bookiibookii.data.model.BaseResponse
 import com.bookiibookii.bookiibookii.data.model.CardDetailResponse
 import com.bookiibookii.bookiibookii.data.model.CardOperationResponse
 import com.bookiibookii.bookiibookii.data.model.CommentListResponse
 import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
 import com.bookiibookii.bookiibookii.data.model.CommonResponse
 import com.bookiibookii.bookiibookii.data.model.BookSearchResponse
-import com.bookiibookii.bookiibookii.data.model.CardListResponse
+import com.bookiibookii.bookiibookii.data.model.BookmarkListResponse
+import com.bookiibookii.bookiibookii.data.model.BookmarkToggleResponse
+import com.bookiibookii.bookiibookii.data.model.CompleteReadingResponse
+import com.bookiibookii.bookiibookii.data.model.CreateCardResponse
+import com.bookiibookii.bookiibookii.data.model.GroupCardListResponse
 import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
 import com.bookiibookii.bookiibookii.data.model.GroupCreateResponse
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
@@ -27,6 +32,8 @@ import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
 import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
 import com.bookiibookii.bookiibookii.data.model.NotificationListResultDto
 import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
+import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
+import com.bookiibookii.bookiibookii.data.model.PostCommentResponse
 import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
 import com.bookiibookii.bookiibookii.data.model.ReportCreateResponse
 import com.bookiibookii.bookiibookii.data.model.ReportListResponse
@@ -34,10 +41,12 @@ import com.bookiibookii.bookiibookii.data.model.ReportRequest
 import com.bookiibookii.bookiibookii.data.model.ReviewRequest
 import com.bookiibookii.bookiibookii.data.model.TokenRefreshRequest
 import com.bookiibookii.bookiibookii.data.model.TokenRefreshResponse
+import com.bookiibookii.bookiibookii.data.model.TrackerResponse
 import com.bookiibookii.bookiibookii.data.model.UpdateCardRequest
 import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.data.model.UserUpdateResponse
 import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
+import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import okhttp3.RequestBody
 import com.bookiibookii.bookiibookii.trkData.api.TrkApi
 import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
@@ -100,10 +109,10 @@ interface ApiService: TrkApi {
         @Body request: TokenRefreshRequest
     ): retrofit2.Call<TokenRefreshResponse>
 
-    @GET("api/groups/my")
+    @GET("api/report/groups/my")
     suspend fun getMyGroups(): Response<MyGroupResponse>
 
-    @GET("api/groups/{groupId}/members")
+    @GET("api/report/{groupId}/members")
     suspend fun getGroupMembers(
         @Path("groupId") groupId: Int
     ): Response<GroupMemberResponse>
@@ -126,7 +135,7 @@ interface ApiService: TrkApi {
     @GET("api/library/books")
     suspend fun getLibraryBooks() : Response<LibraryResponse>
 
-    @GET("api/card/detail/{cardId}")
+    @GET("api/cards/detail/{cardId}")
     suspend fun getCardDetail(
         @Path("cardId") cardId: Long
     ): Response<CardDetailResponse>
@@ -142,32 +151,6 @@ interface ApiService: TrkApi {
     suspend fun getPresignedUrl(
         @Path("userBookId") userBookId: Int
     ): Response<PresignedUrlResponse>
-
-    // 독서카드 목록 조회
-    @GET("api/card/{userBookId}")
-    suspend fun getBookCards(
-        @Path("userBookId") userBookId: Int
-    ): Response<CardListResponse>
-
-    @POST("api/reviews/books/{userBookId}")
-    suspend fun postBookReview(
-        @Path("userBookId") userBookId: Int,
-        @Body request: ReviewRequest
-    ): Response<com.bookiibookii.bookiibookii.data.model.BaseResponse>
-
-    //  카드 생성
-    @POST("api/card/{userBookId}")
-    suspend fun createCard(
-        @Path("userBookId") userBookId: Int,
-        @Body request: CreateCardRequest
-    ): Response<CardOperationResponse>
-
-    // 카드 수정
-    @PATCH("api/card/{cardId}")
-    suspend fun updateCard(
-        @Path("cardId") cardId: Long,
-        @Body request: UpdateCardRequest
-    ): Response<CardOperationResponse>
 
 
     // 닉네임 중복 검증
@@ -222,6 +205,75 @@ interface ApiService: TrkApi {
         @Query("sort") sort: String = "latest" // 정렬 옵션 (필요시)
     ): Response<GroupItemDto.GroupSearchResponse>
 
+    // 독서카드 그룹 조회
+    @GET("api/cards/group/{groupId}")
+    suspend fun getGroupCards(
+        @Path("groupId") groupId: Int
+    ): Response<GroupCardListResponse>
+
+    // 리뷰 작성
+    @POST("api/reviews/together/{userBookId}")
+    suspend fun postBookReview(
+        @Path("userBookId") userBookId: Int,
+        @Body request: ReviewRequest
+    ): Response<BaseResponse> // BaseResponse는 result가 String인 공통 응답
+
+
+    // 댓글 작성
+    @POST("api/cards/{cardId}/comments")
+    suspend fun postCardComment(
+        @Path("cardId") cardId: Long,
+        @Body request: PostCommentRequest
+    ): Response<PostCommentResponse>
+
+    // Presigned URL 발급 (카드 생성 전용)
+    @POST("api/cards/{userBookId}/presigned-url")
+    suspend fun postPresignedUrl(
+        @Path("userBookId") userBookId: Int
+    ): Response<PresignedUrlResponse>
+
+    // 독서카드 생성
+    @POST("api/cards/{userBookId}")
+    suspend fun createCard(
+        @Path("userBookId") userBookId: Int,
+        @Body request: CreateCardRequest
+    ): Response<CreateCardResponse>
+
+    // 카드 수정 (기존 유지, 추후 연결)
+    @PATCH("api/cards/{cardId}")
+    suspend fun updateCard(
+        @Path("cardId") cardId: Long,
+        @Body request: UpdateCardRequest
+    ): Response<CardOperationResponse>
+
+    // 북마크 토글
+    @PATCH("api/cards/{cardId}/bookmark")
+    suspend fun toggleBookmark(
+        @Path("cardId") cardId: Long
+    ): Response<BookmarkToggleResponse>
+
+    // 북마크 목록 조회
+    @GET("api/cards/bookmarks")
+    suspend fun getBookmarkedCards(): Response<BookmarkListResponse>
+
+    @DELETE("api/library/{userBookId}")
+    suspend fun deleteGroup(
+        @Path("userBookId") userBookId: Int
+    ): Response<BaseResponse>
+
+    @GET("/api/profiles/{nickname}")
+    suspend fun getUserProfile(
+        @Path("nickname") nickname: String
+    ): Response<LoginActivity.ProfileResponse> // ProfileResponse는 MypageResult를 감싸는 형태여야 함
+
+    @GET("/api/groups/me/trackers")
+    suspend fun getMyTrackers(): Response<TrackerResponse>
+
+    @PATCH("/api/groups/{groupId}/together/members/me/complete")
+    suspend fun completeReading(
+        @Path("groupId") groupId: Int
+    ): Response<CompleteReadingResponse>
+
     // 그룹 상세 조회
     @GET("api/groups/{groupId}")
     suspend fun getGroupDetail(
@@ -247,6 +299,7 @@ interface ApiService: TrkApi {
         @Path("groupId") groupId: Long
     ): Response<GroupItemDto.GroupAppListResponse>
 
+    //그룹 참여 요청 수락/거절
     @PATCH("api/groups/apply/{applyId}")
     suspend fun updateApplicationStatus(
         @Path("applyId") applyId: Long,
@@ -279,4 +332,36 @@ interface ApiService: TrkApi {
     suspend fun deleteKeyword(
         @Path("keywordId") keywordId: Long
     ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<String>>
+  
+    @DELETE("api/cards/{cardId}")
+    suspend fun deleteCard(
+        @Path("cardId") cardId: Long
+    ): Response<BaseResponse>
+
+    //그룹 삭제하기
+    @DELETE("api/groups/{groupId}")
+    suspend fun deleteGroup(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.GroupDeleteResponse>
+
+    //그룹 수정하기
+    @PATCH("api/groups/{groupId}")
+    suspend fun modifyGroup(
+        @Path("groupId") groupId: Long,
+        @Body request: GroupItemDto.GroupModifyRequest
+    ): Response<GroupItemDto.GroupModifyResponse>
+
+    //그룹 댓글달기
+    @POST("api/groups/{groupId}/comments")
+    suspend fun postComment(
+        @Path("groupId") groupId: Long,
+        @Body request: GroupItemDto.CommentCreateRequest
+    ): Response<GroupItemDto.CommentCreateResponse>
+
+    //그룹 댓글 조회
+    @GET("api/groups/{groupId}/comments")
+    suspend fun getComments(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.CommentListResponse>
+
 }

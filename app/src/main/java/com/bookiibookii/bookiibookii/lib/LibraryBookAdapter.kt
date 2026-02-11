@@ -75,13 +75,13 @@ class LibraryBookAdapter(
     inner class CoverViewHolder(private val binding: ItemLibBookBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: LibBook) {
             binding.libItemBookTitleTv.text = item.title
-            binding.libItemProfileTv.text = item.author // 기획에 따라 작성자/호스트 이름 변경
+            binding.libItemProfileTv.text = item.hostName // 기획에 따라 작성자/호스트 이름 변경
 
             // 표지 이미지
             Glide.with(itemView.context)
                 .load(item.coverUrl)
                 .placeholder(R.color.grey_300)
-                .error(R.color.grey_300)
+                .error(R.drawable.img_profile_default)
                 .into(binding.libItemBookIv)
 
             // 호스트 프로필
@@ -89,7 +89,7 @@ class LibraryBookAdapter(
                 .load(item.hostProfileUrl)
                 .circleCrop()
                 .placeholder(R.drawable.bg_circle_gray500)
-                .error(R.drawable.bg_circle_gray500)
+                .error(R.drawable.img_profile_default)
                 .into(binding.libItemProfileIv)
 
             // 상태 표시
@@ -127,16 +127,18 @@ class LibraryBookAdapter(
         fun bind(item: LibBook, position: Int) {
             binding.itemBookGridTv.text = item.title
 
-            // 동적 높이 계산
+            // [동적 높이 계산 로직]
             val titleLength = item.title.length
             val calculatedHeight = (titleLength * 15) + 60
             val finalHeightDp = calculatedHeight.coerceIn(120, 260)
 
+            // ★ 중요: root가 아닌 내부 컨테이너(spineContainer)의 높이만 변경합니다.
+            // XML의 root는 wrap_content여야 Flexbox에서 정상 작동합니다.
             val spineParams = binding.spineContainer.layoutParams
             spineParams.height = dpToPx(binding.root.context, finalHeightDp)
             binding.spineContainer.layoutParams = spineParams
 
-            // 배경색 (짝/홀 다르게)
+            // 배경색
             val colors = listOf(R.color.ui_main_105, R.color.ui_main_sub_pale)
             binding.spineContainer.background.setTint(
                 ContextCompat.getColor(binding.root.context, colors[position % colors.size])
