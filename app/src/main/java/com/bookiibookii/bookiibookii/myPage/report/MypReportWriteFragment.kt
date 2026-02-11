@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.myPage.report
 
-import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -34,6 +33,7 @@ class MypReportWriteFragment : Fragment() {
     // 데이터 저장용
     private var myGroups: List<GroupSummary> = emptyList()
     private var selectedGroupId: Int? = null
+    private var selectedTargetId: Int? = null // ★ [추가됨] 선택된 타겟(멤버)의 ID 저장용
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMypReportWriteBinding.inflate(inflater, container, false)
@@ -44,8 +44,8 @@ class MypReportWriteFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         initListeners()
-        initReportTypeRadioGroup() // 라디오 버튼 스타일 로직
-        initValidation()           // 필수 입력값 체크 로직
+        initReportTypeRadioGroup()
+        initValidation()
     }
 
     private fun initListeners() {
@@ -67,7 +67,6 @@ class MypReportWriteFragment : Fragment() {
 
         // 3. 전송 버튼
         binding.mypWriteBtn.setOnClickListener {
-            // 버튼이 활성화된 상태(clickable=true)에서만 동작
             sendReport()
         }
     }
@@ -88,6 +87,7 @@ class MypReportWriteFragment : Fragment() {
 
                         // 그룹이 바뀌면 멤버 초기화
                         binding.mypReportMemberEt.setText("")
+                        selectedTargetId = null // ★ 멤버 ID도 같이 초기화
                     }
                 }
             } catch (e: Exception) {
@@ -103,9 +103,13 @@ class MypReportWriteFragment : Fragment() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val members = response.body()!!.result
                     val memberNames = members.map { it.nickname }
-                    showDropdown(binding.mypReportMemberPlusIv, memberNames) { name, _ ->
+                    showDropdown(binding.mypReportMemberPlusIv, memberNames) { name, index ->
                         // 멤버 선택 시 처리
                         binding.mypReportMemberEt.setText(name)
+
+                        // ★ [추가됨] 선택한 멤버의 실제 고유 ID를 저장합니다.
+                        // 주의: members[index].userId 부분은 실제 모델의 ID 필드명(예: memberId, id 등)에 맞게 수정해 주세요!
+                        selectedTargetId = members[index].userId
                     }
                 }
             } catch (e: Exception) {
@@ -120,11 +124,9 @@ class MypReportWriteFragment : Fragment() {
             return
         }
 
-        val inflater = LayoutInflater.from(context)
-        // 팝업용 레이아웃을 코드로 생성하거나 별도 XML 사용 가능. 여기선 간단히 RecyclerView만 있는 뷰 생성
         val popupView = RecyclerView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            background = ContextCompat.getDrawable(context, R.drawable.bg_round_10dp_gray300) // 배경 설정 (XML 필요)
+            background = ContextCompat.getDrawable(context, R.drawable.bg_round_10dp_gray300)
             backgroundTintList = ColorStateList.valueOf(Color.WHITE)
             layoutManager = LinearLayoutManager(context)
             setPadding(0, 10, 0, 10)
@@ -132,14 +134,14 @@ class MypReportWriteFragment : Fragment() {
 
         val popupWindow = PopupWindow(popupView, 500, ViewGroup.LayoutParams.WRAP_CONTENT, true)
         popupWindow.elevation = 10f
-        popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)) // 배경 투명 처리해야 둥근 모서리 보임
+        popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
         popupView.adapter = PopupAdapter(items) { name, index ->
             onSelected(name, index)
             popupWindow.dismiss()
         }
 
-        popupWindow.showAsDropDown(anchorView, -400, 0) // 위치 조정
+        popupWindow.showAsDropDown(anchorView, -400, 0)
     }
 
     // --- 라디오 버튼 스타일 변경 로직 ---
@@ -153,30 +155,27 @@ class MypReportWriteFragment : Fragment() {
                 val view = group.getChildAt(i)
                 if (view is RadioButton) {
                     if (view.id == checkedId) {
-                        // 선택된 버튼 스타일 적용
                         applySelectedStyle(view)
                     } else {
-                        // 선택 해제된 버튼 스타일 적용
                         applyUnselectedStyle(view)
                     }
                 }
             }
-            checkValidation() // 라디오 버튼 변경 시 유효성 검사
+            checkValidation()
         }
     }
 
     private fun applySelectedStyle(rb: RadioButton) {
-        rb.setBackgroundResource(R.drawable.bg_round_20dp_orange_stroke) // 오렌지 테두리
-        rb.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check_orange, 0, 0, 0) // 오렌지 체크 아이콘
-        rb.setTextColor(ContextCompat.getColor(requireContext(), R.color.pre_main)) // 메인 컬러 텍스트
+        rb.setBackgroundResource(R.drawable.bg_round_20dp_orange_stroke)
+        rb.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check_orange, 0, 0, 0)
+        rb.setTextColor(ContextCompat.getColor(requireContext(), R.color.pre_main))
     }
 
     private fun applyUnselectedStyle(rb: RadioButton) {
-        rb.setBackgroundResource(R.drawable.bg_input_round_20dp_white) // 흰색 배경 (기본)
-        rb.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check_gray, 0, 0, 0) // 회색 체크 아이콘
-        rb.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_900)) // 검정 텍스트
+        rb.setBackgroundResource(R.drawable.bg_input_round_20dp_white)
+        rb.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check_gray, 0, 0, 0)
+        rb.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_900))
     }
-
 
     // --- 필수값 체크 및 버튼 활성화 로직 ---
 
@@ -188,17 +187,17 @@ class MypReportWriteFragment : Fragment() {
         }
 
         binding.mypReportGroupEt.addTextChangedListener(watcher)
-        // 멤버는 필수는 아니지만, 로직상 필요하다면 추가
+        binding.mypReportMemberEt.addTextChangedListener(watcher) // 타겟 ID를 위해 멤버도 필수 체크 연결
         binding.mypReportContentEt.addTextChangedListener(watcher)
     }
 
     private fun checkValidation() {
         val isGroupFilled = binding.mypReportGroupEt.text.isNotEmpty()
+        val isMemberFilled = binding.mypReportMemberEt.text.isNotEmpty()
         val isTypeSelected = binding.mypReportTypeRg.checkedRadioButtonId != -1
         val isContentFilled = binding.mypReportContentEt.text.isNotEmpty()
 
-        // 필수 항목: 그룹, 유형, 내용 (멤버는 UI상 별표가 없어서 제외했습니다. 필요시 추가하세요)
-        val isValid = isGroupFilled && isTypeSelected && isContentFilled
+        val isValid = isGroupFilled && isMemberFilled && isTypeSelected && isContentFilled
 
         updateButtonState(isValid)
     }
@@ -217,35 +216,51 @@ class MypReportWriteFragment : Fragment() {
 
     // --- API 전송 로직 ---
     private fun sendReport() {
-        val groupName = binding.mypReportGroupEt.text.toString()
-        val memberName = binding.mypReportMemberEt.text.toString()
         val content = binding.mypReportContentEt.text.toString()
         val type = getSelectedReportType() ?: return
 
+        // ★ [수정됨] 이름이 아닌 ID 값을 가져옵니다.
+        val groupId = selectedGroupId
+        val targetId = selectedTargetId
+
+        if (groupId == null || targetId == null) {
+            Toast.makeText(context, "그룹과 신고 대상을 정확히 선택해주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         lifecycleScope.launch {
             try {
-                val request = ReportRequest(groupName, memberName, type, content)
+                // ★ [수정됨] API 명세서에 맞춰 groupId와 targetId를 파라미터로 넘깁니다.
+                val request = ReportRequest(
+                    groupId = groupId,
+                    targetId = targetId,
+                    reportType = type,
+                    content = content
+                )
+
                 val response = RetrofitClient.api().postReport(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "신고가 접수되었습니다.", Toast.LENGTH_SHORT).show()
                     requireActivity().supportFragmentManager.popBackStack()
                 } else {
-                    Toast.makeText(context, "전송 실패", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "전송 실패: ${response.body()?.message}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "네트워크 오류", Toast.LENGTH_SHORT).show()
+                Log.e("ReportWrite", "API 오류", e)
+                Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun getSelectedReportType(): String? {
+        // ★ [수정됨] API 명세서에 맞게 String 값을 완벽히 맞춥니다.
         return when (binding.mypReportTypeRg.checkedRadioButtonId) {
             binding.mypReportType1Rb.id -> "ABUSE"
             binding.mypReportType2Rb.id -> "SPAM"
-            binding.mypReportType3Rb.id -> "NOSHOW"
-            binding.mypReportType4Rb.id -> "DAMAGE"
-            binding.mypReportType5Rb.id -> "OTHER"
+            binding.mypReportType3Rb.id -> "NO_SHOW"
+            binding.mypReportType4Rb.id -> "DAMAGED_BOOK"
+            binding.mypReportType5Rb.id -> "OTHER" // *만약 서버 명세서에 OTHER가 없다면 다른 값으로 대체하거나 서버쪽에 추가를 요청해야 합니다.
             else -> null
         }
     }

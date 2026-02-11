@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.CommonDialog
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailIngBinding
@@ -26,7 +26,7 @@ class LibraryBookDetailIngFragment : Fragment() {
     private var _binding: FragmentLibBookDetailIngBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+    private lateinit var loadingDialog: LoadingDialog
 
     private var userBookId: Int = -1
     private var groupId: Int = -1
@@ -36,6 +36,7 @@ class LibraryBookDetailIngFragment : Fragment() {
     private var hostName = ""
     private var hostProfileUrl = ""
     private var startDate = ""
+    private var endDate = "" // ★ 추가됨
 
     private lateinit var cardAdapter: LibraryReviewAdapter
     private var originalList: List<CardItem> = emptyList()
@@ -51,6 +52,7 @@ class LibraryBookDetailIngFragment : Fragment() {
             hostName = it.getString("hostName", "") ?: ""
             hostProfileUrl = it.getString("hostProfileUrl", "") ?: ""
             startDate = it.getString("startDate", "") ?: ""
+            endDate = it.getString("endDate", "") ?: "" // ★ 추가됨
         }
     }
 
@@ -61,13 +63,11 @@ class LibraryBookDetailIngFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
         initView()
         initRecyclerView()
         initListeners()
-
-        // ★ 두 개의 API를 하나의 로딩 안에서 호출하도록 묶음
         loadInitialData()
     }
 
@@ -75,7 +75,9 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.libDetailBookTitleTv.text = bookTitle
         binding.libDetailBookAuthorTv.text = bookAuthor
         binding.libDetailTitleTv.text = bookTitle
-        binding.libDetailDateTv.text = "$startDate ~"
+
+        // ★ 날짜 갱신
+        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
 
         binding.libDetailBookTitleTv.isSelected = true
         binding.libDetailBookAuthorTv.isSelected = true
@@ -94,7 +96,6 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.layoutEmpty.visibility = View.GONE
     }
 
-    // ★ 두 API를 순차적으로 부르고 로딩창을 끄는 통합 함수
     private fun loadInitialData() {
         if (groupId == -1) return
         lifecycleScope.launch {
@@ -110,7 +111,6 @@ class LibraryBookDetailIngFragment : Fragment() {
         }
     }
 
-    // ★ suspend 적용
     private suspend fun fetchProgress() {
         val response = RetrofitClient.api().getMyTrackers()
         if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -134,7 +134,6 @@ class LibraryBookDetailIngFragment : Fragment() {
         }
     }
 
-    // ★ suspend 적용
     private suspend fun fetchCardList() {
         val response = RetrofitClient.api().getGroupCards(groupId)
         if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -233,6 +232,7 @@ class LibraryBookDetailIngFragment : Fragment() {
             ).show()
         }
 
+        // ★ [핵심] 호스트 이름, 프로필, 날짜 모두 Bundle로 묶어서 넘겨줍니다.
         binding.libWriteReviewBtn.setOnClickListener {
             val fragment = LibraryWriteReviewFragment().apply {
                 arguments = Bundle().apply {
@@ -241,6 +241,10 @@ class LibraryBookDetailIngFragment : Fragment() {
                     putString("bookTitle", bookTitle)
                     putString("bookAuthor", bookAuthor)
                     putString("bookCover", bookCover)
+                    putString("hostName", hostName)
+                    putString("hostProfileUrl", hostProfileUrl)
+                    putString("startDate", startDate)
+                    putString("endDate", endDate)
                 }
             }
             requireActivity().supportFragmentManager.beginTransaction()
@@ -264,26 +268,27 @@ class LibraryBookDetailIngFragment : Fragment() {
     private fun requestCompleteReading() {
         if (groupId == -1) return
         lifecycleScope.launch {
-            loadingDialog.show() // ★ 로딩 시작
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().completeReading(groupId)
                 Log.d("LibraryAPI", "${response.body()}")
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "완독 처리가 완료되었습니다.", Toast.LENGTH_SHORT).show()
+
                     binding.libWriteDoneBtn.visibility = View.GONE
                     binding.libWriteReviewBtn.visibility = View.VISIBLE
                     binding.libReviewAddBtn.visibility = View.GONE
 
                     requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
-                    val currentGroupRate = binding.avgPercent.text.toString().replace("%", "").toIntOrNull() ?: 0
-                    updateProgressBar(100, currentGroupRate)
+
+                    loadInitialData()
                 } else {
                     Toast.makeText(context, "완독 처리에 실패했습니다.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 로딩 끝
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
@@ -303,7 +308,7 @@ class LibraryBookDetailIngFragment : Fragment() {
     private fun deleteGroup() {
         if (userBookId == -1) return
         lifecycleScope.launch {
-            loadingDialog.show() // ★ 로딩 시작
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -311,7 +316,7 @@ class LibraryBookDetailIngFragment : Fragment() {
                     requireActivity().supportFragmentManager.popBackStack()
                 }
             } catch (e: Exception) { e.printStackTrace() }
-            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() } // ★ 로딩 끝
+            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
         }
     }
 

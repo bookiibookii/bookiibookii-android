@@ -139,10 +139,10 @@ class LibraryBookAdapter(
         fun bind(item: LibBook, position: Int) {
             binding.itemBookGridTv.text = item.title
 
-            // 1. 책등 동적 높이 계산 (px로 변환)
+            // 1. 책등 동적 높이 계산 (최대 높이를 260 -> 200으로 축소)
             val titleLength = item.title.length
             val calculatedHeight = (titleLength * 15) + 60
-            val finalHeightDp = calculatedHeight.coerceIn(120, 260)
+            val finalHeightDp = calculatedHeight.coerceIn(120, 200) // 👈 여기를 수정!
             val finalHeightPx = dpToPx(binding.root.context, finalHeightDp)
 
             // 2. 부모(책등 컨테이너)의 높이 적용
@@ -150,16 +150,17 @@ class LibraryBookAdapter(
             spineParams.height = finalHeightPx
             binding.spineContainer.layoutParams = spineParams
 
-            // 3. ★ 핵심: 텍스트뷰의 너비(Width)를 책등의 높이(Height)와 똑같이 늘려줌 ★
+            // 3. 텍스트뷰 너비 맞춤
             val tvParams = binding.itemBookGridTv.layoutParams
             tvParams.width = finalHeightPx
             binding.itemBookGridTv.layoutParams = tvParams
 
             // 4. 배경색 및 글자색 적용
             val bgColorRes = if (item.isMine) R.color.ui_main_105 else R.color.ui_main_sub_pale
-            val textColorRes = if (item.isMine) R.color.pre_main else R.color.main
+            val textColorRes = if (item.isMine) R.color.pre_main else R.color.ui_main_sub
 
-            binding.spineContainer.background.setTint(
+            // 👈 핵심: .mutate()를 꼭 붙여야 모양이 깨지지 않고 둥글기가 유지됩니다.
+            binding.spineContainer.background.mutate().setTint(
                 ContextCompat.getColor(binding.root.context, bgColorRes)
             )
             binding.itemBookGridTv.setTextColor(
@@ -168,8 +169,7 @@ class LibraryBookAdapter(
 
             itemView.setOnClickListener { itemClickListener(item) }
         }
-    }
-    private fun dpToPx(context: Context, dp: Int): Int {
+    }    private fun dpToPx(context: Context, dp: Int): Int {
         return (dp * context.resources.displayMetrics.density).toInt()
     }
 }

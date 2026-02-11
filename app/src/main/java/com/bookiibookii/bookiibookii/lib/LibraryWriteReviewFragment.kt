@@ -25,10 +25,17 @@ class LibraryWriteReviewFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var userBookId: Int = -1
-    private var groupId: Int = -1 // TogetherFragment로 넘겨주기 위해 받음
+    private var groupId: Int = -1
     private var bookTitle = ""
     private var bookAuthor = ""
     private var bookCover = ""
+
+    // ★ 새로 받을 정보들
+    private var hostName = ""
+    private var hostProfileUrl = ""
+    private var startDate = ""
+    private var endDate = ""
+
     private var currentRating : Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +46,10 @@ class LibraryWriteReviewFragment : Fragment() {
             bookTitle = it.getString("bookTitle", "") ?: ""
             bookAuthor = it.getString("bookAuthor", "") ?: ""
             bookCover = it.getString("bookCover", "") ?: ""
+            hostName = it.getString("hostName", "") ?: ""
+            hostProfileUrl = it.getString("hostProfileUrl", "") ?: ""
+            startDate = it.getString("startDate", "") ?: ""
+            endDate = it.getString("endDate", "") ?: ""
         }
     }
 
@@ -62,6 +73,16 @@ class LibraryWriteReviewFragment : Fragment() {
         binding.libWriteTitleTv.text = bookTitle
         binding.libDetailBookAuthorTv.text = bookAuthor
         Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
+
+        // ★ 프로필과 날짜 세팅 적용
+        binding.libDetailProfileTv.text = hostName
+        Glide.with(this).load(hostProfileUrl)
+            .placeholder(R.drawable.bg_circle_gray500)
+            .error(R.drawable.img_profile_default)
+            .circleCrop()
+            .into(binding.libDetailProfileIv)
+
+        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
     }
 
     private fun postReview() {
@@ -75,44 +96,30 @@ class LibraryWriteReviewFragment : Fragment() {
                 Log.d("Library", "${response.body()}")
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    // ★ 성공 시: Together(결과) 화면으로 이동
                     val togetherFragment = LibraryBookDetailTogetherFragment().apply {
                         arguments = Bundle().apply {
                             putInt("userBookId", userBookId)
-                            putInt("groupId", groupId) // groupId 전달
+                            putInt("groupId", groupId)
                             putString("bookTitle", bookTitle)
                             putString("bookAuthor", bookAuthor)
                             putString("bookCover", bookCover)
+
+                            // ★ [핵심] 결과 화면이 하얗게 뜨지 않도록 내가 가진 정보를 모두 다시 담아 넘겨줍니다.
+                            putString("hostName", hostName)
+                            putString("hostProfileUrl", hostProfileUrl)
+                            putString("startDate", startDate)
+                            putString("endDate", endDate)
+                            putDouble("rating", rating) // 내가 방금 적은 별점 적용!
                         }
                     }
                     requireActivity().supportFragmentManager.beginTransaction()
                         .replace(R.id.fragmentContainer, togetherFragment)
-                        // .addToBackStack(null) // 결과 화면에서 뒤로가기 시 목록으로 가려면 주석 처리
                         .commit()
                 }
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
-    private fun navigateToTogetherFragment() {
-        // 결과 화면(Together) 프래그먼트 생성
-        val togetherFragment = LibraryBookDetailTogetherFragment().apply {
-            arguments = Bundle().apply {
-                putInt("userBookId", userBookId)
-                putString("bookTitle", bookTitle)
-                putString("bookAuthor", bookAuthor)
-                putString("bookCover", bookCover)
-            }
-        }
-
-        // 현재 화면(WriteReview)을 대체하여 이동
-        requireActivity().supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, togetherFragment)
-            // .addToBackStack(null) // 결과 화면에서 뒤로가기 시 다시 목록으로 가고 싶다면 스택에 추가 X
-            .commit()
-    }
-
-    // --- (이하 별점 및 입력 감지 UI 로직) ---
     private fun initStarRating() {
         val stars = listOf(
             binding.libDetailRateList.getChildAt(0) as ImageView,
@@ -129,7 +136,6 @@ class LibraryWriteReviewFragment : Fragment() {
                 if (currentRating == targetHalf) {
                     currentRating = targetFull
                 } else {
-                    // 처음 누르거나 다른 별을 누르면 일단 '반 개' 상태로 만듦
                     currentRating = targetHalf
                 }
                 updateStarUI(stars, currentRating)
@@ -141,17 +147,11 @@ class LibraryWriteReviewFragment : Fragment() {
     private fun updateStarUI(stars: List<ImageView>, rating: Double) {
         stars.forEachIndexed { index, imageView ->
             val starValue = index + 1.0
-
-            // 🔹 4. 점수에 따라 아이콘 3가지 분기 처리
             if (rating >= starValue) {
-                // 꽉 찬 별 (예: rating이 3.0인데 현재 별이 3번째(3.0)일 때)
                 imageView.setImageResource(R.drawable.ic_star_filled)
             } else if (rating >= starValue - 0.5) {
-                // 반 개 별 (예: rating이 2.5인데 현재 별이 3번째(3.0)일 때)
-                // ⚠️ 주의: 프로젝트의 drawable 폴더에 ic_star_half 이미지가 꼭 있어야 합니다!
                 imageView.setImageResource(R.drawable.ic_star_half)
             } else {
-                // 빈 별
                 imageView.setImageResource(R.drawable.ic_star_none)
             }
         }

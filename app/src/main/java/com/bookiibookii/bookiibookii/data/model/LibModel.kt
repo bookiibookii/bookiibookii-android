@@ -18,14 +18,14 @@ data class BookResult(
     val image: String?,              // ★ 수정: URL은 없을 수 있으므로 Nullable 권장
     val hostId: Int,
     val hostProfileImageUrl: String?, // ★ 수정: Nullable 권장
-    val hostNickname: String?,
+    val hostNickName: String?,
     val startDate: String,
     val endDate : String?,
     val duration: Int,
     val rating: Double,
     val comment: String?,
     val groupType: String ,           // "RELAY" or "TOGETHER"
-    val groupState : String,
+    val groupStatus : String,
 )
 
 // UI에서 사용하는 모델 (Adapter용)
@@ -62,10 +62,18 @@ data class GroupCardListResponse(
 
 data class GroupCardResult(
     val groupId: Int,
-    val currentBookOwner: OwnerInfo?, // 현재 책 소유자 (이어읽기용)
-    val myComment: String?,           // 내 한줄평/후기
-    val partnerComment: String?,      // 상대 한줄평/후기
+    val currentBookOwner: OwnerInfo?,
+    val myComment: String?,
+    val partnerComment: String?,
+    val togetherComments: List<TogetherComment>?, // ★ [추가됨] 함께읽기 코멘트 배열
     val cards: List<CardItem>
+)
+
+// ★ [추가됨] 함께읽기 코멘트 모델
+data class TogetherComment(
+    val userId: Int,
+    val nickname: String,
+    val comment: String
 )
 
 data class OwnerInfo(
@@ -81,7 +89,7 @@ data class CardItem(
     val createdAt: String,
     val bookTitle: String,
     val isBookmarked: Boolean,
-    val creatorName: String // 작성자 이름
+    val creatorName: String
 )
 
 data class CardImage(
