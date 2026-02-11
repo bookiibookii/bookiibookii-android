@@ -137,7 +137,7 @@ class DirectGuestExtendPeriodDialogFragment : DialogFragment() {
                 vm.event.collect { ev ->
                     when (ev) {
                         is DirectGuestEvent.ExtensionSuccess -> {
-                            dismissAllDialogsInActivity()
+                            dismiss()
                             vm.loadTracker(groupId)
                         }
 

@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.trkGuest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.trkData.dto.TrackerCheckImageResponseDto
 import com.bookiibookii.bookiibookii.trkData.dto.TrackerDetailResponseDto
 import com.bookiibookii.bookiibookii.trkData.dto.TrackerReadingStartResponseDto
 import com.bookiibookii.bookiibookii.trkData.dto.TrackerReceiveRequestDto
@@ -74,6 +75,15 @@ class GuestViewModel : ViewModel() {
     val shippingStartState: StateFlow<UiState<TrackerShippingStartResponseDto>> =
         _shippingStartState.asStateFlow()
 
+    private val _checkImageState =
+        MutableStateFlow<UiState<TrackerCheckImageResponseDto>>(UiState.Idle)
+    val checkImageState: StateFlow<UiState<TrackerCheckImageResponseDto>> =
+        _checkImageState.asStateFlow()
+
+    private companion object {
+        const val TAG = "IMG_DEBUG"
+    }
+
     init {
         recomputeSteps()
     }
@@ -96,6 +106,24 @@ class GuestViewModel : ViewModel() {
 
     fun resetShippingStartState() {
         _shippingStartState.value = UiState.Idle
+    }
+
+    fun loadCheckImage(groupId: Long) {
+        viewModelScope.launch {
+            _checkImageState.value = UiState.Loading
+            try {
+                val body = RetrofitClient.api().getTrackerCheckReceivedImage(groupId)
+
+                if (!body.isSuccess || body.result == null) {
+                    _checkImageState.value = UiState.Error(body.message ?: "check image API error")
+                    return@launch
+                }
+
+                _checkImageState.value = UiState.Success(body.result)
+            } catch (e: Exception) {
+                _checkImageState.value = UiState.Error(e.message ?: "network error")
+            }
+        }
     }
 
     fun loadTracker(groupId: Long) {
@@ -134,10 +162,16 @@ class GuestViewModel : ViewModel() {
     fun patchTrackerExtension(groupId: Long, days: Int) {
         viewModelScope.launch {
             _extensionState.value = UiState.Loading
+            android.util.Log.d("IMG_DEBUG", "confirmReception start groupId=$groupId")
 
             try {
                 val body = RetrofitClient.api()
                     .patchTrackerExtension(groupId, days)
+
+                android.util.Log.d(
+                    "IMG_DEBUG",
+                    "confirmReception resp isSuccess=${body.isSuccess} msg=${body.message} result=${body.result}"
+                )
 
                 if (!body.isSuccess) {
                     _extensionState.value = UiState.Error(body.message ?: "독서 기간 연장 실패")
@@ -149,6 +183,7 @@ class GuestViewModel : ViewModel() {
                 loadTracker(groupId)
 
             } catch (e: Exception) {
+                android.util.Log.e("IMG_DEBUG", "confirmReception error", e)
                 _extensionState.value = UiState.Error(e.message ?: "network error")
             }
         }
@@ -344,6 +379,8 @@ class GuestViewModel : ViewModel() {
         contentType: String
     ): Boolean = withContext(Dispatchers.IO) {
         val client = OkHttpClient()
+
+        android.util.Log.d(TAG, "PUT start url=${putUrl.take(60)}... type=$contentType bytes=${bytes.size}")
 
         val body = bytes.toRequestBody(contentType.toMediaType())
         val request = Request.Builder()

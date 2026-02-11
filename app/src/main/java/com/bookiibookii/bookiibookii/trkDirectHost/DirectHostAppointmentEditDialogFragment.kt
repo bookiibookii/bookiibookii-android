@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
@@ -16,11 +17,16 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectHostAppointmentEditDialogBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.ResolverStyle
 
 class DirectHostAppointmentEditDialogFragment : DialogFragment() {
 
     private var _binding: FragmentDirectHostAppointmentEditDialogBinding? = null
     private val binding get() = _binding!!
+
+    private var didInitPlace = false
 
     private val vm: DirectHostViewModel by activityViewModels()
 
@@ -52,6 +58,8 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        vm.loadTracker(groupId)
 
         binding.btnClose.setOnClickListener { dismiss() }
 
@@ -87,14 +95,45 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
             }
         }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.trackerState.collectLatest { state ->
+                    val dto = (state as? UiState.Success)?.data ?: return@collectLatest
+                    if (didInitPlace) return@collectLatest
+                    didInitPlace = true
+
+                    val place = dto.meetingInfo?.meetingPlace.orEmpty()
+                    if (place.isNotBlank()) {
+                        binding.etPlace.setText(place)
+                        updateRegisterState()
+                    }
+                }
+            }
+        }
+
         binding.btnRegister.setOnClickListener {
             if (!binding.btnRegister.isEnabled) return@setOnClickListener
 
-            val date = binding.etDate.text?.toString()?.trim().orEmpty()
+            val rawDate = binding.etDate.text?.toString().orEmpty()
             val place = binding.etPlace.text?.toString()?.trim().orEmpty()
 
+            val apiDate = toApiUtcZ(rawDate)
+            if (apiDate == null) {
+                Toast.makeText(
+                    requireContext(),
+                    "날짜 형식이 올바르지 않아요. 예: 2026.02.10.14:00",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            if (place.isBlank()) {
+                Toast.makeText(requireContext(), "장소를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             binding.btnRegister.isEnabled = false
-            vm.makeMeeting(groupId, date, place)
+            vm.makeMeeting(groupId, apiDate, place)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -102,7 +141,7 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
                 vm.event.collect { ev ->
                     when (ev) {
                         is DirectHostEvent.MeetingSuccess -> {
-                            dismissAllDialogsAndSheets()
+                            dismiss()
 
                             vm.loadTracker(groupId)
                         }
@@ -114,20 +153,6 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
                         else -> Unit
                     }
                 }
-            }
-        }
-    }
-
-    private fun dismissAllDialogsAndSheets() {
-        val fm = requireActivity().supportFragmentManager
-        fm.fragments.forEach { f ->
-            if (f is DialogFragment) {
-                f.dismissAllowingStateLoss()
-            }
-        }
-        parentFragmentManager.fragments.forEach { f ->
-            if (f is DialogFragment) {
-                f.dismissAllowingStateLoss()
             }
         }
     }
@@ -148,6 +173,26 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
 
             val textColorRes = if (enabled) R.color.grey_100 else R.color.grey_500
             setTextColor(ContextCompat.getColor(context, textColorRes))
+        }
+    }
+
+    private val inputFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("uuuu.MM.dd.HH:mm")
+            .withResolverStyle(ResolverStyle.STRICT)
+
+    private val apiFormatterNoShift: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss'Z'")
+            .withResolverStyle(ResolverStyle.STRICT)
+
+    private fun toApiUtcZ(rawInput: String): String? {
+        val trimmed = rawInput.trim()
+        if (trimmed.isBlank()) return null
+
+        return try {
+            val local = LocalDateTime.parse(trimmed, inputFormatter)
+            apiFormatterNoShift.format(local)
+        } catch (e: Exception) {
+            null
         }
     }
 

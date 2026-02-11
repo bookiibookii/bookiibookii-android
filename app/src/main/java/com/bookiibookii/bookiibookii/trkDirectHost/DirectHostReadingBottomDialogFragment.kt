@@ -36,6 +36,7 @@ class DirectHostReadingBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        vm.resetExtensionApplied()
         vm.loadTracker(groupId)
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -52,7 +53,7 @@ class DirectHostReadingBottomDialogFragment : BottomSheetDialogFragment() {
                             binding.tvStartDate.text = DateTimeUtils.formatMeetingTime(dto.startDate)
                             binding.tvEndDate.text = DateTimeUtils.formatMeetingTime(dto.endDate)
 
-                            val alreadyExtended = (dto.extensionCount ?: 0) >= 1
+                            val alreadyExtended = ((dto.extensionCount ?: 0) >= 1) || vm.extensionApplied.value
                             binding.btnExtendPeriod.isEnabled = !alreadyExtended
                             binding.btnExtendPeriod.alpha = if (alreadyExtended) 0.5f else 1f
                         }
@@ -91,6 +92,17 @@ class DirectHostReadingBottomDialogFragment : BottomSheetDialogFragment() {
                             binding.btnFinish.isEnabled = true
                         }
                         else -> Unit
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.extensionApplied.collectLatest { applied ->
+                    if (applied) {
+                        binding.btnExtendPeriod.isEnabled = false
+                        binding.btnExtendPeriod.alpha = 0.5f
                     }
                 }
             }

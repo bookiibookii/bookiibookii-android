@@ -71,10 +71,10 @@
                     android:id="@+id/tv_user_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="noshel"
+                    android:text="sayo"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="@color/pre_main"
+                    android:textColor="@color/pre_sub"
                     android:includeFontPadding="false" />
 
                 <TextView
@@ -85,9 +85,7 @@
                     android:textSize="18sp"
                     android:textColor="@android:color/black"
                     android:includeFontPadding="false" />
-
             </LinearLayout>
-
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_widget"
@@ -107,7 +105,6 @@
                     android:paddingVertical="10dp"/>
 
             </com.google.android.material.card.MaterialCardView>
-
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
