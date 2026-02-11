@@ -186,6 +186,7 @@ class LibraryCardDetailFragment : Fragment() {
     }
 
     // ★ suspend 적용
+// ★ suspend 적용
     private suspend fun fetchCardDetail() {
         val response = RetrofitClient.api().getCardDetail(cardId)
         if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -205,6 +206,22 @@ class LibraryCardDetailFragment : Fragment() {
                 if (result.createdAt.length >= 10) libCardBookDateTv.text = result.createdAt.substring(0, 10).replace("-", ".")
                 libCardContentTv.text = result.memo
 
+                // ★ [추가된 부분] 서버에서 받아온 상세 정보로 프로필/이름 덮어쓰기
+                // 주의: result.creatorName, result.creatorProfileImageUrl 은 임의로 적은 것입니다.
+                // 실제 서버 API 응답 모델(DTO)에 있는 필드명으로 꼭 맞춰서 변경해 주세요!
+                val apiWriterName = result.creatorName ?: writerName
+                val apiProfileUrl = result.writerProfile ?: writerProfileUrl
+
+                libCardProfileTv.text = apiWriterName
+
+                Glide.with(requireContext())
+                    .load(apiProfileUrl)
+                    .placeholder(R.drawable.bg_round_10dp_gray300)
+                    .error(R.drawable.img_profile_default)
+                    .circleCrop()
+                    .into(libCardProfileIv)
+
+                // (아래는 기존 카드 이미지 처리 코드 그대로 유지)
                 if (!currentImageUrl.isNullOrEmpty()) {
                     libCardImageIv.visibility = View.VISIBLE
                     Glide.with(requireContext()).load(currentImageUrl)
@@ -216,7 +233,6 @@ class LibraryCardDetailFragment : Fragment() {
             }
         }
     }
-
     // ★ suspend 적용
     private suspend fun fetchComments() {
         val response = RetrofitClient.api().getCardComments(cardId)

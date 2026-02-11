@@ -98,6 +98,9 @@ class GuestActivity : AppCompatActivity() {
                         currentIsVerified = dto.deliveryInfo?.isVerified
                         binding.cardWidget.isEnabled = true
 
+                        val title = dto.bookTitle?.trim().orEmpty()
+                        binding.tvToolbarTitle.text = if (title.isBlank()) " " else title
+
                         if (!didAutoShowSheet && savedInstanceState == null) {
                             didAutoShowSheet = true
                             binding.root.post {

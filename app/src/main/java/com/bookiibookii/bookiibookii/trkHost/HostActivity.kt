@@ -136,6 +136,9 @@ class HostActivity : AppCompatActivity() {
                     currentStatus = TrackerStatus.from(dto.trackerStatus)
                     currentIsVerified = dto.deliveryInfo?.isVerified
 
+                    val title = dto.bookTitle?.trim().orEmpty()
+                    binding.tvToolbarTitle.text = if (title.isBlank()) " " else title
+
                     binding.cardWidget.isEnabled = true
 
                     if (!didAutoShowSheet && savedInstanceState == null && !pendingShowAfterRefresh) {

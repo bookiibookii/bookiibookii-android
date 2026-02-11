@@ -86,7 +86,7 @@ class MypProfileEditFragment : Fragment() {
                     .placeholder(R.drawable.img_profile_default)
                     .error(R.drawable.img_profile_default)
                     .fallback(R.drawable.img_profile_default)
-                    .transform(CenterCrop(), RoundedCorners(dpToPx(25))) // 128dp 크기에 어울리는 40dp 둥근 모서리
+                    .transform(CenterCrop(), RoundedCorners(dpToPx(60))) // 128dp 크기에 어울리는 40dp 둥근 모서리
                     .into(binding.mypEditProfileIv)
             }
         }

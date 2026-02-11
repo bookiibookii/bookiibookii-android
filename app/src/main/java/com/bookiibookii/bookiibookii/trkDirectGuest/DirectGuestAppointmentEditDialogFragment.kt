@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
@@ -16,11 +17,16 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestAppointmentEditDialogBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.ResolverStyle
 
 class DirectGuestAppointmentEditDialogFragment : DialogFragment() {
 
     private var _binding: FragmentDirectGuestAppointmentEditDialogBinding? = null
     private val binding get() = _binding!!
+
+    private var didInitFallback = false
 
     private val vm: DirectGuestViewModel by activityViewModels()
 
@@ -57,6 +63,7 @@ class DirectGuestAppointmentEditDialogFragment : DialogFragment() {
         binding.etDate.doAfterTextChanged { updateRegisterState() }
         binding.etPlace.doAfterTextChanged { updateRegisterState() }
 
+        vm.loadTracker(groupId)
         vm.loadMeeting(groupId)
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -88,11 +95,26 @@ class DirectGuestAppointmentEditDialogFragment : DialogFragment() {
         binding.btnRegister.setOnClickListener {
             if (!binding.btnRegister.isEnabled) return@setOnClickListener
 
-            val date = binding.etDate.text?.toString()?.trim().orEmpty()
-            val place = binding.etPlace.text?.toString()?.trim().orEmpty()
+            val rawDate = binding.etDate.text.toString().trim()
+            val place = binding.etPlace.text.toString().trim()
+
+            val apiDate = toApiUtcZ(rawDate)
+            if (apiDate == null) {
+                Toast.makeText(
+                    requireContext(),
+                    "날짜 형식이 올바르지 않아요. 예: 2026.02.10.14:00",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            if (place.isBlank()) {
+                Toast.makeText(requireContext(), "장소를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
             binding.btnRegister.isEnabled = false
-            vm.makeMeeting(groupId, date, place)
+            vm.makeMeeting(groupId, apiDate, place)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -109,6 +131,30 @@ class DirectGuestAppointmentEditDialogFragment : DialogFragment() {
                         }
 
                         else -> Unit
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.trackerState.collectLatest { state ->
+                    val dto = (state as? UiState.Success)?.data ?: return@collectLatest
+
+                    if (didInitInputs) return@collectLatest
+
+                    if (didInitFallback) return@collectLatest
+                    didInitFallback = true
+
+                    val info = dto.meetingInfo
+                    if (info != null) {
+                        if (binding.etDate.text.isNullOrBlank() && !info.meetingTime.isNullOrBlank()) {
+                            binding.etDate.setText(info.meetingTime)
+                        }
+                        if (binding.etPlace.text.isNullOrBlank() && !info.meetingPlace.isNullOrBlank()) {
+                            binding.etPlace.setText(info.meetingPlace)
+                        }
+                        updateRegisterState()
                     }
                 }
             }
@@ -142,6 +188,26 @@ class DirectGuestAppointmentEditDialogFragment : DialogFragment() {
 
             val tc = if (enabled) R.color.grey_100 else R.color.grey_500
             setTextColor(ContextCompat.getColor(context, tc))
+        }
+    }
+
+    private val inputFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("uuuu.MM.dd.HH:mm")
+            .withResolverStyle(ResolverStyle.STRICT)
+
+    private val apiFormatterNoShift: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss'Z'")
+            .withResolverStyle(ResolverStyle.STRICT)
+
+    private fun toApiUtcZ(rawInput: String): String? {
+        val trimmed = rawInput.trim()
+        if (trimmed.isBlank()) return null
+
+        return try {
+            val local = LocalDateTime.parse(trimmed, inputFormatter)
+            apiFormatterNoShift.format(local)
+        } catch (e: Exception) {
+            null
         }
     }
 

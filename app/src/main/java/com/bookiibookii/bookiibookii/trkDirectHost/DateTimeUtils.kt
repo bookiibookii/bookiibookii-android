@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 object DateTimeUtils {
 
     private val outputFormatter: DateTimeFormatter =
-        DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")
+        DateTimeFormatter.ofPattern("yyyy.MM.dd")
     
     fun formatMeetingTime(
         raw: String?,

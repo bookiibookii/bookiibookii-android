@@ -53,11 +53,11 @@
         </activity>
 
         <activity
-            android:name=".home.noti.HomNotificationActivity"
+            android:name=".home.notification.ui.NotificationActivity"
             android:exported="false" />
 
         <activity
-            android:name=".home.notiSetting.HomKeywordNotiSettingActivity"
+            android:name=".home.notification.ui.NotificationKeywordSettingActivity"
             android:exported="false" />
 
         <activity
@@ -90,6 +90,9 @@
         <activity
             android:name=".group.GroupJoinManagementActivity"
             android:exported="false" />
+
+        <activity android:name=".group.GroupDetailReportContainerActivity"
+            android:screenOrientation="portrait" />
       
         <activity
             android:name=".trkHost.HostActivity"

@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.LibBook
 import com.bookiibookii.bookiibookii.data.model.ReadStatus
@@ -33,7 +33,7 @@ class LibraryFragment : Fragment() {
     private var _binding: FragmentLibBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+    private lateinit var loadingDialog: LoadingDialog
 
     private lateinit var libraryAdapter: LibraryBookAdapter
     private var allMyBooks: List<LibBook> = emptyList()
@@ -49,9 +49,8 @@ class LibraryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
-        // 기존에 XML에 있던 자체 ProgressBar는 사용하지 않으므로 GONE 처리 (혹은 XML에서 지우셔도 됩니다)
         binding.loadingProgressBar.visibility = View.GONE
 
         initRecyclerView()
@@ -67,17 +66,27 @@ class LibraryFragment : Fragment() {
 
     private fun fetchBooks() {
         lifecycleScope.launch {
-            loadingDialog.show() // ★ 로딩 다이얼로그 띄우기
+            loadingDialog.show()
             binding.libBookListRv.visibility = View.INVISIBLE
             try {
                 val response = RetrofitClient.api().getLibraryBooks()
                 Log.d("LibraryAPI", "${response.body()}")
-                val myNickname = myPageViewModel.confirmedNickname ?: ""
+
+                // 닉네임이 없을 경우를 대비해 profileData에서도 가져오도록 안전장치 추가
+                val myNickname = myPageViewModel.confirmedNickname ?: myPageViewModel.profileData.value?.nickname ?: ""
+
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val resultList = response.body()?.result ?: emptyList()
 
-                    allMyBooks = resultList.map { apiData ->
+                    // ★ 1. MATCHED와 COMPLETED 상태만 필터링 (나머지는 화면에 띄우지 않음)
+                    val filteredList = resultList.filter {
+                        it.groupState == "MATCHED" || it.groupState == "COMPLETED"
+                    }
+
+                    // ★ 2. 필터링된 데이터만 매핑
+                    allMyBooks = filteredList.map { apiData ->
                         val state = apiData.groupState
+                        // COMPLETED면 종료 탭, MATCHED면 진행 중 탭
                         val status = if (state == "COMPLETED") ReadStatus.DONE else ReadStatus.READING
                         val reviewWritten = apiData.rating > 0.0
 
@@ -105,7 +114,7 @@ class LibraryFragment : Fragment() {
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 통신 끝나면 로딩 닫기
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
                 binding.libBookListRv.visibility = View.VISIBLE
             }
         }
@@ -133,12 +142,22 @@ class LibraryFragment : Fragment() {
     private fun initRecyclerView() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
             val targetFragment: Fragment
-            if (clickedBook.groupType == "TOGETHER") {
-                if (clickedBook.readStatus == ReadStatus.DONE) targetFragment = LibraryBookDetailTogetherFragment()
-                else targetFragment = LibraryBookDetailIngFragment()
-            } else {
-                if (clickedBook.readStatus == ReadStatus.DONE) targetFragment = LibraryBookDetailFragment()
-                else targetFragment = LibraryBookDetailFragment() // 원래 목적지 맞춤 수정 필요 부분
+
+            // ★ 기존 이동 로직 복구 및 유지
+            if (clickedBook.groupType == "TOGETHER") { // 함께 읽기
+                if (clickedBook.readStatus == ReadStatus.DONE) {
+                    targetFragment = LibraryBookDetailTogetherFragment() // 함께 읽기 종료 (투게더)
+                } else {
+                    targetFragment = LibraryBookDetailIngFragment() // 함께 읽기 진행 중 (아이엔지)
+                }
+            } else { // 이어 읽기
+                if (clickedBook.readStatus == ReadStatus.DONE) {
+                    targetFragment = LibraryBookDetailFragment() // 이어 읽기 종료 (디테일)
+                } else {
+                    // ★ 주의: 이어읽기 진행 중일 때 이동할 실제 트래커 프래그먼트 클래스명으로 교체해 주세요.
+                    //targetFragment = TrackerFragment() // <--- 교체 필요
+                    targetFragment = LibraryFragment()
+                }
             }
 
             val bundle = Bundle().apply {
@@ -152,6 +171,8 @@ class LibraryFragment : Fragment() {
                 putString("startDate", clickedBook.startDate)
                 putString("endDate", clickedBook.endDate)
                 putDouble("rating", clickedBook.rating)
+                // ★ 내 카드인지 판별하는 데이터 넘기기
+                putBoolean("isMine", clickedBook.isMine)
             }
             targetFragment.arguments = bundle
             requireActivity().supportFragmentManager.beginTransaction().replace(R.id.fragmentContainer, targetFragment).addToBackStack(null).commit()

@@ -30,6 +30,8 @@ import com.bookiibookii.bookiibookii.data.model.MypageResponse
 import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
+import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
+import com.bookiibookii.bookiibookii.data.model.NotificationListResultDto
 import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentResponse
@@ -49,6 +51,7 @@ import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import okhttp3.RequestBody
 import com.bookiibookii.bookiibookii.trkData.api.TrkApi
+import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -292,11 +295,39 @@ interface ApiService: TrkApi {
         @Path("groupId") groupId: Long
     ): Response<GroupItemDto.GroupAppListResponse>
 
+    //그룹 참여 요청 수락/거절
     @PATCH("api/groups/apply/{applyId}")
     suspend fun updateApplicationStatus(
         @Path("applyId") applyId: Long,
         @Body request: GroupItemDto.GroupAppStatusRequest
     ): Response<GroupItemDto.GroupAppStatusResponse>
+
+    @GET("api/notifications")
+    suspend fun getNotifications(
+        @Query("category") category: String,
+        @Query("cursor") cursor: String?,
+        @Query("size") size: Int
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<NotificationListResultDto>>
+
+    @PATCH("api/notifications/{notificationId}/read")
+    suspend fun readNotification(
+        @Path("notificationId") notificationId: Long
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<NotificationItemDto>>
+
+    @GET("/api/keywords")
+    suspend fun getKeywords(
+        @Query("sort") sort: String // "LATEST" | "ALPHABETICAL"
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<com.bookiibookii.bookiibookii.data.model.KeywordListResultDto>>
+
+    @POST("/api/keywords")
+    suspend fun createKeyword(
+        @Body request: com.bookiibookii.bookiibookii.data.model.KeywordCreateRequest
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<com.bookiibookii.bookiibookii.data.model.KeywordCreateResultDto>>
+
+    @DELETE("/api/keywords/{keywordId}")
+    suspend fun deleteKeyword(
+        @Path("keywordId") keywordId: Long
+    ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<String>>
 
     @DELETE("api/cards/{cardId}")
     suspend fun deleteCard(
@@ -311,4 +342,31 @@ interface ApiService: TrkApi {
         @Path("userBookId") userBookId: Int,
         @Body request: RelayReviewRequest
     ): Response<BaseResponse>
+
+    //그룹 삭제하기
+    @DELETE("api/groups/{groupId}")
+    suspend fun deleteGroup(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.GroupDeleteResponse>
+
+    //그룹 수정하기
+    @PATCH("api/groups/{groupId}")
+    suspend fun modifyGroup(
+        @Path("groupId") groupId: Long,
+        @Body request: GroupItemDto.GroupModifyRequest
+    ): Response<GroupItemDto.GroupModifyResponse>
+
+    //그룹 댓글달기
+    @POST("api/groups/{groupId}/comments")
+    suspend fun postComment(
+        @Path("groupId") groupId: Long,
+        @Body request: GroupItemDto.CommentCreateRequest
+    ): Response<GroupItemDto.CommentCreateResponse>
+
+    //그룹 댓글 조회
+    @GET("api/groups/{groupId}/comments")
+    suspend fun getComments(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.CommentListResponse>
+
 }

@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.home.notiSetting
+package com.bookiibookii.bookiibookii.home.notification.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,21 +7,23 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.KeywordItemDto
 
 class KeywordAdapter(
-    private val onDeleteClick: (String) -> Unit
+    private val onDeleteClick: (KeywordItemDto) -> Unit
 ) : RecyclerView.Adapter<KeywordAdapter.VH>() {
 
-    private val items = mutableListOf<String>()
+    private val items = mutableListOf<KeywordItemDto>()
 
-    fun submitList(list: List<String>) {
+    fun submitList(list: List<KeywordItemDto>) {
         items.clear()
         items.addAll(list)
         notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_keyword_setting, parent, false)
+        val v = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_keyword_setting, parent, false)
         return VH(v)
     }
 
@@ -36,11 +38,9 @@ class KeywordAdapter(
         private val tvKeyword: TextView = itemView.findViewById(R.id.tv_keyword)
         private val ivDelete: ImageView = itemView.findViewById(R.id.iv_delete)
 
-        fun bind(keyword: String) {
-            tvKeyword.text = keyword
-            ivDelete.setOnClickListener {
-                onDeleteClick(keyword)
-            }
+        fun bind(item: KeywordItemDto) {
+            tvKeyword.text = item.content
+            ivDelete.setOnClickListener { onDeleteClick(item) }
         }
     }
 }

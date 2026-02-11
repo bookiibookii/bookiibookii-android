@@ -32,6 +32,11 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
+import android.graphics.drawable.Drawable
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 
 class MypageFragment : Fragment() {
 
@@ -115,12 +120,38 @@ class MypageFragment : Fragment() {
             mypBookCardTv.text = data.togetherGroup.toString()
 
             val imageUrl = data.profileImageUrl
+
+            // ★ Glide에 Listener를 달아서 이미지 로딩 완료 시점을 캐치합니다.
             Glide.with(root.context)
                 .load(imageUrl)
                 .placeholder(R.drawable.img_profile_default)
                 .error(R.drawable.img_profile_default)
                 .fallback(R.drawable.img_profile_default)
-                .transform(CenterCrop(), RoundedCorners(dpToPx(25)))
+                .transform(CenterCrop(), RoundedCorners(dpToPx(60)))
+                .listener(object : RequestListener<Drawable> {
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Drawable>,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        // 이미지 로딩 실패 (또는 URL이 null일 때) 로딩창 종료
+                        if (loadingDialog.isShowing) loadingDialog.dismiss()
+                        return false
+                    }
+
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        model: Any,
+                        target: Target<Drawable>?,
+                        dataSource: DataSource,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        // 이미지 로딩 성공 시 로딩창 종료
+                        if (loadingDialog.isShowing) loadingDialog.dismiss()
+                        return false
+                    }
+                })
                 .into(mypProfileIv)
 
             mypTagsLayout.removeAllViews()
@@ -156,7 +187,11 @@ class MypageFragment : Fragment() {
 
     private fun fetchMypageData() {
         lifecycleScope.launch {
-            loadingDialog.show() // ★ API 호출 전 로딩 시작
+            loadingDialog.show() // API 호출 전 로딩 시작
+
+            // ★ API 통신 자체가 실패했을 때를 대비한 플래그 변수
+            var isApiSuccess = false
+
             try {
                 Log.d("MYPAGE_DEBUG", "fetchMypageData 호출 시작")
                 val response = RetrofitClient.api().getMypage()
@@ -165,6 +200,8 @@ class MypageFragment : Fragment() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result
                     if (result != null) {
+                        isApiSuccess = true
+                        // 성공했다면 updateUI 내부의 Glide Listener가 로딩창을 꺼줍니다.
                         updateUI(result)
                     }
                 } else {
@@ -173,7 +210,10 @@ class MypageFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e("Mypage", "Network Error", e)
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
+                // ★ API 호출에 실패해서 updateUI(Glide)까지 도달하지 못한 경우에만 여기서 안전하게 닫아줍니다.
+                if (!isApiSuccess) {
+                    if (loadingDialog.isShowing) loadingDialog.dismiss()
+                }
             }
         }
     }

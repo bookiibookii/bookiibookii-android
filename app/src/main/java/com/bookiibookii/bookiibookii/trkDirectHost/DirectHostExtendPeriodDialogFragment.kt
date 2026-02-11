@@ -133,7 +133,7 @@ class DirectHostExtendPeriodDialogFragment : DialogFragment() {
                 vm.event.collect { ev ->
                     when (ev) {
                         is DirectHostEvent.ExtensionSuccess -> {
-                            dismissAllDialogsInActivity()
+                            dismiss()
 
                             vm.loadTracker(groupId)
                         }
@@ -149,19 +149,6 @@ class DirectHostExtendPeriodDialogFragment : DialogFragment() {
         }
     }
 
-    private fun dismissAllDialogsInActivity() {
-        val fm = requireActivity().supportFragmentManager
-        fm.fragments.forEach { f ->
-            if (f is DialogFragment) {
-                f.dismissAllowingStateLoss()
-            }
-        }
-        parentFragmentManager.fragments.forEach { f ->
-            if (f is DialogFragment) {
-                f.dismissAllowingStateLoss()
-            }
-        }
-    }
 
     private fun displayDate(raw: String?): String {
         if (raw.isNullOrBlank()) return "-"

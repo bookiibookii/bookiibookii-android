@@ -99,12 +99,15 @@ class DirectHostExchangeBottomDialogFragment : BottomSheetDialogFragment() {
         if (raw.isNullOrBlank()) return "-"
 
         return try {
-            val dt = if (raw.endsWith("Z")) {
-                java.time.OffsetDateTime.parse(raw)
-                    .atZoneSameInstant(java.time.ZoneId.systemDefault())
-                    .toLocalDateTime()
+            val s = raw.trim()
+
+            val dt = if (s.endsWith("Z")) {
+                LocalDateTime.parse(
+                    s,
+                    DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss'Z'")
+                )
             } else {
-                LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                LocalDateTime.parse(s, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
             }
 
             dt.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))

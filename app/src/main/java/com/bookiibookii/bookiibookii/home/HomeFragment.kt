@@ -14,7 +14,7 @@ import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeMateBinding
-import com.bookiibookii.bookiibookii.home.noti.HomNotificationActivity
+import com.bookiibookii.bookiibookii.home.notification.ui.NotificationActivity
 
 class HomeFragment : Fragment() {
 
@@ -87,7 +87,7 @@ class HomeFragment : Fragment() {
         val ivNoti = headerRoot.findViewById<ImageView>(R.id.iv_home_notification)
 
         ivNoti.setOnClickListener {
-            val intent = Intent(requireContext(), HomNotificationActivity::class.java)
+            val intent = Intent(requireContext(), NotificationActivity::class.java)
             startActivity(intent)
         }
     }
