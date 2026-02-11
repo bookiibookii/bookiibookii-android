@@ -739,7 +739,7 @@
                     android:text="#재미있게" />
 
                 <com.google.android.material.chip.Chip
-                    android:id="@+id/act_grp_gen_tag_insite_cp"
+                    android:id="@+id/act_grp_gen_tag_insight_cp"
                     style="@style/Widget.App.Chip.GroupGen.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

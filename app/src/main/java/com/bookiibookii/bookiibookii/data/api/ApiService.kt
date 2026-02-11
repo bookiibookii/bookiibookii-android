@@ -296,6 +296,7 @@ interface ApiService: TrkApi {
         @Path("groupId") groupId: Long
     ): Response<GroupItemDto.GroupAppListResponse>
 
+    //그룹 참여 요청 수락/거절
     @PATCH("api/groups/apply/{applyId}")
     suspend fun updateApplicationStatus(
         @Path("applyId") applyId: Long,
@@ -306,4 +307,31 @@ interface ApiService: TrkApi {
     suspend fun deleteCard(
         @Path("cardId") cardId: Long
     ): Response<BaseResponse>
+
+    //그룹 삭제하기
+    @DELETE("api/groups/{groupId}")
+    suspend fun deleteGroup(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.GroupDeleteResponse>
+
+    //그룹 수정하기
+    @PATCH("api/groups/{groupId}")
+    suspend fun modifyGroup(
+        @Path("groupId") groupId: Long,
+        @Body request: GroupItemDto.GroupModifyRequest
+    ): Response<GroupItemDto.GroupModifyResponse>
+
+    //그룹 댓글달기
+    @POST("api/groups/{groupId}/comments")
+    suspend fun postComment(
+        @Path("groupId") groupId: Long,
+        @Body request: GroupItemDto.CommentCreateRequest
+    ): Response<GroupItemDto.CommentCreateResponse>
+
+    //그룹 댓글 조회
+    @GET("api/groups/{groupId}/comments")
+    suspend fun getComments(
+        @Path("groupId") groupId: Long
+    ): Response<GroupItemDto.CommentListResponse>
+
 }
