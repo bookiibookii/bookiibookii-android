@@ -29,7 +29,7 @@ class MypPostcodeSearchFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnBack.setOnClickListener {
-            parentFragmentManager.popBackStack()
+            requireActivity().supportFragmentManager.popBackStack()
         }
 
         initWebView()
@@ -100,7 +100,7 @@ class MypPostcodeSearchFragment : Fragment() {
 
             // UI 스레드에서 백스택 제거 (화면 닫기)
             activity?.runOnUiThread {
-                parentFragmentManager.popBackStack()
+                requireActivity().supportFragmentManager.popBackStack()
             }
         }
     }

@@ -6,27 +6,20 @@
     android:layout_marginEnd="4dp"
     android:layout_marginStart="4dp"
     android:layout_marginBottom="40dp">
-    <LinearLayout
+
+    <FrameLayout
         android:id="@+id/spine_container"
         android:layout_width="32dp"
         android:layout_height="100dp"
-        android:background="@drawable/bg_lib_chip"
-        android:gravity="bottom|center_horizontal"
-        android:paddingBottom="16dp">
+        android:background="@drawable/bg_lib_spine">
 
         <TextView
             android:id="@+id/item_book_grid_tv"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:text="책 제목"
+            android:layout_width="100dp"  android:layout_height="32dp"  android:layout_gravity="center"
+            android:gravity="center_vertical|start" android:paddingStart="16dp" android:text="책 제목"
             android:rotation="-90"
-            android:transformPivotX="16dp"
-            android:transformPivotY="15dp"
-            android:translationX="-84dp"
             android:singleLine="true"
             android:ellipsize="end"
-            android:gravity="start|center_vertical"
-            android:textAppearance="@style/medium15"
-            android:textColor="@color/pre_main" />
-    </LinearLayout>
+            android:textAppearance="@style/medium15" />
+    </FrameLayout>
 </LinearLayout>

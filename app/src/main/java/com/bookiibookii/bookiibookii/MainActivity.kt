@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii
 
-import LoadingDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View

@@ -15,15 +15,26 @@ class MypLateBookAdapter(private val items: List<MypageBook>) :
         fun bind(item: MypageBook) {
             binding.itemMypLateTitleTv.text = item.bookTitle
 
-            val ratingInt = item.rating.toInt()
+            // toInt()를 빼고 원본 소수점 값(Double or Float)을 그대로 사용합니다.
+            val rating = item.rating
 
             // 별점 처리 (LinearLayout 내부의 ImageView들)
             for (i in 0 until binding.itemMypLateRatingLl.childCount) {
                 val star = binding.itemMypLateRatingLl.getChildAt(i) as ImageView
-                if (i < ratingInt) {
-                    star.setImageResource(R.drawable.ic_star_filled) // 채워진 별
-                } else {
-                    star.setImageResource(R.drawable.ic_star_none) // 채워진 별
+
+                when {
+                    rating >= (i + 1.0) -> {
+                        // 1.0 이상 채워져야 하면 꽉 찬 별
+                        star.setImageResource(R.drawable.ic_star_filled)
+                    }
+                    rating >= (i + 0.5) -> {
+                        // 0.5 이상 채워져야 하면 반쪽 별
+                        star.setImageResource(R.drawable.ic_star_half)
+                    }
+                    else -> {
+                        // 그 외에는 빈 별
+                        star.setImageResource(R.drawable.ic_star_none)
+                    }
                 }
             }
         }

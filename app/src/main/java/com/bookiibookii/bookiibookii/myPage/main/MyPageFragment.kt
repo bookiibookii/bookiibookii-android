@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.myPage
 
-import MypReview
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
@@ -18,7 +17,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.MypMyReviewFragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.MypReview
 import com.bookiibookii.bookiibookii.data.model.MypageResult
 import com.bookiibookii.bookiibookii.databinding.FragmentMypBinding
 import com.bookiibookii.bookiibookii.databinding.LayoutMypProfileCardBinding
@@ -28,6 +29,8 @@ import com.bookiibookii.bookiibookii.myPage.main.MypReviewAdapter
 import com.bookiibookii.bookiibookii.myPage.profile.MypProfileEditFragment
 import com.bookiibookii.bookiibookii.myPage.set.MypSetFragment
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
 
 class MypageFragment : Fragment() {
@@ -39,6 +42,8 @@ class MypageFragment : Fragment() {
     private var _profileBinding: LayoutMypProfileCardBinding? = null
     private val profileBinding get() = _profileBinding!!
 
+    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+
     private val viewModel: MyPageViewModel by activityViewModels()
     private var isGroupExpanded = true
 
@@ -47,43 +52,30 @@ class MypageFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMypBinding.inflate(inflater, container, false)
-
-        // include된 레이아웃 바인딩
         _profileBinding = LayoutMypProfileCardBinding.bind(binding.layoutProfile.root)
-
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
 
         setupRecyclerViews()
-        initNavigation()    // 버튼 클릭 리스너
-        initGroupToggle()   // 접기/펴기 로직
-        observeViewModel()  // [복구됨] 뷰모델 관찰
-        fetchMypageData()   // 서버 데이터 요청
+        initNavigation()
+        initGroupToggle()
+        observeViewModel()
+        fetchMypageData()
     }
 
-    // 1. 네비게이션 설정 (기존 유지)
     private fun initNavigation() {
-        binding.mypSettingIv.setOnClickListener {
-            navigateToFragment(MypSetFragment())
-        }
-
-        binding.mypMyReviewIv.setOnClickListener {
-            navigateToFragment(MypMyReviewFragment())
-        }
-
-        profileBinding.mypEditIv.setOnClickListener {
-            navigateToFragment(MypProfileEditFragment())
-        }
+        binding.mypSettingIv.setOnClickListener { navigateToFragment(MypSetFragment()) }
+        binding.mypMyReviewIv.setOnClickListener { navigateToFragment(MypMyReviewFragment()) }
+        profileBinding.mypEditIv.setOnClickListener { navigateToFragment(MypProfileEditFragment()) }
     }
 
-    // 2. 그룹 리스트 접기/펴기 (기존 유지)
     private fun initGroupToggle() {
         binding.mypGroupIv.setOnClickListener {
             isGroupExpanded = !isGroupExpanded
-
             if (isGroupExpanded) {
                 binding.mypGroupsRv.visibility = View.VISIBLE
                 binding.mypGroupIv.animate().rotation(0f).setDuration(200).start()
@@ -94,19 +86,27 @@ class MypageFragment : Fragment() {
         }
     }
 
-    // 3. 리사이클러뷰 설정 (기존 유지)
     private fun setupRecyclerViews() {
         binding.mypReviewsRv.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         binding.mypGroupsRv.layoutManager = LinearLayoutManager(context)
-        binding.mypGroupsRv.isNestedScrollingEnabled = false // 스크롤 중첩 방지
-
+        binding.mypGroupsRv.isNestedScrollingEnabled = false
         binding.rvBooks.layoutManager = LinearLayoutManager(context)
-        binding.rvBooks.isNestedScrollingEnabled = false // 스크롤 중첩 방지
+        binding.rvBooks.isNestedScrollingEnabled = false
     }
 
-    // 4. API 데이터로 UI 업데이트 (이미지 로드 추가됨)
+    private fun translateBadge(englishText: String): String {
+        return when (englishText.uppercase()) {
+            "PASSIONATE" -> "열정적인"
+            "COMMUNICATOR" -> "소통왕"
+            "FAST_READER" -> "스피드 리더"
+            "KIND" -> "친절해요"
+            "PUNCTUAL" -> "시간을 잘 지켜요"
+            "GOOD_LISTENER" -> "경청을 잘해요"
+            else -> englishText
+        }
+    }
+
     private fun updateUI(data: MypageResult) {
-        // [Profile Layout Binding]
         with(profileBinding) {
             mypNameTv.text = data.nickname
             mypTempTv.text = "${data.manner}°C"
@@ -114,57 +114,49 @@ class MypageFragment : Fragment() {
             mypReadBookTv.text = data.relayGroup.toString()
             mypBookCardTv.text = data.togetherGroup.toString()
 
-            // [추가된 부분] 이미지 로드 (Glide)
-            val imageUrl = data.userImage?.s3Key
+            val imageUrl = data.profileImageUrl
             Glide.with(root.context)
                 .load(imageUrl)
-                .placeholder(R.drawable.img_profile_default) // 기본 이미지
-                .error(R.drawable.img_profile_default)       // 에러 시 기본 이미지
-                .fallback(R.drawable.img_profile_default)    // null일 때 기본 이미지
-                .circleCrop()
+                .placeholder(R.drawable.img_profile_default)
+                .error(R.drawable.img_profile_default)
+                .fallback(R.drawable.img_profile_default)
+                .transform(CenterCrop(), RoundedCorners(dpToPx(25)))
                 .into(mypProfileIv)
 
-            // 프로필 태그 동적 추가 (기존 로직 + dpToPx 적용)
             mypTagsLayout.removeAllViews()
             data.topTags.forEach { tagText ->
                 val textView = TextView(root.context).apply {
                     text = "#$tagText"
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f) // 12sp로 명시
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                     setTextColor(ContextCompat.getColor(context, R.color.ui_main_sub))
                     setBackgroundResource(R.drawable.bg_round_8dp_gray300)
                     backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.ui_main_sub_pale))
 
-                    // 패딩 (helper 함수 사용)
                     val pH = dpToPx(8)
                     val pV = dpToPx(4)
                     setPadding(pH, pV, pH, pV)
 
-                    // 마진
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        marginEnd = dpToPx(10)
-                    }
+                    ).apply { marginEnd = dpToPx(10) }
                 }
                 mypTagsLayout.addView(textView)
             }
         }
 
-        // 획득한 후기 리스트 매핑 (UserBadge -> MypReview)
         val badgeList = data.userBadge?.map {
             MypReview(content = it.userBadge, count = it.count)
         } ?: emptyList()
         binding.mypReviewsRv.adapter = MypReviewAdapter(badgeList)
 
-        // 주최한 그룹 & 최근 읽은 책 (null 안전 처리)
         binding.mypGroupsRv.adapter = MypGroupAdapter(data.groups ?: emptyList())
         binding.rvBooks.adapter = MypLateBookAdapter(data.books ?: emptyList())
     }
 
-    // 5. API 호출 (기존 유지 + null 체크 강화)
     private fun fetchMypageData() {
         lifecycleScope.launch {
+            loadingDialog.show() // ★ API 호출 전 로딩 시작
             try {
                 Log.d("MYPAGE_DEBUG", "fetchMypageData 호출 시작")
                 val response = RetrofitClient.api().getMypage()
@@ -180,26 +172,25 @@ class MypageFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e("Mypage", "Network Error", e)
+            } finally {
+                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
             }
         }
     }
 
-    // [복구됨] 뷰모델 관찰
     private fun observeViewModel() {
         viewModel.profileData.observe(viewLifecycleOwner) { data ->
-            // 프로필 수정 등 로컬 변경사항이 있을 때 즉시 반영
             profileBinding.mypNameTv.text = data.nickname
         }
     }
 
     private fun navigateToFragment(fragment: Fragment) {
-        parentFragmentManager.beginTransaction()
+        requireActivity().supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .addToBackStack(null)
             .commit()
     }
 
-    // dp -> px 변환 유틸 함수 (기존 유지)
     private fun dpToPx(dp: Int): Int {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
