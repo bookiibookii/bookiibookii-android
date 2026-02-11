@@ -15,10 +15,10 @@ class LoadingDialog(context: Context) : Dialog(context) {
         super.onCreate(savedInstanceState)
 
         // 타이틀바 제거
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        //requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.dialog_loading)
 
-        window?.setBackgroundDrawable(ColorDrawable(Color.WHITE))
+        window?.setBackgroundDrawable(ColorDrawable(Color.parseColor("#80000000")))
         window?.setLayout(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT

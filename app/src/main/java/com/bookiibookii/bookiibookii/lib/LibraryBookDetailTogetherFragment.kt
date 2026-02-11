@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -13,9 +14,10 @@ import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.CommonDialog
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
+import com.bookiibookii.bookiibookii.data.model.GroupCardResult
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailTogetherBinding
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -26,7 +28,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private var _binding: FragmentLibBookDetailTogetherBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+    private lateinit var loadingDialog: LoadingDialog
 
     private val myPageViewModel: MyPageViewModel by activityViewModels()
 
@@ -40,9 +42,13 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private var myNickname = "나"
     private var startDate = "2025. 12. 18.~"
     private var endDate = ""
+    private var rating: Double = 0.0
 
     private lateinit var cardAdapter: LibraryReviewAdapter
+    private lateinit var partnerReviewAdapter: LibraryCardReviewAdapter
     private var originalList: List<CardItem> = emptyList()
+
+    private var currentGroupResult: GroupCardResult? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,6 +62,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
             hostProfileUrl = it.getString("hostProfileUrl", "") ?: ""
             startDate = it.getString("startDate", "") ?: ""
             endDate = it.getString("endDate", "") ?: ""
+            rating = it.getDouble("rating", 0.0)
         }
     }
 
@@ -66,7 +73,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
         setupMyProfileData()
         initView()
@@ -80,8 +87,14 @@ class LibraryBookDetailTogetherFragment : Fragment() {
         myPageViewModel.profileData.observe(viewLifecycleOwner) { profile ->
             if (profile != null) {
                 myNickname = profile.nickname
-                if (_binding != null) binding.libDetailReviewName1Tv.text = myNickname
+                if (_binding != null) {
+                    binding.libDetailReviewName1Tv.text = myNickname
+                    updateReviewUI()
+                }
             }
+        }
+        if (myPageViewModel.profileData.value == null) {
+            myPageViewModel.fetchMypageData()
         }
     }
 
@@ -89,7 +102,6 @@ class LibraryBookDetailTogetherFragment : Fragment() {
         binding.libDetailBookTitleTv.text = bookTitle
         binding.libDetailBookAuthorTv.text = bookAuthor
         binding.libDetailTitleTv.text = bookTitle
-        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
 
         binding.libDetailBookTitleTv.isSelected = true
         binding.libDetailBookAuthorTv.isSelected = true
@@ -100,10 +112,40 @@ class LibraryBookDetailTogetherFragment : Fragment() {
         Glide.with(this).load(hostProfileUrl).placeholder(R.drawable.bg_circle_gray500)
             .error(R.drawable.img_profile_default).circleCrop().into(binding.libDetailProfileIv)
 
+        // ★ [핵심] 날짜는 별점 유무와 상관없이 무조건 반영합니다.
+        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
+
+        // 별점 세팅
+        if (rating > 0.0) {
+            binding.libDetailRateList.visibility = View.VISIBLE
+            setRatingStars(rating)
+        } else {
+            binding.libDetailRateList.visibility = View.GONE
+        }
+
+        partnerReviewAdapter = LibraryCardReviewAdapter()
+        binding.libPartnerReviewRv.adapter = partnerReviewAdapter
+
         binding.groupPartnerReview.visibility = View.GONE
         binding.bookDetailDownArrowIv.rotation = 0f
+
         binding.groupDataExist.visibility = View.GONE
         binding.layoutEmpty.visibility = View.GONE
+    }
+
+    private fun setRatingStars(score: Double) {
+        val scoreInt = score.toInt()
+        val hasHalfStar = (score - scoreInt) >= 0.5
+        val container = binding.libDetailRateList
+
+        for (i in 0 until container.childCount) {
+            val star = container.getChildAt(i) as? ImageView ?: continue
+            when {
+                i < scoreInt -> star.setImageResource(R.drawable.ic_star_filled)
+                i == scoreInt && hasHalfStar -> star.setImageResource(R.drawable.ic_star_half)
+                else -> star.setImageResource(R.drawable.ic_star_none)
+            }
+        }
     }
 
     private fun initRecyclerView() {
@@ -128,18 +170,14 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private fun fetchData() {
         if (groupId == -1) return
         lifecycleScope.launch {
-            loadingDialog.show() // ★ 로딩 시작
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getGroupCards(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val result = response.body()?.result
+                    currentGroupResult = response.body()?.result
+                    updateReviewUI()
 
-                    binding.libDetailReviewName1Tv.text = myNickname
-                    binding.libDetailReviewText1Tv.text = result?.myComment ?: "\"아직 한줄 평을 남기지 않았어요.\""
-                    binding.libDetailReviewName2Tv.text = "상대방"
-                    binding.libDetailReviewText2Tv.text = result?.partnerComment ?: "작성된 내용이 없습니다."
-
-                    val apiCards = result?.cards ?: emptyList()
+                    val apiCards = currentGroupResult?.cards ?: emptyList()
                     originalList = apiCards
                     cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
                     binding.libDetailTotalTv.text = "${apiCards.size}개"
@@ -153,8 +191,26 @@ class LibraryBookDetailTogetherFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) { e.printStackTrace() }
-            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() } // ★ 로딩 끝
+            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
         }
+    }
+
+    private fun updateReviewUI() {
+        val result = currentGroupResult ?: return
+
+        binding.libDetailReviewName1Tv.text = myNickname
+
+        val myCommentObj = result.togetherComments?.find { it.nickname == myNickname }
+        val finalMyComment = myCommentObj?.comment ?: result.myComment
+
+        if (finalMyComment.isNullOrBlank()) {
+            binding.libDetailReviewText1Tv.text = "\"아직 한줄 평을 남기지 않았어요.\""
+        } else {
+            binding.libDetailReviewText1Tv.text = "\"$finalMyComment\""
+        }
+
+        val partnerComments = result.togetherComments?.filter { it.nickname != myNickname } ?: emptyList()
+        partnerReviewAdapter.submitList(partnerComments)
     }
 
     private fun toggleBookmark(card: CardItem) {
@@ -176,7 +232,9 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     }
 
     private fun initListeners() {
-        binding.libDetailBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.libDetailBackIv.setOnClickListener {
+            requireActivity().supportFragmentManager.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        }
 
         binding.libDetailMoreIv.setOnClickListener {
             LibraryGroupDeleteBottomSheet { showDeleteConfirmDialog() }.show(parentFragmentManager, "GroupDeleteSheet")
@@ -211,7 +269,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private fun deleteGroup() {
         if (userBookId == -1) return
         lifecycleScope.launch {
-            loadingDialog.show() // ★ 로딩 시작
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -219,7 +277,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
                     parentFragmentManager.popBackStack()
                 }
             } catch (e: Exception) { e.printStackTrace() }
-            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() } // ★ 로딩 끝
+            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
         }
     }
 

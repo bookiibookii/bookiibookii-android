@@ -93,7 +93,7 @@
                     android:layout_marginTop="-20dp"
                     app:layout_constraintStart_toStartOf="@id/share_image_a"
                     app:layout_constraintEnd_toEndOf="@id/share_image_a"
-                    android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
+                    android:background="@drawable/bg_round_20dp_white_bottom"
                     app:layout_constraintTop_toBottomOf="@id/share_image_a"
                     app:layout_constraintBottom_toBottomOf="parent">
 

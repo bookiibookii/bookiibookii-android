@@ -85,8 +85,8 @@ data class ReportSummary(
 
 // 신고 작성 요청
 data class ReportRequest(
-    val groupName: String,
-    val targetMember: String, // API 스펙상 필요할 것으로 추정 (XML 입력 필드 존재)
+    val groupId: Int,
+    val targetId: Int, // API 스펙상 필요할 것으로 추정 (XML 입력 필드 존재)
     val reportType: String,   // "ABUSE", "SPAM" ...
     val content: String
 )

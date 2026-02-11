@@ -72,21 +72,17 @@ class LibraryFragment : Fragment() {
                 val response = RetrofitClient.api().getLibraryBooks()
                 Log.d("LibraryAPI", "${response.body()}")
 
-                // 닉네임이 없을 경우를 대비해 profileData에서도 가져오도록 안전장치 추가
                 val myNickname = myPageViewModel.confirmedNickname ?: myPageViewModel.profileData.value?.nickname ?: ""
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val resultList = response.body()?.result ?: emptyList()
 
-                    // ★ 1. MATCHED와 COMPLETED 상태만 필터링 (나머지는 화면에 띄우지 않음)
                     val filteredList = resultList.filter {
-                        it.groupState == "MATCHED" || it.groupState == "COMPLETED"
+                        it.groupStatus == "MATCHED" || it.groupStatus == "COMPLETED"
                     }
 
-                    // ★ 2. 필터링된 데이터만 매핑
                     allMyBooks = filteredList.map { apiData ->
-                        val state = apiData.groupState
-                        // COMPLETED면 종료 탭, MATCHED면 진행 중 탭
+                        val state = apiData.groupStatus
                         val status = if (state == "COMPLETED") ReadStatus.DONE else ReadStatus.READING
                         val reviewWritten = apiData.rating > 0.0
 
@@ -96,7 +92,7 @@ class LibraryFragment : Fragment() {
                             title = apiData.title,
                             author = apiData.author,
                             coverUrl = apiData.image,
-                            hostName = apiData.hostNickname,
+                            hostName = apiData.hostNickName,
                             hostProfileUrl = apiData.hostProfileImageUrl,
                             startDate = apiData.startDate,
                             endDate = apiData.endDate,
@@ -106,9 +102,10 @@ class LibraryFragment : Fragment() {
                             rating = apiData.rating,
                             groupType = apiData.groupType,
                             groupState = state ?: "",
-                            isMine = (apiData.hostNickname == myNickname)
+                            isMine = (apiData.hostNickName == myNickname)
                         )
                     }
+                    // ★ 데이터 통신 후 현재 탭 상태에 맞춰 화면 갱신
                     showBooksByStatus(currentTabStatus)
                 }
             } catch (e: Exception) {
@@ -132,31 +129,51 @@ class LibraryFragment : Fragment() {
         showBooksByStatus(currentTabStatus)
     }
 
+    // ★ 수정된 부분: 데이터 유무에 따른 빈 화면(Empty View) 처리 로직 추가
     private fun showBooksByStatus(status: ReadStatus) {
         val filteredList = allMyBooks.filter { it.readStatus == status }
         libraryAdapter.submitList(filteredList)
         binding.libTotalTv.text = "${filteredList.size}권"
         updateButtonStyles(status)
+
+        // 리스트가 비어있을 때 Empty Layout 표시 및 텍스트 변경
+        if (filteredList.isEmpty()) {
+            binding.mypNoBookCl.visibility = View.VISIBLE
+            binding.libBookListRv.visibility = View.GONE
+            binding.libGridIv.visibility = View.GONE
+            binding.libTotalTv.visibility = View.GONE
+            binding.libSortIv.visibility = View.GONE
+
+            if (status == ReadStatus.READING) {
+                binding.mypNoText.text = "아직 진행 중인 독서가 없어요"
+            } else {
+                binding.mypNoText.text = "완료한 독서가 없어요"
+            }
+        } else {
+            // 리스트에 데이터가 있을 때 정상적으로 리스트 표시
+            binding.mypNoBookCl.visibility = View.GONE
+            binding.libBookListRv.visibility = View.VISIBLE
+            binding.libGridIv.visibility = View.VISIBLE
+            binding.libTotalTv.visibility = View.VISIBLE
+            binding.libSortIv.visibility = View.VISIBLE
+        }
     }
 
     private fun initRecyclerView() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
             val targetFragment: Fragment
 
-            // ★ 기존 이동 로직 복구 및 유지
-            if (clickedBook.groupType == "TOGETHER") { // 함께 읽기
+            if (clickedBook.groupType == "TOGETHER") {
                 if (clickedBook.readStatus == ReadStatus.DONE) {
-                    targetFragment = LibraryBookDetailTogetherFragment() // 함께 읽기 종료 (투게더)
+                    targetFragment = LibraryBookDetailTogetherFragment()
                 } else {
-                    targetFragment = LibraryBookDetailIngFragment() // 함께 읽기 진행 중 (아이엔지)
+                    targetFragment = LibraryBookDetailIngFragment()
                 }
-            } else { // 이어 읽기
+            } else {
                 if (clickedBook.readStatus == ReadStatus.DONE) {
-                    targetFragment = LibraryBookDetailFragment() // 이어 읽기 종료 (디테일)
+                    targetFragment = LibraryBookDetailFragment()
                 } else {
-                    // ★ 주의: 이어읽기 진행 중일 때 이동할 실제 트래커 프래그먼트 클래스명으로 교체해 주세요.
-                    //targetFragment = TrackerFragment() // <--- 교체 필요
-                    targetFragment = LibraryFragment()
+                    targetFragment = LibraryFragment() // 추후 교체
                 }
             }
 
@@ -171,7 +188,6 @@ class LibraryFragment : Fragment() {
                 putString("startDate", clickedBook.startDate)
                 putString("endDate", clickedBook.endDate)
                 putDouble("rating", clickedBook.rating)
-                // ★ 내 카드인지 판별하는 데이터 넘기기
                 putBoolean("isMine", clickedBook.isMine)
             }
             targetFragment.arguments = bundle
