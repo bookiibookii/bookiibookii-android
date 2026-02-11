@@ -17,8 +17,7 @@ class LoadingDialog(context: Context) : Dialog(context) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.dialog_loading)
 
-        // 다이얼로그 배경을 투명하게 (이게 있어야 뒤에 원래 화면이 보임)
-        window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+g        window?.setBackgroundDrawable(ColorDrawable(Color.WHITE))
 
         // 로딩 중에 뒤로가기나 바깥 화면 터치로 로딩창이 꺼지지 않도록 막음
         setCancelable(false)
