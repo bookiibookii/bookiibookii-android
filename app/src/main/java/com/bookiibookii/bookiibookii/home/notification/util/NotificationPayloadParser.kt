@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.home.notification.ui
+package com.bookiibookii.bookiibookii.home.notification.util
 
 import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
 import org.json.JSONObject
