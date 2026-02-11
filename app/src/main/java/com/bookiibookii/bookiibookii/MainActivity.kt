@@ -75,6 +75,12 @@ class MainActivity : AppCompatActivity() {
         selectTab(NavTab.GROUP, GroupFragment())
     }
 
+    fun moveToTrackerDetail(groupId: Long) {
+        selectTab(NavTab.TRACKER, TrkHostMainFragment())
+
+        // TODO: 트래커 상세 화면/네비 구조에 맞게 groupId 전달하여 TRK-010으로 이동
+    }
+
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)

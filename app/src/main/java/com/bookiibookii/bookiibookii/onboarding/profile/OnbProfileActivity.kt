@@ -313,6 +313,7 @@ class OnbProfileActivity : AppCompatActivity() {
         iconIv.setImageResource(iconRes)
         messageTv.text = message
 
+        @Suppress("DEPRECATION")
         Toast(this).apply {
             duration = Toast.LENGTH_SHORT
             view = layout
