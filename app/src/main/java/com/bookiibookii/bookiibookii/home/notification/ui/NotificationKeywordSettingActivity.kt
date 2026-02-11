@@ -283,6 +283,7 @@ class NotificationKeywordSettingActivity : AppCompatActivity() {
         btnAdd.isEnabled = underLimit && text.isNotEmpty()
     }
 
+    @Suppress("DEPRECATION")
     private fun showCustomToast(message: String) {
         val inflater = LayoutInflater.from(this)
         val view: View = inflater.inflate(R.layout.toast_custom, null)

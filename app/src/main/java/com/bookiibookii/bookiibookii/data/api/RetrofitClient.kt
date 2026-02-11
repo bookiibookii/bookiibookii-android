@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.data.api
 
 import android.content.Context
+import com.bookiibookii.bookiibookii.trkData.api.TrkApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -12,12 +13,13 @@ object RetrofitClient {
 
     @Volatile private var apiService: ApiService? = null
     @Volatile private var apiServiceNoAuth: ApiService? = null
+    @Volatile private var trkService: TrkApi? = null
 
     fun init(context: Context) {
-        if (apiService != null && apiServiceNoAuth != null) return
+        if (apiService != null && apiServiceNoAuth != null && trkService != null) return
 
         synchronized(this) {
-            if (apiService != null && apiServiceNoAuth != null) return
+            if (apiService != null && apiServiceNoAuth != null && trkService != null) return
 
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
@@ -37,6 +39,7 @@ object RetrofitClient {
                 .build()
 
             apiService = retrofit.create(ApiService::class.java)
+            trkService = retrofit.create(TrkApi::class.java)
 
             val noAuthClient = OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
@@ -59,4 +62,7 @@ object RetrofitClient {
 
     fun apiNoAuth(): ApiService =
         apiServiceNoAuth ?: error("RetrofitClient.init(context) 먼저 호출해야 함")
+
+    fun trkApi(): TrkApi =
+        trkService ?: error("RetrofitClient.init(context) 먼저 호출해야 함")
 }
