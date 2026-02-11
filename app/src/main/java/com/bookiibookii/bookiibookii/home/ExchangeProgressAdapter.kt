@@ -33,7 +33,8 @@ class ExchangeProgressAdapter(
     ) : RecyclerView.ViewHolder(itemView) {
 
         private val ivCover: ImageView = itemView.findViewById(R.id.iv_book_cover)
-        private val ivProfile: com.google.android.material.imageview.ShapeableImageView = itemView.findViewById(R.id.iv_user_profile)
+        private val ivProfile: com.google.android.material.imageview.ShapeableImageView =
+            itemView.findViewById(R.id.iv_user_profile)
 
         private val tvTitle: TextView = itemView.findViewById(R.id.tv_book_title)
         private val tvAuthor: TextView = itemView.findViewById(R.id.tv_book_author)
@@ -49,6 +50,13 @@ class ExchangeProgressAdapter(
         private val guide2: View = itemView.findViewById(R.id.guide_step_2)
         private val guide3: View = itemView.findViewById(R.id.guide_step_3)
         private val guide4: View = itemView.findViewById(R.id.guide_step_4)
+
+        private val tvStep1: TextView = itemView.findViewById(R.id.tv_step_1)
+        private val tvStep2: TextView = itemView.findViewById(R.id.tv_step_2)
+        private val tvStep3: TextView = itemView.findViewById(R.id.tv_step_3)
+        private val tvStep4: TextView = itemView.findViewById(R.id.tv_step_4)
+
+        private val trackerRoot: ConstraintLayout = itemView.findViewById(R.id.layout_tracker)
 
         fun bind(item: HomeExchangeItem) {
             tvTitle.text = item.bookTitle
@@ -87,15 +95,57 @@ class ExchangeProgressAdapter(
             bindStepDate(tvDate4, dates, 3)
 
             val step = mapRelayStatusToStep(item.trackerStatus)
-            setFillEndToStep(step)
+            applyStepUi(step)
 
             itemView.setOnClickListener { onClick(item) }
         }
 
+        @SuppressLint("SetTextI18n")
+        private fun applyStepUi(step: Int) {
+            val endTargetId = when (step) {
+                1 -> guide1.id
+                2 -> guide2.id
+                3 -> guide3.id
+                else -> guide4.id
+            }
+
+            // fill end 이동
+            val fillParams = viewFill.layoutParams as ConstraintLayout.LayoutParams
+            fillParams.endToEnd = endTargetId
+            fillParams.endToStart = ConstraintLayout.LayoutParams.UNSET
+            viewFill.layoutParams = fillParams
+
+            // 프로필 위치 이동
+            val profileParams = ivProfile.layoutParams as ConstraintLayout.LayoutParams
+            profileParams.startToStart = ConstraintLayout.LayoutParams.UNSET
+            profileParams.endToEnd = ConstraintLayout.LayoutParams.UNSET
+            profileParams.startToStart = endTargetId
+            profileParams.endToEnd = endTargetId
+            ivProfile.layoutParams = profileParams
+
+            // 라벨 색상
+            val selected = itemView.context.getColor(R.color.pre_main)
+            val normal = itemView.context.getColor(R.color.grey_500)
+
+            tvStep1.setTextColor(if (step == 1) selected else normal)
+            tvStep2.setTextColor(if (step == 2) selected else normal)
+            tvStep3.setTextColor(if (step == 3) selected else normal)
+            tvStep4.setTextColor(if (step == 4) selected else normal)
+
+            // 날짜는 현재 단계만
+            tvDate1.visibility = if (step == 1 && tvDate1.text.isNotBlank()) View.VISIBLE else View.INVISIBLE
+            tvDate2.visibility = if (step == 2 && tvDate2.text.isNotBlank()) View.VISIBLE else View.INVISIBLE
+            tvDate3.visibility = if (step == 3 && tvDate3.text.isNotBlank()) View.VISIBLE else View.INVISIBLE
+            tvDate4.visibility = if (step == 4 && tvDate4.text.isNotBlank()) View.VISIBLE else View.INVISIBLE
+
+            trackerRoot.requestLayout()
+        }
+
         private fun bindStepDate(tv: TextView, dates: List<String?>, index: Int) {
             val value = if (index < dates.size) dates[index] else null
-            if (value.isNullOrBlank()) tv.visibility = View.INVISIBLE
-            else {
+            if (value.isNullOrBlank()) {
+                tv.visibility = View.INVISIBLE
+            } else {
                 tv.text = value
                 tv.visibility = View.VISIBLE
             }
@@ -112,25 +162,11 @@ class ExchangeProgressAdapter(
                 else -> 1
             }
         }
-
-        private fun setFillEndToStep(step: Int) {
-            val endTargetId = when (step) {
-                1 -> guide1.id
-                2 -> guide2.id
-                3 -> guide3.id
-                else -> guide4.id
-            }
-            val params = viewFill.layoutParams as ConstraintLayout.LayoutParams
-            params.endToEnd = endTargetId
-            viewFill.layoutParams = params
-        }
-    }
+    } // ✅ ViewHolder 닫기
 
     companion object {
         private val diffCallback = object : DiffUtil.ItemCallback<HomeExchangeItem>() {
-
             override fun areItemsTheSame(oldItem: HomeExchangeItem, newItem: HomeExchangeItem): Boolean {
-                // 혹시라도 같은 groupId가 다른 role로 들어올 수 있으니 role까지 포함
                 return oldItem.groupId == newItem.groupId && oldItem.role == newItem.role
             }
 
@@ -139,4 +175,4 @@ class ExchangeProgressAdapter(
             }
         }
     }
-}
+} // ✅ Adapter 닫기

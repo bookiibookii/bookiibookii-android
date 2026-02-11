@@ -35,6 +35,8 @@ class HomeFragment : Fragment() {
     private val api by lazy { RetrofitClient.api() }
     private val trkApi by lazy { RetrofitClient.trkApi() } // ✅ 여기로 받기
 
+    private var notiBadge: View? = null
+
     private val exchangeAdapter = ExchangeProgressAdapter { item ->
         (activity as? MainActivity)?.moveToTrackerDetail(item.groupId, item.role)
     }
@@ -52,6 +54,11 @@ class HomeFragment : Fragment() {
     }
 
     private var exchangeTotal = 0
+
+    override fun onResume() {
+        super.onResume()
+        refreshNotiBadge()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -110,8 +117,49 @@ class HomeFragment : Fragment() {
     private fun bindHeaderActions() {
         val headerRoot = binding.sectionHomeHeader.root
         val ivNoti = headerRoot.findViewById<ImageView>(R.id.iv_home_notification)
+        notiBadge = headerRoot.findViewById(R.id.view_home_notification_badge)
+
         ivNoti.setOnClickListener {
             startActivity(Intent(requireContext(), NotificationActivity::class.java))
+        }
+    }
+
+    private fun setNotiBadgeVisible(visible: Boolean) {
+        notiBadge?.visibility = if (visible) View.VISIBLE else View.INVISIBLE
+    }
+
+    private fun refreshNotiBadge() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                val size = 20
+
+                // SYSTEM 1페이지
+                val systemRes = api.getNotifications(
+                    category = "SYSTEM",
+                    cursor = null,
+                    size = size
+                )
+
+                // KEYWORD 1페이지
+                val keywordRes = api.getNotifications(
+                    category = "KEYWORD",
+                    cursor = null,
+                    size = size
+                )
+
+                val systemItems = if (systemRes.isSuccessful) systemRes.body()?.result?.items.orEmpty() else emptyList()
+                val keywordItems = if (keywordRes.isSuccessful) keywordRes.body()?.result?.items.orEmpty() else emptyList()
+
+                val hasUnreadSystem = systemItems.any { !it.isRead }
+                val hasUnreadKeyword = keywordItems.any { !it.isRead }
+
+                hasUnreadSystem || hasUnreadKeyword
+            }.onSuccess { hasUnread ->
+                setNotiBadgeVisible(hasUnread)
+            }.onFailure {
+                // 실패 시는 일단 숨김(원하면 "이전 상태 유지"로 바꿔도 됨)
+                setNotiBadgeVisible(false)
+            }
         }
     }
 
