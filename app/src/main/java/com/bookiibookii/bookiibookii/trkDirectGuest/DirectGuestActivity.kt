@@ -16,7 +16,9 @@ import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
 
@@ -178,19 +180,35 @@ class DirectGuestActivity : AppCompatActivity() {
         }
     }
 
-    private val meetingFormatterNoShift: DateTimeFormatter =
-        DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss'Z'")
-            .withResolverStyle(ResolverStyle.STRICT)
-
     private fun isMeetingPassed(meetingTime: String?): Boolean {
         if (meetingTime.isNullOrBlank()) return false
+        val meetingInstant = parseMeetingInstant(meetingTime) ?: return false
+        return meetingInstant.isBefore(Instant.now())
+    }
 
-        return try {
-            val meetingLocal = LocalDateTime.parse(meetingTime.trim(), meetingFormatterNoShift)
-            meetingLocal.isBefore(LocalDateTime.now())
-        } catch (e: Exception) {
-            false
+    private val inputDotFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("uuuu.MM.dd.HH:mm")
+            .withResolverStyle(ResolverStyle.STRICT)
+
+    private fun parseMeetingInstant(raw: String): Instant? {
+        val s = raw.trim()
+        if (s.isBlank()) return null
+
+        runCatching {
+            return java.time.OffsetDateTime.parse(s).toInstant()
         }
+
+        runCatching {
+            val ldt = LocalDateTime.parse(s, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            return ldt.atZone(ZoneId.of("Asia/Seoul")).toInstant()
+        }
+
+        runCatching {
+            val ldt = LocalDateTime.parse(s, inputDotFormatter)
+            return ldt.atZone(ZoneId.of("Asia/Seoul")).toInstant()
+        }
+
+        return null
     }
 
     private companion object {

@@ -73,6 +73,8 @@ class GuestExtendPeriodDialogFragment : DialogFragment() {
             }
 
             vm.patchTrackerExtension(groupId, days)
+
+            dismiss()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

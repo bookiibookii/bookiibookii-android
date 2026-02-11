@@ -12,14 +12,15 @@ data class TrackerData(
     val bookTitle: String,
     val bookAuthor: String,
     val bookCategory: String?,
-    val withUserName: String?,
     val coverImageUrl: String?,
     val exchangeType: ExchangeType,
 
+    val withUserName: String?,
     val stepDates: List<String?>,
-
     val currentStatus: TrackerStatus,
-
     val hostProfileImageUrl: String?,
-    val guestProfileImageUrl: String?
+    val guestProfileImageUrl: String?,
+
+    val myReadingRate: Int? = null,
+    val groupReadingRate: Int? = null
 )
