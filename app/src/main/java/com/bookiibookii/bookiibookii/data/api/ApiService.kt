@@ -370,13 +370,6 @@ interface ApiService: TrkApi {
         @Path("groupId") groupId: Long
     ): Response<GroupItemDto.CommentListResponse>
 
-    //그룹댓글 삭제
-    @DELETE("api/groups/{groupId}/comments/{commentId}")
-    suspend fun deleteComment(
-        @Path("groupId") groupId: Int,
-        @Path("commentId") commentId: Int
-    ): Response<GroupItemDto.CommentDeleteResponse> // 제시하신 공통 응답 형식 (BaseResponse) 적용
-
     // 홈 추천 그룹 (3개)
     @GET("/api/recommendations/groups")
     suspend fun getRecommendedGroups(
