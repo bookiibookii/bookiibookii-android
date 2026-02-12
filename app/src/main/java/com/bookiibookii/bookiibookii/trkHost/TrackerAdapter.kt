@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.databinding.ItemTrackerNoneBinding
 import com.bookiibookii.bookiibookii.databinding.ItemTrkBinding
 import com.bumptech.glide.Glide
 import java.time.LocalDate
@@ -17,39 +18,51 @@ import java.time.format.DateTimeFormatter
 
 class TrackerAdapter(
     private val onItemClicked: (TrackerData) -> Unit
-) : ListAdapter<TrackerData, TrackerAdapter.ViewHolder>(DIFF) {
+) : ListAdapter<TrackerData, RecyclerView.ViewHolder>(DIFF) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemTrkBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
-        return ViewHolder(binding)
+    override fun getItemViewType(position: Int): Int {
+        return when (getItem(position).exchangeType) {
+            ExchangeType.NONE -> VIEW_TYPE_NONE
+            else -> VIEW_TYPE_EXCHANGE
+        }
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position), onItemClicked)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+
+        return when (viewType) {
+            VIEW_TYPE_NONE -> {
+                val binding = ItemTrackerNoneBinding.inflate(inflater, parent, false)
+                NoneViewHolder(binding)
+            }
+            else -> {
+                val binding = ItemTrkBinding.inflate(inflater, parent, false)
+                ExchangeViewHolder(binding)
+            }
+        }
     }
 
-    class ViewHolder(
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val item = getItem(position)
+
+        when (holder) {
+            is NoneViewHolder -> holder.bind(item, onItemClicked)
+            is ExchangeViewHolder -> holder.bind(item, onItemClicked)
+        }
+    }
+
+    class ExchangeViewHolder(
         private val binding: ItemTrkBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(
-            item: TrackerData,
-            onItemClicked: (TrackerData) -> Unit
-        ) {
+        fun bind(item: TrackerData, onItemClicked: (TrackerData) -> Unit) {
             binding.tvBookTitle.text = item.bookTitle
             binding.tvBookAuthor.text = item.bookAuthor
-
             binding.tvWithUser.text = item.withUserName ?: ""
-
-            binding.tvBookAuthor.text = item.bookAuthor
             binding.tvBookCategory.text = item.bookCategory.orEmpty()
 
             Glide.with(binding.ivBookCover)
-                    .load(item.coverImageUrl)
+                .load(item.coverImageUrl)
                 .placeholder(R.color.grey_200)
                 .error(R.color.grey_200)
                 .into(binding.ivBookCover)
@@ -61,9 +74,7 @@ class TrackerAdapter(
                 guestProfileUrl = item.guestProfileImageUrl
             )
 
-            binding.root.setOnClickListener {
-                onItemClicked(item)
-            }
+            binding.root.setOnClickListener { onItemClicked(item) }
         }
 
         private fun progressStatusFromDates(stepDates: List<String?>): TrackerStatus {
@@ -95,7 +106,6 @@ class TrackerAdapter(
 
             val idx = stepIndex(step)
 
-            // 프로그레스바 채우기, 나중에 상세 조정
             val percent = when (idx) {
                 0 -> 0.1f
                 1 -> 1.0f / 3.0f
@@ -118,29 +128,23 @@ class TrackerAdapter(
             bindStepProfiles(hostProfileUrl, guestProfileUrl, idx)
         }
 
-        // 이 부분 나중에 확인
         private fun stepIndex(status: TrackerStatus): Int = when (status) {
-            // 1단계: 호스트 독서
             TrackerStatus.READY,
             TrackerStatus.HOST_READING,
             TrackerStatus.HOST_EXTENSION,
             TrackerStatus.HOST_DONE -> 0
 
-            // 2단계: 호스트 발송 ~ 게스트 수령 전
             TrackerStatus.SHIPPING_TO_GUEST,
             TrackerStatus.RECEIVED -> 1
 
-            // 3단계: 게스트 독서
             TrackerStatus.GUEST_READING,
             TrackerStatus.GUEST_EXTENSION,
             TrackerStatus.GUEST_DONE -> 2
 
-            // 4단계: 게스트 발송 ~ 종료
             TrackerStatus.SHIPPING_TO_HOST,
             TrackerStatus.RETURNED,
             TrackerStatus.COMPLETED -> 3
 
-            // 예외
             TrackerStatus.UNKNOWN -> 0
         }
 
@@ -158,25 +162,23 @@ class TrackerAdapter(
             }
         }
 
-        private fun setWidthPercent(view: android.view.View, percent: Float) {
+        private fun setWidthPercent(view: View, percent: Float) {
             val lp = view.layoutParams as ConstraintLayout.LayoutParams
             lp.matchConstraintPercentWidth = percent.coerceIn(0f, 1f)
             view.layoutParams = lp
             view.requestLayout()
         }
 
-        private fun setDot(dotView: android.widget.ImageView, color: Int) {
+        private fun setDot(dotView: ImageView, color: Int) {
             dotView.setColorFilter(color)
         }
 
         private fun formatStepDate(raw: String?): String {
             if (raw.isNullOrBlank()) return ""
-
             return try {
                 val dateOnly = raw.substring(0, 10)
                 val date = LocalDate.parse(dateOnly)
-                val mmdd = date.format(DateTimeFormatter.ofPattern("M. d."))
-                "$mmdd"
+                date.format(DateTimeFormatter.ofPattern("M. d."))
             } catch (_: Exception) {
                 raw
             }
@@ -189,11 +191,7 @@ class TrackerAdapter(
             setProfile(ivStep4Profile, guestUrl, isVisible = (currentIndex == 3))
         }
 
-        private fun ItemTrkBinding.setProfile(
-            view: ImageView,
-            url: String?,
-            isVisible: Boolean
-        ) {
+        private fun ItemTrkBinding.setProfile(view: ImageView, url: String?, isVisible: Boolean) {
             if (!url.isNullOrBlank() && isVisible) {
                 view.visibility = View.VISIBLE
                 Glide.with(view)
@@ -207,7 +205,74 @@ class TrackerAdapter(
         }
     }
 
+    class NoneViewHolder(
+        private val binding: ItemTrackerNoneBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(item: TrackerData, onItemClicked: (TrackerData) -> Unit) {
+            binding.tvBookTitle.text = item.bookTitle
+            binding.tvBookAuthor.text = item.bookAuthor
+            binding.tvBookCategory.text = item.bookCategory.orEmpty()
+            binding.tvWithUser.text = item.withUserName ?: ""
+
+            Glide.with(binding.ivBookCover)
+                .load(item.coverImageUrl)
+                .placeholder(R.color.grey_200)
+                .error(R.color.grey_200)
+                .into(binding.ivBookCover)
+
+            val myRate = (item.myReadingRate ?: 0).coerceIn(0, 100)
+            val groupRate = (item.groupReadingRate ?: 0).coerceIn(0, 100)
+
+            binding.tvMyPercent.text = "${myRate}%"
+            binding.tvGroupPercent.text = "${groupRate}%"
+
+            val myPercent = (myRate / 100f).coerceIn(0f, 1f)
+            val groupPercent = (groupRate / 100f).coerceIn(0f, 1f)
+
+            binding.viewTrackFill.setBackgroundColor(
+                ContextCompat.getColor(binding.root.context, R.color.pre_main)
+            )
+            binding.viewTrackGroup.setBackgroundColor(
+                ContextCompat.getColor(binding.root.context, R.color.grey_900)
+            )
+
+            setWidthPercent(binding.viewTrackFill, myPercent)
+            setWidthPercent(binding.viewTrackGroup, groupPercent)
+            setGuidelinePercent(binding.guidelineGroup, groupPercent)
+
+            if (myPercent <= groupPercent) {
+                binding.viewTrackFill.bringToFront()
+                binding.dotMy.bringToFront()
+            } else {
+                binding.viewTrackGroup.bringToFront()
+                binding.dotGroup.bringToFront()
+            }
+
+            binding.layoutProgressCompare.invalidate()
+
+            binding.root.setOnClickListener { onItemClicked(item) }
+        }
+
+        private fun setWidthPercent(view: View, percent: Float) {
+            val lp = view.layoutParams as ConstraintLayout.LayoutParams
+            lp.matchConstraintPercentWidth = percent.coerceIn(0f, 1f)
+            view.layoutParams = lp
+            view.requestLayout()
+        }
+
+        private fun setGuidelinePercent(guideline: View, percent: Float) {
+            val lp = guideline.layoutParams as ConstraintLayout.LayoutParams
+            lp.guidePercent = percent.coerceIn(0f, 1f)
+            guideline.layoutParams = lp
+            guideline.requestLayout()
+        }
+    }
+
     companion object {
+        private const val VIEW_TYPE_EXCHANGE = 0
+        private const val VIEW_TYPE_NONE = 1
+
         val DIFF = object : DiffUtil.ItemCallback<TrackerData>() {
             override fun areItemsTheSame(old: TrackerData, new: TrackerData): Boolean {
                 return old.id == new.id

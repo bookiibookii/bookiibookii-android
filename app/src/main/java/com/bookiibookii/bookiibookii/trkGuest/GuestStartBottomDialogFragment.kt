@@ -15,6 +15,9 @@ import com.bookiibookii.bookiibookii.trkHost.UiState
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 
 class GuestStartBottomDialogFragment : BottomSheetDialogFragment() {
@@ -47,9 +50,13 @@ class GuestStartBottomDialogFragment : BottomSheetDialogFragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.uiState.collectLatest { state ->
                     val dto = state.data
+                    val startRaw = dto?.startDate
+                    val periodDays = dto?.readingPeriod ?: 0
 
                     binding.tvStartDate.text = prettyDate(dto?.startDate)
-                    binding.tvEndDate.text = prettyDate(dto?.endDate)
+
+                    val endRaw = addDaysFromStartDate(startRaw, periodDays)
+                    binding.tvEndDate.text = prettyDate(endRaw)
                 }
             }
         }
@@ -80,6 +87,25 @@ class GuestStartBottomDialogFragment : BottomSheetDialogFragment() {
                     }
                 }
             }
+        }
+    }
+
+
+    private fun addDaysFromStartDate(raw: String?, days: Int): String? {
+        if (raw.isNullOrBlank()) return raw
+        if (days <= 0) return raw
+
+        return try {
+            if (raw.endsWith("Z")) {
+                OffsetDateTime.parse(raw).plusDays(days.toLong()).toString()
+            } else {
+                val datePart = raw.substring(0, 10)
+                val d = LocalDate.parse(datePart, DateTimeFormatter.ISO_LOCAL_DATE)
+                val newDate = d.plusDays(days.toLong())
+                newDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + raw.substring(10)
+            }
+        } catch (_: Exception) {
+            raw
         }
     }
 
