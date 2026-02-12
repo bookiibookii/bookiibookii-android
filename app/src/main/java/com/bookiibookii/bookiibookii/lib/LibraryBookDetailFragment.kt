@@ -173,10 +173,19 @@ class LibraryBookDetailFragment : Fragment() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result ?: return@launch
 
+                    // 1. 내 후기 바인딩
                     binding.libDetailReviewName1Tv.text = myNickname
                     binding.libDetailReviewText1Tv.text = result.myComment ?: "\"아직 한줄 평을 남기지 않았어요.\""
 
-                    binding.libDetailReviewName2Tv.text = hostName
+                    // 2. 상대방 후기 바인딩 (수정된 부분)
+                    // togetherComments 리스트에서 '나'가 아닌 사람을 찾습니다.
+                    val partnerItem = result.togetherComments?.find { it.nickname != myNickname }
+
+                    // 파트너를 찾았으면 그 닉네임, 못 찾았는데 내가 호스트가 아니면 호스트 이름, 그것도 아니면 "상대방"
+                    val partnerName = partnerItem?.nickname
+                        ?: if (myNickname != hostName) hostName else "상대방"
+
+                    binding.libDetailReviewName2Tv.text = partnerName
                     binding.libDetailReviewText2Tv.text = result.partnerComment ?: "\"아직 한줄 평을 남기지 않았어요.\""
 
                     val apiCards = result.cards
@@ -209,7 +218,6 @@ class LibraryBookDetailFragment : Fragment() {
             finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
         }
     }
-
     private fun initRecyclerView() {
         cardAdapter = LibraryReviewAdapter(
             onItemClick = { clickedCard ->

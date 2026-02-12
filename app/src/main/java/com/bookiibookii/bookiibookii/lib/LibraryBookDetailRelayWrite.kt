@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
-import android.util.Log // ★ 로그 사용
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +13,10 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback // 백버튼 콜백
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.LoadingDialog
@@ -29,7 +31,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 
 class LibraryBookDetailRelayWriteFragment : Fragment() {
 
@@ -41,10 +42,12 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
     private var userBookId: Int = -1
     private var groupId: Int = -1
 
-    // 상태 저장 변수
     private var bookRating = 0.0
     private var partnerRating = 0.0
     private val selectedTags = mutableSetOf<TextView>()
+
+    // ★ [핵심] 전송 완료 여부 체크 변수
+    private var isReviewSubmitted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,10 +57,7 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentLibBookDetailRelayWriteBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -66,93 +66,76 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         loadingDialog = LoadingDialog(requireContext())
 
-        // 1. 초기 UI 설정 (버튼 비활성화 등)
         updateButtonState()
-
-        // 2. 리스너 등록
         initListener()
-
-        // 3. 서버 데이터 가져오기
+        handleSystemBackPressed() // 시스템 백버튼 처리
         fetchGroupDetail()
     }
 
-    private fun fetchGroupDetail() {
-        if (groupId == -1) {
-            Toast.makeText(context, "잘못된 접근입니다.", Toast.LENGTH_SHORT).show()
-            return
-        }
+    // ★ 시스템 백버튼(제스처/하단바) 눌렀을 때 로직
+    private fun handleSystemBackPressed() {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isReviewSubmitted) {
+                    goToLibrary() // 전송 완료 상태면 서재로
+                } else {
+                    isEnabled = false
+                    requireActivity().onBackPressed() // 아니면 그냥 뒤로가기
+                }
+            }
+        })
+    }
 
+    // ★ 서재로 이동하며 스택 정리하는 함수
+    private fun goToLibrary() {
+        parentFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, LibraryFragment())
+            .commit()
+    }
+
+    private fun fetchGroupDetail() {
+        if (groupId == -1) return
         lifecycleScope.launch {
             loadingDialog.show()
             try {
-                // 그룹 상세 정보 호출
                 val response = RetrofitClient.api().getGroupDetail(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val result = response.body()!!.result
-                    updateUI(result)
-                } else {
-                    Toast.makeText(context, "정보를 불러오는데 실패했습니다.", Toast.LENGTH_SHORT).show()
+                    updateUI(response.body()!!.result)
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
-            } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss()
-            }
+            } catch (e: Exception) { e.printStackTrace() }
+            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
         }
     }
 
     private fun updateUI(data: GroupItemDto.GroupDetailResult) {
-        // 1. 책 이미지
-        Glide.with(this)
-            .load(data.bookImage)
-            .transform(CenterCrop(), RoundedCorners(dpToPx(10))) // 라운드 처리
-            .placeholder(R.drawable.bg_round_20dp_gray200)
-            .into(binding.libDetailImageIv)
+        Glide.with(this).load(data.bookImage)
+            .transform(CenterCrop(), RoundedCorners(dpToPx(10)))
+            .placeholder(R.drawable.bg_round_20dp_gray200).into(binding.libDetailImageIv)
 
-        // 2. 호스트 정보
-        Glide.with(this)
-            .load(data.hostProfileImageUrl)
-            .placeholder(R.drawable.bg_round_10dp_gray300)
-            .error(R.drawable.img_profile_default)
-            .circleCrop()
-            .into(binding.libDetailProfileIv)
+        Glide.with(this).load(data.hostProfileImageUrl)
+            .placeholder(R.drawable.bg_round_10dp_gray300).error(R.drawable.img_profile_default)
+            .circleCrop().into(binding.libDetailProfileIv)
+
         binding.libDetailProfileTv.text = data.hostNickname
-
-        // 3. 책 정보
         binding.libDetailBookTitleTv.text = data.bookTitle
         binding.libDetailBookAuthorTv.text = data.author
+        binding.libDetailDateTv.text = formatDateRange(data.startDate)
 
-        // 4. 날짜 처리 (UTC StartDate ~ Today)
-        val formattedDate = formatDateRange(data.startDate)
-        binding.libDetailDateTv.text = formattedDate
+        setSpannableColor(binding.libWriteTitleTv, "${data.bookTitle}에 대한 평가를 남겨주세요!", data.bookTitle)
 
-        // 5. 책 평가 타이틀 (Spannable 적용)
-        val bookQuestion = "${data.bookTitle}에 대한 평가를 남겨주세요!"
-        setSpannableColor(binding.libWriteTitleTv, bookQuestion, data.bookTitle)
-
-        // 6. 파트너 평가 타이틀 (ParticipantSlot에서 내가 아닌 사람 찾기)
         val partner = data.participantSlots?.find { !it.isMe }
         val partnerName = partner?.nickname ?: "상대방"
-        val partnerQuestion = "$partnerName 님에 대한 평가를 남겨주세요!"
-        setSpannableColor(binding.libWritePartnerTv, partnerQuestion, partnerName)
+        setSpannableColor(binding.libWritePartnerTv, "$partnerName 님에 대한 평가를 남겨주세요!", partnerName)
     }
 
-    // 날짜 포맷팅 함수 (UTC -> Local ~ Today)
     private fun formatDateRange(serverDateStr: String): String {
-        try {
+        return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val outputFormat = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
-
             val startDate = inputFormat.parse(serverDateStr) ?: Date()
-            val todayDate = Date()
-
-            return "${outputFormat.format(startDate)} ~ ${outputFormat.format(todayDate)}"
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return "$serverDateStr ~"
-        }
+            "${outputFormat.format(startDate)} ~ ${outputFormat.format(Date())}"
+        } catch (e: Exception) { "$serverDateStr ~" }
     }
 
     private fun setSpannableColor(textView: TextView, fullText: String, targetWord: String) {
@@ -160,30 +143,26 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
         val startIndex = fullText.indexOf(targetWord)
         if (startIndex != -1) {
             val endIndex = startIndex + targetWord.length
-            val color = ContextCompat.getColor(requireContext(), R.color.pre_main)
-            spannable.setSpan(ForegroundColorSpan(color), startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(ForegroundColorSpan(ContextCompat.getColor(requireContext(), R.color.pre_main)), startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         textView.text = spannable
     }
 
     private fun initListener() {
+        // ★ 뒤로가기 버튼(상단 아이콘) 클릭 시 로직
         binding.libDetailBackIv.setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
+            if (isReviewSubmitted) {
+                goToLibrary()
+            } else {
+                requireActivity().supportFragmentManager.popBackStack()
+            }
         }
 
-        // 책 별점 (0.5 단위)
         setupStarRating(binding.libDetailRateList, isBookRating = true)
-
-        // 파트너 별점 (0.5 단위)
         setupStarRating(binding.libPartnerRateList, isBookRating = false)
-
-        // 태그 선택
         setupTagSelection()
 
-        // 작성 완료 버튼
-        binding.libReviewAddBtn.setOnClickListener {
-            submitReview()
-        }
+        binding.libReviewAddBtn.setOnClickListener { submitReview() }
     }
 
     private fun setupStarRating(container: LinearLayout, isBookRating: Boolean) {
@@ -192,19 +171,15 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
             val child = container.getChildAt(i)
             if (child is ImageView) stars.add(child)
         }
-
         var currentContainerRating = 0.0
-
         stars.forEachIndexed { index, starView ->
             starView.setOnClickListener {
+                if (isReviewSubmitted) return@setOnClickListener // 전송 후 수정 방지
+
                 val targetHalf = index + 0.5
                 val targetFull = index + 1.0
-
                 currentContainerRating = if (currentContainerRating == targetHalf) targetFull else targetHalf
-
-                if (isBookRating) bookRating = currentContainerRating
-                else partnerRating = currentContainerRating
-
+                if (isBookRating) bookRating = currentContainerRating else partnerRating = currentContainerRating
                 updateStarUI(stars, currentContainerRating)
                 updateButtonState()
             }
@@ -237,6 +212,8 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
     }
 
     private fun toggleTag(textView: TextView) {
+        if (isReviewSubmitted) return // 전송 후 수정 방지
+
         if (selectedTags.contains(textView)) {
             selectedTags.remove(textView)
             textView.setBackgroundResource(R.drawable.bg_round_20dp_white_stroke_1dp_gray200)
@@ -250,9 +227,13 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
     }
 
     private fun updateButtonState() {
+        if (isReviewSubmitted) {
+            binding.libReviewAddBtn.isEnabled = false
+            return
+        }
+
         val isEnabled = (bookRating > 0.0) && (partnerRating > 0.0) && selectedTags.isNotEmpty()
         binding.libReviewAddBtn.isEnabled = isEnabled
-
         if (isEnabled) {
             binding.libReviewAddBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.grey_900))
             binding.libReviewAddBtn.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
@@ -263,13 +244,9 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
     }
 
     private fun submitReview() {
-        if (userBookId == -1) {
-            Toast.makeText(context, "정보가 부족합니다.", Toast.LENGTH_SHORT).show()
-            return
-        }
+        if (userBookId == -1) return
 
         val badgeCodes = selectedTags.map { mapUiTextToBadgeCode(it.text.toString()) }
-
         val request = RelayReviewRequest(
             bookRating = bookRating,
             bookComment = binding.libWriteReviewEt.text.toString(),
@@ -278,50 +255,39 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
             badgeCodes = badgeCodes
         )
 
-        // ★ [로그 1] 내가 보내려는 데이터가 정확한지 확인
-        Log.d("RelayReview", "======== 리뷰 전송 시도 ========")
-        Log.d("RelayReview", "Target userBookId: $userBookId")
-        Log.d("RelayReview", "Request Body: $request")
+        loadingDialog.show()
 
         lifecycleScope.launch {
-            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().postRelayReview(userBookId, request)
+                Log.d("RelayReview", "Code: ${response.code()}")
 
-                // ★ [로그 2] 서버 응답 코드 확인
-                Log.d("RelayReview", "Response Code: ${response.code()}")
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
+                if (!isAdded || activity == null) return@launch
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Log.d("RelayReview", "성공 Response: ${response.body()}")
                     Toast.makeText(context, "리뷰 작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
 
-                    requireActivity().supportFragmentManager.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
-                    requireActivity().supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainer, LibraryFragment())
-                        .commit()
+                    // ★ [수정] 이동하지 않고 상태만 변경
+                    isReviewSubmitted = true
+                    updateButtonState() // 버튼 비활성화
+
+                    // 입력창 비활성화 (선택)
+                    binding.libWriteReviewEt.isEnabled = false
+                    binding.libWritePartnerReviewEt.isEnabled = false
+
                 } else {
-                    // ★ [로그 3] 실패 원인 (서버 에러 메시지) 확인
-                    val errorBody = response.errorBody()?.string()
-                    val msg = response.body()?.message ?: "등록 실패"
-
-                    Log.e("RelayReview", "실패 메시지: $msg")
-                    Log.e("RelayReview", "Error Body: $errorBody")
-
-                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, response.body()?.message ?: "등록 실패", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // ★ [로그 4] 아예 통신이 안 되거나 터졌을 때 확인
-                Log.e("RelayReview", "Exception 발생: ${e.message}")
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
                 e.printStackTrace()
                 Toast.makeText(context, "네트워크 오류", Toast.LENGTH_SHORT).show()
-            } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
 
     private fun mapUiTextToBadgeCode(text: String): String {
-        // ★ [참고] 서버에서 정의한 enum 값과 일치해야 400 에러가 안 납니다.
         return when (text) {
             "친절하고 매너가 좋아요" -> "KINDNESS"
             "글씨가 예뻐요" -> "GOOD_HANDWRITING"

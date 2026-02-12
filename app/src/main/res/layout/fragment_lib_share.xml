@@ -31,6 +31,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
+        android:padding="4dp"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/share_tv">
 
         <androidx.cardview.widget.CardView
@@ -38,9 +40,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="visible"
+            android:layout_margin="2dp"
             app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/transparent">
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="@color/white">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -134,8 +137,9 @@
             android:layout_width="match_parent"
             android:layout_height="380dp"
             android:visibility="gone"
+            android:layout_margin="2dp"
             app:cardCornerRadius="20dp"
-            app:cardElevation="0dp">
+            app:cardElevation="3dp">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"

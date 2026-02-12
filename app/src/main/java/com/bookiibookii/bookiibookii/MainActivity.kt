@@ -12,6 +12,7 @@ import com.bookiibookii.bookiibookii.group.main.GroupFragment
 import com.bookiibookii.bookiibookii.home.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.home.OtherProfileFragment
+import com.bookiibookii.bookiibookii.lib.LibraryBookDetailRelayWriteFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
@@ -45,6 +46,46 @@ class MainActivity : AppCompatActivity() {
         }
 
         initBottomNav()
+        handleNavigationIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent) // 새로운 Intent로 교체
+        handleNavigationIntent(intent)
+    }
+
+    private fun handleNavigationIntent(intent: Intent?) {
+        if (intent?.getStringExtra("NAV_ACTION") == "OPEN_RELAY_WRITE") {
+            val groupId = intent.getLongExtra("target_group_id", -1L)
+            val userBookId = intent.getIntExtra("target_user_book_id", -1)
+
+            if (groupId != -1L && userBookId != -1) {
+                moveToRelayWriteFragment(groupId, userBookId)
+            }
+        }
+    }
+
+    private fun moveToRelayWriteFragment(groupId: Long, userBookId: Int) {
+        // 1. 바텀 네비게이션 상태를 Library로 변경 (선택 사항)
+        setBottomNavSelected(NavTab.LIBRARY)
+
+        // 2. Fragment 생성 및 데이터 전달
+        val fragment = LibraryBookDetailRelayWriteFragment().apply {
+            arguments = Bundle().apply {
+                putInt("groupId", groupId.toInt()) // Fragment에서 Int로 받고 있다면 형변환 주의
+                putInt("userBookId", userBookId)
+            }
+        }
+
+        // 3. Fragment 교체
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null) // 뒤로가기 시 이전 화면으로
+            .commit()
+
+        // Intent 데이터 소비 처리 (중복 실행 방지용, 필요시)
+        intent.removeExtra("NAV_ACTION")
     }
 
     private fun initBottomNav() {
