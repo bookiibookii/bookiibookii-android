@@ -14,9 +14,25 @@ import com.google.android.material.button.MaterialButton
 class LoginIntroAnimActivity : AppCompatActivity() {
 
     private var autoSlideRunnable: Runnable? = null
+    private var showStartBtnRunnable: Runnable? = null
 
     // 문구 최종 위치(위로 올릴 정도)
     private val DESC_UP_DP = 180f
+
+    // 타이밍 튜닝
+    private val LOGO_UP_MS = 700L
+    private val DESC_IN_MS = 350L
+    private val DESC_UP_MS = 400L
+    private val PAGER_IN_MS = 400L
+
+    private var isPagerShown = false
+
+    // 첫 카드가 너무 빨리 넘어가는 문제 방지
+    private val FIRST_SLIDE_DELAY_MS = 2200L
+    private val SLIDE_INTERVAL_MS = 2000L
+
+    // 마지막 페이지 도착 후 버튼 노출 딜레이
+    private val START_BTN_DELAY_MS = 350L
 
     private val cardPages = listOf(
         R.drawable.img_anim_01,
@@ -26,15 +42,13 @@ class LoginIntroAnimActivity : AppCompatActivity() {
 
     private val descByPage = listOf(
         "우리들의 비밀스런 북클럽\n부키부키",
-        "한번에 하는 비밀의 교환독서",
+        "안심할 수 있는 비대면 교환독서 \n",
+        "서로의 문장을\n공유하며 넓어지는 우리만의 서재",
         "소중한 후기로 가꾸는\n나에게 꼭 맞는 독서 파트너와의 만남"
     )
 
     // 스크롤이 끝난(IDLE) 뒤에 문구/버튼을 처리하기 위한 보류 값
     private var pendingDesc: String? = null
-
-    // 마지막 페이지 도착 후 버튼 노출 딜레이(원하면 200~600 사이로 조절)
-    private val START_BTN_DELAY_MS = 350L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,12 +79,12 @@ class LoginIntroAnimActivity : AppCompatActivity() {
         pager.adapter = IntroPagerAdapter(cardPages)
         pager.isUserInputEnabled = false
         pager.alpha = 0f
-
-        // 캐러셀 세팅(가볍게)
         setupCarouselPager(pager)
+        pager.setCurrentItem(0, false)
 
-        // 문구 초기(아래에서 올라오며 등장)
-        desc.text = descByPage[0]
+        // 초기 문구: 로고 자리에서 등장할 "소개 문구"
+        // (첫 카드 문구로 바꾸는 애니메이션은 "카드 등장 순간"에 따로 실행)
+        desc.text = "독서 취향 기반 교환독서\n부키부키"
         desc.alpha = 0f
         desc.translationY = dpToPx(18f)
 
@@ -78,11 +92,21 @@ class LoginIntroAnimActivity : AppCompatActivity() {
         pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 
             override fun onPageSelected(position: Int) {
-                // ✅ 스크롤 애니와 문구/버튼 애니를 겹치지 않게 보류
-                pendingDesc = descByPage.getOrElse(position) { descByPage.last() }
+                val newText = descByPage.getOrElse(position + 1) { descByPage.last() }
 
-                // 스크롤 중에는 버튼 숨김 유지
+                // ✅ 자동 슬라이드에서 IDLE이 누락되는 경우 대비: 페이지 선택 시 즉시 반영
+                if (isPagerShown) {
+                    if (desc.text.toString() != newText) {
+                        animateDescChange(desc, newText)
+                    }
+                    pendingDesc = null
+                } else {
+                    // (카드 등장 전에는 IDLE 이후로 처리하는 기존 방식 유지)
+                    pendingDesc = newText
+                }
+
                 if (position != cardPages.lastIndex) {
+                    showStartBtnRunnable?.let { btnStart.removeCallbacks(it) }
                     btnStart.visibility = View.GONE
                     btnStart.animate().cancel()
                 }
@@ -91,19 +115,19 @@ class LoginIntroAnimActivity : AppCompatActivity() {
             override fun onPageScrollStateChanged(state: Int) {
                 if (state != ViewPager2.SCROLL_STATE_IDLE) return
 
-                // ✅ 스크롤이 완전히 끝난 뒤 문구 변경(끊김 감소)
+                // 스크롤이 완전히 끝난 뒤 문구 변경
                 pendingDesc?.let {
                     animateDescChange(desc, it)
                     pendingDesc = null
                 }
 
-                // ✅ 마지막 페이지면 버튼도 IDLE 이후 + 딜레이 후 노출
+                // 마지막 페이지면 버튼도 IDLE 이후 + 딜레이 후 노출
                 if (pager.currentItem == cardPages.lastIndex) {
-                    btnStart.removeCallbacks(null)
+                    showStartBtnRunnable?.let { btnStart.removeCallbacks(it) }
                     btnStart.visibility = View.GONE
                     btnStart.animate().cancel()
 
-                    btnStart.postDelayed({
+                    showStartBtnRunnable = Runnable {
                         btnStart.alpha = 0f
                         btnStart.translationY = dpToPx(8f)
                         btnStart.visibility = View.VISIBLE
@@ -112,7 +136,9 @@ class LoginIntroAnimActivity : AppCompatActivity() {
                             .translationY(0f)
                             .setDuration(250L)
                             .start()
-                    }, START_BTN_DELAY_MS)
+                    }
+
+                    btnStart.postDelayed(showStartBtnRunnable!!, START_BTN_DELAY_MS)
                 } else {
                     btnStart.visibility = View.GONE
                 }
@@ -124,7 +150,7 @@ class LoginIntroAnimActivity : AppCompatActivity() {
             val targetY = -(logo.top - dpToPx(50f))
             logo.animate()
                 .translationY(targetY)
-                .setDuration(700L)
+                .setDuration(LOGO_UP_MS)
                 .start()
         }
 
@@ -133,35 +159,44 @@ class LoginIntroAnimActivity : AppCompatActivity() {
             desc.animate()
                 .alpha(1f)
                 .translationY(0f)
-                .setDuration(350L)
+                .setDuration(DESC_IN_MS)
                 .start()
         }, 650L)
 
-        // 3) 문구 최종 위치로 위로 + 카드 등장(문구/카드 간격 유지)
+        // 3) 문구만 먼저 위로 올림 (카드는 아직 등장 X)
+        val descUpStart = 1200L
         logo.postDelayed({
             val descFinalY = -dpToPx(DESC_UP_DP)
+            desc.animate()
+                .translationY(descFinalY)
+                .setDuration(DESC_UP_MS)
+                .start()
+        }, descUpStart)
 
+        // 4) 문구가 올라간 뒤에 카드 등장 + "첫 카드 문구"로 변경 + 오토슬라이드 시작
+        logo.postDelayed({
+            val descFinalY = -dpToPx(DESC_UP_DP)
             val gapDp = 20f
             val pagerFinalY = descFinalY + dpToPx(gapDp)
 
-            desc.animate()
-                .translationY(descFinalY)
-                .setDuration(220L)
-                .start()
+            isPagerShown = true
+
+            // 첫 카드 문구로 변경(이 순간에 '바뀌는' 연출)
+            animateDescChange(desc, descByPage[1])
 
             pager.translationY = pagerFinalY + dpToPx(20f)
             pager.animate()
                 .alpha(1f)
                 .translationY(pagerFinalY)
-                .setDuration(350L)
+                .setDuration(PAGER_IN_MS)
                 .start()
-        }, 1200L)
 
-        // 4) 카드 자동 슬라이드 시작(첫 이동은 살짝 당겨서 덜 뜸들임)
-        startAutoSlide(pager, intervalMs = 2000L)
+            // 카드 등장 이후에 슬라이드 시작 (첫 카드는 오래 보여주기)
+            startAutoSlide(pager, intervalMs = SLIDE_INTERVAL_MS, firstDelayMs = FIRST_SLIDE_DELAY_MS)
+        }, descUpStart + DESC_UP_MS)
     }
 
-    private fun startAutoSlide(pager: ViewPager2, intervalMs: Long) {
+    private fun startAutoSlide(pager: ViewPager2, intervalMs: Long, firstDelayMs: Long) {
         autoSlideRunnable?.let { pager.removeCallbacks(it) }
 
         autoSlideRunnable = object : Runnable {
@@ -174,11 +209,10 @@ class LoginIntroAnimActivity : AppCompatActivity() {
             }
         }
 
-        // 첫 슬라이드 시작을 조금 당김
-        pager.postDelayed(autoSlideRunnable!!, 1400L)
+        pager.postDelayed(autoSlideRunnable!!, firstDelayMs)
     }
 
-    // 문구 변경: 위치는 유지하고 페이드만(가볍게)
+    // 문구 변경: 위치는 유지하고 페이드만
     private fun animateDescChange(desc: TextView, newText: String) {
         val keepY = desc.translationY
         desc.animate().cancel()
@@ -197,7 +231,7 @@ class LoginIntroAnimActivity : AppCompatActivity() {
             .start()
     }
 
-    // 캐러셀: padding + (가벼운) scale/alpha만
+    // 캐러셀: padding + scale/alpha만
     private fun setupCarouselPager(pager: ViewPager2) {
         pager.clipToPadding = false
         pager.clipChildren = false
@@ -229,6 +263,11 @@ class LoginIntroAnimActivity : AppCompatActivity() {
         val pager = findViewById<ViewPager2?>(R.id.pager_intro)
         autoSlideRunnable?.let { pager?.removeCallbacks(it) }
         autoSlideRunnable = null
+
+        val btnStart = findViewById<MaterialButton?>(R.id.btn_start)
+        showStartBtnRunnable?.let { btnStart?.removeCallbacks(it) }
+        showStartBtnRunnable = null
+
         super.onDestroy()
     }
 }
