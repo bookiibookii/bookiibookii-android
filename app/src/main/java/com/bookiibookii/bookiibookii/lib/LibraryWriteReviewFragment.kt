@@ -136,10 +136,9 @@ class LibraryWriteReviewFragment : Fragment() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "리뷰가 등록되었습니다.", Toast.LENGTH_SHORT).show()
 
-                    // ★ [수정] 즉시 이동하지 않고 상태만 변경
-                    isReviewSubmitted = true
-                    checkValidation() // 버튼 UI 업데이트 (비활성화)
-                    binding.libWriteReviewEt.isEnabled = false // 입력창 비활성화
+                    // ★ [수정] 단순히 뒤로가기
+                    requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
+                    requireActivity().supportFragmentManager.popBackStack()
 
                 } else {
                     Toast.makeText(context, "리뷰 등록 실패: ${response.message()}", Toast.LENGTH_SHORT).show()
@@ -150,7 +149,6 @@ class LibraryWriteReviewFragment : Fragment() {
             }
         }
     }
-
     private fun initStarRating() {
         val stars = listOf(
             binding.libDetailRateList.getChildAt(0) as ImageView,

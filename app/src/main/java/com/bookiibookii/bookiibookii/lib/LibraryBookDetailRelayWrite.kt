@@ -260,7 +260,6 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().postRelayReview(userBookId, request)
-                Log.d("RelayReview", "Code: ${response.code()}")
 
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
                 if (!isAdded || activity == null) return@launch
@@ -268,16 +267,15 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "리뷰 작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
 
-                    // ★ [수정] 이동하지 않고 상태만 변경
-                    isReviewSubmitted = true
-                    updateButtonState() // 버튼 비활성화
-
-                    // 입력창 비활성화 (선택)
-                    binding.libWriteReviewEt.isEnabled = false
-                    binding.libWritePartnerReviewEt.isEnabled = false
+                    // ★ [수정] 복잡한 이동 로직 제거 -> 단순히 뒤로가기
+                    // 서재 화면이 onResume 등에서 데이터를 다시 불러오도록 설계되어 있다면 목록이 갱신됩니다.
+                    // 만약 갱신이 필요하다면 setFragmentResult를 사용합니다.
+                    requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
+                    requireActivity().supportFragmentManager.popBackStack()
 
                 } else {
-                    Toast.makeText(context, response.body()?.message ?: "등록 실패", Toast.LENGTH_SHORT).show()
+                    val msg = response.body()?.message ?: "등록 실패"
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
@@ -286,7 +284,6 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
             }
         }
     }
-
     private fun mapUiTextToBadgeCode(text: String): String {
         return when (text) {
             "친절하고 매너가 좋아요" -> "KINDNESS"
