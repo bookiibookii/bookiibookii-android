@@ -22,7 +22,7 @@ class GroupJoinManagementActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGrpJoinManagementBinding
     private lateinit var groupJoinAdapter: GroupJoinAdapter
 
-    private var currentGroupId: Long = 0L
+    private var currentGroupId: Long = -1L
     private var currentBookTitle = "" // 이전 화면에서 받아오거나 API로 조회
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,8 +31,9 @@ class GroupJoinManagementActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // 1. Intent 데이터 수신
-        val groupIdInt = intent.getIntExtra("GROUP_ID", 0)
-        currentGroupId = groupIdInt.toLong()
+//        val groupIdInt = intent.getIntExtra("GROUP_ID", 0)
+//        currentGroupId = groupIdInt.toLong()
+        currentGroupId = intent.getLongExtra("GROUP_ID", 0L)
 
         // 책 제목도 이전 화면에서 넘겨주면 좋습니다. (없으면 기본값)
         currentBookTitle = intent.getStringExtra("BOOK_TITLE") ?: "모임 신청 관리"

@@ -166,7 +166,7 @@ data class GroupItemDto(
     )
 
     data class GroupDetailResult(
-        val groupId: Int,
+        val groupId: Long,
         val title: String,
         val bookTitle: String,
         val bookImage: String?,
@@ -197,7 +197,7 @@ data class GroupItemDto(
 
     data class ParticipantSlot(
         val nickname: String?,
-        val profileImage: String?,
+        val profileImageUrl: String?,
         val role: String, // "HOST", "GUEST", "EMPTY"
         val isMe: Boolean
     )
@@ -328,7 +328,7 @@ data class GroupItemDto(
     data class CommentWriter(
         val userId: Long,
         val name: String,
-        val profileImage: String?,
+        @SerializedName("profileImageUrl") val profileImageUrl: String?,
         val role: String
     )
 
