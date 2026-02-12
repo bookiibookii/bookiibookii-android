@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_bottom_sheet_top_round"
-    android:paddingBottom="16dp">
+    android:elevation="8dp">
 
     <View
         android:id="@+id/grp_mg_bottom_sheet_handle"
@@ -16,6 +16,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/grp_mg_bottom_sheet_back_Iv"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="20dp"
+        android:src="@drawable/ic_back_button"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/grp_mg_bottom_sheet_title_Tv"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/grp_mg_bottom_sheet_title_Tv" />
 
     <TextView
         android:id="@+id/grp_mg_bottom_sheet_title_Tv"

@@ -46,13 +46,6 @@ class TrkGuestMainViewModel : ViewModel() {
                     return@launch
                 }
 
-                list.forEach {
-                    android.util.Log.d(
-                        "GUEST_LIST",
-                        "server groupId=${it.groupId}"
-                    )
-                }
-
                 _trackers.value = list.map { it.toTrackerData() }
 
             } catch (e: Exception) {
@@ -77,7 +70,10 @@ class TrkGuestMainViewModel : ViewModel() {
             stepDates = emptyList(),
             currentStatus = TrackerStatus.UNKNOWN,
             hostProfileImageUrl = null,
-            guestProfileImageUrl = null
+            guestProfileImageUrl = null,
+
+            myReadingRate = null,
+            groupReadingRate = null
         )
 
         return when (exchangeType) {
@@ -98,12 +94,28 @@ class TrkGuestMainViewModel : ViewModel() {
                     currentStatus = status
                 )
             }
-            // 같이 읽기
+
             ExchangeType.NONE -> {
                 val detail = this.togetherDetail
+
+                val myRate = detail?.myReadingRate?.coerceIn(0, 100)
+                val groupRate = detail?.groupReadingRate?.coerceIn(0, 100)
+
+                val withText = buildString {
+                    val host = detail?.hostNickname
+                    if (!host.isNullOrBlank()) append(host)
+                    val cnt = detail?.participantCount
+                    if (cnt != null && cnt > 0) {
+                        if (isNotEmpty()) append("  +$cnt")
+                        else append("+$cnt")
+                    }
+                }.ifBlank { null }
+
                 baseData.copy(
-                    withUserName = detail?.hostNickname,
-                    currentStatus = TrackerStatus.GUEST_READING
+                    withUserName = withText,
+                    currentStatus = TrackerStatus.GUEST_READING,
+                    myReadingRate = myRate,
+                    groupReadingRate = groupRate
                 )
             }
         }
@@ -130,8 +142,8 @@ class TrkGuestMainViewModel : ViewModel() {
         return when (typeString?.uppercase()) {
             "DELIVERY", "SHIPPING" -> ExchangeType.DELIVERY
             "DIRECT" -> ExchangeType.DIRECT
-            "TOGETHER" -> ExchangeType.NONE
-            else -> ExchangeType.DELIVERY
+            "TOGETHER", "NONE" -> ExchangeType.NONE
+            else -> ExchangeType.NONE
         }
     }
 }

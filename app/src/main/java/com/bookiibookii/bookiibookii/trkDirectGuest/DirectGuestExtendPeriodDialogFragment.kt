@@ -130,6 +130,8 @@ class DirectGuestExtendPeriodDialogFragment : DialogFragment() {
 
             binding.btnApply.isEnabled = false
             vm.extendPeriod(groupId, days)
+
+            dismiss()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

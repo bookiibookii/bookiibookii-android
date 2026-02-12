@@ -4,19 +4,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingVertical="8dp">
+    android:paddingBottom="12dp">
 
-    <ImageView
-        android:id="@+id/item_member_profile_Iv"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/item_member_profile_card"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:background="@drawable/ic_profile"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_profile"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        app:cardPreventCornerOverlap="false"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent">
 
+        <ImageView
+            android:id="@+id/item_member_profile_Iv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_profile" />
+
+    </com.google.android.material.card.MaterialCardView>
     <TextView
         android:id="@+id/item_member_nickname_Tv"
         android:layout_width="wrap_content"
@@ -26,9 +35,9 @@
         android:text="닉네임"
         android:textColor="@color/grey_900"
         android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@id/item_member_profile_Iv"
-        app:layout_constraintStart_toEndOf="@id/item_member_profile_Iv"
-        app:layout_constraintTop_toTopOf="@id/item_member_profile_Iv" />
+        app:layout_constraintBottom_toBottomOf="@id/item_member_profile_card"
+        app:layout_constraintStart_toEndOf="@id/item_member_profile_card"
+        app:layout_constraintTop_toTopOf="@id/item_member_profile_card" />
 
     <com.google.android.material.chip.Chip
         android:id="@+id/item_member_host_Cp"

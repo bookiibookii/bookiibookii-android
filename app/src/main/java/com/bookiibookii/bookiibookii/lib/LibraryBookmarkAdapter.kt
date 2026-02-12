@@ -72,7 +72,7 @@ class LibraryBookmarkAdapter(
                     // 닉네임으로 프로필 조회
                     val response = RetrofitClient.api().getUserProfile(item.creatorName)
                     if (response.isSuccessful && response.body()?.isSuccess == true) {
-                        val userImageKey = response.body()?.result?.userImage?.s3Key
+                        val userImageKey = response.body()?.result?.profileImageUrl
 
                         withContext(Dispatchers.Main) {
                             if (userImageKey != null) {

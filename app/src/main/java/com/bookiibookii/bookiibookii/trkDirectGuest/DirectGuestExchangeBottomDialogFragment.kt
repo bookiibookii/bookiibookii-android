@@ -114,7 +114,7 @@ class DirectGuestExchangeBottomDialogFragment : BottomSheetDialogFragment() {
                 LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
             }
 
-            dt.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))
+            dt.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss"))
         } catch (_: Exception) {
             "-"
         }

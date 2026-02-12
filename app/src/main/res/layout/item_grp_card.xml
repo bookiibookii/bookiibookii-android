@@ -199,56 +199,52 @@
         app:layout_constraintStart_toEndOf="@id/grp_item_nickname_Tv"
         app:layout_constraintTop_toTopOf="@id/grp_item_profile_Iv" />
 
-    <com.google.android.material.chip.Chip
-        android:id="@+id/grp_item_hash1_Cp"
-        style="@style/Widget.App.Chip.hashtag"
-        android:layout_width="wrap_content"
-        android:layout_height="23dp"
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/grp_item_chip_group"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="#메모환영"
+        app:chipSpacingHorizontal="8dp"
+        app:chipSpacingVertical="8dp"
+        app:singleLine="false"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_profile_Iv" />
+        app:layout_constraintTop_toBottomOf="@id/grp_item_profile_Iv">
 
-    <com.google.android.material.chip.Chip
-        android:id="@+id/grp_item_hash2_Cp"
-        style="@style/Widget.App.Chip.hashtag"
-        android:layout_width="wrap_content"
-        android:layout_height="23dp"
-        android:layout_marginStart="8dp"
-        android:text="#인사이트"
-        app:layout_constraintStart_toEndOf="@id/grp_item_hash1_Cp"
-        app:layout_constraintTop_toTopOf="@id/grp_item_hash1_Cp" />
 
-    <com.google.android.material.chip.Chip
-        android:id="@+id/grp_item_hash3_Cp"
-        style="@style/Widget.App.Chip.hashtag"
-        android:layout_width="wrap_content"
-        android:layout_height="23dp"
-        android:layout_marginStart="8dp"
-        android:text="#인사이트"
-        app:layout_constraintStart_toEndOf="@id/grp_item_hash2_Cp"
-        app:layout_constraintTop_toTopOf="@id/grp_item_hash1_Cp" />
+<!--        <com.google.android.material.chip.Chip-->
+<!--            android:id="@+id/grp_item_hash1_Cp"-->
+<!--            style="@style/Widget.App.Chip.hashtag"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="23dp"-->
+<!--            tools:text="#커스텀태그" />-->
 
-    <com.google.android.material.chip.Chip
-        android:id="@+id/grp_item_hash4_Cp"
-        style="@style/Widget.App.Chip.hashtag"
-        android:layout_width="wrap_content"
-        android:layout_height="23dp"
-        android:layout_marginStart="8dp"
-        android:text="#인사이트"
-        app:layout_constraintStart_toEndOf="@id/grp_item_hash3_Cp"
-        app:layout_constraintTop_toTopOf="@id/grp_item_hash1_Cp" />
+<!--        <com.google.android.material.chip.Chip-->
+<!--            android:id="@+id/grp_item_hash2_Cp"-->
+<!--            style="@style/Widget.App.Chip.hashtag"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="23dp"-->
+<!--            tools:text="#태그2" />-->
 
-    <com.google.android.material.chip.Chip
-        android:id="@+id/grp_item_hash5_Cp"
-        style="@style/Widget.App.Chip.hashtag"
-        android:layout_width="wrap_content"
-        android:layout_height="23dp"
-        android:layout_marginStart="8dp"
-        android:text="#인사이트"
-        app:layout_constraintStart_toEndOf="@id/grp_item_hash4_Cp"
-        app:layout_constraintTop_toTopOf="@id/grp_item_hash1_Cp" />
+<!--        <com.google.android.material.chip.Chip-->
+<!--            android:id="@+id/grp_item_hash3_Cp"-->
+<!--            style="@style/Widget.App.Chip.hashtag"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="23dp" />-->
 
+<!--        <com.google.android.material.chip.Chip-->
+<!--            android:id="@+id/grp_item_hash4_Cp"-->
+<!--            style="@style/Widget.App.Chip.hashtag"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="23dp" />-->
+
+<!--        <com.google.android.material.chip.Chip-->
+<!--            android:id="@+id/grp_item_hash5_Cp"-->
+<!--            style="@style/Widget.App.Chip.hashtag"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="23dp" />-->
+
+    </com.google.android.material.chip.ChipGroup>
     <FrameLayout
         android:id="@+id/grp_item_bottom_btn_layout"
         android:layout_width="match_parent"
@@ -257,7 +253,7 @@
         android:visibility="gone"
         tools:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/grp_item_hash1_Cp">
+        app:layout_constraintTop_toBottomOf="@id/grp_item_chip_group">
 
         <View
             android:id="@+id/grp_item_manage_Btn"
