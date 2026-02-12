@@ -98,7 +98,7 @@ class GroupChatAdapter(
                 }
             }
 
-            // 프로필 이미지 // profileImage로 load 해야됨!!
+            // 프로필 이미지
             Glide.with(context)
                 .load(item.writer.profileImage)
                 .placeholder(R.drawable.ic_profile)
