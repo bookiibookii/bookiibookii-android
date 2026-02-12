@@ -1,9 +1,9 @@
 package com.bookiibookii.bookiibookii.group
 data class GroupJoinData(
-val id: Int,                 // 유저 고유 ID
-val profileResId: Int?,      // 프로필 이미지 리소스 (URL이라면 String으로 변경)
-val nickname: String,        // 닉네임
-val date: String,            // 날짜 (ex: "2026.01.29")
-val intro: String,           // 간단 소개
-val tags: List<String>       // 태그 리스트 (ex: ["#열정", "#성실"])
+    val id: Int,                 // 유저(신청) 고유 ID
+    val profileImgUrl: String?,  // [변경] 서버 이미지 URL (없으면 null)
+    val nickname: String,
+    val date: String,            // ex: "2026.01.29"
+    val intro: String,           // 신청 한마디
+    val tags: List<String>       // [#태그1, #태그2 ...] (이미 한글로 변환된 상태로 받음)
 )

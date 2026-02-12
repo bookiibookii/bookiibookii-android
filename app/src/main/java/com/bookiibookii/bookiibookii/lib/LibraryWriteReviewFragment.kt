@@ -30,7 +30,6 @@ class LibraryWriteReviewFragment : Fragment() {
     private var bookAuthor = ""
     private var bookCover = ""
 
-    // ★ 새로 받을 정보들
     private var hostName = ""
     private var hostProfileUrl = ""
     private var startDate = ""
@@ -74,7 +73,6 @@ class LibraryWriteReviewFragment : Fragment() {
         binding.libDetailBookAuthorTv.text = bookAuthor
         Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
 
-        // ★ 프로필과 날짜 세팅 적용
         binding.libDetailProfileTv.text = hostName
         Glide.with(this).load(hostProfileUrl)
             .placeholder(R.drawable.bg_circle_gray500)
@@ -89,11 +87,18 @@ class LibraryWriteReviewFragment : Fragment() {
         val comment = binding.libWriteReviewEt.text.toString()
         val rating = currentRating
 
+        // ★ 로딩바가 없다면 추가해주는 것이 좋습니다 (사용자 중복 클릭 방지)
+        // binding.loadingPb.visibility = View.VISIBLE
+        // binding.libReviewAddBtn.isEnabled = false
+
         lifecycleScope.launch {
             try {
                 val request = ReviewRequest(rating, comment)
                 val response = RetrofitClient.api().postBookReview(userBookId, request)
                 Log.d("Library", "${response.body()}")
+
+                // ★ 프래그먼트가 이미 종료되었거나 분리된 상태라면 중단 (크래시 방지)
+                if (!isAdded || activity == null) return@launch
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val togetherFragment = LibraryBookDetailTogetherFragment().apply {
@@ -103,23 +108,47 @@ class LibraryWriteReviewFragment : Fragment() {
                             putString("bookTitle", bookTitle)
                             putString("bookAuthor", bookAuthor)
                             putString("bookCover", bookCover)
-
-                            // ★ [핵심] 결과 화면이 하얗게 뜨지 않도록 내가 가진 정보를 모두 다시 담아 넘겨줍니다.
                             putString("hostName", hostName)
                             putString("hostProfileUrl", hostProfileUrl)
                             putString("startDate", startDate)
                             putString("endDate", endDate)
-                            putDouble("rating", rating) // 내가 방금 적은 별점 적용!
+                            putDouble("rating", rating)
                         }
                     }
-                    requireActivity().supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainer, togetherFragment)
-                        .commit()
+
+                    val fm = requireActivity().supportFragmentManager
+
+                    // ★ [수정 핵심] 안전한 화면 전환 로직
+                    try {
+                        // 1. 쌓여있는 화면들을 '즉시' 비웁니다 (동기 처리)
+                        // 이렇게 해야 다음 명령어가 빈 스택 위에서 실행됩니다.
+                        fm.popBackStackImmediate(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+
+                        // 2. 바닥에 '서재(LibraryFragment)'를 깝니다.
+                        fm.beginTransaction()
+                            .replace(R.id.fragmentContainer, LibraryFragment())
+                            .commit()
+
+                        // 3. 그 위에 '결과(TogetherFragment)'를 올립니다.
+                        // (commit()은 비동기지만, 순서대로 스케줄링되므로 2번 뒤에 3번이 실행됩니다)
+                        fm.beginTransaction()
+                            .replace(R.id.fragmentContainer, togetherFragment)
+                            .addToBackStack(null) // 백버튼 누르면 2번(서재)으로 이동
+                            .commitAllowingStateLoss() // 상태 손실 허용 (안전장치)
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        // 만약 위의 복잡한 로직이 실패하면, 최소한 결과 화면으로라도 이동시킵니다.
+                        fm.beginTransaction()
+                            .replace(R.id.fragmentContainer, togetherFragment)
+                            .commitAllowingStateLoss()
+                    }
                 }
-            } catch (e: Exception) { e.printStackTrace() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
-
     private fun initStarRating() {
         val stars = listOf(
             binding.libDetailRateList.getChildAt(0) as ImageView,
@@ -179,8 +208,19 @@ class LibraryWriteReviewFragment : Fragment() {
         binding.libReviewAddBtn.setTextColor(ContextCompat.getColor(requireContext(), colorText))
     }
 
+    override fun onResume() {
+        super.onResume()
+        hideBottomNavigation(true)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        hideBottomNavigation(false)
         _binding = null
+    }
+
+    private fun hideBottomNavigation(shouldHide: Boolean) {
+        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
+        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
     }
 }

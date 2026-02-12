@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.CommonDialog
-import com.bookiibookii.bookiibookii.common.GroupTagMapper // 태그 변환기 (없으면 아래 주석 참고)
+import com.bookiibookii.bookiibookii.common.GroupTagMapper // [중요] 태그 변환기
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpJoinManagementBinding
@@ -22,20 +22,19 @@ class GroupJoinManagementActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGrpJoinManagementBinding
     private lateinit var groupJoinAdapter: GroupJoinAdapter
 
-    private var currentGroupId: Long = -1L
-    private var currentBookTitle = "" // 이전 화면에서 받아오거나 API로 조회
+    private var currentGroupId: Long = 0L
+    private var currentBookTitle = ""
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGrpJoinManagementBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 1. Intent 데이터 수신
-//        val groupIdInt = intent.getIntExtra("GROUP_ID", 0)
-//        currentGroupId = groupIdInt.toLong()
         currentGroupId = intent.getLongExtra("GROUP_ID", 0L)
 
-        // 책 제목도 이전 화면에서 넘겨주면 좋습니다. (없으면 기본값)
+        // 1. Intent 데이터 수신
+
         currentBookTitle = intent.getStringExtra("BOOK_TITLE") ?: "모임 신청 관리"
 
         if (currentGroupId == 0L) {
@@ -46,13 +45,10 @@ class GroupJoinManagementActivity : AppCompatActivity() {
 
         initView()
         initListener()
-
-        // 2. API 호출
         fetchApplicationList()
     }
 
     private fun initView() {
-        // 어댑터 초기화 (처음엔 빈 리스트)
         groupJoinAdapter = GroupJoinAdapter(mutableListOf()) { item, isAccept ->
             if (isAccept) showAgreeDialog(item) else showRefusalDialog(item)
         }
@@ -62,11 +58,11 @@ class GroupJoinManagementActivity : AppCompatActivity() {
             adapter = groupJoinAdapter
         }
 
-        // 책 제목 세팅 (XML에 해당 뷰가 있다면)
-        // binding.bookTitleTv.text = currentBookTitle
+        // (옵션) 타이틀 설정이 필요하다면
+        // binding.actGrpJoinMgTitleTv.text = currentBookTitle
     }
 
-    // ★ 서버에서 신청 목록 가져오기
+    // ★ [핵심 수정] 데이터 로드 및 변환
     private fun fetchApplicationList() {
         lifecycleScope.launch {
             try {
@@ -77,18 +73,18 @@ class GroupJoinManagementActivity : AppCompatActivity() {
                     val serverList = result?.applicationList ?: emptyList()
                     val totalCount = result?.totalCount ?: 0
 
-                    // DTO -> GroupJoinData 변환
+                    // DTO -> UI Model 변환
                     val uiList = serverList.map { serverItem ->
 
-                        // 태그 변환: 서버 코드(ENGLISH) -> 화면용(#한글)
-                        // GroupTagMapper가 없다면: serverItem.tags?.map { "#$it" } ?: emptyList() 로 대체
+                        // 1. 태그 변환: [ENG_CODE] -> [#한글태그]
                         val displayTags = serverItem.tags?.map { tagCode ->
                             GroupTagMapper.toKoreanTag(tagCode)
                         } ?: emptyList()
 
+                        // 2. 데이터 객체 생성
                         GroupJoinData(
-                            id = serverItem.applicationId.toInt(), // ID
-                            profileResId = null, // API에 이미지 URL이 없으므로 null (Adapter가 기본 이미지 처리)
+                            id = serverItem.applicationId.toInt(),
+                            profileImgUrl = serverItem.profileImageUrl,
                             nickname = serverItem.name,
                             date = serverItem.createdAt,
                             intro = serverItem.applyMsg,
@@ -96,7 +92,6 @@ class GroupJoinManagementActivity : AppCompatActivity() {
                         )
                     }.toMutableList()
 
-                    // ★ 어댑터 데이터 갱신
                     groupJoinAdapter.updateData(uiList)
                     updateCountText(totalCount)
 
@@ -121,33 +116,20 @@ class GroupJoinManagementActivity : AppCompatActivity() {
     private fun processApplication(applicationId: Int, status: String, nickname: String) {
         lifecycleScope.launch {
             try {
-                // 서버로 보낼 Body 생성
                 val requestBody = GroupItemDto.GroupAppStatusRequest(status)
-
-                // API 호출 (Int -> Long 변환 주의)
                 val response = RetrofitClient.api().updateApplicationStatus(
-                    applicationId.toLong(), // ★ 여기서 item.id를 넘겨야 함 (groupId 아님!)
+                    applicationId.toLong(),
                     requestBody
                 )
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    // 성공 시 메시지 출력
-                    val msg = if (status == "ACCEPTED") {
-                        "$nickname 님이 게스트가 되었습니다."
-                    } else {
-                        "$nickname 님의 요청을 거절했습니다."
-                    }
+                    val msg = if (status == "ACCEPTED") "$nickname 님이 게스트가 되었습니다." else "$nickname 님의 요청을 거절했습니다."
                     showCustomToast(msg)
-
-                    // ★ 목록 새로고침 (중요)
-                    fetchApplicationList()
-
+                    //fetchApplicationList() // 목록 갱신 // 있으면 삭제됨
                 } else {
-                    // 실패 시 에러 메시지
                     val errorMsg = response.body()?.message ?: "처리 실패"
                     Toast.makeText(this@GroupJoinManagementActivity, errorMsg, Toast.LENGTH_SHORT).show()
                 }
-
             } catch (e: Exception) {
                 e.printStackTrace()
                 Toast.makeText(this@GroupJoinManagementActivity, "네트워크 오류 발생", Toast.LENGTH_SHORT).show()
@@ -155,8 +137,7 @@ class GroupJoinManagementActivity : AppCompatActivity() {
         }
     }
 
-    // --- 다이얼로그 및 토스트 로직 ---
-
+    // --- 다이얼로그 및 토스트 ---
     private fun showAgreeDialog(item: GroupJoinData) {
         CommonDialog(
             context = this,
@@ -165,10 +146,7 @@ class GroupJoinManagementActivity : AppCompatActivity() {
             content = "${item.nickname} 님의 그룹 참여 요청을 수락하시겠습니까?",
             confirmBtnText = "수락",
             confirmBtnColor = R.color.grey_900,
-            onConfirmClick = {
-                // 수락 API 호출 ("ACCEPTED")
-                processApplication(item.id, "ACCEPTED", item.nickname)
-            }
+            onConfirmClick = { processApplication(item.id, "ACCEPTED", item.nickname) }
         ).show()
     }
 
@@ -180,10 +158,7 @@ class GroupJoinManagementActivity : AppCompatActivity() {
             content = "${item.nickname} 님의 그룹 참여 요청을 거절하시겠습니까?",
             confirmBtnText = "거절",
             confirmBtnColor = R.color.ui_point_red,
-            onConfirmClick = {
-                // 거절 API 호출 ("REJECTED")
-                processApplication(item.id, "REJECTED", item.nickname)
-            }
+            onConfirmClick = { processApplication(item.id, "REJECTED", item.nickname) }
         ).show()
     }
 

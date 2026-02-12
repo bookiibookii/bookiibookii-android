@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii
 
-import android.app.ComponentCaller
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -12,6 +11,7 @@ import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.group.main.GroupFragment
 import com.bookiibookii.bookiibookii.home.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
+import com.bookiibookii.bookiibookii.home.OtherProfileFragment
 import com.bookiibookii.bookiibookii.lib.LibraryBookDetailRelayWriteFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment
@@ -46,14 +46,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         initBottomNav()
-
-        handleExternalNavigation(intent)
-    }
-
-    override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        handleExternalNavigation(intent)
     }
 
     private fun initBottomNav() {
@@ -158,30 +150,5 @@ class MainActivity : AppCompatActivity() {
             R.drawable.ic_mypage_unselected,
             tab == NavTab.MY
         )
-    }
-
-    private fun handleExternalNavigation(intent: Intent?) {
-        if (intent == null) return
-        if (intent.getStringExtra("navigate_to") != "library_book_detail") return
-
-        val groupId = intent.getLongExtra("arg_group_id", -1L)
-        val userBookId = intent.getIntExtra("arg_user_book_id", -1)
-        if (groupId <= 0L || userBookId <= 0) return
-
-        setBottomNavSelected(NavTab.LIBRARY)
-
-        val detail = LibraryBookDetailRelayWriteFragment().apply {
-            arguments = Bundle().apply {
-                putLong("arg_group_id", groupId)
-                putInt("arg_user_book_id", userBookId)
-            }
-        }
-
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, detail)
-            .addToBackStack(null) // 뒤로가기 시 라이브러리로 돌아가게
-            .commit()
-
-        intent.removeExtra("navigate_to")
     }
 }

@@ -71,7 +71,7 @@
         app:layout_constraintTop_toBottomOf="@id/lib_line_v"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
-        app:layout_constraintBottom_toTopOf="@id/iv_lock"
+        app:layout_constraintBottom_toTopOf="@id/et_input"
         android:layout_marginVertical="20dp"
         tools:listitem="@layout/item_lib_card_chat"/>
 
