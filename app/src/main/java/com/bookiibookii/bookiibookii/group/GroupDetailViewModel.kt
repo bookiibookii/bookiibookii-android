@@ -24,6 +24,10 @@ class GroupDetailViewModel : ViewModel() {
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
+    // 댓글 삭제
+    private val _commentDeleteEvent = MutableLiveData<Boolean>()
+    val commentDeleteEvent: LiveData<Boolean> = _commentDeleteEvent
+
     // --- 그룹 상세 조회 ---
     fun fetchGroupDetail(groupId: Int) {
         viewModelScope.launch {
@@ -82,6 +86,44 @@ class GroupDetailViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+
+    // --- 댓글 삭제 ---
+    fun deleteComment(groupId: Int, commentId: Int) {
+        viewModelScope.launch {
+            try {
+                // 1. API 호출
+                val response = RetrofitClient.api().deleteComment(groupId, commentId)
+
+                // 2. HTTP 통신 성공 여부 확인 (200 OK 등)
+                if (response.isSuccessful) {
+                    val body = response.body()
+
+                    // 3. 서버가 정의한 비즈니스 로직 성공 여부 확인 (isSuccess: true)
+                    if (body != null && body.isSuccess) {
+                        _commentDeleteEvent.value = true
+
+                        // 삭제 성공 후 현재 댓글 목록을 다시 불러와 화면을 동기화
+                        fetchComments(groupId.toLong())
+                        Log.d("GroupDetailVM", "댓글 삭제 성공: $commentId")
+                    } else {
+                        // 서버에서 에러 응답을 보낸 경우 (body.code, body.message 사용)
+                        _commentDeleteEvent.value = false
+                        val errorMsg = body?.message ?: "알 수 없는 에러"
+                        val errorCode = body?.code ?: "UNKNOWN"
+                        Log.e("GroupDetailVM", "삭제 실패 - Code: $errorCode, Msg: $errorMsg")
+                    }
+                } else {
+                    // HTTP 통신 자체가 실패한 경우 (404, 500 등)
+                    _commentDeleteEvent.value = false
+                    Log.e("GroupDetailVM", "HTTP 오류 - Code: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                _commentDeleteEvent.value = false
+                Log.e("GroupDetailVM", "삭제 중 네트워크 예외 발생", e)
             }
         }
     }

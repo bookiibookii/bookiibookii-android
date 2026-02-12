@@ -1,9 +1,11 @@
 package com.bookiibookii.bookiibookii.group
 
 import android.content.Context
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupWindow
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
@@ -11,19 +13,24 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto.CommentItem
 import com.bookiibookii.bookiibookii.databinding.ItemGrpChatCardBinding
+import com.bookiibookii.bookiibookii.databinding.ItemGrpChatDeletePopupBinding
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.math.roundToInt
 
 class GroupChatAdapter(
-    private val onReplyClick: (Long, String) -> Unit
+    private val onReplyClick: (Long, String) -> Unit,
+    private val onDeleteClick: (Long) -> Unit // ★ 삭제 콜백 추가
 ) : RecyclerView.Adapter<GroupChatAdapter.CommentViewHolder>() {
 
     private val flatList = ArrayList<CommentItem>()
     private var hostNickname: String? = null
 
+    private var selectedCommentId: Long? = null
     fun setHostNickname(nickname: String?) {
         this.hostNickname = nickname
         notifyDataSetChanged()
@@ -56,6 +63,12 @@ class GroupChatAdapter(
         fun bind(item: CommentItem, hostNickname: String?) {
             val context = itemView.context
             val isReply = (item.parentId != null && item.parentId != 0L)
+
+            if (selectedCommentId == item.id) {
+                binding.root.setBackgroundResource(R.drawable.bg_round_10dp_gray100)
+            } else {
+                binding.root.setBackgroundColor(Color.TRANSPARENT)
+            }
 
             // 1. 비밀댓글 표시
             binding.itemGrpChatCardSecretTv.visibility = if (item.secret) View.VISIBLE else View.GONE
@@ -101,11 +114,10 @@ class GroupChatAdapter(
             // 프로필 이미지
             Glide.with(context)
                 .load(item.writer.profileImage)
-                .placeholder(R.drawable.ic_profile)
-                .error(R.drawable.ic_profile)
-                .circleCrop()
+                .transform(CenterCrop(),RoundedCorners(dpToPx(context, 6))) // 6dp 정도의 부드러운 라운드
+                .placeholder(R.drawable.ic_profile) // 로딩 중 기본 이미지
+                .error(R.drawable.ic_profile)       // 에러 시 기본 이미지
                 .into(binding.itemGrpChatCardProfileIv)
-
             // 5. 시간 표시
             val (timeNum, timeUnit) = getTimeAgoParts(item.createdAt)
             binding.itemGrpChatCardTimeTv.text = timeNum
@@ -118,14 +130,48 @@ class GroupChatAdapter(
                 marginStart = dpToPx(context, indentSize)
             }
 
-            // 7. 클릭 시 답글 작성
             itemView.setOnClickListener {
                 if (!item.deleted) {
                     onReplyClick(item.id, item.writer.name)
                 }
             }
+
+            // 롱 클릭: 삭제 팝업
+            itemView.setOnLongClickListener {
+                if (!item.deleted) {
+                    selectedCommentId = item.id
+                    notifyDataSetChanged() // 여기서 전체를 다시 그려야 grey_100이 적용됨!
+                    showCustomDeletePopup(itemView, item.id)
+                }
+                true
+            }
+        }
+        private fun showCustomDeletePopup(anchorView: View, commentId: Long) {
+            val context = anchorView.context
+            val popupBinding = ItemGrpChatDeletePopupBinding.inflate(LayoutInflater.from(context))
+
+            val popupWindow = PopupWindow(
+                popupBinding.root,
+                dpToPx(context, 160),
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true
+            )
+
+            // 삭제 팝업 내의 버튼 클릭 시
+            popupBinding.root.setOnClickListener {
+                onDeleteClick(commentId) // ★ ViewModel로 ID 전달
+                popupWindow.dismiss()
+            }
+
+            popupWindow.setOnDismissListener {
+                selectedCommentId = null
+                notifyDataSetChanged()
+            }
+
+            popupWindow.showAsDropDown(anchorView, anchorView.width - dpToPx(context, 180), -dpToPx(context, 60))
         }
     }
+
 
     private fun dpToPx(context: Context, dp: Int): Int {
         val density = context.resources.displayMetrics.density
@@ -159,5 +205,38 @@ class GroupChatAdapter(
         override fun getItemOffsets(outRect: android.graphics.Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
             outRect.bottom = (verticalSpaceDp * view.context.resources.displayMetrics.density).toInt()
         }
+    }
+
+    private fun showCustomDeletePopup(anchorView: View, commentId: Long) {
+        val context = anchorView.context
+        val inflater = LayoutInflater.from(context)
+        val popupBinding = ItemGrpChatDeletePopupBinding.inflate(inflater)
+
+        val popupWindow = PopupWindow(
+            popupBinding.root,
+            dpToPx(context, 160), // 너비 지정
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true // 바깥 터치 시 닫힘
+        )
+
+        // 팝업 그림자(Elevation) 설정
+        popupWindow.elevation = 10f
+
+        // 삭제 클릭 리스너
+        popupBinding.root.setOnClickListener {
+            // onDeleteClick(commentId) // Activity로 삭제 신호 전달
+            popupWindow.dismiss()
+        }
+
+        // 팝업이 닫힐 때 배경색 원상복구
+        popupWindow.setOnDismissListener {
+            selectedCommentId = null
+            notifyDataSetChanged()
+        }
+
+        // 이미지처럼 댓글 영역의 오른쪽 상단에 위치시키기
+        // xOff: 오른쪽 끝에서 살짝 안으로, yOff: 댓글 높이의 절반 정도 위로
+        popupWindow.showAsDropDown(anchorView, anchorView.width - dpToPx(context, 180),
+            -dpToPx(context, 60))
     }
 }

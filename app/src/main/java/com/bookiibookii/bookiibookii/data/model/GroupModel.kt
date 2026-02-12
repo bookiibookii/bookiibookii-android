@@ -353,4 +353,19 @@ data class GroupItemDto(
         val createdAt: String,
         val children: List<CommentItem>? = null // ★ 대댓글 리스트 (없으면 null)
     )
+
+
+    //댓글 삭제
+    data class CommentDeleteResponse(
+        val isSuccess: Boolean,
+        val code: String,
+        val message: String,
+        val result: CommentDeleteResult? // 성공 시 삭제된 정보가 담길 수 있으므로
+    )
+
+    // 삭제 결과 알맹이 (필요시)
+    data class CommentDeleteResult(
+        val commentId: Long,
+        val deletedAt: String
+    )
 }
