@@ -70,7 +70,7 @@ class GrpSearchActivity : AppCompatActivity() {
             val intent = Intent(this, GroupDetailActivity::class.java).apply {
                 // 그룹의 식별자(ID)를 넘겨줍니다.
                 // 키값("GROUP_ID")은 GroupDetailActivity에서 받는 키값과 동일해야 합니다.
-                putExtra("GROUP_ID", group.groupId)
+                putExtra("GROUP_ID", group.groupId.toLong())
 
                 // 만약 그룹 객체 전체를 넘기고 싶다면, Group 모델이 Parcelable을 구현해야 합니다.
                 // putExtra("GROUP_DATA", group)

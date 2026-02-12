@@ -112,7 +112,7 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
 
         // 2. 호스트 정보
         Glide.with(this)
-            .load(data.hostProfileImage)
+            .load(data.hostProfileImageUrl)
             .placeholder(R.drawable.bg_round_10dp_gray300)
             .error(R.drawable.img_profile_default)
             .circleCrop()

@@ -4,8 +4,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bookiibookii.bookiibookii.databinding.ItemGroupJoinManagementBinding
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.GroupTagMapper
+import com.bookiibookii.bookiibookii.databinding.ItemGroupJoinManagementBinding
+import com.bumptech.glide.Glide // Glide 임포트 필수
 
 class GroupJoinAdapter(
     private var dataList: MutableList<GroupJoinData>,
@@ -30,19 +32,20 @@ class GroupJoinAdapter(
     inner class Holder(private val binding: ItemGroupJoinManagementBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: GroupJoinData) {
             with(binding) {
-                //기본 텍스트 및 이미지 설정
+                // 1. 텍스트 설정
                 itemGrpJoinManageNicknameTv.text = item.nickname
                 itemGrpJoinManageDateTv.text = item.date
                 itemGrpJoinManageContentTv.text = item.intro
 
-                // 프로필 이미지
-                if (item.profileResId != null) {
-                    itemGrpJoinManageProfileIv.setImageResource(item.profileResId)
-                } else {
-                    itemGrpJoinManageProfileIv.setImageResource(R.drawable.ic_profile)
-                }
+                // 2. [변경] 프로필 이미지 (Glide 사용)
+                Glide.with(root.context)
+                    .load(item.profileImgUrl)          // URL 로드
+                    .placeholder(R.drawable.ic_profile) // 로딩/실패/null 시 기본 이미지
+                    .error(R.drawable.ic_profile)
+                    .circleCrop()                       // 원형으로 자르기
+                    .into(itemGrpJoinManageProfileIv)
 
-                // 칩 처리 로직
+                // 3. 태그 칩 설정 (기존 로직 유지)
                 val chipViews = listOf(
                     grpItemJoinMgHash1Cp,
                     grpItemJoinMgHash2Cp,
@@ -50,26 +53,21 @@ class GroupJoinAdapter(
                     grpItemJoinMgHash4Cp,
                     grpItemJoinMgHash5Cp
                 )
+                GroupTagMapper.bindTags(chipViews, item.tags)
+
 
                 chipViews.forEachIndexed { index, chipView ->
                     if (index < item.tags.size) {
-                        // 데이터가 있는 경우 -> 텍스트 설정하고 보이게 함
                         chipView.text = item.tags[index]
                         chipView.visibility = View.VISIBLE
                     } else {
-                        // 데이터가 없는 슬롯: 숨김
                         chipView.visibility = View.GONE
                     }
                 }
 
-                // 버튼 클릭 리스너
-                itemGrpJoinManageYesBtn.setOnClickListener {
-                    onItemClick(item, true)
-                }
-
-                itemGrpJoinManageNoBtn.setOnClickListener {
-                    onItemClick(item, false)
-                }
+                // 4. 버튼 리스너
+                itemGrpJoinManageYesBtn.setOnClickListener { onItemClick(item, true) }
+                itemGrpJoinManageNoBtn.setOnClickListener { onItemClick(item, false) }
             }
         }
     }
@@ -78,14 +76,5 @@ class GroupJoinAdapter(
         dataList.clear()
         dataList.addAll(newItemList)
         notifyDataSetChanged()
-    }
-
-    fun removeItem(item: GroupJoinData) {
-        val position = dataList.indexOf(item)
-        if (position != -1) {
-            dataList.removeAt(position)
-            notifyItemRemoved(position)
-            notifyItemRangeChanged(position, dataList.size)
-        }
     }
 }
