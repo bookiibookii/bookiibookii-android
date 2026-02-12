@@ -16,8 +16,8 @@
         <TextView
             android:id="@+id/item_book_grid_tv"
             android:layout_width="100dp"  android:layout_height="32dp"  android:layout_gravity="center"
-            android:gravity="center_vertical|start" android:paddingStart="16dp" android:text="책 제목"
-            android:rotation="-90"
+            android:gravity="center_vertical|end" android:paddingStart="16dp" android:text="책 제목"
+            android:rotation="90"
             android:singleLine="true"
             android:ellipsize="end"
             android:textAppearance="@style/medium15" />

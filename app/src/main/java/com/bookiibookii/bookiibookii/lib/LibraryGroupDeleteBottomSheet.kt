@@ -8,6 +8,7 @@ import com.bookiibookii.bookiibookii.databinding.FragmentLibGroupDeleteBottomBin
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class LibraryGroupDeleteBottomSheet(
+    private val onDetailClick: () -> Unit,
     private val onDeleteClick: () -> Unit
 ) : BottomSheetDialogFragment() {
 
@@ -21,9 +22,16 @@ class LibraryGroupDeleteBottomSheet(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
+        binding.libDialogGroupTv.setOnClickListener {
+            dismiss()
+            onDetailClick()
+        }
+
+        // 서재 삭제 클릭 리스너
         binding.libDialogDeleteTv.setOnClickListener {
-            dismiss() // 바텀시트 닫고
-            onDeleteClick() // 삭제 다이얼로그 호출 콜백 실행
+            dismiss()
+            onDeleteClick()
         }
     }
 }

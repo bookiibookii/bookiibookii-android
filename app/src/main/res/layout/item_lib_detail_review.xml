@@ -90,7 +90,7 @@
         <!-- 사진 -->
         <ImageView
             android:id="@+id/item_review_photo_iv"
-            android:layout_width="140dp"
+            android:layout_width="match_parent"
             android:layout_height="140dp"
             android:src="@drawable/bg_round_8dp_gray300"
             android:layout_marginTop="8dp"
