@@ -36,6 +36,8 @@ import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentResponse
 import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
+import com.bookiibookii.bookiibookii.data.model.RecommendedBookmateDto
+import com.bookiibookii.bookiibookii.data.model.RecommendedGroupDto
 import com.bookiibookii.bookiibookii.data.model.RelayReviewRequest
 import com.bookiibookii.bookiibookii.data.model.ReportCreateResponse
 import com.bookiibookii.bookiibookii.data.model.ReportListResponse
@@ -51,6 +53,7 @@ import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import okhttp3.RequestBody
 import com.bookiibookii.bookiibookii.trkData.api.TrkApi
+import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -365,5 +368,15 @@ interface ApiService: TrkApi {
     suspend fun getComments(
         @Path("groupId") groupId: Long
     ): Response<GroupItemDto.CommentListResponse>
+
+    // 홈 추천 그룹 (3개)
+    @GET("/api/recommendations/groups")
+    suspend fun getRecommendedGroups(
+        @Query("refresh") refresh: Boolean = false
+    ): Response<CommonResponse<List<RecommendedGroupDto>>>
+
+    // 부키메이트 추천 (최대 5명)
+    @GET("/api/recommendations/bookmates")
+    suspend fun getRecommendedBookmates(): Response<CommonResponse<List<RecommendedBookmateDto>>>
 
 }

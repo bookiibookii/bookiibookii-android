@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.trkGuest
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +8,7 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
@@ -14,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityGuestBinding
+import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrackerStatus
 import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
