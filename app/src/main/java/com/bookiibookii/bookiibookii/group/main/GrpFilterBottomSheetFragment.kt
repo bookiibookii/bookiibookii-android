@@ -11,25 +11,28 @@ import com.bookiibookii.bookiibookii.databinding.FragmentGrpBottomSheetBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
 
-// 필터 종류 구분용 Enum
+
+//필터 종류를 구분하기 위한 Enum 클래스
+
 enum class FilterType {
-    GROUP_TYPE,
-    CATEGORY
+    GROUP_TYPE, // 그룹 유형 (함께 읽기, 교환 등)
+    CATEGORY    // 도서 분야 (경제, 소설 등)
 }
 
 class FilterBottomSheetFragment(
     private val filterType: FilterType,
-    private val preSelectedList: List<String>,
-    private val onConfirm: (List<String>) -> Unit,
-    private val onDismissAction: () -> Unit
+    private val preSelectedList: List<String>,    // 기존에 선택되어 있던 값
+    private val onConfirm: (List<String>) -> Unit, // 확인 버튼 클릭 콜백
+    private val onDismissAction: () -> Unit        // 닫힐 때 실행할 액션
 ) : BottomSheetDialogFragment() {
 
     private var _binding: FragmentGrpBottomSheetBinding? = null
     private val binding get() = _binding!!
 
-    // 현재 선택된 필터들을 담을 리스트
+    // 현재 바텀시트 내에서 실시간으로 선택된 필터 리스트
     private val selectedList = mutableListOf<String>()
 
+    // [Lifecycle] 생명주기
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -41,14 +44,25 @@ class FilterBottomSheetFragment(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        initData()
-        setupUI()
-        initListener()
+        initData()      // 전달받은 데이터 세팅
+        setupUI()       // 칩 동적 생성 및 타이틀 설정
+        initListener()  // 버튼 및 전체 선택 리스너 설정
     }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        onDismissAction() // 칩의 UI 상태 복구 등을 위해 콜백 호출
+    }
+
+    // [Initialization] 초기 데이터 및 UI 설정
 
     private fun initData() {
         selectedList.clear()
-        // 이전 선택값이 없거나 '전체'가 포함되어 있으면 전체 선택
         if (preSelectedList.isEmpty() || preSelectedList.contains("전체")) {
             binding.grpBottomSheetEntiretyCp.isChecked = true
         } else {
@@ -60,7 +74,7 @@ class FilterBottomSheetFragment(
     private fun setupUI() {
         val inflater = LayoutInflater.from(requireContext())
 
-        // 타입에 따라 제목과 칩 데이터 리스트 결정
+        // 1. 타입별 타이틀 및 데이터 정의 (필터 추가 시 여기를 수정)
         val chipDataList = when (filterType) {
             FilterType.GROUP_TYPE -> {
                 binding.grpBottomSheetTitleTv.text = "그룹 유형"
@@ -75,83 +89,54 @@ class FilterBottomSheetFragment(
             }
         }
 
-        // 칩 동적 생성 및 추가
+        // 2. 정의된 리스트를 바탕으로 칩 생성
         for (dataText in chipDataList) {
             val chip = inflater.inflate(R.layout.item_filter_chip, binding.grpBottomSheetChipGroup, false) as Chip
             chip.text = dataText
-
-            // 이전에 선택된 항목이라면 체크 상태로 표시
             chip.isChecked = selectedList.contains(dataText)
 
-            // 칩 클릭 리스너
+            // 개별 칩 인터랙션: 선택 시 '전체' 해제 / 미선택 시 리스트에서 제거
             chip.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
                     selectedList.add(dataText)
-                    // 개별 칩을 선택하면 '전체' 칩은 해제
                     binding.grpBottomSheetEntiretyCp.isChecked = false
                 } else {
                     selectedList.remove(dataText)
-                    // 모든 칩이 해제되면 자동으로 '전체' 선택
                     if (selectedList.isEmpty()) {
                         binding.grpBottomSheetEntiretyCp.isChecked = true
                     }
                 }
-                updateSummaryText() // 상단 요약 텍스트 갱신
+                updateSummaryText() // 실시간 상단 텍스트 갱신
             }
 
-            // 칩 추가
             binding.grpBottomSheetChipGroup.addView(chip)
 
-
+            // '함께 읽기' 뒤에 구분선이 필요한 디자인 대응
             if (filterType == FilterType.GROUP_TYPE && dataText == "함께 읽기") {
                 addDynamicDivider()
             }
         }
 
-        // 초기 상태에 맞춰 요약 텍스트 업데이트
         updateSummaryText()
     }
 
-    // 동적으로 구분선(ImageView)을 생성하여 추가하는 함수
-    private fun addDynamicDivider() {
-        val divider = ImageView(requireContext()).apply {
-            setImageResource(R.drawable.ic_vector_86) // 구분선 이미지
-            scaleType = ImageView.ScaleType.FIT_XY
-
-            // XML의 layout_height="32dp"와 동일하게 설정
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                dpToPx(38)
-            )
-        }
-        binding.grpBottomSheetChipGroup.addView(divider)
-    }
-
-    // ★ dp를 px로 변환하는 헬퍼 함수
-    private fun dpToPx(dp: Int): Int {
-        val density = resources.displayMetrics.density
-        return (dp * density).toInt()
-    }
-
+    // [Interaction] 버튼 및 칩 리스너
     private fun initListener() {
         with(binding) {
             // '전체' 칩 클릭 로직
             grpBottomSheetEntiretyCp.setOnClickListener {
                 if (grpBottomSheetEntiretyCp.isChecked) {
-                    // 전체가 선택되면 나머지 칩 모두 해제 및 리스트 비우기
                     selectedList.clear()
                     clearAllChipsExcludeEntirety()
                     updateSummaryText()
                 } else {
-                    // 전체를 끄려고 할 때, 다른 선택된 게 없다면 못 끄게 막음 (강제 체크)
+                    // 아무것도 선택 안 된 상태에서 '전체'를 끌 수 없도록 강제 유지
                     if (selectedList.isEmpty()) grpBottomSheetEntiretyCp.isChecked = true
                 }
             }
 
-            // 취소 버튼
             grpBottomSheetCancelBtn.setOnClickListener { dismiss() }
 
-            // 확인 버튼
             grpBottomSheetEnterBtn.setOnClickListener {
                 val result = if (selectedList.isEmpty()) listOf("전체") else selectedList
                 onConfirm(result)
@@ -160,60 +145,54 @@ class FilterBottomSheetFragment(
         }
     }
 
-    // '전체' 칩과 '구분선'을 제외한 나머지 동적 칩들의 체크 해제
     private fun clearAllChipsExcludeEntirety() {
-        val count = binding.grpBottomSheetChipGroup.childCount
-        for (i in 0 until count) {
-            val view = binding.grpBottomSheetChipGroup.getChildAt(i)
-            // Chip 객체이면서 ID가 '전체'가 아닌 것만 체크 해제
+        val group = binding.grpBottomSheetChipGroup
+        for (i in 0 until group.childCount) {
+            val view = group.getChildAt(i)
             if (view is Chip && view.id != R.id.grp_bottom_sheet_entirety_Cp) {
                 view.isChecked = false
             }
         }
     }
 
-    // 상단 요약 텍스트 (과학/IT · 자기계발 외 3개) 업데이트 로직
+
+    //  [UI Update] 요약 텍스트 제어 -> 상단에 현재 선택된 항목들을 요약해서 보여줍니다. (예: 경제/경영 · 과학/IT 외 2개)
+
     private fun updateSummaryText() {
         with(binding) {
-            // 모든 텍스트 뷰 일단 숨김 (초기화)
-            grpBottomSheetSelect1Tv.visibility = View.GONE
-            grpBottomSheetDot1Tv.visibility = View.GONE
-            grpBottomSheetSelect2Tv.visibility = View.GONE
-            grpBottomSheetDot2Tv.visibility = View.GONE
-            grpBottomSheetSelect3Tv.visibility = View.GONE
-            grpBottomSheetExceptTitleTv.visibility = View.GONE
-            grpBottomSheetExceptNumTv.visibility = View.GONE
-            grpBottomSheetExceptCountTv.visibility = View.GONE
+            // 모든 텍스트 초기화
+            val summaryViews = listOf(
+                grpBottomSheetSelect1Tv, grpBottomSheetDot1Tv,
+                grpBottomSheetSelect2Tv, grpBottomSheetDot2Tv,
+                grpBottomSheetSelect3Tv, grpBottomSheetExceptTitleTv,
+                grpBottomSheetExceptNumTv, grpBottomSheetExceptCountTv
+            )
+            summaryViews.forEach { it.visibility = View.GONE }
 
-            // '전체'인 경우
+            // '전체' 선택 시 처리
             if (selectedList.isEmpty() || grpBottomSheetEntiretyCp.isChecked) {
-                grpBottomSheetSelect1Tv.text = "전체"
-                grpBottomSheetSelect1Tv.visibility = View.VISIBLE
+                grpBottomSheetSelect1Tv.apply {
+                    text = "전체"
+                    visibility = View.VISIBLE
+                }
                 return
             }
 
-            // 선택된 개수에 따라 Visibility 켜기
-            // 첫 번째 아이템
-            if (selectedList.isNotEmpty()) {
+            // 선택 개수에 따른 순차 노출 (최대 3개 노출 후 '외 N개' 처리)
+            if (selectedList.size >= 1) {
                 grpBottomSheetSelect1Tv.text = selectedList[0]
                 grpBottomSheetSelect1Tv.visibility = View.VISIBLE
             }
-
-            // 두 번째 아이템
             if (selectedList.size >= 2) {
                 grpBottomSheetDot1Tv.visibility = View.VISIBLE
                 grpBottomSheetSelect2Tv.text = selectedList[1]
                 grpBottomSheetSelect2Tv.visibility = View.VISIBLE
             }
-
-            // 세 번째 아이템
             if (selectedList.size >= 3) {
                 grpBottomSheetDot2Tv.visibility = View.VISIBLE
                 grpBottomSheetSelect3Tv.text = selectedList[2]
                 grpBottomSheetSelect3Tv.visibility = View.VISIBLE
             }
-
-            // 4개 이상일 때 ("외 N개")
             if (selectedList.size > 3) {
                 grpBottomSheetExceptTitleTv.visibility = View.VISIBLE
                 grpBottomSheetExceptNumTv.text = "${selectedList.size - 3}"
@@ -223,12 +202,24 @@ class FilterBottomSheetFragment(
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+
+    //  [Helpers] 유틸리티
+
+    private fun addDynamicDivider() {
+        val divider = ImageView(requireContext()).apply {
+            setImageResource(R.drawable.ic_vector_86)
+            scaleType = ImageView.ScaleType.FIT_XY
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                dpToPx(38)
+            )
+        }
+        binding.grpBottomSheetChipGroup.addView(divider)
     }
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-        onDismissAction()
+
+    private fun dpToPx(dp: Int): Int {
+        val density = resources.displayMetrics.density
+        return (dp * density).toInt()
     }
+
 }

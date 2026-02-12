@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    private const val BASE_URL = "https://bookii.gyeonseo.com/"
+    private const val BASE_URL = "https://bookiibookii.gyeonseo.com/"
 
     @Volatile private var apiService: ApiService? = null
     @Volatile private var apiServiceNoAuth: ApiService? = null
