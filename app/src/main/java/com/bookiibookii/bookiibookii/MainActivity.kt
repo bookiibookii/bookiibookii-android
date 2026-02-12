@@ -12,6 +12,7 @@ import com.bookiibookii.bookiibookii.group.main.GroupFragment
 import com.bookiibookii.bookiibookii.home.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.home.OtherProfileFragment
+import com.bookiibookii.bookiibookii.lib.LibraryBookDetailRelayWriteFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
@@ -88,19 +89,6 @@ class MainActivity : AppCompatActivity() {
 
         intent.putExtra("group_id", groupId) // ✅ 여기 키가 핵심
         startActivity(intent)
-    }
-
-    fun moveToOtherProfile(nickname: String) {
-        val fragment = OtherProfileFragment().apply {
-            arguments = Bundle().apply {
-                putString(OtherProfileFragment.ARG_NICKNAME, nickname)
-            }
-        }
-
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, fragment) // ✅ 여기 수정
-            .addToBackStack(null) // 뒤로가기 가능
-            .commit()
     }
 
     private fun replaceFragment(fragment: Fragment) {

@@ -100,6 +100,7 @@ interface TrkApi {
     suspend fun patchConfirmReception(
         @Path("groupId") groupId: Long
     ): ApiResponse<TrackerDetailResponseDto>
+
 }
 
 

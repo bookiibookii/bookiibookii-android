@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.trkHost
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,13 +13,15 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityHostBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class HostActivity : AppCompatActivity() {
+class HostActivity : AppCompatActivity(),
+    HostTradeFinishBottomDialogFragment.Listener {
 
     private lateinit var binding: ActivityHostBinding
     private val vm: HostViewModel by viewModels()
@@ -246,4 +249,21 @@ class HostActivity : AppCompatActivity() {
         val sheet = createSheetForStatus(status)
         sheet.show(supportFragmentManager, tag)
     }
+
+    override fun onMoveToLibraryBookDetail(groupId: Long, userBookId: Int) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("navigate_to", "library_book_detail")
+            putExtra("arg_group_id", groupId)
+            putExtra("arg_user_book_id", userBookId)
+
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        startActivity(intent)
+        finish()
+    }
+
+    override fun onError(message: String) {
+        android.util.Log.e("HOST", "FinishSheet error: $message")
+    }
+
 }
