@@ -35,22 +35,18 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun routeNext() {
-        val isOnboardingDone = TokenManager.isOnboardingDone(this)
-
-        if (!isOnboardingDone) {
-            moveToIntro()
-            return
-        }
-
         val hasToken = TokenManager.hasAccessToken(this)
+
+        // (기존 - 자동 로그인) 스플래쉬 -> 메인
         if (hasToken) {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
             return
         }
 
-        startActivity(Intent(this, LoginActivity::class.java))
-        finish()
+        // (신규) 또는 (기존 - 자동 로그인 안됨)
+        // 스플래쉬 -> 애니메이션 -> 로그인
+        moveToIntro()
     }
 
     private fun moveToIntro() {

@@ -250,7 +250,7 @@ class LoginActivity : AppCompatActivity() {
             val isNewUser = !TokenManager.isOnboardingDone(this)
 
             if (isNewUser) {
-                moveToIntroAnim()
+                moveToOnboarding()
             } else {
                 moveToMain()
             }
