@@ -39,7 +39,6 @@
         app:cardCornerRadius="8dp"
         app:cardElevation="0dp"
         app:strokeWidth="0dp"
-        android:layout_marginTop="1dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tv_title"
         app:layout_constraintBottom_toBottomOf="@id/tv_title">

@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 class DirectHostViewModel : ViewModel() {
 
@@ -40,25 +39,10 @@ class DirectHostViewModel : ViewModel() {
     private val _tradeStepList = MutableStateFlow<List<TradeStatusItem>>(emptyList())
     val tradeStepList: StateFlow<List<TradeStatusItem>> = _tradeStepList.asStateFlow()
 
-    private val REMAINING_BADGE_STATUSES = setOf(
-        "HOST_READING",
-        "HOST_DONE",
-        "SHIPPING_TO_GUEST",
-        "RECEIVED",
-        "GUEST_READING",
-        "GUEST_EXTENSION",
-        "GUEST_DONE",
-        "SHIPPING_TO_HOST",
-        "RETURNED"
-    )
-
-    private val _currentTrackerStatus = MutableStateFlow<String?>(null)
-    private val _remainingDays = MutableStateFlow<Int?>(null)
-
     private fun updateStepsByTrackerStatus(status: String?) {
         val steps = buildSteps(status)
 
-        val base = steps.map { s ->
+        _tradeStepList.value = steps.map { s ->
             TradeStatusItem(
                 id = s.id.name,
                 title = s.title,
@@ -69,28 +53,6 @@ class DirectHostViewModel : ViewModel() {
                 }
             )
         }
-
-        _tradeStepList.value = applyRemainingDaysBadgeIfNeeded(base)
-    }
-
-    private fun applyRemainingDaysBadgeIfNeeded(list: List<TradeStatusItem>): List<TradeStatusItem> {
-        val status = _currentTrackerStatus.value
-        if (status !in REMAINING_BADGE_STATUSES) return list
-
-        val remainingDays = _remainingDays.value ?: return list
-        if (list.isEmpty()) return list
-
-        val badgeText = formatRemainingDaysBadge(remainingDays)
-        val first = list.first().copy(badge = badgeText)
-        return listOf(first) + list.drop(1)
-    }
-
-    private fun formatRemainingDaysBadge(remainingDays: Int): String {
-        return when {
-            remainingDays > 0 -> "D-$remainingDays"
-            remainingDays == 0 -> "D-day"
-            else -> "D+${abs(remainingDays)}"
-        }
     }
 
     fun loadTracker(groupId: Long) {
@@ -100,13 +62,8 @@ class DirectHostViewModel : ViewModel() {
                 val res = RetrofitClient.api().getTrackerDetail(groupId)
 
                 if (res.isSuccess && res.result != null) {
-                    val dto = res.result
-                    _trackerState.value = UiState.Success(dto)
-
-                    _currentTrackerStatus.value = dto.trackerStatus
-                    _remainingDays.value = dto.remainingDays
-
-                    updateStepsByTrackerStatus(dto.trackerStatus)
+                    _trackerState.value = UiState.Success(res.result)
+                    updateStepsByTrackerStatus(res.result.trackerStatus)
                 } else {
                     _trackerState.value = UiState.Error(res.message ?: "API 실패")
                 }
@@ -208,7 +165,6 @@ class DirectHostViewModel : ViewModel() {
             }
         }
     }
-
 
     private val steps = listOf(
         StepUiModel(StepId.GUEST_RETURN_SHIP, "책을 읽고 있어요", "독서카드를 작성하면 교환독서가 더 즐거워져요!", StepBadgeState.PLANNED),

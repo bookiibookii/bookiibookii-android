@@ -62,19 +62,23 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 
         if (response.code == 401) {
 
+            // refresh 요청 자체가 401이면 재시도 루프 방지 → 로그아웃 라우팅
             if (url.contains("/api/auth/refresh")) {
                 response.close()
                 routeLogout(appContext)
-                return response
+
+                // ⚠️ close된 response를 반환하지 않음 (호출부가 사용하면 문제 생길 수 있음)
+                throw IOException("Unauthorized on refresh endpoint")
             }
 
             val refreshToken = prefs.getString("refresh_token", null)
             if (refreshToken.isNullOrEmpty()) {
                 response.close()
                 routeLogout(appContext)
-                return response
+                throw IOException("Missing refresh token")
             }
 
+            // 기존 401 응답은 여기서 소비(닫기)
             response.close()
 
             val outcome = runBlocking {
@@ -87,7 +91,6 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                         val result = refreshRes.body()?.result
                             ?: return@runBlocking RefreshOutcome.SYSTEM_ERROR
 
-                        // TODO: 추후 로그 삭제 (refresh 성공 확인용)
                         Log.d("TOKEN_REFRESH", "새 AccessToken 발급 성공")
 
                         prefs.edit {
@@ -115,7 +118,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                 }
             }
 
-            when (outcome) {
+            return when (outcome) {
                 RefreshOutcome.SUCCESS -> {
                     val newAccessToken = prefs.getString("access_token", null)
 
@@ -127,22 +130,28 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                             .build()
                     }
 
-                    return chain.proceed(retryRequest)
+                    // retry도 네트워크 예외가 날 수 있으니 동일하게 처리
+                    try {
+                        chain.proceed(retryRequest)
+                    } catch (e: IOException) {
+                        routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
+                        throw e
+                    }
                 }
 
                 RefreshOutcome.INVALID_TOKEN -> {
                     routeLogout(appContext)
-                    return response
+                    throw IOException("Invalid refresh token")
                 }
 
                 RefreshOutcome.NETWORK_ERROR -> {
                     routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
-                    return response
+                    throw IOException("Network error during token refresh")
                 }
 
                 RefreshOutcome.SYSTEM_ERROR -> {
                     routeComError(appContext, ComErrorActivity.TYPE_SYSTEM_ERROR)
-                    return response
+                    throw IOException("System error during token refresh")
                 }
             }
         }
@@ -175,7 +184,8 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         if (!isRouting.compareAndSet(false, true)) return
 
         val intent = ComErrorActivity.newIntent(context, type).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            // 추천: 에러 화면도 스택 정리해서 꼬임 방지
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
         android.os.Handler(android.os.Looper.getMainLooper()).post {

@@ -15,8 +15,8 @@
             android:id="@+id/logoContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center"
+            android:orientation="vertical"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -26,19 +26,20 @@
             <!-- 심볼 로고 -->
             <ImageView
                 android:id="@+id/imgLogo"
-                android:layout_width="92dp"
-                android:layout_height="92dp"
+                android:layout_width="82dp"
+                android:layout_height="82dp"
                 android:contentDescription="@string/app_name"
                 android:src="@drawable/ic_bookii_logo_white" />
 
             <!-- 타이틀 이미지 -->
             <ImageView
                 android:id="@+id/imgTitle"
-                android:layout_width="137.72dp"
-                android:layout_height="71dp"
-                android:layout_marginStart="18dp"
+                android:layout_width="204dp"
+                android:layout_height="21.79dp"
+                android:layout_marginTop="20dp"
                 android:contentDescription="@string/app_name"
-                android:src="@drawable/ic_bookii_title_white" />
+                android:src="@drawable/ic_home_logo"
+                app:tint="@color/white" />
         </LinearLayout>
 
         <!-- 로딩 인디케이터 -->
