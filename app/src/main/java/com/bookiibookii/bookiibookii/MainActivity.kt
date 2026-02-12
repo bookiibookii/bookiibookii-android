@@ -1,6 +1,6 @@
 package com.bookiibookii.bookiibookii
 
-import LoadingDialog
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -9,9 +9,12 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.group.main.GroupFragment
+import com.bookiibookii.bookiibookii.home.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment
+import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
+import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
 
 class MainActivity : AppCompatActivity() {
@@ -69,6 +72,21 @@ class MainActivity : AppCompatActivity() {
     private fun selectTab(tab: NavTab, fragment: Fragment) {
         setBottomNavSelected(tab)
         replaceFragment(fragment)
+    }
+
+    fun moveToGroupTab() {
+        selectTab(NavTab.GROUP, GroupFragment())
+    }
+
+    fun moveToTrackerDetail(groupId: Long, role: ExchangeRole) {
+
+        val intent = when (role) {
+            ExchangeRole.GUEST -> Intent(this, GuestActivity::class.java)
+            ExchangeRole.HOST -> Intent(this, HostActivity::class.java)
+        }
+
+        intent.putExtra("group_id", groupId) // ✅ 여기 키가 핵심
+        startActivity(intent)
     }
 
     private fun replaceFragment(fragment: Fragment) {

@@ -5,6 +5,7 @@
     android:id="@+id/section_exchange_progress"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:backgroundTint="@color/ui_bg"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
     android:paddingTop="16dp"
@@ -16,21 +17,31 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="부키메이트가 되어보세요!"
-        android:textSize="16sp"
+        android:textSize="20sp"
+        android:textStyle="bold"
         android:letterSpacing="-0.02"
         android:textColor="@color/grey_900"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 데이터 있을 때 -->
-    <include
-        android:id="@+id/include_mate_card"
-        layout="@layout/item_home_mate_card"
-        android:layout_width="match_parent"
+    <!-- 데이터 있을 때: 1~5명 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_mate"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:overScrollMode="never"
+        android:clipToPadding="false"
+
+        android:visibility="visible"
+        tools:visibility="visible"
+
+        tools:listitem="@layout/item_home_mate_card"
+        tools:itemCount="3"
+
+        app:layout_constraintTop_toBottomOf="@id/tv_group_section_title"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_group_section_title"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- 데이터 없을 때 -->
     <include
@@ -41,8 +52,8 @@
         android:layout_marginTop="12dp"
         android:text="그룹 둘러보기"
 
-        android:visibility="visible"
-        tools:visibility="visible"
+        android:visibility="gone"
+        tools:visibility="gone"
 
         android:theme="@style/ThemeOverlay.BookiiBookii.HomeButton.Pre"
         app:layout_constraintTop_toBottomOf="@id/tv_group_section_title"

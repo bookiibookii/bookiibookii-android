@@ -3,9 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/item_home_group_book"
-    android:layout_width="120dp"
-    android:layout_height="wrap_content"
-    android:layout_marginEnd="16dp">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <!-- 책 표지 -->
     <ImageView
@@ -17,7 +16,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintDimensionRatio="3:4" />
+        app:layout_constraintDimensionRatio="3:4"
+        android:clipToOutline="true" />
 
     <!-- 제목 (한 줄, 말줄임) -->
     <TextView
@@ -25,6 +25,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:text="제목"
         android:textSize="12sp"
         android:maxLines="1"

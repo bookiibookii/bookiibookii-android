@@ -63,12 +63,10 @@ class GroupDetailActivity : AppCompatActivity() {
     }
 
     private val viewModel: GroupDetailViewModel by viewModels()
-    private val userViewModel: MyPageViewModel by viewModels()
-    private var currentGroupId: Int = 0
+    private val userViewModel: MyPageViewModel by viewModels() // 추가
+    private var currentGroupId: Long = -1L
     private var targetParentId: Long? = null
-
     private var isReplyMode = false
-
     private var isSecretMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,47 +74,50 @@ class GroupDetailActivity : AppCompatActivity() {
         binding = ActivityGrpHostBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        currentGroupId = intent.getIntExtra("GROUP_ID", 0)
-        if (currentGroupId == 0) {
+        // Intent 데이터 수신
+        currentGroupId = intent.getLongExtra("GROUP_ID", -1L)
+        if (currentGroupId <= 0L) {
             Toast.makeText(this, "잘못된 접근입니다.", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
+        // 1. 뷰 초기화
         initView()
         initBottomSheet()
         setupObserver()
-
         initSecretLock()
         initInputListener()
 
+        viewModel.groupDetail.observe(this) { data ->
+            if (data != null) {
+                setupMoreMenu(data.isHost) // 여기서 호출해야 작동합니다!
+            }
+        }
+        // 2. 데이터 로드
         userViewModel.fetchMypageData()
-        viewModel.fetchGroupDetail(currentGroupId)
-        viewModel.fetchComments(currentGroupId.toLong())
+        viewModel.fetchGroupDetail(currentGroupId.toInt())
+        viewModel.fetchComments(currentGroupId)
 
-
+        // 3. 리스너 및 콜백
         binding.grpMgBottomSheetBackIv.setOnClickListener {
-            exitReplyMode() // 전체 목록으로 복귀
+            exitReplyMode()
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // 1. 답글 모드라면 -> 답글 모드 해제
                 if (isReplyMode) {
                     exitReplyMode()
                     return
                 }
-                // 2. 바텀시트가 열려있다면 -> 닫기
                 if (::bottomSheetBehavior.isInitialized && bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                     return
                 }
-                // 3. 그 외 -> 액티비티 종료
                 isEnabled = false
                 onBackPressedDispatcher.onBackPressed()
             }
         })
-
     }
 
     // ========================================================================
@@ -310,15 +311,14 @@ class GroupDetailActivity : AppCompatActivity() {
     }
     private fun setupObserver() {
 
-        // 1. 내 정보(마이페이지) 관찰 -> 내 닉네임 확보
         userViewModel.profileData.observe(this) { profile ->
             if (profile != null) {
                 val myNickname = profile.nickname
-                // 현재 멤버 리스트가 있다면 내 닉네임을 반영해서 ME 뱃지 갱신
-                val currentSlots = viewModel.groupDetail.value?.participantSlots
-                memberAdapter.submitList(currentSlots, myNickname)
+
+                // (1) 멤버 리스트에서 '나' 표시를 위해 닉네임만 활용
                 val detail = viewModel.groupDetail.value
                 updateMemberAdapter(detail?.participantSlots, detail?.hostProfileImageUrl)
+
             }
         }
 
@@ -327,15 +327,12 @@ class GroupDetailActivity : AppCompatActivity() {
             if (data != null) {
                 bindUi(data)
                 handleButtonStatus(data)
-                setupMoreMenu(data.isHost)
 
-                // 상세 데이터 로드 시점에 내 닉네임이 로드되어 있다면 같이 전달
-                val myNickname = userViewModel.profileData.value?.nickname
-                memberAdapter.submitList(data.participantSlots, myNickname)
-
+                // ★ 내 정보가 이미 로드되어 있는지 확인 후 어댑터 갱신
                 updateMemberAdapter(data.participantSlots, data.hostProfileImageUrl)
             }
         }
+
 
         // 3. 댓글 리스트 관찰
         viewModel.commentList.observe(this) { list ->
@@ -425,9 +422,16 @@ class GroupDetailActivity : AppCompatActivity() {
             grpItemDeadlineNoTv.text = data.readingPeriod.toString()
             grpItemMemStatusNoTv.text = "${data.matchedCount}"
 
-            Glide.with(this@GroupDetailActivity).load(data.bookImage).centerCrop().into(grpItemCoverIv)
-            Glide.with(this@GroupDetailActivity).load(data.hostProfileImageUrl).placeholder(R.drawable.ic_profile).circleCrop().into(grpItemProfileIv)
+            Glide.with(this@GroupDetailActivity)
+                .load(data.bookImage)
+                .centerCrop()
+                .into(grpItemCoverIv)
 
+            Glide.with(this@GroupDetailActivity)
+                .load(data.hostProfileImageUrl) // 데이터 클래스 변수명과 일치하는지 확인!
+                .placeholder(R.drawable.ic_profile)
+                .circleCrop()
+                .into(grpItemProfileIv)
             grpItemHotCp.visibility = if (data.isHot) View.VISIBLE else View.GONE
 
             // 모든 칩 리스트 (XML에 5개 이상 넉넉히 있다고 가정)
@@ -458,28 +462,28 @@ class GroupDetailActivity : AppCompatActivity() {
 //        memberAdapter.submitList(data.participantSlots)
 
         val processedSlots = data.participantSlots?.map { slot ->
-            if (slot.role == "HOST" && slot.profileImage.isNullOrBlank()) {
-                // 호스트인데 이미지가 없다면, 상단 호스트 프로필 URL을 복사해서 넣어줌
-                slot.copy(profileImage = data.hostProfileImageUrl)
+            if (slot.role == "HOST" && slot.profileImageUrl.isNullOrBlank()) {
+                // 호스트인데 이미지가 비어있다면, 상세 정보의 호스트 이미지를 넣어줌
+                slot.copy(profileImageUrl = data.hostProfileImageUrl)
             } else {
                 slot
             }
         }
 
-        updateMemberAdapter(data.participantSlots, data.hostProfileImageUrl)
+        updateMemberAdapter(processedSlots, data.hostProfileImageUrl)
     }
 
     private fun updateMemberAdapter(slots: List<GroupItemDto.ParticipantSlot>?, hostProfile: String?) {
         val myNickname = userViewModel.profileData.value?.nickname
 
         val processed = slots?.map { slot ->
-            if (slot.role == "HOST") {
-                // 호스트라면 상단 프로필 이미지(hostProfile)를 강제로 꽂아줌
-                slot.copy(profileImage = hostProfile)
+            if (slot.role == "HOST" && slot.profileImageUrl.isNullOrBlank()) {
+                slot.copy(profileImageUrl = hostProfile)
             } else {
                 slot
             }
         }
+
         memberAdapter.submitList(processed, myNickname)
     }
 
@@ -566,7 +570,8 @@ class GroupDetailActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(this@GroupDetailActivity, "신청되었습니다!", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
-                    viewModel.fetchGroupDetail(currentGroupId)
+                    viewModel.fetchGroupDetail(currentGroupId.toInt())
+
                 } else {
                     val msg = try { JSONObject(response.errorBody()?.string() ?: "{}").getString("message") } catch (e: Exception) { "신청 실패" }
                     Toast.makeText(this@GroupDetailActivity, msg, Toast.LENGTH_SHORT).show()
@@ -583,7 +588,7 @@ class GroupDetailActivity : AppCompatActivity() {
                 val response = RetrofitClient.api().cancelGroupApplication(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(this@GroupDetailActivity, "신청 취소 완료", Toast.LENGTH_SHORT).show()
-                    viewModel.fetchGroupDetail(currentGroupId)
+                    viewModel.fetchGroupDetail(currentGroupId.toInt())
                 } else {
                     val msg = try { JSONObject(response.errorBody()?.string() ?: "{}").getString("message") } catch (e: Exception) { "취소 실패" }
                     Toast.makeText(this@GroupDetailActivity, msg, Toast.LENGTH_SHORT).show()
@@ -603,7 +608,7 @@ class GroupDetailActivity : AppCompatActivity() {
                         if (currentData != null) {
                             val intent = Intent(this, GroupGenerationActivity::class.java)
                             intent.putExtra("IS_EDIT_MODE", true)
-                            intent.putExtra("GROUP_ID", currentGroupId)
+                            intent.putExtra("GROUP_ID", currentGroupId.toInt())
                             intent.putExtra("BOOK_TITLE", currentData.bookTitle)
                             intent.putExtra("START_DATE", currentData.startDate)
                             intent.putExtra("PERIOD", currentData.readingPeriod)
@@ -663,10 +668,9 @@ class GroupDetailActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (currentGroupId != 0) {
-            viewModel.fetchGroupDetail(currentGroupId)
-            // 화면 돌아올 때마다 댓글도 새로고침하려면 여기 추가
-            viewModel.fetchComments(currentGroupId.toLong())
+        if (currentGroupId > 0L) {
+            viewModel.fetchGroupDetail(currentGroupId.toInt())
+            viewModel.fetchComments(currentGroupId)
         }
     }
 

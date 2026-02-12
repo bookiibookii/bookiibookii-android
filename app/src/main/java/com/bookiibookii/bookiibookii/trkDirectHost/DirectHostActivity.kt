@@ -67,6 +67,8 @@ class DirectHostActivity : AppCompatActivity() {
 
                                 binding.tvToolbarTitle.text = dto.bookTitle.orEmpty()
 
+                                binding.tvUserName.text = dto.partnerNickname.orEmpty()
+
                                 showOrReplaceBottomSheetByStatus(groupId, status, meetingTime)
                             }
 
@@ -82,6 +84,7 @@ class DirectHostActivity : AppCompatActivity() {
         vm.loadTracker(groupId)
 
         binding.cardWidget.setOnClickListener {
+            vm.loadTracker(groupId)
             val dto = (vm.trackerState.value as? UiState.Success)?.data
             val status = dto?.trackerStatus
             val meetingTime = dto?.meetingInfo?.meetingTime

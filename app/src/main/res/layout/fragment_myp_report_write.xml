@@ -263,7 +263,7 @@
                     android:drawableStart="@drawable/ic_check_gray"
                     android:drawablePadding="12dp"
                     android:paddingHorizontal="16dp"
-                    android:text="텍스트"
+                    android:text="기타"
                     android:textAppearance="@style/regular15"
                     android:textColor="@color/grey_900"/>
 

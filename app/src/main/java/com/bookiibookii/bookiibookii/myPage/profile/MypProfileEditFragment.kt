@@ -24,9 +24,12 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
 import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentMypProfileEditBinding
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -38,6 +41,8 @@ class MypProfileEditFragment : Fragment() {
 
     private val viewModel: MyPageViewModel by activityViewModels()
 
+    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+
     private var selectedImageFile: File? = null
     private var cameraUri: Uri? = null
 
@@ -48,6 +53,7 @@ class MypProfileEditFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
 
         if (viewModel.profileData.value == null) {
             viewModel.fetchMypageData()
@@ -63,7 +69,6 @@ class MypProfileEditFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        // 1. 프로필 데이터 바인딩
         viewModel.profileData.observe(viewLifecycleOwner) { data ->
             if (binding.mypEditNickEt.text.isEmpty()) {
                 binding.mypEditNickEt.setText(data.nickname)
@@ -75,43 +80,48 @@ class MypProfileEditFragment : Fragment() {
                 binding.mypEditChangeInfoEt.setText(data.region ?: "")
                 binding.mypEditHopeAddressEt.setText(data.meetPlace ?: "")
 
-                val imageUrl = data.userImage?.s3Key
+                val imageUrl = data.profileImageUrl
                 Glide.with(this)
                     .load(imageUrl)
                     .placeholder(R.drawable.img_profile_default)
                     .error(R.drawable.img_profile_default)
                     .fallback(R.drawable.img_profile_default)
-                    .circleCrop()
+                    .transform(CenterCrop(), RoundedCorners(dpToPx(60))) // 128dp 크기에 어울리는 40dp 둥근 모서리
                     .into(binding.mypEditProfileIv)
             }
         }
 
-        // 2. 닉네임 중복 확인 상태 관찰
         viewModel.isNicknameChecked.observe(viewLifecycleOwner) { isChecked ->
             updateNicknameButtonState(isEnabled = !isChecked)
         }
 
-        // 3. 이벤트 감지
+
         lifecycleScope.launch {
             viewModel.eventFlow.collect { event ->
+                // ★ 뷰모델에서 통신 완료(혹은 실패/성공 이벤트) 이벤트가 넘어오면 무조건 로딩 해제
+                if (::loadingDialog.isInitialized && loadingDialog.isShowing) {
+                    loadingDialog.dismiss()
+                }
+
                 when(event) {
                     is MyPageViewModel.Event.ShowToast ->
                         Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                     is MyPageViewModel.Event.NavigateBack ->
-                        parentFragmentManager.popBackStack()
+                        requireActivity().supportFragmentManager.popBackStack()
                     is MyPageViewModel.Event.NicknameCheckResult -> {
-                        // [수정] 서버에서 온 메시지(event.message)를 그대로 토스트로 출력
                         Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         }
     }
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
+    }
 
     private fun initListeners() {
-        binding.mypEditBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.mypEditBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
-        // 닉네임 변경 감지
         binding.mypEditNickEt.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun afterTextChanged(s: Editable?) {}
@@ -125,36 +135,33 @@ class MypProfileEditFragment : Fragment() {
             }
         })
 
-        // 닉네임 중복 확인 버튼
         binding.mypEditNickCheckEt.setOnClickListener {
             val nickname = binding.mypEditNickEt.text.toString()
             if (nickname.isBlank()) {
                 Toast.makeText(context, "닉네임을 입력해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+            loadingDialog.show() // ★ 중복 확인 로딩 시작
             viewModel.checkNickname(nickname)
         }
 
-        // 카메라/갤러리 선택
         binding.mypEditProfileEditIv.setOnClickListener {
             showImagePickerOption()
         }
 
-        // 주소 검색
         binding.mypEditPostCheckEt.setOnClickListener {
-            parentFragmentManager.beginTransaction()
+            requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, MypPostcodeSearchFragment())
                 .addToBackStack(null)
                 .commit()
         }
         binding.mypEditChangeInfoSearchEt.setOnClickListener {
-            parentFragmentManager.beginTransaction()
+            requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, MypRegionSearchFragment())
                 .addToBackStack(null)
                 .commit()
         }
 
-        // 수정 완료 버튼
         binding.mypEditEditBtn.setOnClickListener {
             val currentNick = binding.mypEditNickEt.text.toString()
             val originNick = viewModel.profileData.value?.nickname
@@ -165,7 +172,6 @@ class MypProfileEditFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // 전화번호 정규식 검사
             val phone = binding.mypEditNumEt.text.toString()
             val phonePattern = "^\\d{3}-\\d{3,4}-\\d{4}$"
 
@@ -176,6 +182,7 @@ class MypProfileEditFragment : Fragment() {
 
             val request = UserUpdateRequest(
                 nickname = currentNick,
+                s3Key = "",
                 receiverName = binding.mypEditNameEt.text.toString(),
                 phone = phone,
                 zipCode = binding.mypEditPostEt.text.toString(),
@@ -184,6 +191,8 @@ class MypProfileEditFragment : Fragment() {
                 region = binding.mypEditChangeInfoEt.text.toString(),
                 meetPlace = binding.mypEditHopeAddressEt.text.toString()
             )
+
+            loadingDialog.show() // ★ 프로필 수정 통신 로딩 시작
             viewModel.updateProfile(request, selectedImageFile)
         }
     }
@@ -225,7 +234,12 @@ class MypProfileEditFragment : Fragment() {
 
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess ->
         if (isSuccess && cameraUri != null) {
-            Glide.with(this).load(cameraUri).circleCrop().into(binding.mypEditProfileIv)
+            // ★ 수정: 원형 자르기 대신 둥근 사각형(25dp) 적용
+            Glide.with(this)
+                .load(cameraUri)
+                .transform(CenterCrop(), RoundedCorners(dpToPx(25)))
+                .into(binding.mypEditProfileIv)
+
             selectedImageFile = File(requireContext().cacheDir, "camera/temp_profile.jpg")
         }
     }
@@ -252,7 +266,12 @@ class MypProfileEditFragment : Fragment() {
 
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            Glide.with(this).load(uri).circleCrop().into(binding.mypEditProfileIv)
+            // ★ 수정: 원형 자르기 대신 둥근 사각형(25dp) 적용
+            Glide.with(this)
+                .load(uri)
+                .transform(CenterCrop(), RoundedCorners(dpToPx(25)))
+                .into(binding.mypEditProfileIv)
+
             selectedImageFile = uriToFile(uri)
         }
     }

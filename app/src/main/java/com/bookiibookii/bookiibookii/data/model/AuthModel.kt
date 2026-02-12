@@ -58,13 +58,18 @@ data class WithdrawResponse(
 )
 
 data class TokenRefreshRequest(
-    @SerializedName("refreshToken")
     val refreshToken: String
+)
+
+data class TokenRefreshResult(
+    val accessToken: String,
+    val refreshToken: String,
+    val userId: Int
 )
 
 data class TokenRefreshResponse(
     val isSuccess: Boolean,
     val code: String,
     val message: String,
-    val result: LoginResult?
+    val result: TokenRefreshResult?
 )
