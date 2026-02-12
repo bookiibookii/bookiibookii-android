@@ -1,17 +1,17 @@
 package com.bookiibookii.bookiibookii.lib
 
-import android.graphics.Rect
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.LoadingDialog
@@ -21,6 +21,10 @@ import com.bookiibookii.bookiibookii.data.model.ReadStatus
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryViewModel
 import com.bookiibookii.bookiibookii.data.viewModel.SortType
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBinding
+import com.bookiibookii.bookiibookii.trkDirectGuest.DirectGuestActivity
+import com.bookiibookii.bookiibookii.trkDirectHost.DirectHostActivity
+import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
+import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.google.android.flexbox.AlignItems
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexWrap
@@ -105,7 +109,6 @@ class LibraryFragment : Fragment() {
                             isMine = (apiData.hostNickName == myNickname)
                         )
                     }
-                    // ★ 데이터 통신 후 현재 탭 상태에 맞춰 화면 갱신
                     showBooksByStatus(currentTabStatus)
                 }
             } catch (e: Exception) {
@@ -129,14 +132,12 @@ class LibraryFragment : Fragment() {
         showBooksByStatus(currentTabStatus)
     }
 
-    // ★ 수정된 부분: 데이터 유무에 따른 빈 화면(Empty View) 처리 로직 추가
     private fun showBooksByStatus(status: ReadStatus) {
         val filteredList = allMyBooks.filter { it.readStatus == status }
         libraryAdapter.submitList(filteredList)
         binding.libTotalTv.text = "${filteredList.size}권"
         updateButtonStyles(status)
 
-        // 리스트가 비어있을 때 Empty Layout 표시 및 텍스트 변경
         if (filteredList.isEmpty()) {
             binding.mypNoBookCl.visibility = View.VISIBLE
             binding.libBookListRv.visibility = View.GONE
@@ -150,7 +151,6 @@ class LibraryFragment : Fragment() {
                 binding.mypNoText.text = "완료한 독서가 없어요"
             }
         } else {
-            // 리스트에 데이터가 있을 때 정상적으로 리스트 표시
             binding.mypNoBookCl.visibility = View.GONE
             binding.libBookListRv.visibility = View.VISIBLE
             binding.libGridIv.visibility = View.VISIBLE
@@ -161,42 +161,133 @@ class LibraryFragment : Fragment() {
 
     private fun initRecyclerView() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
-            val targetFragment: Fragment
+            // ★ 여기에 로그 추가
+            Log.d("LibraryClick", "클릭된 책: ${clickedBook.title}, isMine 값: ${clickedBook.isMine}")
 
             if (clickedBook.groupType == "TOGETHER") {
-                if (clickedBook.readStatus == ReadStatus.DONE) {
-                    targetFragment = LibraryBookDetailTogetherFragment()
+                val targetFragment: Fragment = if (clickedBook.readStatus == ReadStatus.DONE) {
+                    LibraryBookDetailTogetherFragment()
                 } else {
-                    targetFragment = LibraryBookDetailIngFragment()
+                    LibraryBookDetailIngFragment()
                 }
+                navigateToFragment(targetFragment, clickedBook)
+                return@LibraryBookAdapter
             } else {
                 if (clickedBook.readStatus == ReadStatus.DONE) {
-                    targetFragment = LibraryBookDetailFragment()
+                    navigateToFragment(LibraryBookDetailFragment(), clickedBook)
                 } else {
-                    targetFragment = LibraryFragment() // 추후 교체
+                    checkTradeTypeAndNavigate(clickedBook) // 추후 교체
                 }
             }
-
-            val bundle = Bundle().apply {
-                putInt("userBookId", clickedBook.id)
-                putInt("groupId", clickedBook.groupId)
-                putString("bookTitle", clickedBook.title)
-                putString("bookAuthor", clickedBook.author)
-                putString("bookCover", clickedBook.coverUrl)
-                putString("hostName", clickedBook.hostName)
-                putString("hostProfileUrl", clickedBook.hostProfileUrl)
-                putString("startDate", clickedBook.startDate)
-                putString("endDate", clickedBook.endDate)
-                putDouble("rating", clickedBook.rating)
-                putBoolean("isMine", clickedBook.isMine)
-            }
-            targetFragment.arguments = bundle
-            requireActivity().supportFragmentManager.beginTransaction().replace(R.id.fragmentContainer, targetFragment).addToBackStack(null).commit()
         }
 
         binding.libBookListRv.layoutManager = GridLayoutManager(context, 3)
         binding.libBookListRv.adapter = libraryAdapter
         setCoverModeLayout()
+    }
+
+    private fun checkTradeTypeAndNavigate(book: LibBook) {
+        // [로그 1] 함수 시작 확인
+        Log.d("TrackerCheck", "========== 네비게이션 로직 시작 ==========")
+        Log.d("TrackerCheck", "Target GroupID: ${book.groupId}, isMine(Host여부): ${book.isMine}")
+
+        lifecycleScope.launch {
+            loadingDialog.show()
+            try {
+                // 1. 내 트래커 목록 조회 API 호출
+                val response = RetrofitClient.api().getMyTrackers()
+
+                // [로그 2] API 응답 코드 확인
+                Log.d("TrackerCheck", "API Response Code: ${response.code()}")
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val trackerList = response.body()?.result ?: emptyList()
+
+                    // [로그 3] 받아온 리스트 크기 및 포함된 ID들 확인
+                    Log.d("TrackerCheck", "받아온 트래커 개수: ${trackerList.size}")
+                    Log.d("TrackerCheck", "목록 내 ID들: ${trackerList.map { it.groupId }}")
+
+                    // 2. 클릭한 책의 groupId와 일치하는 트래커 찾기
+                    val targetTracker = trackerList.find { it.groupId == book.groupId }
+
+                    if (targetTracker != null) {
+                        // [로그 4] 찾은 트래커 정보 상세 확인 (null, 공백 여부 등 체크)
+                        val tradeType = targetTracker.tradeType // "DELIVERY" or "DIRECT"
+                        val isHost = book.isMine
+
+                        Log.d("TrackerCheck", ">> 매칭된 트래커 발견!")
+                        Log.d("TrackerCheck", "   - tradeType: '$tradeType'") // 따옴표로 감싸서 공백 확인
+                        Log.d("TrackerCheck", "   - isHost: $isHost")
+
+                        // 3. 4가지 경우의 수에 따라 액티비티 클래스 결정
+                        val targetActivityClass = when {
+                            isHost && tradeType == "DELIVERY" -> {
+                                Log.d("TrackerCheck", "결정: HostActivity (택배/호스트)")
+                                HostActivity::class.java
+                            }
+                            !isHost && tradeType == "DELIVERY" -> {
+                                Log.d("TrackerCheck", "결정: GuestActivity (택배/게스트)")
+                                GuestActivity::class.java
+                            }
+                            isHost && tradeType == "DIRECT" -> {
+                                Log.d("TrackerCheck", "결정: DirectHostActivity (직거래/호스트)")
+                                DirectHostActivity::class.java
+                            }
+                            !isHost && tradeType == "DIRECT" -> {
+                                Log.d("TrackerCheck", "결정: DirectGuestActivity (직거래/게스트)")
+                                DirectGuestActivity::class.java
+                            }
+                            else -> {
+                                Log.e("TrackerCheck", "결정 실패: 조건에 맞는 케이스 없음 (Else 분기)")
+                                null
+                            }
+                        }
+
+                        // 4. 액티비티 이동
+                        if (targetActivityClass != null) {
+                            val intent = Intent(requireActivity(), targetActivityClass)
+                            intent.putExtra("group_id", book.groupId.toLong())
+                            startActivity(intent)
+                            Log.d("TrackerCheck", "StartActivity 실행 완료")
+                        } else {
+                            Toast.makeText(context, "이동할 수 없는 상태입니다 (조건 불일치).", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Log.e("TrackerCheck", "!! 해당 GroupID(${book.groupId})를 가진 트래커를 리스트에서 찾지 못함")
+                        Toast.makeText(context, "트래커 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Log.e("TrackerCheck", "API 실패 메시지: ${response.body()?.message}")
+                    Toast.makeText(context, "정보 조회 실패", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("TrackerCheck", "Exception 발생: ${e.message}")
+                e.printStackTrace()
+                Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+            } finally {
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
+            }
+        }
+    }
+    private fun navigateToFragment(targetFragment: Fragment, book: LibBook) {
+        val bundle = Bundle().apply {
+            putInt("userBookId", book.id)
+            putInt("groupId", book.groupId)
+            putString("bookTitle", book.title)
+            putString("bookAuthor", book.author)
+            putString("bookCover", book.coverUrl)
+            putString("hostName", book.hostName)
+            putString("hostProfileUrl", book.hostProfileUrl)
+            putString("startDate", book.startDate)
+            putString("endDate", book.endDate)
+            putDouble("rating", book.rating)
+            putBoolean("isMine", book.isMine)
+        }
+        targetFragment.arguments = bundle
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, targetFragment)
+            .addToBackStack(null)
+            .commit()
     }
 
     private fun initClickListeners() {

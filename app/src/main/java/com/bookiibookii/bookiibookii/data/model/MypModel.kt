@@ -107,7 +107,9 @@ data class MyGroupResponse(
 
 data class GroupSummary(
     val groupId: Int,
-    val name: String
+    val groupName: String,       // 👈 name 대신 groupName으로 변경!
+    val groupHostNickname: String,
+    val isHost: Boolean
 )
 
 // 그룹 멤버 조회 응답
