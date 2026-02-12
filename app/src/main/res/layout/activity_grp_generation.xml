@@ -66,11 +66,7 @@
             android:textSize="14sp"
             android:visibility="gone"
             tools:visibility="visible"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:singleLine="true"
-            android:maxWidth="200dp"
-            tools:text="정말정말정말 긴이름을 가진 책이랍니다.정말정말정말 긴이름을 가진 책이랍니다." />
+            tools:text="괴테는 모든 것을 말했다" />
 
     </LinearLayout>
 

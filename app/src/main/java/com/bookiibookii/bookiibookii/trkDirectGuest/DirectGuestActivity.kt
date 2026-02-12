@@ -14,6 +14,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityDirectGuestBinding
 import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -21,6 +22,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
+import kotlin.math.ceil
 
 class DirectGuestActivity : AppCompatActivity() {
 
@@ -66,7 +68,6 @@ class DirectGuestActivity : AppCompatActivity() {
                                 val meetingTime = dto.meetingInfo?.meetingTime
 
                                 binding.tvToolbarTitle.text = dto.bookTitle.orEmpty()
-
                                 binding.tvUserName.text = dto.partnerNickname.orEmpty()
 
                                 showOrReplaceBottomSheetByStatus(groupId, status, meetingTime)
@@ -98,9 +99,29 @@ class DirectGuestActivity : AppCompatActivity() {
 
         steps.forEachIndexed { index, item ->
             val row = inflater.inflate(R.layout.item_trade_status, binding.stepContainer, false)
+
             row.findViewById<TextView>(R.id.tv_title).text = item.title
-            row.findViewById<TextView>(R.id.tv_desc).text = item.description  // TradeStatusItem에 description이 있을 때
-            row.findViewById<TextView>(R.id.tv_badge).text = item.badge
+            row.findViewById<TextView>(R.id.tv_desc).text = item.description
+
+            val badgeText = row.findViewById<TextView>(R.id.tv_badge)
+            val badgeCard = row.findViewById<MaterialCardView>(R.id.card_badge)
+
+            val badge = item.badge.trim()
+            badgeText.text = badge
+
+            val isTopDday =
+                index == 0 && (badge == "D-day" || badge.startsWith("D-") || badge.startsWith("D+"))
+
+            if (isTopDday) {
+                badgeCard.strokeWidth = dpToPx(1)
+                badgeCard.strokeColor = getColorCompat(R.color.pre_sub)
+                badgeCard.setCardBackgroundColor(getColorCompat(android.R.color.white))
+                badgeText.setTextColor(getColorCompat(R.color.pre_sub))
+            } else {
+                badgeCard.strokeWidth = 0
+                badgeCard.setCardBackgroundColor(getColorCompat(R.color.grey_200))
+                badgeText.setTextColor(getColorCompat(R.color.grey_500))
+            }
 
             row.findViewById<View>(R.id.divider).visibility =
                 if (index == steps.lastIndex) View.GONE else View.VISIBLE
@@ -108,6 +129,12 @@ class DirectGuestActivity : AppCompatActivity() {
             binding.stepContainer.addView(row)
         }
     }
+
+    private fun getColorCompat(resId: Int): Int =
+        androidx.core.content.ContextCompat.getColor(this, resId)
+
+    private fun dpToPx(dp: Int): Int =
+        ceil(dp * resources.displayMetrics.density).toInt()
 
     private fun showOrReplaceBottomSheetByStatus(
         groupId: Long,

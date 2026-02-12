@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 class DirectGuestViewModel : ViewModel() {
 
@@ -43,6 +44,21 @@ class DirectGuestViewModel : ViewModel() {
     private val _stepUiList = MutableStateFlow<List<StepUiModel>>(emptyList())
     val stepUiList: StateFlow<List<StepUiModel>> = _stepUiList.asStateFlow()
 
+    private val REMAINING_BADGE_STATUSES = setOf(
+        "HOST_READING",
+        "HOST_DONE",
+        "SHIPPING_TO_GUEST",
+        "RECEIVED",
+        "GUEST_READING",
+        "GUEST_EXTENSION",
+        "GUEST_DONE",
+        "SHIPPING_TO_HOST",
+        "RETURNED"
+    )
+
+    private val _currentTrackerStatus = MutableStateFlow<String?>(null)
+    private val _remainingDays = MutableStateFlow<Int?>(null)
+
     fun loadTracker(groupId: Long) {
         viewModelScope.launch {
             _trackerState.value = UiState.Loading
@@ -50,9 +66,13 @@ class DirectGuestViewModel : ViewModel() {
                 val res = RetrofitClient.api().getTrackerDetail(groupId)
 
                 if (res.isSuccess && res.result != null) {
-                    _trackerState.value = UiState.Success(res.result)
+                    val dto = res.result
+                    _trackerState.value = UiState.Success(dto)
 
-                    updateStepsByTrackerStatus(res.result.trackerStatus)
+                    _currentTrackerStatus.value = dto.trackerStatus
+                    _remainingDays.value = dto.remainingDays
+
+                    updateStepsByTrackerStatus(dto.trackerStatus)
                 } else {
                     _trackerState.value = UiState.Error(res.message ?: "API 실패")
                 }
@@ -84,6 +104,7 @@ class DirectGuestViewModel : ViewModel() {
                 val res = RetrofitClient.api().patchTrackerReadingStart(groupId)
                 if (res.isSuccess) {
                     _event.send(DirectGuestEvent.ReadingStartSuccess)
+                    loadTracker(groupId)
                 } else {
                     _event.send(
                         DirectGuestEvent.ReadingStartFail(res.message ?: "reading 시작 실패")
@@ -103,6 +124,7 @@ class DirectGuestViewModel : ViewModel() {
                 val res = RetrofitClient.api().patchTrackerDone(groupId)
                 if (res.isSuccess) {
                     _event.send(DirectGuestEvent.DoneSuccess)
+                    loadTracker(groupId)
                 } else {
                     _event.send(DirectGuestEvent.DoneFail(res.message ?: "독서 완료 처리 실패"))
                 }
@@ -119,6 +141,8 @@ class DirectGuestViewModel : ViewModel() {
                 if (res.isSuccess) {
                     _extensionApplied.value = true
                     _event.send(DirectGuestEvent.ExtensionSuccess)
+                    // [MOD] 상태 정합성 위해 재조회
+                    loadTracker(groupId)
                 } else {
                     _event.send(DirectGuestEvent.ExtensionFail(res.message ?: "독서 기간 연장 실패"))
                 }
@@ -173,7 +197,7 @@ class DirectGuestViewModel : ViewModel() {
 
         _stepUiList.value = steps
 
-        _tradeStepList.value = steps.map { s ->
+        val base = steps.map { s ->
             TradeStatusItem(
                 s.id.name,
                 s.title,
@@ -183,6 +207,28 @@ class DirectGuestViewModel : ViewModel() {
                     StepBadgeState.PLANNED -> "예정"
                 }
             )
+        }
+
+        _tradeStepList.value = applyRemainingDaysBadgeIfNeeded(base)
+    }
+
+    private fun applyRemainingDaysBadgeIfNeeded(list: List<TradeStatusItem>): List<TradeStatusItem> {
+        val status = _currentTrackerStatus.value
+        if (status !in REMAINING_BADGE_STATUSES) return list
+
+        val remainingDays = _remainingDays.value ?: return list
+        if (list.isEmpty()) return list
+
+        val badgeText = formatRemainingDaysBadge(remainingDays)
+        val first = list.first().copy(badge = badgeText)
+        return listOf(first) + list.drop(1)
+    }
+
+    private fun formatRemainingDaysBadge(remainingDays: Int): String {
+        return when {
+            remainingDays > 0 -> "D-$remainingDays"
+            remainingDays == 0 -> "D-day"
+            else -> "D+${abs(remainingDays)}"
         }
     }
 
@@ -230,7 +276,6 @@ class DirectGuestViewModel : ViewModel() {
             StepBadgeState.PLANNED
         )
     )
-
 
     private data class Progress(val visibleCount: Int, val doneCount: Int)
 

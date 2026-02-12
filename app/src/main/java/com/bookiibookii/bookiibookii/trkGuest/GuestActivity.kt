@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.trkGuest
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,7 +7,6 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
@@ -16,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityGuestBinding
-import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrackerStatus
 import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -124,12 +121,34 @@ class GuestActivity : AppCompatActivity() {
         binding.stepContainer.removeAllViews()
 
         val inflater = LayoutInflater.from(this)
+
         steps.forEachIndexed { index, item ->
             val row = inflater.inflate(R.layout.item_trade_status, binding.stepContainer, false)
 
             row.findViewById<TextView>(R.id.tv_title).text = item.title
             row.findViewById<TextView>(R.id.tv_desc).text = item.description
-            row.findViewById<TextView>(R.id.tv_badge).text = item.badge
+
+            val badgeText = row.findViewById<TextView>(R.id.tv_badge)
+            val badgeCard = row.findViewById<com.google.android.material.card.MaterialCardView>(R.id.card_badge)
+
+            val badge = item.badge.trim()
+            badgeText.text = badge
+
+            val isTopDday =
+                index == 0 &&
+                        (badge == "D-day" || badge.startsWith("D-") || badge.startsWith("D+"))
+
+            if (isTopDday) {
+                badgeCard.strokeWidth = dpToPx(1)
+                badgeCard.strokeColor = getColorCompat(R.color.pre_sub)
+                badgeCard.setCardBackgroundColor(getColorCompat(android.R.color.white))
+
+                badgeText.setTextColor(getColorCompat(R.color.pre_sub))
+            } else {
+                badgeCard.strokeWidth = 0
+                badgeCard.setCardBackgroundColor(getColorCompat(R.color.grey_200))
+                badgeText.setTextColor(getColorCompat(R.color.grey_500))
+            }
 
             val divider = row.findViewById<View>(R.id.divider)
             divider.visibility = if (index == steps.lastIndex) View.GONE else View.VISIBLE
@@ -137,6 +156,13 @@ class GuestActivity : AppCompatActivity() {
             binding.stepContainer.addView(row)
         }
     }
+
+    private fun getColorCompat(resId: Int): Int =
+        androidx.core.content.ContextCompat.getColor(this, resId)
+
+    private fun dpToPx(dp: Int): Int =
+        kotlin.math.ceil(dp * resources.displayMetrics.density).toInt()
+
 
     private fun createSheetForStatus(status: TrackerStatus): BottomSheetDialogFragment {
         return when (status) {
