@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.RecommendedBookmateDto
 import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
@@ -49,8 +50,8 @@ class HomeFragment : Fragment() {
         startActivity(intent)
     }
 
-    private val mateAdapter = MateRecommendAdapter { _ ->
-        // TODO
+    private val mateAdapter = MateRecommendAdapter { item ->
+        (activity as? MainActivity)?.moveToOtherProfile(item.nickname)
     }
 
     private var exchangeTotal = 0
