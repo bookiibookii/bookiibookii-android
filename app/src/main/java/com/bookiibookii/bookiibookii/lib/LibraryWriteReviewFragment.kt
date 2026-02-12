@@ -9,11 +9,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.ReviewRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailWrtieReviewBinding
@@ -29,13 +33,16 @@ class LibraryWriteReviewFragment : Fragment() {
     private var bookTitle = ""
     private var bookAuthor = ""
     private var bookCover = ""
-
     private var hostName = ""
     private var hostProfileUrl = ""
     private var startDate = ""
     private var endDate = ""
 
+    private lateinit var loadingDialog: LoadingDialog
     private var currentRating : Double = 0.0
+
+    // ★ [핵심] 전송 완료 여부 체크 변수
+    private var isReviewSubmitted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,12 +66,43 @@ class LibraryWriteReviewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingDialog = LoadingDialog(requireContext())
+
         initView()
         initStarRating()
         initInputListener()
+        handleSystemBackPressed() // 시스템 백버튼 처리
 
-        binding.libDetailBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
+        // ★ 뒤로가기 버튼 리스너
+        binding.libDetailBackIv.setOnClickListener {
+            if (isReviewSubmitted) {
+                goToLibrary()
+            } else {
+                requireActivity().supportFragmentManager.popBackStack()
+            }
+        }
+
         binding.libReviewAddBtn.setOnClickListener { postReview() }
+    }
+
+    private fun handleSystemBackPressed() {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isReviewSubmitted) {
+                    goToLibrary()
+                } else {
+                    isEnabled = false
+                    requireActivity().onBackPressed()
+                }
+            }
+        })
+    }
+
+    private fun goToLibrary() {
+        parentFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, LibraryFragment())
+            .commit()
     }
 
     private fun initView() {
@@ -77,78 +115,42 @@ class LibraryWriteReviewFragment : Fragment() {
         Glide.with(this).load(hostProfileUrl)
             .placeholder(R.drawable.bg_circle_gray500)
             .error(R.drawable.img_profile_default)
-            .circleCrop()
-            .into(binding.libDetailProfileIv)
+            .circleCrop().into(binding.libDetailProfileIv)
 
         binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
     }
 
     private fun postReview() {
+        loadingDialog.show()
         val comment = binding.libWriteReviewEt.text.toString()
         val rating = currentRating
-
-        // ★ 로딩바가 없다면 추가해주는 것이 좋습니다 (사용자 중복 클릭 방지)
-        // binding.loadingPb.visibility = View.VISIBLE
-        // binding.libReviewAddBtn.isEnabled = false
 
         lifecycleScope.launch {
             try {
                 val request = ReviewRequest(rating, comment)
                 val response = RetrofitClient.api().postBookReview(userBookId, request)
-                Log.d("Library", "${response.body()}")
 
-                // ★ 프래그먼트가 이미 종료되었거나 분리된 상태라면 중단 (크래시 방지)
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
                 if (!isAdded || activity == null) return@launch
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val togetherFragment = LibraryBookDetailTogetherFragment().apply {
-                        arguments = Bundle().apply {
-                            putInt("userBookId", userBookId)
-                            putInt("groupId", groupId)
-                            putString("bookTitle", bookTitle)
-                            putString("bookAuthor", bookAuthor)
-                            putString("bookCover", bookCover)
-                            putString("hostName", hostName)
-                            putString("hostProfileUrl", hostProfileUrl)
-                            putString("startDate", startDate)
-                            putString("endDate", endDate)
-                            putDouble("rating", rating)
-                        }
-                    }
+                    Toast.makeText(context, "리뷰가 등록되었습니다.", Toast.LENGTH_SHORT).show()
 
-                    val fm = requireActivity().supportFragmentManager
+                    // ★ [수정] 즉시 이동하지 않고 상태만 변경
+                    isReviewSubmitted = true
+                    checkValidation() // 버튼 UI 업데이트 (비활성화)
+                    binding.libWriteReviewEt.isEnabled = false // 입력창 비활성화
 
-                    // ★ [수정 핵심] 안전한 화면 전환 로직
-                    try {
-                        // 1. 쌓여있는 화면들을 '즉시' 비웁니다 (동기 처리)
-                        // 이렇게 해야 다음 명령어가 빈 스택 위에서 실행됩니다.
-                        fm.popBackStackImmediate(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
-
-                        // 2. 바닥에 '서재(LibraryFragment)'를 깝니다.
-                        fm.beginTransaction()
-                            .replace(R.id.fragmentContainer, LibraryFragment())
-                            .commit()
-
-                        // 3. 그 위에 '결과(TogetherFragment)'를 올립니다.
-                        // (commit()은 비동기지만, 순서대로 스케줄링되므로 2번 뒤에 3번이 실행됩니다)
-                        fm.beginTransaction()
-                            .replace(R.id.fragmentContainer, togetherFragment)
-                            .addToBackStack(null) // 백버튼 누르면 2번(서재)으로 이동
-                            .commitAllowingStateLoss() // 상태 손실 허용 (안전장치)
-
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        // 만약 위의 복잡한 로직이 실패하면, 최소한 결과 화면으로라도 이동시킵니다.
-                        fm.beginTransaction()
-                            .replace(R.id.fragmentContainer, togetherFragment)
-                            .commitAllowingStateLoss()
-                    }
+                } else {
+                    Toast.makeText(context, "리뷰 등록 실패: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
                 e.printStackTrace()
             }
         }
     }
+
     private fun initStarRating() {
         val stars = listOf(
             binding.libDetailRateList.getChildAt(0) as ImageView,
@@ -160,13 +162,11 @@ class LibraryWriteReviewFragment : Fragment() {
 
         stars.forEachIndexed { index, imageView ->
             imageView.setOnClickListener {
+                if (isReviewSubmitted) return@setOnClickListener // 전송 후 수정 금지
+
                 val targetHalf = index + 0.5
                 val targetFull = index + 1.0
-                if (currentRating == targetHalf) {
-                    currentRating = targetFull
-                } else {
-                    currentRating = targetHalf
-                }
+                currentRating = if (currentRating == targetHalf) targetFull else targetHalf
                 updateStarUI(stars, currentRating)
                 checkValidation()
             }
@@ -195,6 +195,14 @@ class LibraryWriteReviewFragment : Fragment() {
     }
 
     private fun checkValidation() {
+        // 이미 제출했다면 무조건 비활성화
+        if (isReviewSubmitted) {
+            binding.libReviewAddBtn.isEnabled = false
+            binding.libReviewAddBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.grey_200))
+            binding.libReviewAddBtn.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_500))
+            return
+        }
+
         val hasText = binding.libWriteReviewEt.text.isNotBlank()
         val hasRating = currentRating > 0
 

@@ -202,11 +202,11 @@ class LibraryShareFragment : DialogFragment() {
     }
 
     // ★ 2. 뷰 캡처 함수 (Type A 크기 측정 완전 보장)
+// ★ 2. 뷰 캡처 함수 (그림자 효과 추가 버전)
     private fun getViewBitmapUri(view: View): Uri? {
         try {
-            // [강제 측정 로직 강화]
-            // Type A처럼 wrap_content인 뷰가 찰나의 순간 크기가 0으로 잡히는 것을 막기 위해,
-            // 340dp(다이얼로그 가로) - 48dp(좌우 패딩) = 292dp 로 가로 크기를 명확히 못 박고 측정합니다.
+            // 1. 강제 측정 로직 (기존 유지)
+            // Type A: 340dp(다이얼로그) - 48dp(좌우패딩) = 292dp
             val targetWidthPx = (292 * resources.displayMetrics.density).toInt()
 
             if (view.width == 0 || view.height == 0) {
@@ -220,30 +220,70 @@ class LibraryShareFragment : DialogFragment() {
             val width = view.width.takeIf { it > 0 } ?: view.measuredWidth
             val height = view.height.takeIf { it > 0 } ?: view.measuredHeight
 
-            // 비정상적인 크기일 경우 캡처 중단
             if (width <= 0 || height <= 0) return null
 
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            // ---------------------------------------------------------
+            // ★ [수정] 그림자를 위한 여백 및 Paint 설정
+            // ---------------------------------------------------------
+            val shadowMargin = 24 // 그림자가 그려질 여백 (px 단위, 적절히 조절 가능)
+            val cornerRadius = 20f * resources.displayMetrics.density // 카드 둥글기 (XML과 동일하게)
+
+            // 전체 비트맵 크기 = 뷰 크기 + 양쪽 여백
+            val bitmap = Bitmap.createBitmap(
+                width + (shadowMargin * 2),
+                height + (shadowMargin * 2),
+                Bitmap.Config.ARGB_8888
+            )
             val canvas = Canvas(bitmap)
 
-            // 배경 투명 초기화 후 둥글게 자르기
+            // 배경 투명 초기화
             canvas.drawColor(Color.TRANSPARENT)
-            val radius = 20f * resources.displayMetrics.density
+
+            // 그림자 설정을 위한 페인트 객체
+            val paint = android.graphics.Paint().apply {
+                color = Color.WHITE // 카드 배경색 (흰색)
+                style = android.graphics.Paint.Style.FILL
+                isAntiAlias = true
+
+                // 그림자 설정: (반경, X오프셋, Y오프셋, 그림자색상)
+                // 0x33000000: 투명도 약 20% 검정색
+                setShadowLayer(16f, 0f, 8f, 0x33000000.toInt())
+            }
+
+            // 그림자가 포함된 흰색 배경 그리기 (중앙에 위치하도록 shadowMargin 만큼 띄움)
+            val rectF = android.graphics.RectF(
+                shadowMargin.toFloat(),
+                shadowMargin.toFloat(),
+                (width + shadowMargin).toFloat(),
+                (height + shadowMargin).toFloat()
+            )
+            canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, paint)
+
+            // ---------------------------------------------------------
+            // ★ [수정] 실제 뷰 그리기
+            // ---------------------------------------------------------
+            canvas.save()
+            // 뷰를 그림자 안쪽 중앙으로 이동
+            canvas.translate(shadowMargin.toFloat(), shadowMargin.toFloat())
+
+            // 뷰 내부 내용이 둥근 모서리를 벗어나지 않도록 클리핑 (기존 로직 응용)
             val path = android.graphics.Path().apply {
                 addRoundRect(
                     android.graphics.RectF(0f, 0f, width.toFloat(), height.toFloat()),
-                    radius,
-                    radius,
+                    cornerRadius,
+                    cornerRadius,
                     android.graphics.Path.Direction.CW
                 )
             }
             canvas.clipPath(path)
 
-            // 본문 배경색 화이트 깔고 뷰 그리기
-            canvas.drawColor(Color.WHITE)
+            // 뷰 그리기
             view.draw(canvas)
+            canvas.restore()
 
-            // 파일 저장
+            // ---------------------------------------------------------
+            // 파일 저장 (기존 유지)
+            // ---------------------------------------------------------
             val imagesFolder = File(requireContext().cacheDir, "images")
             if (!imagesFolder.exists()) imagesFolder.mkdirs()
 
