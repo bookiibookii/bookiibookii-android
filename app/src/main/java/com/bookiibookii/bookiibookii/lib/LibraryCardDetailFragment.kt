@@ -9,12 +9,14 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
@@ -33,10 +35,15 @@ class LibraryCardDetailFragment : Fragment() {
 
     private lateinit var loadingDialog: LoadingDialog
 
+    private val myPageViewModel: MyPageViewModel by activityViewModels()
+    private var myNickname: String = "" // 내 닉네임
+
     private var cardId: Long = -1L
-    private var isMine: Boolean = false
+    private var isMine: Boolean = false // 최종적으로 판단된 '내 카드 여부'
+
     private var writerName: String = ""
     private var writerProfileUrl: String? = null
+    private var cardCreatorName: String? = null // ★ API에서 받아온 카드 작성자 닉네임 저장용
 
     private var currentMemo: String = ""
     private var currentPage: Int = 0
@@ -51,7 +58,7 @@ class LibraryCardDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
         arguments?.let {
             cardId = it.getLong("cardId", -1L)
-            isMine = it.getBoolean("isMine", false)
+            // 이전 화면의 isMine은 무시합니다. (여기서는 카드 작성자 여부가 중요하므로)
             writerName = it.getString("writerName", "Unknown") ?: ""
             writerProfileUrl = it.getString("writerProfileUrl", null)
         }
@@ -66,6 +73,9 @@ class LibraryCardDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         loadingDialog = LoadingDialog(requireContext())
 
+        // 1. 내 닉네임 관찰 및 데이터 요청
+        initMyData()
+
         try {
             initView()
             initBottomSheet()
@@ -76,24 +86,64 @@ class LibraryCardDetailFragment : Fragment() {
         }
     }
 
-    private fun initView() {
-        if (isMine) {
-            binding.libCardEditIv.visibility = View.VISIBLE
-            binding.libCardTrashIv.visibility = View.VISIBLE
-        } else {
-            binding.libCardEditIv.visibility = View.GONE
-            binding.libCardTrashIv.visibility = View.GONE
+    private fun initMyData() {
+        // 이미 로드된 닉네임이 있으면 가져옴
+        myNickname = myPageViewModel.confirmedNickname ?: ""
+
+        // 닉네임이 나중에 로드될 경우를 대비해 관찰
+        myPageViewModel.profileData.observe(viewLifecycleOwner) { profile ->
+            if (profile != null) {
+                myNickname = profile.nickname
+                // ★ 내 정보가 늦게 도착해도 소유권 확인 재실행
+                checkOwnership()
+            }
         }
 
+        // 데이터가 없으면 서버에 요청
+        if (myPageViewModel.profileData.value == null) {
+            myPageViewModel.fetchMypageData()
+        }
+    }
+
+    private fun initView() {
+        // 일단 숨겨두고 checkOwnership()에서 결정
+        binding.libCardEditIv.visibility = View.GONE
+        binding.libCardTrashIv.visibility = View.GONE
+
         binding.libCardProfileTv.text = writerName
-        Glide.with(this).load(writerProfileUrl).placeholder(R.drawable.bg_round_10dp_gray300)
-            .error(R.drawable.img_profile_default).circleCrop().into(binding.libCardProfileIv)
+        loadProfileImage(writerProfileUrl)
 
         chatAdapter = LibraryChatAdapter(emptyList())
         binding.includeChatBottom.libCardChatRv.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = chatAdapter
         }
+    }
+
+    // ★ [핵심] 내 닉네임과 카드 작성자를 비교하여 버튼 노출 결정
+    private fun checkOwnership() {
+        // 둘 다 정보가 있어야 비교 가능
+        if (myNickname.isNotEmpty() && !cardCreatorName.isNullOrEmpty()) {
+            isMine = (myNickname == cardCreatorName)
+
+            if (isMine) {
+                binding.libCardEditIv.visibility = View.VISIBLE
+                binding.libCardTrashIv.visibility = View.VISIBLE
+            } else {
+                binding.libCardEditIv.visibility = View.GONE
+                binding.libCardTrashIv.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun loadProfileImage(url: String?) {
+        if (_binding == null) return
+        Glide.with(requireContext())
+            .load(url)
+            .placeholder(R.drawable.bg_round_10dp_gray300)
+            .error(R.drawable.img_profile_default)
+            .transform(CenterCrop(), RoundedCorners(dpToPx(10)))
+            .into(binding.libCardProfileIv)
     }
 
     private fun initBottomSheet() {
@@ -193,35 +243,43 @@ class LibraryCardDetailFragment : Fragment() {
             currentImageUrl = result.cardImage?.presignedGetUrl
             currentBookTitle = result.bookTitle
 
+            // ★ 카드 작성자 이름 저장
+            cardCreatorName = result.creatorName
+
+            // ★ 카드 정보가 도착했으니 소유권 확인 실행
+            checkOwnership()
+
             isBookmarked = result.isBookmarked ?: false
             binding.libCardBookIv.setImageResource(if (isBookmarked) R.drawable.ic_bookmark_orange else R.drawable.ic_bookmark_gray)
 
             with(binding) {
                 libCardBookTitleTv.text = result.bookTitle
                 libCardBookPageTv.text = "p.${result.page}"
-
-                // ★ [수정 1] UTC 시간 변환 및 상대 시간 계산 로직 적용
                 libCardBookDateTv.text = calculateTimeAgo(result.createdAt)
-
                 libCardContentTv.text = result.memo
 
-                // 만약 서버에서 작성자/프로필 정보를 내려준다면 여기서 갱신
                 val apiWriterName = result.creatorName ?: writerName
-                val apiProfileUrl = result.writerProfile ?: writerProfileUrl
                 libCardProfileTv.text = apiWriterName
-                Glide.with(requireContext())
-                    .load(apiProfileUrl)
-                    .placeholder(R.drawable.bg_round_10dp_gray300)
-                    .error(R.drawable.img_profile_default)
-                    .circleCrop()
-                    .into(libCardProfileIv)
+                writerName = apiWriterName
 
-                // ★ [수정 2] 이미지 라운드 처리 방식 개선
+                // 프로필 이미지 로드
+                try {
+                    val profileResponse = RetrofitClient.api().getUserProfile(apiWriterName)
+                    if (profileResponse.isSuccessful && profileResponse.body()?.isSuccess == true) {
+                        val finalProfileUrl = profileResponse.body()?.result?.profileImageUrl
+                        loadProfileImage(finalProfileUrl)
+                        writerProfileUrl = finalProfileUrl
+                    } else {
+                        loadProfileImage(writerProfileUrl)
+                    }
+                } catch (e: Exception) {
+                    loadProfileImage(writerProfileUrl)
+                }
+
                 if (!currentImageUrl.isNullOrEmpty()) {
                     libCardImageIv.visibility = View.VISIBLE
                     Glide.with(requireContext())
                         .load(currentImageUrl)
-                        // .apply() 대신 .transform() 체이닝 사용 (가장 확실한 방법)
                         .transform(CenterCrop(), RoundedCorners(dpToPx(20)))
                         .placeholder(R.drawable.bg_round_20dp_gray200)
                         .into(libCardImageIv)
@@ -232,44 +290,32 @@ class LibraryCardDetailFragment : Fragment() {
         }
     }
 
-    // ★ [추가] UTC 시간을 받아서 상대 시간(방금 전, N분 전, N시간 전, 날짜)으로 변환하는 함수
     private fun calculateTimeAgo(serverTime: String): String {
         if (serverTime.isEmpty()) return ""
         try {
-            // 1. 서버 시간 파싱 (UTC 기준)
-            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            val format = if (serverTime.contains(".")) "yyyy-MM-dd'T'HH:mm:ss.SSS" else "yyyy-MM-dd'T'HH:mm:ss"
+            val parser = SimpleDateFormat(format, Locale.getDefault())
             parser.timeZone = TimeZone.getTimeZone("UTC")
+
             val date = parser.parse(serverTime) ?: return serverTime
 
-            // 2. 현재 시간과 차이 계산 (밀리초)
             val now = System.currentTimeMillis()
             val diff = now - date.time
-
             val minutes = diff / (1000 * 60)
             val hours = minutes / 60
-            val days = hours / 24
 
             return when {
                 minutes < 1 -> "방금 전"
                 minutes < 60 -> "${minutes}분 전"
                 hours < 24 -> "${hours}시간 전"
                 else -> {
-                    // 3. 24시간 이상이면 날짜로 표시 (한국 시간 기준)
                     val formatter = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
-                    formatter.timeZone = TimeZone.getDefault() // 내 폰 시간대(KST)
+                    formatter.timeZone = TimeZone.getDefault()
                     formatter.format(date)
                 }
             }
         } catch (e: Exception) {
-            // 파싱 실패 시 기본 날짜 형식으로 반환 시도 (밀리초 포함된 포맷 등 예외 대응)
-            return try {
-                val fallbackParser = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val fallbackDate = fallbackParser.parse(serverTime)
-                val formatter = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
-                formatter.format(fallbackDate ?: return serverTime)
-            } catch (e2: Exception) {
-                serverTime // 최후의 수단: 원본 그대로 반환
-            }
+            return serverTime
         }
     }
 

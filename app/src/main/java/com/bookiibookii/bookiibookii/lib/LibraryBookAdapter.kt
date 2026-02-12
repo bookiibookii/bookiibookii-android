@@ -15,6 +15,8 @@ import com.bookiibookii.bookiibookii.data.model.LibBook
 import com.bookiibookii.bookiibookii.data.model.ReadStatus
 import com.bookiibookii.bookiibookii.databinding.ItemLibBookBinding
 import com.bookiibookii.bookiibookii.databinding.ItemLibBookGridBinding
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 
 class LibraryBookAdapter(
     private var items: List<LibBook>,
@@ -75,66 +77,47 @@ class LibraryBookAdapter(
     inner class CoverViewHolder(private val binding: ItemLibBookBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: LibBook) {
             binding.libItemBookTitleTv.text = item.title
-            binding.libItemProfileTv.text = item.hostName // 기획에 따라 작성자/호스트 이름 변경
+            binding.libItemProfileTv.text = item.hostName
 
-            // 표지 이미지
             Glide.with(itemView.context)
                 .load(item.coverUrl)
                 .placeholder(R.color.grey_300)
                 .error(R.drawable.img_profile_default)
                 .into(binding.libItemBookIv)
 
-            // 호스트 프로필
             Glide.with(itemView.context)
                 .load(item.hostProfileUrl)
-                .circleCrop()
+                .transform(CenterCrop(), RoundedCorners(dpToPx(itemView.context, 6)))
                 .placeholder(R.drawable.bg_circle_gray500)
                 .error(R.drawable.img_profile_default)
                 .into(binding.libItemProfileIv)
 
-            // 상태 표시
-            when (item.readStatus) {
-                ReadStatus.READING -> {
-                    binding.libItemStateTv.visibility = View.VISIBLE
-                    binding.libRateList.visibility = View.GONE
-                    binding.libItemStateTv.text = item.progress ?: "독서 중"
-                }
-                ReadStatus.DONE -> {
-                    binding.libItemStateTv.visibility = View.GONE
-                    binding.libRateList.visibility = View.VISIBLE
-                    setRatingStars(binding.libRateList, item.rating)
-                }
+            // 상태에 따른 UI 처리 (XML Constraints 이용)
+            if (item.readStatus == ReadStatus.DONE) {
+                binding.libRateList.visibility = View.VISIBLE
+                setRatingStars(binding.libRateList, item.rating)
+            } else {
+                binding.libRateList.visibility = View.GONE
             }
 
             itemView.setOnClickListener { itemClickListener(item) }
         }
 
         private fun setRatingStars(starContainer: LinearLayout, rating: Double) {
-            val ratingInt = rating.toInt() // 예: 4.5 -> 4
-            val hasHalfStar = (rating - ratingInt) >= 0.5 // 예: 4.5 - 4 = 0.5 -> true
+            val ratingInt = rating.toInt()
+            // ★ 수정됨: score -> rating 으로 변경
+            val hasHalfStar = (rating - ratingInt) >= 0.5
 
             for (i in 0 until starContainer.childCount) {
                 val starView = starContainer.getChildAt(i) as? ImageView ?: continue
-
                 when {
-                    i < ratingInt -> {
-                        // 1. 꽉 찬 별
-                        starView.setImageResource(R.drawable.ic_star_filled)
-                    }
-                    i == ratingInt && hasHalfStar -> {
-                        // 2. 반 개 별 (정수부를 갓 넘고, 0.5 이상일 때)
-                        starView.setImageResource(R.drawable.ic_star_half)
-                    }
-                    else -> {
-                        // 3. 빈 별
-                        starView.setImageResource(R.drawable.ic_star_none)
-                    }
+                    i < ratingInt -> starView.setImageResource(R.drawable.ic_star_filled)
+                    i == ratingInt && hasHalfStar -> starView.setImageResource(R.drawable.ic_star_half)
+                    else -> starView.setImageResource(R.drawable.ic_star_none)
                 }
             }
         }
-    }
-
-    // [2] 책등 모드 뷰홀더
+    }    // [2] 책등 모드 뷰홀더
     inner class SpineViewHolder(private val binding: ItemLibBookGridBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: LibBook, position: Int) {
             binding.itemBookGridTv.text = item.title
@@ -169,7 +152,9 @@ class LibraryBookAdapter(
 
             itemView.setOnClickListener { itemClickListener(item) }
         }
-    }    private fun dpToPx(context: Context, dp: Int): Int {
+    }
+
+    private fun dpToPx(context: Context, dp: Int): Int {
         return (dp * context.resources.displayMetrics.density).toInt()
     }
 }

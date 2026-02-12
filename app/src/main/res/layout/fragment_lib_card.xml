@@ -174,7 +174,7 @@
 
             <ImageView
                 android:id="@+id/lib_card_image_iv"
-                android:layout_width="332dp"
+                android:layout_width="match_parent"
                 android:layout_height="332dp"
                 android:src="@drawable/bg_round_20dp_gray200"
                 android:layout_marginTop="16dp"

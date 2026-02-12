@@ -22,6 +22,9 @@ import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailTogetherBi
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 class LibraryBookDetailTogetherFragment : Fragment() {
 
@@ -110,11 +113,12 @@ class LibraryBookDetailTogetherFragment : Fragment() {
 
         binding.libDetailProfileTv.text = hostName
         Glide.with(this).load(hostProfileUrl).placeholder(R.drawable.bg_circle_gray500)
-            .error(R.drawable.img_profile_default).circleCrop().into(binding.libDetailProfileIv)
+            .error(R.drawable.img_profile_default).transform(CenterCrop(), RoundedCorners(dpToPx(8))).into(binding.libDetailProfileIv)
 
         // ★ [핵심] 날짜는 별점 유무와 상관없이 무조건 반영합니다.
-        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
-
+        val formattedStart = formatDate(startDate)
+        val formattedEnd = formatDate(endDate)
+        binding.libDetailDateTv.text = if (formattedEnd.isNotEmpty()) "$formattedStart ~ $formattedEnd" else "$formattedStart ~"
         // 별점 세팅
         if (rating > 0.0) {
             binding.libDetailRateList.visibility = View.VISIBLE
@@ -131,6 +135,22 @@ class LibraryBookDetailTogetherFragment : Fragment() {
 
         binding.groupDataExist.visibility = View.GONE
         binding.layoutEmpty.visibility = View.GONE
+    }
+
+    private fun formatDate(dateString: String): String {
+        if (dateString.isEmpty()) return ""
+        return try {
+            val format = if (dateString.contains(".")) "yyyy-MM-dd'T'HH:mm:ss.SSS" else "yyyy-MM-dd'T'HH:mm:ss"
+            val parser = SimpleDateFormat(format, Locale.getDefault())
+            parser.timeZone = TimeZone.getTimeZone("UTC")
+            val date = parser.parse(dateString) ?: return dateString
+
+            val formatter = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
+            formatter.timeZone = TimeZone.getDefault()
+            formatter.format(date)
+        } catch (e: Exception) {
+            dateString
+        }
     }
 
     private fun setRatingStars(score: Double) {

@@ -63,7 +63,7 @@ class GroupMemberAdapter(
 
                     // ★ 충돌 해결: profileImageUrl 사용 & CenterCrop
                     Glide.with(context)
-                        .load(slot.profileImageUrl)
+                        .load(slot.profileImage)
                         .placeholder(R.drawable.ic_profile)
                         .error(R.drawable.ic_profile)
                         .centerCrop()

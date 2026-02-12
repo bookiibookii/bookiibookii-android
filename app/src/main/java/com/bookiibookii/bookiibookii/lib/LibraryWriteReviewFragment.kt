@@ -30,7 +30,6 @@ class LibraryWriteReviewFragment : Fragment() {
     private var bookAuthor = ""
     private var bookCover = ""
 
-    // ★ 새로 받을 정보들
     private var hostName = ""
     private var hostProfileUrl = ""
     private var startDate = ""
@@ -74,7 +73,6 @@ class LibraryWriteReviewFragment : Fragment() {
         binding.libDetailBookAuthorTv.text = bookAuthor
         Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
 
-        // ★ 프로필과 날짜 세팅 적용
         binding.libDetailProfileTv.text = hostName
         Glide.with(this).load(hostProfileUrl)
             .placeholder(R.drawable.bg_circle_gray500)
@@ -103,17 +101,30 @@ class LibraryWriteReviewFragment : Fragment() {
                             putString("bookTitle", bookTitle)
                             putString("bookAuthor", bookAuthor)
                             putString("bookCover", bookCover)
-
-                            // ★ [핵심] 결과 화면이 하얗게 뜨지 않도록 내가 가진 정보를 모두 다시 담아 넘겨줍니다.
                             putString("hostName", hostName)
                             putString("hostProfileUrl", hostProfileUrl)
                             putString("startDate", startDate)
                             putString("endDate", endDate)
-                            putDouble("rating", rating) // 내가 방금 적은 별점 적용!
+                            putDouble("rating", rating)
                         }
                     }
-                    requireActivity().supportFragmentManager.beginTransaction()
+
+                    // ★ [핵심 로직 수정] 백스택 정리 및 화면 이동 순서 재정의
+                    val fm = requireActivity().supportFragmentManager
+
+                    // 1. 기존에 쌓여있던 Ing(진행), Write(작성) 화면들을 모두 제거합니다.
+                    fm.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+
+                    // 2. 바닥에 '서재 목록(LibraryFragment)'을 먼저 깔아줍니다. (나중에 백버튼 누르면 여기로 오게 됨)
+                    fm.beginTransaction()
+                        .replace(R.id.fragmentContainer, LibraryFragment())
+                        .commit()
+
+                    // 3. 그 위에 '결과 화면(TogetherFragment)'을 얹습니다.
+                    // addToBackStack(null)을 해야 백버튼 시 2번(LibraryFragment)이 보입니다.
+                    fm.beginTransaction()
                         .replace(R.id.fragmentContainer, togetherFragment)
+                        .addToBackStack(null)
                         .commit()
                 }
             } catch (e: Exception) { e.printStackTrace() }
@@ -179,8 +190,19 @@ class LibraryWriteReviewFragment : Fragment() {
         binding.libReviewAddBtn.setTextColor(ContextCompat.getColor(requireContext(), colorText))
     }
 
+    override fun onResume() {
+        super.onResume()
+        hideBottomNavigation(true)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        hideBottomNavigation(false)
         _binding = null
+    }
+
+    private fun hideBottomNavigation(shouldHide: Boolean) {
+        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
+        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
     }
 }

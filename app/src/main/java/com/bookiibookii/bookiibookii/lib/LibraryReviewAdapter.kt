@@ -85,7 +85,7 @@ class LibraryReviewAdapter(
                             if (userImageKey != null) {
                                 Glide.with(itemView.context)
                                     .load(userImageKey)
-                                    .circleCrop()
+                                    .transform(CenterCrop(), RoundedCorners(dpToPx(8)))
                                     .placeholder(R.drawable.img_profile_default)
                                     .into(binding.itemReviewProfileIv)
                             }
