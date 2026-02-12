@@ -22,7 +22,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import kotlin.math.abs
 
 data class HostTrackerUiState(
     val isLoading: Boolean = false,
@@ -86,19 +85,6 @@ class HostViewModel : ViewModel() {
         const val TAG = "IMG_DEBUG"
     }
 
-    private val REMAINING_BADGE_STATUSES = setOf(
-        TrackerStatus.HOST_READING,
-        TrackerStatus.HOST_DONE,
-        TrackerStatus.RECEIVED,
-        TrackerStatus.GUEST_READING,
-        TrackerStatus.GUEST_EXTENSION,
-        TrackerStatus.GUEST_DONE,
-        TrackerStatus.RETURNED
-    )
-
-    private val _currentTrackerStatus = MutableStateFlow(TrackerStatus.UNKNOWN)
-    private val _remainingDays = MutableStateFlow<Int?>(null)
-
     init {
         recomputeSteps()
     }
@@ -144,9 +130,6 @@ class HostViewModel : ViewModel() {
                     isLoading = false,
                     data = dto
                 )
-
-                _currentTrackerStatus.value = TrackerStatus.from(dto.trackerStatus)
-                _remainingDays.value = dto.remainingDays
 
                 setPhaseFromApiStatus(dto.trackerStatus)
 
@@ -469,31 +452,7 @@ class HostViewModel : ViewModel() {
     }
 
     private fun recomputeSteps() {
-        val base = buildSteps(role, _phase.value)
-        _steps.value = applyRemainingDaysBadgeIfNeeded(base)
-    }
-
-    private fun applyRemainingDaysBadgeIfNeeded(list: List<TradeStatusItem>): List<TradeStatusItem> {
-        val status = _currentTrackerStatus.value
-        if (status !in REMAINING_BADGE_STATUSES) return list
-
-        val remainingDays = _remainingDays.value ?: return list
-        val badgeText = formatRemainingDaysBadge(remainingDays)
-
-        if (list.isEmpty()) return list
-
-        val first = list.first()
-        val replacedFirst = first.copy(badge = badgeText)
-
-        return listOf(replacedFirst) + list.drop(1)
-    }
-
-    private fun formatRemainingDaysBadge(remainingDays: Int): String {
-        return when {
-            remainingDays > 0 -> "D-$remainingDays"
-            remainingDays == 0 -> "D-day"
-            else -> "D+${abs(remainingDays)}"
-        }
+        _steps.value = buildSteps(role, _phase.value)
     }
 
     private fun buildSteps(role: Role, phase: Phase): List<TradeStatusItem> {

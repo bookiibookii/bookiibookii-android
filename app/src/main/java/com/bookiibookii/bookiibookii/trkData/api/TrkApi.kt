@@ -37,7 +37,7 @@ interface TrkApi {
         @Path("groupId") groupId: Long
     ): ApiResponse<TrackerDetailResponseDto>
 
-    @POST("/api/groups/{groupId}/tracker/delivery")
+    @POST("/api/groups/{groupId}/tracker/shipping")
     suspend fun postTrackerShippingStart(
         @Path("groupId") groupId: Long,
         @Body request: TrackerShippingStartRequestDto
@@ -48,7 +48,7 @@ interface TrkApi {
         @Path("groupId") groupId: Long
     ): ApiResponse<PresignedUrlResponseDto>
 
-    @PATCH("/api/groups/{groupId}/tracker/reception")
+    @PATCH("/api/groups/{groupId}/tracker/receive")
     suspend fun patchTrackerReceive(
         @Path("groupId") groupId: Long,
         @Body request: TrackerReceiveRequestDto
@@ -70,33 +70,33 @@ interface TrkApi {
         @Path("groupId") groupId: Long
     ): ApiResponse<TrackerDoneResponseDto>
 
-    @GET("/api/groups/{groupId}/tracker/images/delivery")
+    @GET("/api/groups/{groupId}/tracker/check/shipping")
     suspend fun getTrackerCheckShippingImage(
         @Path("groupId") groupId: Long
     ): ApiResponse<TrackerCheckShippingImageResponseDto>
 
-    @GET("/api/groups/{groupId}/tracker/images/received")
+    @GET("/api/groups/{groupId}/tracker/check/received")
     suspend fun getTrackerCheckReceivedImage(
         @Path("groupId") groupId: Long
     ): ApiResponse<TrackerCheckImageResponseDto>
 
-    @PATCH("api/groups/{groupId}/tracker/meetings")
+    @PATCH("api/groups/{groupId}/tracker/makeMeeting")
     suspend fun makeMeeting(
         @Path("groupId") groupId: Long,
         @Body request: MakeMeetingRequest
     ): Response<TrackerDetailDto>
 
-    @GET("/api/groups/{groupId}/tracker/meetings")
+    @GET("/api/groups/{groupId}/tracker/meeting")
     suspend fun getTrackerMeeting(
         @Path("groupId") groupId: Long
     ): ApiResponse<TrackerMeetingResponseDto>
 
-    @PATCH("/api/groups/{groupId}/tracker/meetings/completion")
+    @PATCH("/api/groups/{groupId}/tracker/meeting/complete")
     suspend fun patchMeetingComplete(
         @Path("groupId") groupId: Long
     ): retrofit2.Response<TrackerDetailDto>
 
-    @PATCH("/api/groups/{groupId}/tracker/reception/verification")
+    @PATCH("/api/groups/{groupId}/tracker/confirm-reception")
     suspend fun patchConfirmReception(
         @Path("groupId") groupId: Long
     ): ApiResponse<TrackerDetailResponseDto>

@@ -169,30 +169,7 @@ class HostActivity : AppCompatActivity() {
 
             row.findViewById<TextView>(R.id.tv_title).text = item.title
             row.findViewById<TextView>(R.id.tv_desc).text = item.description
-
-            val badgeText = row.findViewById<TextView>(R.id.tv_badge)
-            val badgeCard = row.findViewById<com.google.android.material.card.MaterialCardView>(R.id.card_badge)
-
-            badgeText.text = item.badge
-
-            val isDday = item.badge == "D-day" ||
-                    item.badge.startsWith("D-") ||
-                    item.badge.startsWith("D+")
-
-            if (isDday) {
-                badgeCard.strokeWidth = dpToPx(1)
-                badgeCard.strokeColor = getColorCompat(R.color.pre_main)
-                badgeCard.setCardBackgroundColor(getColorCompat(android.R.color.white))
-
-                badgeText.setTextColor(getColorCompat(R.color.pre_main))
-            } else {
-                badgeCard.strokeWidth = 0
-
-                badgeCard.strokeColor = getColorCompat(R.color.grey_200)
-                badgeCard.setCardBackgroundColor(getColorCompat(R.color.grey_200))
-
-                badgeText.setTextColor(getColorCompat(R.color.grey_500))
-            }
+            row.findViewById<TextView>(R.id.tv_badge).text = item.badge
 
             val divider = row.findViewById<View>(R.id.divider)
             divider.visibility = if (index == steps.lastIndex) View.GONE else View.VISIBLE
@@ -200,12 +177,6 @@ class HostActivity : AppCompatActivity() {
             binding.stepContainer.addView(row)
         }
     }
-
-    private fun getColorCompat(resId: Int): Int =
-        androidx.core.content.ContextCompat.getColor(this, resId)
-
-    private fun dpToPx(dp: Int): Int =
-        (dp * resources.displayMetrics.density).toInt()
 
     private fun createSheetForStatus(status: TrackerStatus): BottomSheetDialogFragment {
         return when (status) {
