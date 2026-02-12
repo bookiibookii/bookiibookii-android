@@ -13,6 +13,7 @@ import com.bookiibookii.bookiibookii.trkData.dto.TrackerShippingStartResponseDto
 import com.bookiibookii.bookiibookii.trkHost.Phase
 import com.bookiibookii.bookiibookii.trkHost.Role
 import com.bookiibookii.bookiibookii.trkHost.StepId
+import com.bookiibookii.bookiibookii.trkHost.TrackerStatus
 import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import com.bookiibookii.bookiibookii.trkHost.UiState
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import kotlin.math.abs
 
 data class GuestTrackerUiState(
     val isLoading: Boolean = false,
@@ -83,6 +85,19 @@ class GuestViewModel : ViewModel() {
     private companion object {
         const val TAG = "IMG_DEBUG"
     }
+
+    private val REMAINING_BADGE_STATUSES = setOf(
+        TrackerStatus.HOST_READING,
+        TrackerStatus.HOST_DONE,
+        TrackerStatus.RECEIVED,
+        TrackerStatus.GUEST_READING,
+        TrackerStatus.GUEST_EXTENSION,
+        TrackerStatus.GUEST_DONE,
+        TrackerStatus.RETURNED
+    )
+
+    private val _currentTrackerStatus = MutableStateFlow(TrackerStatus.UNKNOWN)
+    private val _remainingDays = MutableStateFlow<Int?>(null)
 
     init {
         recomputeSteps()
@@ -148,6 +163,9 @@ class GuestViewModel : ViewModel() {
                     data = dto
                 )
 
+                _currentTrackerStatus.value = TrackerStatus.from(dto.trackerStatus)
+                _remainingDays.value = dto.remainingDays
+
                 setPhaseFromApiStatus(dto.trackerStatus)
 
             } catch (e: Exception) {
@@ -179,7 +197,6 @@ class GuestViewModel : ViewModel() {
                 }
 
                 _extensionState.value = UiState.Success(Unit)
-
                 loadTracker(groupId)
 
             } catch (e: Exception) {
@@ -203,7 +220,6 @@ class GuestViewModel : ViewModel() {
                 }
 
                 _doneState.value = UiState.Success(Unit)
-
                 loadTracker(groupId)
 
             } catch (e: Exception) {
@@ -260,7 +276,6 @@ class GuestViewModel : ViewModel() {
                 }
 
                 _receiveState.value = UiState.Success(body.result)
-
                 loadTracker(groupId)
 
             } catch (e: Exception) {
@@ -284,8 +299,6 @@ class GuestViewModel : ViewModel() {
                 }
 
                 _readingStartState.value = UiState.Success(body.result)
-
-                // 상태 정합성
                 loadTracker(groupId)
 
             } catch (e: Exception) {
@@ -309,7 +322,6 @@ class GuestViewModel : ViewModel() {
                 }
 
                 _confirmReceptionState.value = UiState.Success(body.result)
-
                 loadTracker(groupId)
 
             } catch (e: Exception) {
@@ -364,7 +376,6 @@ class GuestViewModel : ViewModel() {
                 }
 
                 _shippingStartState.value = UiState.Success(shipBody.result)
-
                 loadTracker(groupId)
 
             } catch (e: Exception) {
@@ -398,33 +409,21 @@ class GuestViewModel : ViewModel() {
         return when (status?.uppercase()) {
             "READY" -> Phase.INIT
 
-            "HOST_READING", "READING" ->
-                Phase.HOST_READING
-
-            "HOST_DONE" ->
-                Phase.HOST_SHIPPING_READY
-
-            "SHIPPING_TO_GUEST" ->
-                Phase.HOST_SHIPPED
+            "HOST_READING", "READING" -> Phase.HOST_READING
+            "HOST_DONE" -> Phase.HOST_SHIPPING_READY
+            "SHIPPING_TO_GUEST" -> Phase.HOST_SHIPPED
 
             "RECEIVED",
             "GUEST_READING",
-            "GUEST_EXTENSION" ->
-                Phase.GUEST_READING
+            "GUEST_EXTENSION" -> Phase.GUEST_READING
 
-            "GUEST_DONE" ->
-                Phase.GUEST_SHIPPING_READY
+            "GUEST_DONE" -> Phase.GUEST_SHIPPING_READY
+            "SHIPPING_TO_HOST" -> Phase.GUEST_SHIPPED
 
-            "SHIPPING_TO_HOST" ->
-                Phase.GUEST_SHIPPED
-
-            "COMPLETED", "RETURNED" ->
-                Phase.FINISHED
-
+            "COMPLETED", "RETURNED" -> Phase.FINISHED
             else -> Phase.INIT
         }
     }
-
 
     fun onAction(action: GuestAction) {
         _phase.value = nextPhase(_phase.value, action)
@@ -462,7 +461,28 @@ class GuestViewModel : ViewModel() {
     }
 
     private fun recomputeSteps() {
-        _steps.value = buildSteps(role, _phase.value)
+        val base = buildSteps(role, _phase.value)
+        _steps.value = applyRemainingDaysBadgeIfNeeded(base)
+    }
+
+    private fun applyRemainingDaysBadgeIfNeeded(list: List<TradeStatusItem>): List<TradeStatusItem> {
+        val status = _currentTrackerStatus.value
+        if (status !in REMAINING_BADGE_STATUSES) return list
+
+        val remainingDays = _remainingDays.value ?: return list
+        if (list.isEmpty()) return list
+
+        val badgeText = formatRemainingDaysBadge(remainingDays)
+        val first = list.first().copy(badge = badgeText)
+        return listOf(first) + list.drop(1)
+    }
+
+    private fun formatRemainingDaysBadge(remainingDays: Int): String {
+        return when {
+            remainingDays > 0 -> "D-$remainingDays"
+            remainingDays == 0 -> "D-day"
+            else -> "D+${abs(remainingDays)}"
+        }
     }
 
     private fun buildSteps(role: Role, phase: Phase): List<TradeStatusItem> {

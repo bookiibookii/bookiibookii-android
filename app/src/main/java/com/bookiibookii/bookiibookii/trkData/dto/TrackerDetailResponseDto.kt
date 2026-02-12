@@ -10,6 +10,7 @@ data class TrackerDetailResponseDto(
     val extensionDays: Int?,
     val readingPeriod: Int?,
     val trackerId: Long?,
+    val remainingDays: Int?,
     val deliveryInfo: DeliveryInfoDto?,
     val meetingInfo: MeetingInfoDto?
 )
