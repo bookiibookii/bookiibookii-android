@@ -17,12 +17,14 @@ class LoadingDialog(context: Context) : Dialog(context) {
         // 타이틀바 제거
         //requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.dialog_loading)
+        window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-        window?.setBackgroundDrawable(ColorDrawable(Color.parseColor("#80000000")))
-        window?.setLayout(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT
-        )
+
+        //window?.setBackgroundDrawable(ColorDrawable(Color.parseColor("#80000000")))
+//        window?.setLayout(
+//            WindowManager.LayoutParams.MATCH_PARENT,
+//            WindowManager.LayoutParams.MATCH_PARENT
+//        )
 
         // 로딩 중에 뒤로가기나 바깥 화면 터치로 로딩창이 꺼지지 않도록 막음
         setCancelable(false)

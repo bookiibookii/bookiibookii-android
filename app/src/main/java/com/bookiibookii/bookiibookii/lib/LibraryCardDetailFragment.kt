@@ -12,25 +12,26 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.CommonDialog
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibCardBinding
-import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 class LibraryCardDetailFragment : Fragment() {
 
     private var _binding: FragmentLibCardBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+    private lateinit var loadingDialog: LoadingDialog
 
     private var cardId: Long = -1L
     private var isMine: Boolean = false
@@ -63,14 +64,12 @@ class LibraryCardDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
         try {
             initView()
             initBottomSheet()
             initListeners()
-
-            // ★ 두 API를 하나의 로딩 안에서 처리
             loadInitialData()
         } catch (e: Exception) {
             Toast.makeText(context, "화면을 불러오는 중 문제가 발생했습니다.", Toast.LENGTH_SHORT).show()
@@ -169,7 +168,6 @@ class LibraryCardDetailFragment : Fragment() {
         }
     }
 
-    // ★ 두 API를 순차적으로 부르고 로딩창 끄는 통합 함수
     private fun loadInitialData() {
         if (cardId == -1L) return
         lifecycleScope.launch {
@@ -185,8 +183,6 @@ class LibraryCardDetailFragment : Fragment() {
         }
     }
 
-    // ★ suspend 적용
-// ★ suspend 적용
     private suspend fun fetchCardDetail() {
         val response = RetrofitClient.api().getCardDetail(cardId)
         if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -203,17 +199,16 @@ class LibraryCardDetailFragment : Fragment() {
             with(binding) {
                 libCardBookTitleTv.text = result.bookTitle
                 libCardBookPageTv.text = "p.${result.page}"
-                if (result.createdAt.length >= 10) libCardBookDateTv.text = result.createdAt.substring(0, 10).replace("-", ".")
+
+                // ★ [수정 1] UTC 시간 변환 및 상대 시간 계산 로직 적용
+                libCardBookDateTv.text = calculateTimeAgo(result.createdAt)
+
                 libCardContentTv.text = result.memo
 
-                // ★ [추가된 부분] 서버에서 받아온 상세 정보로 프로필/이름 덮어쓰기
-                // 주의: result.creatorName, result.creatorProfileImageUrl 은 임의로 적은 것입니다.
-                // 실제 서버 API 응답 모델(DTO)에 있는 필드명으로 꼭 맞춰서 변경해 주세요!
+                // 만약 서버에서 작성자/프로필 정보를 내려준다면 여기서 갱신
                 val apiWriterName = result.creatorName ?: writerName
                 val apiProfileUrl = result.writerProfile ?: writerProfileUrl
-
                 libCardProfileTv.text = apiWriterName
-
                 Glide.with(requireContext())
                     .load(apiProfileUrl)
                     .placeholder(R.drawable.bg_round_10dp_gray300)
@@ -221,19 +216,63 @@ class LibraryCardDetailFragment : Fragment() {
                     .circleCrop()
                     .into(libCardProfileIv)
 
-                // (아래는 기존 카드 이미지 처리 코드 그대로 유지)
+                // ★ [수정 2] 이미지 라운드 처리 방식 개선
                 if (!currentImageUrl.isNullOrEmpty()) {
                     libCardImageIv.visibility = View.VISIBLE
-                    Glide.with(requireContext()).load(currentImageUrl)
-                        .apply(RequestOptions.bitmapTransform(MultiTransformation(CenterCrop(), RoundedCorners(dpToPx(20)))))
-                        .placeholder(R.drawable.bg_round_20dp_gray200).into(libCardImageIv)
+                    Glide.with(requireContext())
+                        .load(currentImageUrl)
+                        // .apply() 대신 .transform() 체이닝 사용 (가장 확실한 방법)
+                        .transform(CenterCrop(), RoundedCorners(dpToPx(20)))
+                        .placeholder(R.drawable.bg_round_20dp_gray200)
+                        .into(libCardImageIv)
                 } else {
                     libCardImageIv.visibility = View.GONE
                 }
             }
         }
     }
-    // ★ suspend 적용
+
+    // ★ [추가] UTC 시간을 받아서 상대 시간(방금 전, N분 전, N시간 전, 날짜)으로 변환하는 함수
+    private fun calculateTimeAgo(serverTime: String): String {
+        if (serverTime.isEmpty()) return ""
+        try {
+            // 1. 서버 시간 파싱 (UTC 기준)
+            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            parser.timeZone = TimeZone.getTimeZone("UTC")
+            val date = parser.parse(serverTime) ?: return serverTime
+
+            // 2. 현재 시간과 차이 계산 (밀리초)
+            val now = System.currentTimeMillis()
+            val diff = now - date.time
+
+            val minutes = diff / (1000 * 60)
+            val hours = minutes / 60
+            val days = hours / 24
+
+            return when {
+                minutes < 1 -> "방금 전"
+                minutes < 60 -> "${minutes}분 전"
+                hours < 24 -> "${hours}시간 전"
+                else -> {
+                    // 3. 24시간 이상이면 날짜로 표시 (한국 시간 기준)
+                    val formatter = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
+                    formatter.timeZone = TimeZone.getDefault() // 내 폰 시간대(KST)
+                    formatter.format(date)
+                }
+            }
+        } catch (e: Exception) {
+            // 파싱 실패 시 기본 날짜 형식으로 반환 시도 (밀리초 포함된 포맷 등 예외 대응)
+            return try {
+                val fallbackParser = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val fallbackDate = fallbackParser.parse(serverTime)
+                val formatter = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
+                formatter.format(fallbackDate ?: return serverTime)
+            } catch (e2: Exception) {
+                serverTime // 최후의 수단: 원본 그대로 반환
+            }
+        }
+    }
+
     private suspend fun fetchComments() {
         val response = RetrofitClient.api().getCardComments(cardId)
         if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -246,19 +285,19 @@ class LibraryCardDetailFragment : Fragment() {
     private fun postComment(content: String) {
         if (cardId == -1L) return
         lifecycleScope.launch {
-            loadingDialog.show() // ★ 댓글 작성 로딩 시작
+            loadingDialog.show()
             try {
                 val request = PostCommentRequest(content)
                 val response = RetrofitClient.api().postCardComment(cardId, request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     binding.includeChatBottom.etInput.setText("")
                     hideKeyboard()
-                    fetchComments() // 댓글 다시 불러오기
+                    fetchComments()
                 } else {
                     Toast.makeText(context, "댓글 작성 실패", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) { e.printStackTrace() }
-            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() } // ★ 로딩 끝
+            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
         }
     }
 
@@ -292,7 +331,7 @@ class LibraryCardDetailFragment : Fragment() {
     private fun deleteCard() {
         if (cardId == -1L) return
         lifecycleScope.launch {
-            loadingDialog.show() // ★ 삭제 로딩 시작
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().deleteCard(cardId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -313,7 +352,7 @@ class LibraryCardDetailFragment : Fragment() {
             } catch (e: Exception) {
                 Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 삭제 로딩 끝
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
