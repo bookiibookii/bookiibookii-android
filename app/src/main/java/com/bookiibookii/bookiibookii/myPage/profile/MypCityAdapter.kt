@@ -13,7 +13,7 @@ class MypCityAdapter(
     private val onClick: (City) -> Unit
 ) : RecyclerView.Adapter<MypCityAdapter.CityViewHolder>() {
 
-    private var selectedPosition = 0
+    var selectedPosition = 0
 
     inner class CityViewHolder(val binding: ItemMypCityBinding) : RecyclerView.ViewHolder(binding.root) {
 

@@ -279,7 +279,12 @@ class GroupGenerationActivity : AppCompatActivity() {
 
             // 실행 버튼
             actGrpGenRunBtn.setOnClickListener {
-                if (!it.isEnabled) return@setOnClickListener
+                if (!it.isEnabled) {
+                    if (binding.actGrpGenChipGroup.checkedChipIds.isEmpty()) {
+                    showCustomToast("기본 태그를 최소 1개 이상 선택해주세요.")
+                }
+                    return@setOnClickListener
+                }
                 if (isEditMode) modifyGroupApi() else createGroupApi()
             }
         }
@@ -332,20 +337,10 @@ class GroupGenerationActivity : AppCompatActivity() {
         )
 
         binding.actGrpGenChipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
-            val totalCount = checkedIds.size + (if (isCustomTagSelected) 1 else 0)
-            if (totalCount > 3) {
-                val newlyAdded = checkedIds - previousCheckedIds.toSet()
-                if (newlyAdded.isNotEmpty()) {
-                    val removeId = newlyAdded.first()
-                    binding.actGrpGenChipGroup.post {
-                        group.findViewById<Chip>(removeId)?.isChecked = false
-                        showCustomToast("태그는 최대 3개까지만 선택 가능합니다.")
-                    }
-                }
-                return@setOnCheckedStateChangeListener
-            }
+            // [수정] 3개 제한 로직 삭제
+            // 이제 개수 제한 없이 선택 가능 (필요하다면 여기서 5개 등으로 조절 가능)
             previousCheckedIds = checkedIds
-            checkInputs()
+            checkInputs() // 상태가 바뀔 때마다 유효성 검사
         }
 
         val et = binding.actGrpGenDirectInputEt
@@ -356,7 +351,7 @@ class GroupGenerationActivity : AppCompatActivity() {
                 val text = et.text.toString()
                 if (text.isEmpty() || text == "#") setCustomTagState(false)
                 else if (!isCustomTagSelected) setCustomTagState(true)
-                checkInputs()
+                checkInputs() // 커스텀 태그 입력 시에도 유효성 검사
             }
         })
 
@@ -364,11 +359,6 @@ class GroupGenerationActivity : AppCompatActivity() {
             val text = et.text.toString()
             if (hasFocus) {
                 if (text.startsWith("#")) et.setText(text.removePrefix("#"))
-                if (!isCustomTagSelected && binding.actGrpGenChipGroup.checkedChipIds.size >= 3) {
-                    et.clearFocus()
-                    hideKeyboard(et)
-                    showCustomToast("태그는 최대 3개까지만 선택 가능합니다.")
-                }
             } else {
                 if (text.isNotEmpty() && !text.startsWith("#")) et.setText("#$text")
                 else if (text.isEmpty() || text == "#") {
@@ -392,37 +382,35 @@ class GroupGenerationActivity : AppCompatActivity() {
     // ============================================================================================
 
     private fun checkInputs() {
-        // 공통 필수값: 날짜, 기간, 소개글, 태그
         val hasDate = !selectedDate.isNullOrEmpty()
         val hasPeriod = binding.actGrpGenBookLimitBar.text.toString().isNotEmpty()
         val commentText = binding.actGrpGenIntroduceBar.text.toString()
         val hasValidComment = commentText.length >= 10
-        val hasValidTag = binding.actGrpGenChipGroup.checkedChipIds.isNotEmpty() || isCustomTagSelected
+
+        // ★ [핵심 수정] 커스텀 태그 여부와 상관없이 '기본 칩'이 최소 1개 있어야 함
+        val hasValidTag = binding.actGrpGenChipGroup.checkedChipIds.isNotEmpty()
 
         var isValid = false
 
         if (isEditMode) {
-            // [수정 모드]: 날짜, 기간, 소개글, 태그만 확인 (나머지는 변경 불가하므로 통과)
             isValid = hasDate && hasPeriod && hasValidComment && hasValidTag
         } else {
-            // [생성 모드]: 모든 필드 확인
             val hasIsbn = selectedIsbn.isNotEmpty()
-
             if (groupType == "RELAY") {
                 val hasPossession = (selectedBookHave != null)
                 val hasTradeType = (selectedTradeType != null)
-
-                // 직거래일 경우 장소 필수
                 val isDirect = (selectedTradeType == "DIRECT")
                 val hasDirectLocation = if (!isDirect) true else {
                     binding.actGrpGenRegionEt.text.toString().isNotEmpty() &&
                             binding.actGrpGenPlaceEt.text.toString().isNotEmpty()
                 }
-                isValid = hasIsbn && hasDate && hasPeriod && hasPossession && hasTradeType && hasDirectLocation && hasValidComment && hasValidTag
+                // hasValidTag(기본태그 필수) 포함
+                isValid = hasIsbn && hasDate && hasPeriod && hasPossession &&
+                        hasTradeType && hasDirectLocation && hasValidComment && hasValidTag
             } else {
-                // 같이 읽기
                 val hasCapacity = binding.actGrpGenMemberCountEt.text.toString().isNotEmpty()
-                isValid = hasIsbn && hasDate && hasPeriod && hasCapacity && hasValidComment && hasValidTag
+                isValid = hasIsbn && hasDate && hasPeriod && hasCapacity &&
+                        hasValidComment && hasValidTag
             }
         }
 

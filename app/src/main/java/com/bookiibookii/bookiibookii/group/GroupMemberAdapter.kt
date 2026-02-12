@@ -14,10 +14,11 @@ import com.bumptech.glide.Glide
 class GroupMemberAdapter : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHolder>() {
 
     private var memberList = listOf<ParticipantSlot>()
+    private var myNickname: String? = null // 액티비티에서 받아올 내 닉네임
 
-    // 데이터 갱신용 함수
-    fun submitList(list: List<ParticipantSlot>?) {
+    fun submitList(list: List<ParticipantSlot>?, myNick: String? = null) {
         memberList = list ?: emptyList()
+        myNickname = myNick
         notifyDataSetChanged()
     }
 
@@ -38,35 +39,52 @@ class GroupMemberAdapter : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHol
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(slot: ParticipantSlot) {
+            val context = itemView.context
             with(binding) {
+                // 1. 공통 초기화
+                itemMemberHostCp.visibility = View.GONE
 
-                val context = itemView.context
-
-                // 1. 상태별 분기 처리 (EMPTY / MEMBER / HOST)
                 if (slot.role == "EMPTY") {
-                    // 대기중 상태
                     itemMemberProfileIv.setImageResource(R.drawable.ic_profile)
                     itemMemberProfileIv.alpha = 0.3f
                     itemMemberNicknameTv.text = "모집중"
-                    itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_700))
-                    itemMemberHostCp.visibility = View.GONE
+                    itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_400))
                 } else {
-                    // 참여중 상태
                     itemMemberProfileIv.alpha = 1.0f
                     itemMemberNicknameTv.text = slot.nickname
-                    itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_900))// 검정
+                    itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_900))
 
-                    Glide.with(itemView.context)
+                    // 2. 프로필 이미지 채우기
+                    // [수정] 배경이나 이전 이미지가 남지 않도록 Glide 설정 강화
+                    Glide.with(context)
                         .load(slot.profileImage)
                         .placeholder(R.drawable.ic_profile)
-                        .circleCrop()
+                        .error(R.drawable.ic_profile)
+                        .centerCrop() // 사진을 카드뷰 모양에 꽉 채우기 위해 centerCrop만 사용!
                         .into(itemMemberProfileIv)
+                    // 3. 태그 로직 (HOST 우선, 그다음 ME)
+                    when {
+                        slot.role == "HOST" -> {
+                            itemMemberHostCp.visibility = View.VISIBLE
+                            itemMemberHostCp.text = "HOST"
+                            // 호스트는 기존처럼 메인 강조색
+                            itemMemberHostCp.setChipBackgroundColorResource(R.color.pre_main)
+                            itemMemberHostCp.setTextColor(Color.WHITE)
+                        }
+                        slot.nickname == myNickname -> {
+                            itemMemberHostCp.visibility = View.VISIBLE
+                            itemMemberHostCp.text = "ME"
 
-                    // 호스트 뱃지
-                    if (slot.role == "HOST") {
-                        itemMemberHostCp.visibility = View.VISIBLE
-                    } else {
-                        itemMemberHostCp.visibility = View.GONE
+                            // ★ [수정] 요청하신 색상 조합 적용
+                            // 배경색: sub_pale (연한색)
+                            itemMemberHostCp.setChipBackgroundColorResource(R.color.pre_sub_pale)
+                            // 텍스트색: pre_sub (강조색)
+                            itemMemberHostCp.setTextColor(ContextCompat.getColor(context, R.color.pre_sub))
+                        }
+                        else -> {
+                            itemMemberHostCp.visibility = View.GONE
+                        }
+
                     }
                 }
             }

@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.group
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -12,43 +13,63 @@ import android.view.View
 import android.view.Window
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
-import com.bookiibookii.bookiibookii.databinding.ActivityGrpHostBinding
+import com.bookiibookii.bookiibookii.databinding.ActivityGrpHostBinding // XML 파일명에 맞게 수정하세요
 import com.bookiibookii.bookiibookii.databinding.DialogGroupJoinBinding
 import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.group.viewmodel.GroupDetailViewModel
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import kotlin.math.roundToInt
 
 class GroupDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityGrpHostBinding
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<View>
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout> // 타입 변경 (View -> ConstraintLayout)
 
-    // 어댑터 2개 (멤버 목록, 댓글 목록)
     private val memberAdapter = GroupMemberAdapter()
 
-    // ★ [추가] 댓글 어댑터: 클릭 시 답글 모드로 전환
-    private val commentAdapter = GroupChatAdapter { parentId, writerName ->
-        activateReplyMode(parentId, writerName)
+
+    // 댓글 어댑터: (부모ID, 작성자명) 콜백 -> 답글 모드 진입
+    private var allCommentsList: List<GroupItemDto.CommentItem> = emptyList()
+
+    // 어댑터 클릭 리스너 수정
+    private val commentAdapter = GroupChatAdapter { commentId, writerName ->
+        // 1. 전체 부모 리스트(allCommentsList)에서 클릭된 ID를 찾습니다.
+        // 자식 댓글(대댓글)은 allCommentsList 안에 중첩되어 있으므로 find로 찾아지지 않습니다.
+        val isParentItem = allCommentsList.any { it.id == commentId }
+
+        if (isParentItem) {
+            // 부모 댓글인 경우에만 답글 모드 실행
+            enterReplyMode(commentId, writerName)
+        } else {
+            // 자식 댓글을 클릭했을 때는 아무 동작도 하지 않음 (필요 시 토스트 메시지)
+          }
     }
 
     private val viewModel: GroupDetailViewModel by viewModels()
+    private val userViewModel: MyPageViewModel by viewModels()
     private var currentGroupId: Int = 0
-
-    // ★ 대댓글 타겟 ID (null이면 일반 댓글)
     private var targetParentId: Long? = null
+
+    private var isReplyMode = false
+
+    private var isSecretMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,155 +87,333 @@ class GroupDetailActivity : AppCompatActivity() {
         initBottomSheet()
         setupObserver()
 
-        // 화면 진입 시 데이터 로드 (그룹 정보 + 댓글 목록)
+        initSecretLock()
+        initInputListener()
+
+        userViewModel.fetchMypageData()
         viewModel.fetchGroupDetail(currentGroupId)
-        viewModel.fetchComments(currentGroupId.toLong()) // ★ 댓글 불러오기
-    }
+        viewModel.fetchComments(currentGroupId.toLong())
 
-    private fun initView() {
-        // 1. 뒤로가기 등 기본 버튼
-        binding.actGrpHoBackIv.setOnClickListener { handleBackPress() }
 
-        // 2. 멤버 리스트 (상단)
-        binding.actGrpHoMemberRv.adapter = memberAdapter
-
-        // =========================================================
-        // ★ 3. 댓글 리스트 연결 (새로운 XML ID 적용)
-        // =========================================================
-        binding.grpMgBottomSheetInfoRv.apply {
-            layoutManager = LinearLayoutManager(this@GroupDetailActivity)
-            adapter = commentAdapter
-            // 아이템이 추가될 때 부드러운 애니메이션 (선택)
-            itemAnimator = null
+        binding.grpMgBottomSheetBackIv.setOnClickListener {
+            exitReplyMode() // 전체 목록으로 복귀
         }
 
-        // =========================================================
-        // ★ 4. 입력창 & 전송 버튼 로직
-        // =========================================================
-        val inputEt = binding.grpMgBottomSheetInputEt
-        val sendBtn = binding.grpMgBottomSheetSendIv
-
-        // 초기 상태: 비활성 색상
-        sendBtn.setImageResource(R.drawable.ic_send)
-        sendBtn.isEnabled = false
-
-        // 텍스트 입력 감지 (글자가 있을 때만 전송 버튼 활성화)
-        inputEt.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                val hasText = !s.isNullOrBlank()
-                if (hasText) {
-                    // ★ 글자가 있으면 -> 검정색 아이콘(ic_send_black)으로 교체
-                    sendBtn.setImageResource(R.drawable.ic_send_black)
-                    sendBtn.isEnabled = true
-                } else {
-                    // ★ 글자가 없으면 -> 다시 회색 아이콘(ic_send)으로 복구
-                    sendBtn.setImageResource(R.drawable.ic_send)
-                    sendBtn.isEnabled = false
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // 1. 답글 모드라면 -> 답글 모드 해제
+                if (isReplyMode) {
+                    exitReplyMode()
+                    return
                 }
+                // 2. 바텀시트가 열려있다면 -> 닫기
+                if (::bottomSheetBehavior.isInitialized && bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                    return
+                }
+                // 3. 그 외 -> 액티비티 종료
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
             }
         })
 
-        // 전송 버튼 클릭 리스너
+    }
+
+    // ========================================================================
+    // ★ [핵심] 답글 모드 진입 (Activity가 UI 상태를 변경)
+    // ========================================================================
+    private fun enterReplyMode(parentId: Long, writerName: String) {
+        isReplyMode = true
+        targetParentId = parentId // 답글 작성 시 보낼 부모 ID 저장
+
+        // 1. 헤더 UI 변경 ("댓글 3" -> "답글")
+        binding.grpMgBottomSheetBackIv.visibility = View.VISIBLE
+        binding.grpMgBottomSheetTitleTv.text = "답글"
+        binding.grpMgBottomSheetNumTitleTv.visibility = View.GONE // 개수 숨김 (또는 필요시 답글 수 표시)
+
+        // 2. 리스트 필터링 (선택한 댓글과 그 자식들만 필터링해서 어댑터에 전달)
+        // (서버 구조에 따라 parentId가 자기 자신이거나, parentId 필드가 일치하는 것 추출)
+        val targetThread = allCommentsList.filter {
+            it.id == parentId || (it.parentId == parentId && it.parentId != 0L)
+        }
+        commentAdapter.setComments(targetThread)
+
+        // 3. 입력창 힌트 변경 & 포커스
+        binding.grpMgBottomSheetInputEt.hint = "$writerName 님에게 답글 작성..."
+        showKeyboard()
+
+        // 4. 바텀시트가 닫혀있다면 열기
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        }
+    }
+
+    private fun showKeyboard() {
+        binding.grpMgBottomSheetInputEt.requestFocus()
+        // 약간의 딜레이를 주어야 바텀시트가 펼쳐진 후 키보드가 안정적으로 올라옵니다.
+        binding.grpMgBottomSheetInputEt.postDelayed({
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(binding.grpMgBottomSheetInputEt, InputMethodManager.SHOW_IMPLICIT)
+        }, 100)
+    }
+
+    // ========================================================================
+    // ★ [핵심] 답글 모드 해제 (원상 복구)
+    // ========================================================================
+    private fun exitReplyMode() {
+        isReplyMode = false
+        targetParentId = null // 부모 ID 초기화
+
+        // 1. 헤더 UI 복구
+        binding.grpMgBottomSheetBackIv.visibility = View.GONE
+        binding.grpMgBottomSheetTitleTv.text = "댓글"
+        binding.grpMgBottomSheetNumTitleTv.visibility = View.VISIBLE
+        binding.grpMgBottomSheetNumTitleTv.text = "${allCommentsList.size}"
+
+        // 2. 리스트 전체 복구
+        commentAdapter.setComments(allCommentsList)
+
+        // 3. 입력창 초기화
+        binding.grpMgBottomSheetInputEt.hint = "텍스트 입력 전" // 기본 힌트로 복귀
+        binding.grpMgBottomSheetInputEt.clearFocus()
+        hideKeyboard()
+    }
+
+    private fun initView() {
+        // 상단 뒤로가기
+        binding.actGrpHoBackIv.setOnClickListener { handleBackPress() }
+
+        // 멤버 리스트
+        binding.actGrpHoMemberRv.adapter = memberAdapter
+
+        // 댓글 리스트 설정
+        binding.grpMgBottomSheetInfoRv.apply {
+            layoutManager = LinearLayoutManager(this@GroupDetailActivity)
+            adapter = commentAdapter
+            itemAnimator = null // 깜빡임 방지
+            addItemDecoration(GroupChatAdapter.VerticalSpaceItemDecoration(12))
+
+            // 빈 공간 터치 시 키보드 내리기
+            setOnTouchListener { _, event ->
+                if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                    hideKeyboard()
+                }
+                false
+            }
+        }
+
+        // 입력창 & 전송 버튼
+        val inputEt = binding.grpMgBottomSheetInputEt
+        val sendBtn = binding.grpMgBottomSheetSendIv
+
+        sendBtn.isEnabled = false
+        sendBtn.alpha = 0.3f
+
+        inputEt.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
+            override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val hasText = !s.isNullOrBlank()
+                sendBtn.isEnabled = hasText
+                sendBtn.alpha = if (hasText) 1.0f else 0.3f
+                if (hasText) sendBtn.setImageResource(R.drawable.ic_send_black)
+            }
+        })
+
+        // 전송 버튼 클릭
         sendBtn.setOnClickListener {
             val content = inputEt.text.toString().trim()
             if (content.isNotEmpty()) {
-                // ViewModel에 전송 요청
+                // ★ viewModel에 현재 상태의 parentId를 함께 전달 (일반 댓글이면 null, 답글이면 값 존재)
                 viewModel.postComment(
                     groupId = currentGroupId.toLong(),
                     content = content,
-                    parentId = targetParentId // 답글 모드일 경우 부모 ID 포함
+                    parentId = targetParentId,
+                    secret = isSecretMode
                 )
             }
         }
 
-        // 새로고침 버튼 (바텀시트 헤더)
+        // 새로고침
         binding.grpMgBottomSheetReloadIv.setOnClickListener {
             viewModel.fetchComments(currentGroupId.toLong())
-            Toast.makeText(this, "댓글을 새로고침했습니다.", Toast.LENGTH_SHORT).show()
         }
 
-        // (선택) 댓글 영역 빈 공간 클릭 시 키보드 내리기
-        binding.grpMgBottomSheetInfoRv.setOnTouchListener { v, event ->
-            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
-                hideKeyboard(inputEt)
-                // 답글 모드였다면 취소할 수도 있음
-                if (targetParentId != null) deactivateReplyMode()
+    }
+
+    private fun initBottomSheet() {
+        // XML에서 정의한 ID 연결
+        val bottomSheetLayout = binding.persistentBottomSheet
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetLayout)
+
+        // 1. PeekHeight 설정 (접혔을 때 보이는 높이)
+        // XML에서 app:behavior_peekHeight="170dp"로 설정했으므로 코드 생략 가능하나, 명시적으로 넣어도 됨
+        // bottomSheetBehavior.peekHeight = dpToPx(170)
+
+        // 2. 초기 상태: 접힘
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+
+        // 3. 콜백 설정 (드래그 시 동작)
+        bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                // 필요 시 상태 변화에 따른 로직 추가 (예: 뒤로가기 버튼 모양 변경 등)
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                // slideOffset: 0.0 (접힘) -> 1.0 (펼쳐짐)
+                // 새로고침 아이콘 투명도 조절 (펼칠수록 잘 보이게)
+                binding.grpMgBottomSheetReloadIv.alpha = slideOffset
+            }
+        })
+    }
+
+    private fun deactivateReplyMode() {
+        targetParentId = null
+        binding.grpMgBottomSheetInputEt.hint = "텍스트 입력 전" // 원래 힌트로 복구
+        binding.grpMgBottomSheetInputEt.clearFocus()
+        // 키보드 내리기는 상황에 따라 결정
+    }
+    private fun initInputListener() {
+        binding.grpMgBottomSheetSendIv.setOnClickListener {
+            val content = binding.grpMgBottomSheetInputEt.text.toString().trim()
+            if (content.isNotEmpty()) {
+                viewModel.postComment(
+                    groupId = currentGroupId.toLong(),
+                    content = content,
+                    parentId = targetParentId,
+                    secret = isSecretMode // ★ 이 값을 서버 리퀘스트에 담아 보냅니다.
+                )
+            }
+        }
+
+        // (선택) 빈 공간 터치 시 답글 모드 취소하고 싶다면
+        binding.grpMgBottomSheetInfoRv.setOnTouchListener { _, _ ->
+            if (targetParentId != null) {
+                deactivateReplyMode()
+                hideKeyboard()
             }
             false
         }
     }
 
-    // 답글 모드 활성화 (어댑터에서 호출)
-    private fun activateReplyMode(parentId: Long, writerName: String) {
-        targetParentId = parentId
-        binding.grpMgBottomSheetInputEt.hint = "$writerName 님에게 답글 작성..."
 
-        // 키보드 올리기
-        binding.grpMgBottomSheetInputEt.requestFocus()
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(binding.grpMgBottomSheetInputEt, InputMethodManager.SHOW_IMPLICIT)
+    private fun initSecretLock() {
+        binding.ivLock.setOnClickListener {
+            isSecretMode = !isSecretMode
+            if (isSecretMode) {
+                binding.ivLock.setImageResource(R.drawable.ic_lock_blue)
+                Toast.makeText(this, "비밀댓글 모드 활성", Toast.LENGTH_SHORT).show()
+            } else {
+                binding.ivLock.setImageResource(R.drawable.ic_lock)
+            }
+        }
     }
-
-    // 답글 모드 해제 (전송 후 또는 취소 시)
-    private fun deactivateReplyMode() {
-        targetParentId = null
-        binding.grpMgBottomSheetInputEt.hint = "텍스트 입력 전"
-        binding.grpMgBottomSheetInputEt.clearFocus()
-    }
-
     private fun setupObserver() {
-        // [1] 그룹 상세 데이터 관찰
+
+        // 1. 내 정보(마이페이지) 관찰 -> 내 닉네임 확보
+        userViewModel.profileData.observe(this) { profile ->
+            if (profile != null) {
+                val myNickname = profile.nickname
+                // 현재 멤버 리스트가 있다면 내 닉네임을 반영해서 ME 뱃지 갱신
+                val currentSlots = viewModel.groupDetail.value?.participantSlots
+                memberAdapter.submitList(currentSlots, myNickname)
+                val detail = viewModel.groupDetail.value
+                updateMemberAdapter(detail?.participantSlots, detail?.hostProfileImageUrl)
+            }
+        }
+
+        // 2. 그룹 상세 정보 관찰 (하나로 통합)
         viewModel.groupDetail.observe(this) { data ->
             if (data != null) {
                 bindUi(data)
                 handleButtonStatus(data)
                 setupMoreMenu(data.isHost)
+
+                // 상세 데이터 로드 시점에 내 닉네임이 로드되어 있다면 같이 전달
+                val myNickname = userViewModel.profileData.value?.nickname
+                memberAdapter.submitList(data.participantSlots, myNickname)
+
+                updateMemberAdapter(data.participantSlots, data.hostProfileImageUrl)
             }
         }
 
-        // [2] ★ 댓글 리스트 관찰 (서버에서 오면 어댑터에 넣기)
+        // 3. 댓글 리스트 관찰
         viewModel.commentList.observe(this) { list ->
             if (list != null) {
-                commentAdapter.setComments(list)
+                allCommentsList = list
+                val hostNickname = viewModel.groupDetail.value?.hostNickname
+                commentAdapter.setHostNickname(hostNickname)
 
-                // (선택) 댓글 개수 표시 UI가 있다면
-                binding.grpMgBottomSheetNumTitleTv.text = "${list.size}"
+                if (isReplyMode && targetParentId != null) {
+                    val targetThread = list.filter {
+                        it.id == targetParentId || it.parentId == targetParentId
+                    }
+                    commentAdapter.setComments(targetThread)
+                } else {
+                    commentAdapter.setComments(list)
+                    binding.grpMgBottomSheetNumTitleTv.text = "${list.size}"
+                }
             }
         }
 
-        // [3] ★ 댓글 작성 성공 관찰
+        // 4. 댓글 작성 성공 및 에러 처리 (기존과 동일)
         viewModel.commentWriteSuccess.observe(this) { isSuccess ->
             if (isSuccess) {
-                Toast.makeText(this, "등록 완료!", Toast.LENGTH_SHORT).show()
-
-                // 입력창 초기화 & 답글 모드 해제
                 binding.grpMgBottomSheetInputEt.setText("")
-                binding.grpMgBottomSheetInputEt.hint = "댓글을 입력하세요"
-                targetParentId = null
-
-                hideKeyboard(binding.grpMgBottomSheetInputEt)
-
-                // ★ 목록 새로고침! (내가 쓴 댓글 바로 보이게)
+                isSecretMode = false
+                binding.ivLock.setImageResource(R.drawable.ic_lock)
+                if (isReplyMode) exitReplyMode()
                 viewModel.fetchComments(currentGroupId.toLong())
+                hideKeyboard()
             }
         }
 
-        // [4] 에러 메시지
         viewModel.errorMessage.observe(this) { msg ->
             if (!msg.isNullOrBlank()) Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
     }
+    private fun handleBackPress() {
+        // 바텀시트가 열려있으면 먼저 닫기
+        if (::bottomSheetBehavior.isInitialized && bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        } else {
+            finish()
+        }
+    }
 
-    // 키보드 내리기
-    private fun hideKeyboard(view: View) {
+//    override fun onBackPressed() {
+//        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+//            if (isReplyMode) {
+//                exitReplyMode() // 답글 모드 -> 전체 목록
+//                return
+//            }
+//            // 전체 목록이면 바텀시트 닫기 (기존 로직)
+//        }
+//        super.onBackPressed()
+//    }
+
+    private fun hideKeyboard() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(view.windowToken, 0)
+        imm.hideSoftInputFromWindow(binding.grpMgBottomSheetInputEt.windowToken, 0)
     }
 
 
+
+
     private fun bindUi(data: GroupItemDto.GroupDetailResult) {
+
+        // 1. 직접 교환 여부 확인
+        val isDirectExchange = !data.meetPlace.isNullOrBlank()
+
+        if (isDirectExchange) {
+            // 직접거래일 때: 레이아웃을 보여주고 실제 장소명을 세팅
+            binding.actGrpHoRegionLayout.visibility = View.VISIBLE
+            binding.actGrpHoIntroRealRegionTv.text = data.meetPlace
+        } else {
+            // 택배일 때 (meetPlace가 null인 경우): 레이아웃 자체를 숨김
+            binding.actGrpHoRegionLayout.visibility = View.GONE
+        }
+
         with(binding.actGrpHoIncludedItem) {
             grpItemBookTitleTv.text = data.bookTitle
             grpItemBookAuthorTv.text = data.author
@@ -227,30 +426,61 @@ class GroupDetailActivity : AppCompatActivity() {
             grpItemMemStatusNoTv.text = "${data.matchedCount}"
 
             Glide.with(this@GroupDetailActivity).load(data.bookImage).centerCrop().into(grpItemCoverIv)
-            Glide.with(this@GroupDetailActivity).load(data.hostProfileImage).placeholder(R.drawable.ic_profile).circleCrop().into(grpItemProfileIv)
+            Glide.with(this@GroupDetailActivity).load(data.hostProfileImageUrl).placeholder(R.drawable.ic_profile).circleCrop().into(grpItemProfileIv)
 
             grpItemHotCp.visibility = if (data.isHot) View.VISIBLE else View.GONE
 
-            val chipList = listOf(grpItemHash1Cp, grpItemHash2Cp, grpItemHash3Cp, grpItemHash4Cp, grpItemHash5Cp)
-            chipList.forEach { it.visibility = View.GONE }
-            val displayTags = ArrayList<String>()
-            data.groupTags?.forEach { displayTags.add(GroupTagMapper.toKoreanTag(it)) }
-            if (!data.customTag.isNullOrBlank()) displayTags.add("#${data.customTag}")
+            // 모든 칩 리스트 (XML에 5개 이상 넉넉히 있다고 가정)
+            with(binding.actGrpHoIncludedItem.grpItemChipGroup) {
+                removeAllViews() // 초기화
 
-            for (i in displayTags.indices) {
-                if (i < chipList.size) {
-                    chipList[i].text = displayTags[i]
-                    chipList[i].visibility = View.VISIBLE
+                val displayTags = ArrayList<String>()
+                if (!data.customTag.isNullOrBlank()) displayTags.add("#${data.customTag}")
+                data.groupTags?.forEach { displayTags.add(GroupTagMapper.toKoreanTag(it)) }
+
+                // 상세 페이지는 개수 제한 없이 루프 실행
+                displayTags.forEach { tagText ->
+                    val chip = layoutInflater.inflate(R.layout.item_chip_tag, this, false) as Chip
+                    chip.text = tagText
+                    this.addView(chip)
                 }
             }
+
             grpItemBottomBtnLayout.visibility = View.VISIBLE
+
         }
 
         binding.actGrpHoIntroContTv.text = data.groupComment
+        binding.actGrpHoIntroRealRegionTv.text = data.preferRegion
         binding.actGrpHoMainTitleTv.text = data.title
         binding.actGrpHoMemberStatus1Tv.text = "${data.matchedCount}"
         binding.actGrpHoMemberStatus3Tv.text = "${data.maxCapacity}"
-        memberAdapter.submitList(data.participantSlots)
+//        memberAdapter.submitList(data.participantSlots)
+
+        val processedSlots = data.participantSlots?.map { slot ->
+            if (slot.role == "HOST" && slot.profileImage.isNullOrBlank()) {
+                // 호스트인데 이미지가 없다면, 상단 호스트 프로필 URL을 복사해서 넣어줌
+                slot.copy(profileImage = data.hostProfileImageUrl)
+            } else {
+                slot
+            }
+        }
+
+        updateMemberAdapter(data.participantSlots, data.hostProfileImageUrl)
+    }
+
+    private fun updateMemberAdapter(slots: List<GroupItemDto.ParticipantSlot>?, hostProfile: String?) {
+        val myNickname = userViewModel.profileData.value?.nickname
+
+        val processed = slots?.map { slot ->
+            if (slot.role == "HOST") {
+                // 호스트라면 상단 프로필 이미지(hostProfile)를 강제로 꽂아줌
+                slot.copy(profileImage = hostProfile)
+            } else {
+                slot
+            }
+        }
+        memberAdapter.submitList(processed, myNickname)
     }
 
     private fun handleButtonStatus(data: GroupItemDto.GroupDetailResult) {
@@ -440,38 +670,6 @@ class GroupDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun initBottomSheet() {
-        val bottomSheetLayout = binding.persistentBottomSheet
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetLayout)
-
-        // 1. 초기 설정: 입력창 높이(대략 60~80dp) + 여유분만큼만 빼꼼 나오게 설정
-        // (너무 높으면 리스트가 보여서 지저분해 보임)
-        bottomSheetBehavior.peekHeight = dpToPx(170)
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-
-        // 2. 초기 상태: 헤더(새로고침, 댓글 글자)는 숨겨두기
-        setSheetHeaderAlpha(0f)
-
-        // 3. ★ 핵심: 드래그할 때마다 헤더 투명도 조절 (애니메이션 효과)
-        bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-                // 다 접혔을 때 확실하게 숨김 처리
-                if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
-                    setSheetHeaderAlpha(0f)
-                }
-                // 다 펼쳐졌을 때 확실하게 보임 처리
-                else if (newState == BottomSheetBehavior.STATE_EXPANDED) {
-                    setSheetHeaderAlpha(1f)
-                }
-            }
-
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                // slideOffset: 0.0(접힘) ~ 1.0(펼쳐짐)
-                // 바텀시트가 올라올수록 헤더가 서서히 나타나게 함
-                setSheetHeaderAlpha(slideOffset)
-            }
-        })
-    }
     private fun setSheetHeaderAlpha(alpha: Float) {
         // XML ID 확인 필요 (헤더에 있는 뷰들)
         // 댓글 개수
@@ -484,14 +682,6 @@ class GroupDetailActivity : AppCompatActivity() {
 
         // 만약 헤더 전체를 감싸는 레이아웃(ConstraintLayout 등)이 있다면 그것만 조절해도 됨
         // binding.grpMgBottomSheetHeaderLayout.alpha = alpha
-    }
-
-    private fun handleBackPress() {
-        if (::bottomSheetBehavior.isInitialized && bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-        } else {
-            finish()
-        }
     }
 
     private fun dpToPx(dp: Int): Int {

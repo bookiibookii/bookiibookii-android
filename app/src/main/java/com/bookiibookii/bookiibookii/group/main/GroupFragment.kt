@@ -85,9 +85,11 @@ class GroupFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // 필터 상태와 칩 UI 동기화 (다이얼로그 닫힌 후 등 대비)
-        val displayList = if (currentRegionFilter == "전체" || currentRegionFilter.endsWith(" 전체")) {
+        val displayList = if (currentRegionFilter == "전체") {
             listOf("전체")
+        } else if (currentRegionFilter.endsWith(" 전체")) {
+            // "서울 전체" -> ["서울"]
+            listOf(currentRegionFilter.substringBefore(" "))
         } else {
             currentRegionFilter.substringAfter(" ").split("/")
         }
@@ -98,17 +100,23 @@ class GroupFragment : Fragment() {
     private fun initFragmentResultListeners() {
         setFragmentResultListener("requestKeyRegion") { _, bundle ->
             val rawResult = bundle.getString("regionResult") ?: "전체"
-            val finalResult = if (rawResult.endsWith(" 전체")) "전체" else rawResult
 
-            if (currentRegionFilter != finalResult) {
-                currentRegionFilter = finalResult
-                loadGroupData() // 변경되었으니 재조회
+            // 데이터 변경이 있을 때만 로드
+            if (currentRegionFilter != rawResult) {
+                currentRegionFilter = rawResult
+                loadGroupData() // 데이터 새로고침
 
-                val displayList = if (finalResult == "전체") {
+                // 칩 텍스트 업데이트용 리스트 생성
+                val displayList = if (rawResult == "전체") {
                     listOf("전체")
+                } else if (rawResult.endsWith(" 전체")) {
+                    // "서울 전체" -> ["서울"] 로 표시
+                    listOf(rawResult.substringBefore(" "))
                 } else {
-                    finalResult.substringAfter(" ").split("/")
+                    // "서울 강남구/서초구" -> ["강남구", "서초구"] 로 표시 (혹은 "서울" 포함하고 싶으면 로직 변경)
+                    rawResult.substringAfter(" ").split("/")
                 }
+
                 updateChipUI(binding.grpRegionCp, displayList, "지역별")
             }
         }
@@ -167,8 +175,13 @@ class GroupFragment : Fragment() {
         }
 
         val meetPlace = if (currentRegionFilter == "전체") {
-            null
+            null // 전체 검색
+        } else if (currentRegionFilter.endsWith(" 전체")) {
+            // "서울 전체", "경기 전체" 인 경우 -> "서울", "경기"만 추출해서 리스트로 만듦
+            listOf(currentRegionFilter.substringBefore(" "))
         } else {
+            // "서울 강남구/서초구" 인 경우 -> ["강남구", "서초구"] (또는 서버 스펙에 따라 ["서울 강남구", "서울 서초구"])
+            // 기존 로직 유지 (구 이름만 보냄)
             currentRegionFilter.substringAfter(" ").split("/").map { it.trim() }
         }
 
@@ -238,27 +251,35 @@ class GroupFragment : Fragment() {
                 ).show(parentFragmentManager, "GroupTypeFilter")
             }
 
-            // 2) 지역별
             grpRegionCp.setOnClickListener {
+                // 다이얼로그 생성
+                val dialog = GrpRegionBottomSheetFragment.newInstance(currentRegionFilter)
+
+                // 칩을 체크 상태로 만듦
                 grpRegionCp.isChecked = true
-                val dialog = GrpRegionBottomSheetFragment.Companion.newInstance(currentRegionFilter)
+
+                // [중요] 다이얼로그가 닫힐 때 아무 동작이 없었다면 칩 상태를 다시 확인하는 리스너 추가
+                // GrpRegionBottomSheetFragment에 onDismiss 콜백이 있다면 사용하고,
+                // 없다면 아래처럼 FragmentManager의 Lifecycle을 이용해 감지할 수 있습니다.
+
                 dialog.show(parentFragmentManager, "RegionSearchBottomSheet")
 
-                parentFragmentManager.registerFragmentLifecycleCallbacks(object :
-                    FragmentManager.FragmentLifecycleCallbacks() {
-                    override fun onFragmentDetached(
-                        fm: FragmentManager,
-                        f: Fragment
-                    ) {
-                        super.onFragmentDetached(fm, f)
-                        if (f == dialog) {
+                // 다이얼로그가 닫혔을 때를 감지하여 UI 복구
+                parentFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
+                    override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
+                        if (f is GrpRegionBottomSheetFragment) {
+                            // 닫혔을 때 현재 필터 상태에 따라 UI 원복
                             val displayList = if (currentRegionFilter == "전체") {
                                 listOf("전체")
+                            } else if (currentRegionFilter.endsWith(" 전체")) {
+                                listOf(currentRegionFilter.substringBefore(" "))
                             } else {
                                 currentRegionFilter.substringAfter(" ").split("/")
                             }
-                            updateChipUI(grpRegionCp, displayList, "지역별")
-                            fm.unregisterFragmentLifecycleCallbacks(this)
+                            updateChipUI(binding.grpRegionCp, displayList, "지역별")
+
+                            // 등록한 콜백 해제
+                            parentFragmentManager.unregisterFragmentLifecycleCallbacks(this)
                         }
                     }
                 }, false)
@@ -278,8 +299,6 @@ class GroupFragment : Fragment() {
                     }
                 ).show(parentFragmentManager, "CategoryFilter")
             }
-            //  정렬 필터 클릭 리스너
-            //
             grpMainSortRecommendTv.setOnClickListener { changeSortType("RECOMMEND") }
             grpMainSortLatestTv.setOnClickListener { changeSortType("LATEST") }
             grpMainSortPopularTv.setOnClickListener { changeSortType("POPULAR") }
@@ -322,12 +341,12 @@ class GroupFragment : Fragment() {
     private fun updateChipUI(chip: Chip, resultList: List<String>, defaultText: String) {
         if (resultList.isEmpty() || (resultList.size == 1 && resultList[0] == "전체")) {
             chip.text = defaultText
-            chip.isChecked = false
+            chip.isChecked = false // "전체"면 선택 안 된 상태로
             chip.chipStrokeWidth = dpToPx(1).toFloat()
             chip.setChipStrokeColorResource(R.color.grey_200)
         } else {
             chip.text = resultList.joinToString(" · ")
-            chip.isChecked = true
+            chip.isChecked = true // 값이 있으면 선택 상태 유지
             chip.chipStrokeWidth = 0f
         }
     }
