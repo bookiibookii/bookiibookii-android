@@ -35,30 +35,26 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun routeNext() {
-        val hasToken = TokenManager.hasAccessToken(this)
-
-        // 1) 토큰 없음 → 인트로 애니 → 로그인
-        if (!hasToken) {
-            moveToIntro(LoginIntroAnimActivity.NEXT_LOGIN)
-            return
-        }
-
         val isOnboardingDone = TokenManager.isOnboardingDone(this)
 
-        // 2) 토큰 있음 + 온보딩 미완료 → 인트로 애니 → 온보딩
         if (!isOnboardingDone) {
-            moveToIntro(LoginIntroAnimActivity.NEXT_ONBOARDING)
+            moveToIntro()
             return
         }
 
-        // 3) 토큰 있음 + 온보딩 완료 → 메인
-        startActivity(Intent(this, MainActivity::class.java))
+        val hasToken = TokenManager.hasAccessToken(this)
+        if (hasToken) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+
+        startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }
 
-    private fun moveToIntro(next: String) {
+    private fun moveToIntro() {
         val intent = Intent(this, LoginIntroAnimActivity::class.java).apply {
-            putExtra(LoginIntroAnimActivity.EXTRA_NEXT, next)
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
                     Intent.FLAG_ACTIVITY_NEW_TASK or
                     Intent.FLAG_ACTIVITY_CLEAR_TASK
