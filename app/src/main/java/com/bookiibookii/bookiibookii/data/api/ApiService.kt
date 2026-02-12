@@ -36,6 +36,7 @@ import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentResponse
 import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
+import com.bookiibookii.bookiibookii.data.model.ProfileResponse
 import com.bookiibookii.bookiibookii.data.model.RecommendedBookmateDto
 import com.bookiibookii.bookiibookii.data.model.RecommendedGroupDto
 import com.bookiibookii.bookiibookii.data.model.RelayReviewRequest
@@ -378,5 +379,4 @@ interface ApiService: TrkApi {
     // 부키메이트 추천 (최대 5명)
     @GET("/api/recommendations/bookmates")
     suspend fun getRecommendedBookmates(): Response<CommonResponse<List<RecommendedBookmateDto>>>
-
 }
