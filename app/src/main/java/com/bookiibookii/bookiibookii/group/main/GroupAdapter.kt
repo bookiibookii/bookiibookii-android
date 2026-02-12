@@ -1,14 +1,14 @@
 package com.bookiibookii.bookiibookii.group.main
 
+import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat // ★ 컬러 처리를 위해 추가
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.GroupTagMapper
@@ -16,12 +16,12 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
-import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+
 
 class GroupAdapter(
     private var itemList: List<GroupData>,
@@ -37,48 +37,51 @@ class GroupAdapter(
         val item = itemList[position]
         val context = holder.itemView.context
 
-        // 1. 텍스트 정보 설정
-        holder.tvTitle.text = item.bookTitle
-        holder.tvAuthor.text = item.bookAuthor
-        holder.tvDeadline.text = item.readingPeriod.toString()
-        holder.tvMemberCount.text = item.memberCount
-        holder.tvNickname.text = item.nickname
-        holder.tvDate.text = item.date
+        // 1. 기본 텍스트 정보 바인딩
+        holder.apply {
+            tvTitle.text = item.bookTitle
+            tvAuthor.text = item.bookAuthor
+            tvDeadline.text = item.readingPeriod.toString()
+            tvMemberCount.text = item.memberCount
+            tvNickname.text = item.nickname
+            tvDate.text = item.date
 
-        // 2. 장르 텍스트 처리
-        val genreText = item.genre
-        holder.tvGenre.text = if (genreText.isNotEmpty()) "($genreText)" else ""
+            // 장르가 있을 경우에만 괄호와 함께 표시
+            tvGenre.text = if (item.genre.isNotEmpty()) "(${item.genre})" else ""
 
-        // 3. Hot 뱃지 및 하단 버튼 숨김 처리
-        holder.bottomBtnLayout.visibility = View.GONE
-        holder.chipHot.visibility = if (item.isHot) View.VISIBLE else View.GONE
+            // 카드 하단 공통 레이아웃 숨김 (필요 시 보이도록 설정 가능)
+            bottomBtnLayout.visibility = View.GONE
+            // 인기 그룹일 경우에만 HOT 뱃지 노출
+            chipHot.visibility = if (item.isHot) View.VISIBLE else View.GONE
+        }
 
-        // 4. 칩(Chip) 스타일 및 텍스트 커스텀 로직
+        //  2. 그룹 상태 칩 스타일링
+        // 함께 읽기(TOGETHER)와 교환(RELAY) 그룹에 따라 배경색과 텍스트 구성이 다름
         val bgGrey900 = ContextCompat.getColorStateList(context, R.color.grey_900)
         val bgMain = ContextCompat.getColorStateList(context, R.color.pre_main)
         val textWhite = ContextCompat.getColor(context, R.color.white)
 
-        if (item.groupType == "TOGETHER") {
-            holder.chipStatus.apply {
+        holder.chipStatus.apply {
+            setTextColor(textWhite)
+            if (item.groupType == "TOGETHER") {
                 chipBackgroundColor = bgGrey900
-                setTextColor(textWhite)
                 text = "${item.badgeContent}(${item.maxMemberCount ?: 0})"
-            }
-        } else {
-            holder.chipStatus.apply {
+            } else {
                 chipBackgroundColor = bgMain
-                setTextColor(textWhite)
                 text = item.badgeContent
             }
         }
 
-        // 5. 책 표지 이미지 (Cover)
+        // 3. 이미지 로딩 - Glide
+
+        // 책 표지: 중앙 크롭 및 라운드 처리 적용
         Glide.with(context)
             .load(item.coverImgUrl)
             .transform(CenterCrop(), RoundedCorners(30))
             .placeholder(R.drawable.bg_round_10dp_gray300)
             .into(holder.ivCover)
 
+        // 사용자 프로필: 원형 크롭 및 로드 실패 대응
         Glide.with(context)
             .asBitmap()
             .load(item.profileImgUrl)
@@ -89,34 +92,23 @@ class GroupAdapter(
                     target: Target<Bitmap?>,
                     isFirstResource: Boolean
                 ): Boolean {
-                    // 1. URL이 아예 없어서 실패한 경우 (정상 상황) -> 로그 찍지 않음
-                    if (model == null) {
-                        return false // false를 리턴하면 .error() 이미지를 보여줌
+                    // URL은 전달되었으나 실제 로드에 실패한 경우만 로그 기록
+                    if (model != null) {
+                        Log.w("GlideWarning", "프로필 로드 실패: ${item.nickname} | URL: ${item.profileImgUrl}")
                     }
-
-                    // 2. URL은 있는데 로드에 실패한 경우 ('테스트2' 같은 경우) -> 이때만 로그 확인
-                    Log.w("GlideWarning", "이미지 로드 실패 (닉네임: ${item.nickname})\n - URL: ${item.profileImgUrl}\n - 원인: ${e?.message}")
                     return false
                 }
-
-                override fun onResourceReady(
-                    resource: Bitmap,
-                    model: Any,
-                    target: Target<Bitmap?>?,
-                    dataSource: DataSource,
-                    isFirstResource: Boolean
-                ): Boolean {
-                    // 성공하면 아무것도 안 함 (이미지 보여줌)
-                    return false
-                }
+                override fun onResourceReady(r: Bitmap, m: Any, t: Target<Bitmap?>?, d: DataSource, i: Boolean) = false
             })
             .circleCrop()
             .placeholder(R.drawable.bg_round_10dp_gray500)
             .error(R.drawable.bg_round_10dp_gray500)
-            .fallback(R.drawable.bg_round_10dp_gray500)
             .into(holder.ivProfile)
 
-        // 6. 태그(HashTag) 처리
+
+        // 4. 태그 리스트 처리
+
+        // 커스텀 태그(#)와 서버 태그를 합쳐서 최대 3개까지만 노출, 초과 시 +N 표시
         with(holder.chipGroup) {
             removeAllViews()
 
@@ -124,7 +116,6 @@ class GroupAdapter(
             if (!item.customTag.isNullOrBlank()) allDisplayTags.add("#${item.customTag}")
             item.tags.forEach { allDisplayTags.add(GroupTagMapper.toKoreanTag(it)) }
 
-            // [태그1][태그2][태그3][+N] 로직
             if (allDisplayTags.size < 4) {
                 allDisplayTags.forEach { text -> addTagChip(context, this, text) }
             } else {
@@ -133,32 +124,28 @@ class GroupAdapter(
             }
         }
 
-        // 7. 클릭 리스너
-        holder.itemView.setOnClickListener {
-            itemClick(item)
-        }
+        holder.itemView.setOnClickListener { itemClick(item) }
     }
 
     override fun getItemCount(): Int = itemList.size
-
     fun updateList(newList: List<GroupData>) {
         this.itemList = newList
         notifyDataSetChanged()
     }
 
-    // 칩 생성을 위한 공통 함수 (Adapter 내부 또는 Util)
-    private fun addTagChip(context: android.content.Context, group: ChipGroup, text: String) {
+    private fun addTagChip(context: Context, group: ChipGroup, text: String) {
         val chip = LayoutInflater.from(context).inflate(R.layout.item_chip_tag, group, false) as Chip
         chip.text = text
         group.addView(chip)
     }
 
+    // ViewHolder 뷰 홀더 클래스
     inner class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivCover: ImageView = itemView.findViewById(R.id.grp_item_cover_Iv)
         val tvTitle: TextView = itemView.findViewById(R.id.grp_item_book_title_Tv)
         val tvAuthor: TextView = itemView.findViewById(R.id.grp_item_book_author_Tv)
         val tvGenre: TextView = itemView.findViewById(R.id.grp_item_book_genre_Tv)
-        val chipStatus: Chip = itemView.findViewById(R.id.grp_item_status_Cp) // ★ 여기가 변경됨
+        val chipStatus: Chip = itemView.findViewById(R.id.grp_item_status_Cp)
         val tvDeadline: TextView = itemView.findViewById(R.id.grp_item_deadlineNo_Tv)
         val tvMemberCount: TextView = itemView.findViewById(R.id.grp_item_mem_statusNo_Tv)
         val chipHot: Chip = itemView.findViewById(R.id.grp_item_hot_Cp)

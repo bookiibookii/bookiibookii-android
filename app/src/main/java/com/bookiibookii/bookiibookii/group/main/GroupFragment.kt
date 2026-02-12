@@ -1,17 +1,18 @@
 package com.bookiibookii.bookiibookii.group.main
 
-import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.view.animation.OvershootInterpolator
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -34,26 +35,28 @@ import kotlinx.coroutines.launch
 
 class GroupFragment : Fragment() {
 
-    private lateinit var groupAdapter: GroupAdapter
-
-    private val userViewModel: MyPageViewModel by activityViewModels()
-
+    // region [Properties] 데이터 및 상태 관리 변수
     private var _binding: FragmentGrpBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var groupAdapter: GroupAdapter
+    private val userViewModel: MyPageViewModel by activityViewModels()
 
     private var isLoading = false
     private var isFabOpen = false
 
-    // 필터 상태 관리 변수
+    // 필터링 현재 상태 저장
     private var currentGroupTypeFilters: List<String> = listOf("전체")
     private var currentCategoryFilters: List<String> = listOf("전체")
     private var currentRegionFilter: String = "전체"
+    private var currentSortType = "RECOMMEND" // RECOMMEND(추천순), LATEST(최신순), POPULAR(인기순)
+    // endregion
 
-    private var currentSortType = "RECOMMEND"
+    // region [Lifecycle] 생명주기 관리
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentGrpBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -61,34 +64,37 @@ class GroupFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 초기 데이터 로드 (마이페이지 정보는 배송지 검증용으로 미리 가져옴)
         userViewModel.fetchMypageData()
 
-        initRecyclerViewSetting()
-        initFragmentResultListeners() // 리스너 등록
+        setupRecyclerView()
+        setupFragmentResultListeners() // 필터(지역 등) 선택 결과 수신 리스너
 
-        // 어댑터 미리 초기화 (빈 리스트로)
+        // 어댑터 초기화 및 상세 페이지 진입 전 검증 로직 연결
         groupAdapter = GroupAdapter(ArrayList()) { groupData ->
-            // [수정] 클릭 시 바로 이동하지 않고 검증 로직을 거침
             checkInfoAndMoveToDetail(groupData)
         }
         binding.groupRecyclerview.adapter = groupAdapter
 
-        updateSortUi() // 초기정렬
-        loadGroupData() // 데이터 로드
+        // 초기 UI 렌더링 및 데이터 로드
+        updateSortUi()
+        loadGroupData()
 
+        // 클릭 리스너 바인딩
         initListeners()
         initFabMenu()
         initRefreshLayout()
 
+        // 지역 칩 초기화
         updateChipUI(binding.grpRegionCp, listOf("전체"), "지역별")
     }
 
     override fun onResume() {
         super.onResume()
+        // 지역 필터 상태에 따른 칩 텍스트 동기화
         val displayList = if (currentRegionFilter == "전체") {
             listOf("전체")
         } else if (currentRegionFilter.endsWith(" 전체")) {
-            // "서울 전체" -> ["서울"]
             listOf(currentRegionFilter.substringBefore(" "))
         } else {
             currentRegionFilter.substringAfter(" ").split("/")
@@ -96,64 +102,36 @@ class GroupFragment : Fragment() {
         updateChipUI(binding.grpRegionCp, displayList, "지역별")
     }
 
-    // 필터 결과 수신 리스너
-    private fun initFragmentResultListeners() {
-        setFragmentResultListener("requestKeyRegion") { _, bundle ->
-            val rawResult = bundle.getString("regionResult") ?: "전체"
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+    // endregion
 
-            // 데이터 변경이 있을 때만 로드
-            if (currentRegionFilter != rawResult) {
-                currentRegionFilter = rawResult
-                loadGroupData() // 데이터 새로고침
+    // region [Toast] 커스텀 토스트 시스템 (디자인 시스템 적용)
+    /**
+     * @param message 토스트에 표시할 텍스트
+     * @param isSuccess true: 체크 아이콘(ic_check), false: 경고 아이콘(ic_info)
+     */
+    private fun showCustomToast(message: String, isSuccess: Boolean = true) {
+        val inflater = LayoutInflater.from(requireContext())
+        val layout = inflater.inflate(R.layout.toast_custom, null)
 
-                // 칩 텍스트 업데이트용 리스트 생성
-                val displayList = if (rawResult == "전체") {
-                    listOf("전체")
-                } else if (rawResult.endsWith(" 전체")) {
-                    // "서울 전체" -> ["서울"] 로 표시
-                    listOf(rawResult.substringBefore(" "))
-                } else {
-                    // "서울 강남구/서초구" -> ["강남구", "서초구"] 로 표시 (혹은 "서울" 포함하고 싶으면 로직 변경)
-                    rawResult.substringAfter(" ").split("/")
-                }
+        val iconIv = layout.findViewById<ImageView>(R.id.toast_icon_iv)
+        val messageTv = layout.findViewById<TextView>(R.id.toast_message_tv)
 
-                updateChipUI(binding.grpRegionCp, displayList, "지역별")
-            }
+        messageTv.text = message
+        iconIv.setImageResource(if (isSuccess) R.drawable.ic_check else R.drawable.ic_info)
+
+        with(Toast(requireContext().applicationContext)) {
+            setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
+            duration = Toast.LENGTH_SHORT
+            view = layout
+            show()
         }
     }
 
-    private fun initRecyclerViewSetting() {
-        binding.groupRecyclerview.layoutManager = LinearLayoutManager(context)
-        if (binding.groupRecyclerview.itemDecorationCount == 0) {
-            val spaceInPx = dpToPx(16)
-            binding.groupRecyclerview.addItemDecoration(VerticalSpaceItemDecoration(spaceInPx))
-        }
-    }
-
-    private fun initRefreshLayout() {
-        binding.grpSwipeRefreshLayout.setOnRefreshListener {
-            loadGroupData()
-        }
-    }
-
-
-    // ★ [헬퍼] 한글 카테고리 -> 서버 코드 변환
-    private fun convertCategoryToCode(uiName: String): String {
-        return when {
-            uiName.contains("경제") || uiName.contains("경영") -> "ECON_BIZ"
-            uiName.contains("과학") || uiName.contains("IT") -> "SCI_IT"
-            uiName.contains("소설") || uiName.contains("장르") -> "NOVEL_GENRE"
-            uiName.contains("시") || uiName.contains("에세이") -> "POEM_ESSAY"
-            uiName.contains("가정") || uiName.contains("취미") -> "HOME_HOBBY"
-            uiName.contains("예술") || uiName.contains("문화") -> "ART_CULTURE"
-            uiName.contains("인문") || uiName.contains("역사") -> "HUMAN_HISTORY"
-            uiName.contains("자기계발") -> "SELF_DEV"
-            uiName.contains("정치") || uiName.contains("사회") -> "POL_SOC"
-            else -> "ETC" // 기타
-        }
-    }
-
-    // ★ 2. 실제 API 통신 로직
+    // region [Data Loading] API 통신 로직
     private fun loadGroupData() {
         if (isLoading) return
         isLoading = true
@@ -162,6 +140,7 @@ class GroupFragment : Fragment() {
         val groupTypes = mutableListOf<String>()
         val tradeTypes = mutableListOf<String>()
 
+        // 1. 그룹 유형 및 거래 방식 필터 매핑
         if (!currentGroupTypeFilters.contains("전체")) {
             if (currentGroupTypeFilters.contains("함께 읽기")) groupTypes.add("TOGETHER")
             if (currentGroupTypeFilters.contains("택배 교환")) {
@@ -174,17 +153,16 @@ class GroupFragment : Fragment() {
             }
         }
 
+        // 2. 지역(장소) 필터 매핑
         val meetPlace = if (currentRegionFilter == "전체") {
-            null // 전체 검색
+            null
         } else if (currentRegionFilter.endsWith(" 전체")) {
-            // "서울 전체", "경기 전체" 인 경우 -> "서울", "경기"만 추출해서 리스트로 만듦
             listOf(currentRegionFilter.substringBefore(" "))
         } else {
-            // "서울 강남구/서초구" 인 경우 -> ["강남구", "서초구"] (또는 서버 스펙에 따라 ["서울 강남구", "서울 서초구"])
-            // 기존 로직 유지 (구 이름만 보냄)
             currentRegionFilter.substringAfter(" ").split("/").map { it.trim() }
         }
 
+        // 3. 카테고리 한글 -> 서버 코드 변환
         val categories = if (currentCategoryFilters.contains("전체")) {
             null
         } else {
@@ -194,38 +172,77 @@ class GroupFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().getGroupList(
-                    groupTypes = if (groupTypes.isEmpty()) null else groupTypes,
-                    tradeTypes = if (tradeTypes.isEmpty()) null else tradeTypes,
+                    groupTypes = groupTypes.ifEmpty { null },
+                    tradeTypes = tradeTypes.ifEmpty { null },
                     meetPlace = meetPlace,
                     categories = categories,
-                    sort = currentSortType, // 기본 추천순
+                    sort = currentSortType,
                     page = 0,
                     size = 20
                 )
 
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body?.isSuccess == true) {
-                        val serverList = body.result?.groupList ?: emptyList()
-                        val uiList = serverList.map { it.toUiModel() }
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val serverList = response.body()?.result?.groupList ?: emptyList()
+                    val uiList = serverList.map { it.toUiModel() }
 
-                        groupAdapter = GroupAdapter(ArrayList(uiList)) { groupData ->
-                            checkInfoAndMoveToDetail(groupData)
-                        }
-                        binding.groupRecyclerview.adapter = groupAdapter
-
-                    } else {
-                        Toast.makeText(context, body?.message, Toast.LENGTH_SHORT).show()
+                    // 어댑터 갱신 (로직 보존을 위해 새 인스턴스 할당)
+                    groupAdapter = GroupAdapter(ArrayList(uiList)) { groupData ->
+                        checkInfoAndMoveToDetail(groupData)
                     }
+                    binding.groupRecyclerview.adapter = groupAdapter
                 } else {
-                    Toast.makeText(context, "서버 오류: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    showCustomToast(response.body()?.message ?: "데이터 로드 실패", false)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(context, "네트워크 오류", Toast.LENGTH_SHORT).show()
+                showCustomToast("네트워크 상태를 확인해주세요.", false)
             } finally {
                 isLoading = false
                 if (_binding != null) binding.grpSwipeRefreshLayout.isRefreshing = false
+            }
+        }
+    }
+
+    private fun convertCategoryToCode(uiName: String): String {
+        return when {
+            uiName.contains("경제") || uiName.contains("경영") -> "ECON_BIZ"
+            uiName.contains("과학") || uiName.contains("IT") -> "SCI_IT"
+            uiName.contains("소설") || uiName.contains("장르") -> "NOVEL_GENRE"
+            uiName.contains("시") || uiName.contains("에세이") -> "POEM_ESSAY"
+            uiName.contains("가정") || uiName.contains("취미") -> "HOME_HOBBY"
+            uiName.contains("예술") || uiName.contains("문화") -> "ART_CULTURE"
+            uiName.contains("인문") || uiName.contains("역사") -> "HUMAN_HISTORY"
+            uiName.contains("자기계발") -> "SELF_DEV"
+            uiName.contains("정치") || uiName.contains("사회") -> "POL_SOC"
+            else -> "ETC"
+        }
+    }
+
+    // region [UI Setup] 초기 설정 및 클릭 리스너
+    private fun setupRecyclerView() {
+        binding.groupRecyclerview.layoutManager = LinearLayoutManager(context)
+        if (binding.groupRecyclerview.itemDecorationCount == 0) {
+            val spaceInPx = dpToPx(16)
+            binding.groupRecyclerview.addItemDecoration(VerticalSpaceItemDecoration(spaceInPx))
+        }
+    }
+
+    private fun setupFragmentResultListeners() {
+        setFragmentResultListener("requestKeyRegion") { _, bundle ->
+            val rawResult = bundle.getString("regionResult") ?: "전체"
+
+            if (currentRegionFilter != rawResult) {
+                currentRegionFilter = rawResult
+                loadGroupData() // 필터 변경 시 새로고침
+
+                val displayList = if (rawResult == "전체") {
+                    listOf("전체")
+                } else if (rawResult.endsWith(" 전체")) {
+                    listOf(rawResult.substringBefore(" "))
+                } else {
+                    rawResult.substringAfter(" ").split("/")
+                }
+                updateChipUI(binding.grpRegionCp, displayList, "지역별")
             }
         }
     }
@@ -236,7 +253,7 @@ class GroupFragment : Fragment() {
                 startActivity(Intent(requireContext(), GrpSearchActivity::class.java))
             }
 
-            // 1) 그룹 유형
+            // 필터 칩 클릭: 바텀시트 오픈
             grpGroupTypeCp.setOnClickListener {
                 FilterBottomSheetFragment(
                     filterType = FilterType.GROUP_TYPE,
@@ -252,23 +269,14 @@ class GroupFragment : Fragment() {
             }
 
             grpRegionCp.setOnClickListener {
-                // 다이얼로그 생성
                 val dialog = GrpRegionBottomSheetFragment.newInstance(currentRegionFilter)
-
-                // 칩을 체크 상태로 만듦
                 grpRegionCp.isChecked = true
-
-                // [중요] 다이얼로그가 닫힐 때 아무 동작이 없었다면 칩 상태를 다시 확인하는 리스너 추가
-                // GrpRegionBottomSheetFragment에 onDismiss 콜백이 있다면 사용하고,
-                // 없다면 아래처럼 FragmentManager의 Lifecycle을 이용해 감지할 수 있습니다.
-
                 dialog.show(parentFragmentManager, "RegionSearchBottomSheet")
 
-                // 다이얼로그가 닫혔을 때를 감지하여 UI 복구
+                // 다이얼로그 닫힘 감지 리스너 (UI 복구용)
                 parentFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
                     override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
                         if (f is GrpRegionBottomSheetFragment) {
-                            // 닫혔을 때 현재 필터 상태에 따라 UI 원복
                             val displayList = if (currentRegionFilter == "전체") {
                                 listOf("전체")
                             } else if (currentRegionFilter.endsWith(" 전체")) {
@@ -277,15 +285,12 @@ class GroupFragment : Fragment() {
                                 currentRegionFilter.substringAfter(" ").split("/")
                             }
                             updateChipUI(binding.grpRegionCp, displayList, "지역별")
-
-                            // 등록한 콜백 해제
                             parentFragmentManager.unregisterFragmentLifecycleCallbacks(this)
                         }
                     }
                 }, false)
             }
 
-            // 3) 분야별
             grpCategoryCp.setOnClickListener {
                 FilterBottomSheetFragment(
                     filterType = FilterType.CATEGORY,
@@ -299,76 +304,12 @@ class GroupFragment : Fragment() {
                     }
                 ).show(parentFragmentManager, "CategoryFilter")
             }
+
+            // 정렬 탭 클릭
             grpMainSortRecommendTv.setOnClickListener { changeSortType("RECOMMEND") }
             grpMainSortLatestTv.setOnClickListener { changeSortType("LATEST") }
             grpMainSortPopularTv.setOnClickListener { changeSortType("POPULAR") }
         }
-    }
-
-    private fun changeSortType(type: String) {
-        if (currentSortType == type) return // 이미 선택된 거면 무시
-        currentSortType = type
-        updateSortUi()
-        loadGroupData()
-    }
-
-    // 정렬 UI (텍스트 색상) 업데이트
-    private fun updateSortUi() {
-        val activeColor = ContextCompat.getColor(requireContext(), R.color.pre_main)
-        val inactiveColor = ContextCompat.getColor(requireContext(), R.color.grey_500)
-
-        // 1. 추천순
-        if (currentSortType == "RECOMMEND") {
-            binding.grpMainSortRecommendTv.setTextColor(activeColor)
-        } else {
-            binding.grpMainSortRecommendTv.setTextColor(inactiveColor)
-        }
-
-        // 2. 최신순
-        if (currentSortType == "LATEST") {
-            binding.grpMainSortLatestTv.setTextColor(activeColor)
-        } else {
-            binding.grpMainSortLatestTv.setTextColor(inactiveColor)
-        }
-
-        // 3. 인기순
-        if (currentSortType == "POPULAR") {
-            binding.grpMainSortPopularTv.setTextColor(activeColor)
-        } else {
-            binding.grpMainSortPopularTv.setTextColor(inactiveColor)
-        }
-    }
-    private fun updateChipUI(chip: Chip, resultList: List<String>, defaultText: String) {
-        if (resultList.isEmpty() || (resultList.size == 1 && resultList[0] == "전체")) {
-            chip.text = defaultText
-            chip.isChecked = false // "전체"면 선택 안 된 상태로
-            chip.chipStrokeWidth = dpToPx(1).toFloat()
-            chip.setChipStrokeColorResource(R.color.grey_200)
-        } else {
-            chip.text = resultList.joinToString(" · ")
-            chip.isChecked = true // 값이 있으면 선택 상태 유지
-            chip.chipStrokeWidth = 0f
-        }
-    }
-
-    private fun moveToDetail(groupData: GroupData) {
-        val intent = Intent(requireContext(), GroupDetailActivity::class.java)
-        // GroupData의 필드들을 Intent에 담아 이동
-        intent.putExtra("GROUP_TYPE", groupData.groupType)
-        intent.putExtra("BOOK_TITLE", groupData.bookTitle)
-        intent.putExtra("BOOK_AUTHOR", groupData.bookAuthor)
-        intent.putExtra("BOOK_GENRE", groupData.genre)
-        intent.putExtra("START_DATE", groupData.date)
-        intent.putExtra("COVER_IMG", groupData.coverImgUrl)
-        intent.putExtra("PROFILE_IMG", groupData.profileImgUrl)
-        intent.putExtra("USER_NICNAME", groupData.nickname)
-        intent.putStringArrayListExtra("TAGS", ArrayList(groupData.tags))
-        intent.putExtra("STATUS", groupData.status)
-        intent.putExtra("READING_PERIOD", groupData.readingPeriod)
-        intent.putExtra("MEMBER_COUNT", groupData.memberCount)
-        intent.putExtra("IS_HOT", groupData.isHot)
-        intent.putExtra("GROUP_ID", groupData.groupId.toLong())
-        startActivity(intent)
     }
 
     private fun initFabMenu() {
@@ -391,96 +332,130 @@ class GroupFragment : Fragment() {
         }
     }
 
+    private fun initRefreshLayout() {
+        binding.grpSwipeRefreshLayout.setOnRefreshListener { loadGroupData() }
+    }
+
+
+    // region [UI Update] 상태 변경에 따른 UI 갱신
+    private fun changeSortType(type: String) {
+        if (currentSortType == type) return
+        currentSortType = type
+        updateSortUi()
+        loadGroupData()
+    }
+
+    private fun updateSortUi() {
+        val activeColor = ContextCompat.getColor(requireContext(), R.color.pre_main)
+        val inactiveColor = ContextCompat.getColor(requireContext(), R.color.grey_500)
+
+        with(binding) {
+            grpMainSortRecommendTv.setTextColor(if (currentSortType == "RECOMMEND") activeColor else inactiveColor)
+            grpMainSortLatestTv.setTextColor(if (currentSortType == "LATEST") activeColor else inactiveColor)
+            grpMainSortPopularTv.setTextColor(if (currentSortType == "POPULAR") activeColor else inactiveColor)
+        }
+    }
+
+    private fun updateChipUI(chip: Chip, resultList: List<String>, defaultText: String) {
+        val isDefault = resultList.isEmpty() || (resultList.size == 1 && resultList[0] == "전체")
+
+        if (isDefault) {
+            chip.text = defaultText
+            chip.isChecked = false
+            chip.chipStrokeWidth = dpToPx(1).toFloat()
+            chip.setChipStrokeColorResource(R.color.grey_200)
+        } else {
+            chip.text = resultList.joinToString(" · ")
+            chip.isChecked = true
+            chip.chipStrokeWidth = 0f
+        }
+    }
+
     private fun toggleFabMenu() {
         isFabOpen = !isFabOpen
         with(binding) {
             if (isFabOpen) {
-                grpGroupFabMenuLayout.visibility = View.VISIBLE
-                grpGroupFabMenuLayout.alpha = 0f
-                grpGroupFabMenuLayout.translationY = 50f
-                grpGroupFabMenuLayout.animate().alpha(1f).translationY(0f).setDuration(300).setInterpolator(
-                    OvershootInterpolator()
-                ).start()
+                grpGroupFabMenuLayout.apply {
+                    visibility = View.VISIBLE
+                    alpha = 0f
+                    translationY = 50f
+                    animate().alpha(1f).translationY(0f).setDuration(300)
+                        .setInterpolator(OvershootInterpolator()).start()
+                }
                 grpGroupFabMainBtn.animate().rotation(45f).setDuration(300).start()
             } else {
-                grpGroupFabMenuLayout.animate().alpha(0f).translationY(50f).setDuration(300).withEndAction { grpGroupFabMenuLayout.visibility = View.GONE }.start()
+                grpGroupFabMenuLayout.animate().alpha(0f).translationY(50f).setDuration(300)
+                    .withEndAction { grpGroupFabMenuLayout.visibility = View.GONE }.start()
                 grpGroupFabMainBtn.animate().rotation(0f).setDuration(300).start()
             }
         }
     }
+    // endregion
 
-    private fun checkInfoAndMoveToDetail(groupData: GroupData) { // GroupUiModel은 사용하시는 모델 클래스명
+    // region [Navigation & Validation] 상세 페이지 이동 및 검증
 
-        // 1. 만약 '함께 읽기(TOGETHER)' 그룹이라면 배송지가 필요 없으므로 그냥 통과
-        // (모델에 groupType 필드가 있다고 가정)
+    private fun checkInfoAndMoveToDetail(groupData: GroupData) {
+        // '함께 읽기' 그룹은 별도 정보 없이 진입 가능
         if (groupData.groupType == "TOGETHER") {
             moveToDetail(groupData)
             return
         }
 
         val myProfile = userViewModel.profileData.value
-
-        // 2. 프로필 데이터가 아직 로드되지 않았다면 잠시 대기
         if (myProfile == null) {
-            Toast.makeText(requireContext(), "사용자 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-            userViewModel.fetchMypageData() // 재시도 트리거
+            showCustomToast("사용자 정보를 확인하는 중입니다.", false)
+            userViewModel.fetchMypageData()
             return
         }
 
-        // 3. 필수 정보 검증 로직
-        // 조건: 주소&동지역/직거래장소 필수
+        // 필수 배송지/직거래 정보 존재 여부 확인
         val hasAddress = !myProfile.address.isNullOrBlank() && !myProfile.zipCode.isNullOrBlank()
-        val hasMeetPlace = !myProfile.meetPlace.isNullOrBlank() // 혹은 region
+        val hasMeetPlace = !myProfile.meetPlace.isNullOrBlank()
 
-        // (예시) 교환(RELAY) 그룹은 배송지나 직거래 장소 중 하나는 반드시 설정되어 있어야 함
-       // val isInfoValid = hasBasicContact && (hasAddress || hasMeetPlace)
-
-        val isInfoValid = hasAddress && hasMeetPlace
-        if (isInfoValid) {
+        if (hasAddress && hasMeetPlace) {
             moveToDetail(groupData)
         } else {
-            // 정보 부족 시 다이얼로그 출력
-            showRequiredInfoDialog()
+            showRequiredInfoDialog() // 배송지 미등록 시 다이얼로그 노출
         }
+    }
+
+    private fun moveToDetail(groupData: GroupData) {
+        val intent = Intent(requireContext(), GroupDetailActivity::class.java).apply {
+            putExtra("GROUP_TYPE", groupData.groupType)
+            putExtra("BOOK_TITLE", groupData.bookTitle)
+            putExtra("BOOK_AUTHOR", groupData.bookAuthor)
+            putExtra("BOOK_GENRE", groupData.genre)
+            putExtra("START_DATE", groupData.date)
+            putExtra("COVER_IMG", groupData.coverImgUrl)
+            putExtra("PROFILE_IMG", groupData.profileImgUrl)
+            putExtra("USER_NICNAME", groupData.nickname)
+            putStringArrayListExtra("TAGS", ArrayList(groupData.tags))
+            putExtra("STATUS", groupData.status)
+            putExtra("READING_PERIOD", groupData.readingPeriod)
+            putExtra("MEMBER_COUNT", groupData.memberCount)
+            putExtra("IS_HOT", groupData.isHot)
+            putExtra("GROUP_ID", groupData.groupId.toLong())
+        }
+        startActivity(intent)
     }
 
     private fun showRequiredInfoDialog() {
-        // 1. Dialog 객체 생성 (Builder 대신 바로 Dialog 사용하면 커스텀하기 편함)
-        val dialog = Dialog(requireContext())
+        Dialog(requireContext()).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(R.layout.dialog_none_address)
+            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-        // 2. 타이틀 제거 (setContentView 전에 해야 함)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        // 3. 레이아웃 설정
-        dialog.setContentView(R.layout.dialog_none_address)
-
-        // 4. 배경 투명 처리 (둥근 모서리 적용을 위해 필수)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        // 5. 텍스트 강제 설정 (XML의 tools:text 문제 해결)
-        // findViewById로 뷰를 찾아서 글자를 직접 넣습니다.
-        dialog.findViewById<TextView>(R.id.dialog_none_address_title_tv).text = "배송지 등록"
-        dialog.findViewById<TextView>(R.id.dialog_none_address_content_tv).text = "책을 주고 받을 배송지를 등록해주세요."
-
-        // 6. 닫기 버튼 리스너 연결
-        dialog.findViewById<View>(R.id.dialog_none_address_close_iv).setOnClickListener {
-            dialog.dismiss()
-        }
-
-        // 7. 다이얼로그 띄우기
-        dialog.show()
+            findViewById<TextView>(R.id.dialog_none_address_title_tv).text = "배송지 등록"
+            findViewById<TextView>(R.id.dialog_none_address_content_tv).text = "책을 주고 받을 배송지를 등록해주세요."
+            findViewById<View>(R.id.dialog_none_address_close_iv).setOnClickListener { dismiss() }
+        }.show()
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
+    // region [Helpers] 유틸리티 함수 및 클래스
     private fun dpToPx(dp: Int): Int {
         val density = resources.displayMetrics.density
         return (dp * density).toInt()
     }
-
 
     inner class VerticalSpaceItemDecoration(private val verticalSpaceHeight: Int) : RecyclerView.ItemDecoration() {
         override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {

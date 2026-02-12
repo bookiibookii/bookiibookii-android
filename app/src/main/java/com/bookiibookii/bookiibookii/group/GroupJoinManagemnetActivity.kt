@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.CommonDialog
-import com.bookiibookii.bookiibookii.common.GroupTagMapper // [중요] 태그 변환기
+import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpJoinManagementBinding
@@ -25,16 +25,13 @@ class GroupJoinManagementActivity : AppCompatActivity() {
     private var currentGroupId: Long = 0L
     private var currentBookTitle = ""
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGrpJoinManagementBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // 1. Intent 데이터 수신 및 유효성 검사
         currentGroupId = intent.getLongExtra("GROUP_ID", 0L)
-
-        // 1. Intent 데이터 수신
-
         currentBookTitle = intent.getStringExtra("BOOK_TITLE") ?: "모임 신청 관리"
 
         if (currentGroupId == 0L) {
@@ -49,6 +46,7 @@ class GroupJoinManagementActivity : AppCompatActivity() {
     }
 
     private fun initView() {
+        // 어댑터 초기화: 아이템 클릭 시 수락/거절 다이얼로그 노출
         groupJoinAdapter = GroupJoinAdapter(mutableListOf()) { item, isAccept ->
             if (isAccept) showAgreeDialog(item) else showRefusalDialog(item)
         }
@@ -57,12 +55,15 @@ class GroupJoinManagementActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@GroupJoinManagementActivity)
             adapter = groupJoinAdapter
         }
-
-        // (옵션) 타이틀 설정이 필요하다면
-        // binding.actGrpJoinMgTitleTv.text = currentBookTitle
     }
 
-    // ★ [핵심 수정] 데이터 로드 및 변환
+    private fun initListener() {
+        binding.actGrpJoinMgBackIv.setOnClickListener { finish() }
+    }
+
+    /**
+     * 서버로부터 신청자 목록을 가져와 UI 데이터로 변환 후 리스트 갱신
+     */
     private fun fetchApplicationList() {
         lifecycleScope.launch {
             try {
@@ -73,15 +74,13 @@ class GroupJoinManagementActivity : AppCompatActivity() {
                     val serverList = result?.applicationList ?: emptyList()
                     val totalCount = result?.totalCount ?: 0
 
-                    // DTO -> UI Model 변환
+                    // [핵심] DTO(서버 데이터) -> UI 전용 Model 변환
                     val uiList = serverList.map { serverItem ->
-
-                        // 1. 태그 변환: [ENG_CODE] -> [#한글태그]
+                        // 태그 변환: [ENG_CODE] -> [#한글태그]
                         val displayTags = serverItem.tags?.map { tagCode ->
                             GroupTagMapper.toKoreanTag(tagCode)
                         } ?: emptyList()
 
-                        // 2. 데이터 객체 생성
                         GroupJoinData(
                             id = serverItem.applicationId.toInt(),
                             profileImgUrl = serverItem.profileImageUrl,
@@ -99,7 +98,7 @@ class GroupJoinManagementActivity : AppCompatActivity() {
                     Toast.makeText(this@GroupJoinManagementActivity, "목록 로드 실패", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Log.e("JoinManage", "Error", e)
+                Log.e("JoinManage", "Fetch Error", e)
                 Toast.makeText(this@GroupJoinManagementActivity, "네트워크 오류", Toast.LENGTH_SHORT).show()
             }
         }
@@ -109,10 +108,9 @@ class GroupJoinManagementActivity : AppCompatActivity() {
         binding.actGrpJoinMgTitleNumTv.text = "($count)"
     }
 
-    private fun initListener() {
-        binding.actGrpJoinMgBackIv.setOnClickListener { finish() }
-    }
-
+    /**
+     * 신청 수락/거절 상태 변경 처리
+     */
     private fun processApplication(applicationId: Int, status: String, nickname: String) {
         lifecycleScope.launch {
             try {
@@ -123,21 +121,28 @@ class GroupJoinManagementActivity : AppCompatActivity() {
                 )
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val msg = if (status == "ACCEPTED") "$nickname 님이 게스트가 되었습니다." else "$nickname 님의 요청을 거절했습니다."
+                    val msg = if (status == "ACCEPTED") {
+                        "$nickname 님이 게스트가 되었습니다."
+                    } else {
+                        "$nickname 님의 요청을 거절했습니다."
+                    }
                     showCustomToast(msg)
-                    //fetchApplicationList() // 목록 갱신 // 있으면 삭제됨
+
+                    // 처리 성공 후 리스트 재로딩 (성공한 아이템 제외 목적)
+                    fetchApplicationList()
                 } else {
                     val errorMsg = response.body()?.message ?: "처리 실패"
                     Toast.makeText(this@GroupJoinManagementActivity, errorMsg, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("JoinManage", "Update Status Error", e)
                 Toast.makeText(this@GroupJoinManagementActivity, "네트워크 오류 발생", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // --- 다이얼로그 및 토스트 ---
+    // region [다이얼로그 및 토스트 UI]
+
     private fun showAgreeDialog(item: GroupJoinData) {
         CommonDialog(
             context = this,
@@ -162,6 +167,8 @@ class GroupJoinManagementActivity : AppCompatActivity() {
         ).show()
     }
 
+
+     // 디자인 가이드에 맞춘 커스텀 토스트 메시지
     private fun showCustomToast(message: String) {
         val inflater = LayoutInflater.from(this)
         val layout = inflater.inflate(R.layout.toast_custom, null)
@@ -175,4 +182,6 @@ class GroupJoinManagementActivity : AppCompatActivity() {
             show()
         }
     }
+
+    // endregion
 }
