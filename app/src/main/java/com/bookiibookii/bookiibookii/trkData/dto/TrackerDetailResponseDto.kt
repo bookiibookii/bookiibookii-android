@@ -8,6 +8,7 @@ data class TrackerDetailResponseDto(
     val endDate: String?,
     val extensionCount: Int?,
     val extensionDays: Int?,
+    val readingPeriod: Int?,
     val trackerId: Long?,
     val deliveryInfo: DeliveryInfoDto?,
     val meetingInfo: MeetingInfoDto?

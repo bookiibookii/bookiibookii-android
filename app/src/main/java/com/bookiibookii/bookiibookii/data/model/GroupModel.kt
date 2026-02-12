@@ -73,73 +73,65 @@ data class GroupPageResult(
 
 // 3. 아이템 객체 (서버 필드명과 1:1 매칭)
 data class GroupItemDto(
-    @SerializedName("groupId")
-    val groupId: Long,
+    @SerializedName("groupId") val groupId: Long,
+    @SerializedName("title") val title: String,
+    @SerializedName("author") val author: String?,
+    @SerializedName("genre") val genre: String?,
+    @SerializedName("bookImage") val bookImage: String?,
 
-    @SerializedName("title")
-    val title: String,
+    // ★ [수정] 호스트 프로필 이미지 필드명 매칭
+    @SerializedName("hostProfileImageUrl") val hostProfileImageUrl: String?,
+    @SerializedName("hostNickname") val hostNickname: String?,
 
-    @SerializedName("author")
-    val author: String?,
+    @SerializedName("tags") val tags: List<String>?,
+    @SerializedName("groupStatus") val groupStatus: String,
+    @SerializedName("currentCount") val currentCount: Int,
+    @SerializedName("maxCapacity") val maxCapacity: Int,
+    @SerializedName("readingPeriod") val readingPeriod: Int,
+    @SerializedName("customTag") val customTag : String?,
 
-    @SerializedName("genre")
-    val genre: String?,
-
-    @SerializedName("bookImage") // ★ 서버는 bookImage
-    val bookImage: String?,
-
-    @SerializedName("hostNickname") // ★ 서버는 hostNickname
-    val hostNickname: String?,
-
-    @SerializedName("tags") // ★ 서버는 ["MEMO", "LIGHT_FUN"] (단순 문자열 리스트)
-    val tags: List<String>?,
-
-    @SerializedName("groupStatus")
-    val groupStatus: String, // "RECRUITING"
-
-    @SerializedName("currentCount")
-    val currentCount: Int,
-
-    @SerializedName("maxCapacity")
-    val maxCapacity: Int,
-
-    @SerializedName("readingPeriod")
-    val readingPeriod: Int,
-
-    @SerializedName("customTag")
-    val customTag : String?,
-
-    val groupType: String, // "TOGETHER"
-    val tradeType: String?, // "NONE"
+    val groupType: String,
+    val tradeType: String?,
     val startDate: String?,
-    val isHot: Boolean
+    val isHot: Boolean,
+
+    // ★ [추가] 서버가 보내주는 칩 텍스트 ("택배", "송파구", "함께읽기")
+    @SerializedName("pictureBadge") val pictureBadge: String?
 ) {
     // UI 모델로 변환
     fun toUiModel(): GroupData {
-        // 태그에 # 붙이기
         val safeTags = tags ?: emptyList()
-
         val uiStatus = if (groupStatus == "RECRUITING") "모집 중" else "모집 완료"
+
+        // ★ 서버에서 온 pictureBadge가 없으면 기본값 설정
+        val badgeText = pictureBadge ?: "모집"
 
         return GroupData(
             groupId  = groupId.toInt(),
-            coverImgUrl = bookImage ?: "", // null이면 빈값
+            coverImgUrl = bookImage ?: "",
             bookTitle = title,
-            bookAuthor = author ?: "저자 미상", // null이면 기본값
+            bookAuthor = author ?: "저자 미상",
             genre = genre ?: "장르",
             status = uiStatus,
-            readingPeriod = readingPeriod.toString(), // 책읽는 기간
-            memberCount = currentCount.toString(),
+            readingPeriod = readingPeriod.toString(),
+            memberCount = "$currentCount",
             isHot = isHot,
-            profileImgUrl = "",
+
+            // ★ [연결] 프로필 이미지 연결
+            profileImgUrl = hostProfileImageUrl,
             nickname = hostNickname ?: "알 수 없음",
             date = startDate?.replace("-",".") ?: "날짜 미정",
             tags = safeTags,
             customTag = customTag ?: "",
             groupType = groupType,
+            tradeType = tradeType,
+            maxMemberCount = maxCapacity,
 
+            // ★ [연결] 서버가 준 뱃지 텍스트를 UI 모델에 담기
+            badgeContent = badgeText
         )
     }
+
     data class PopularSearchResponse(
         val isSuccess: Boolean,
         val code: String,
@@ -147,7 +139,7 @@ data class GroupItemDto(
         val result: List<String>? // ["최강록", "한강", ...]
     )
 
- // 그룹 검색하기
+    // 그룹 검색하기
     // 서버 응답 껍데기
     data class GroupSearchResponse(
         val isSuccess: Boolean,
@@ -174,28 +166,32 @@ data class GroupItemDto(
     )
 
     data class GroupDetailResult(
-        val groupId: Int,
-        val title: String,          // 게시글 제목
-        val bookTitle: String,      // 책 제목
-        val bookImage: String?,     // 책 표지
+        val groupId: Long,
+        val title: String,
+        val bookTitle: String,
+        val bookImage: String?,
         val author: String,
         val category: String,
-        val groupStatus: String,    // "RECRUITING", "CLOSED" 등
-        val buttonStatus: String,   // ★ 핵심: "MANAGE", "TRACKER", "CANCEL", "FULL", "APPLY"
-        val isHost: Boolean,        // ★ 호스트 여부 (메뉴 버튼 분기용)
+        val groupStatus: String,
+        val buttonStatus: String,
+        val isHost: Boolean,
         val readingPeriod: Int,
-        val matchedCount: Int,      // 현재 인원
-        val maxCapacity: Int,       // 최대 인원
-        val waitingCount: Int,      // 대기 인원 (호스트용)
+        val matchedCount: Int,
+        val maxCapacity: Int,
+        val waitingCount: Int,
         val isHot: Boolean,
         val createdAt: String,
         val startDate: String,
         val hostNickname: String,
-        val hostProfileImage: String?,
+        // ★ JSON의 hostProfileImageUrl과 이름을 맞춰야 합니다.
+        val hostProfileImageUrl: String?,
+        // ★ JSON에 포함된 추가 정보들
+        val preferRegion: String?,
+        val meetPlace: String?,
         val groupTags: List<String>?,
         val customTag: String?,
-        val groupComment: String?,  // 소개글
-        val participantSlots: List<ParticipantSlot>? // 하단 멤버 리스트용
+        val groupComment: String?,
+        val participantSlots: List<ParticipantSlot>?
     )
 
 
@@ -260,7 +256,8 @@ data class GroupItemDto(
         val name: String,        // 닉네임
         val tags: List<String>?, // 태그 코드들
         val createdAt: String,
-        val applyMsg: String
+        val applyMsg: String,
+        val profileImageUrl: String?,
     )
 
     //참여요청 수락/거절
@@ -307,7 +304,8 @@ data class GroupItemDto(
     //댓글작성
     data class CommentCreateRequest(
         val content: String,
-        val parentId: Long?  // 일반 댓글이면 null, 대댓글이면 부모 ID
+        val parentId: Long?,  // 일반 댓글이면 null, 대댓글이면 부모 ID
+        val secret : Boolean // 비밀댓글
     )
     // [전체 응답] 서버에서 주는 전체 JSON을 받아줄 그릇
     data class CommentCreateResponse(
@@ -331,6 +329,7 @@ data class GroupItemDto(
     data class CommentWriter(
         val userId: Long,
         val name: String,
+        @SerializedName("profileImageUrl")
         val profileImage: String?,
         val role: String
     )
@@ -347,6 +346,7 @@ data class GroupItemDto(
     data class CommentItem(
         val id: Long,
         val deleted: Boolean,
+        val secret: Boolean,
         val content: String,
         val parentId: Long?, // 0 또는 null
         val writer: CommentWriter,

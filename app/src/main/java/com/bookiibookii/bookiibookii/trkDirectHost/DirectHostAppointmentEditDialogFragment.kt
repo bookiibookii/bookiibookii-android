@@ -82,7 +82,7 @@ class DirectHostAppointmentEditDialogFragment : DialogFragment() {
 
                             val dto = state.data
 
-                            binding.etDate.setText(dto.meetingTime.orEmpty())
+//                            binding.etDate.setText(dto.meetingTime.orEmpty())
                             binding.etPlace.setText(dto.meetingPlace.orEmpty())
 
                             updateRegisterState()

@@ -45,16 +45,24 @@ class TrkHostMainFragment : Fragment() {
         updateTabState(isMyGroup = true)
 
         trackerAdapter = TrackerAdapter { item ->
-            val target = when (item.exchangeType) {
-                ExchangeType.DELIVERY -> HostActivity::class.java
-                ExchangeType.DIRECT -> DirectHostActivity::class.java
-                ExchangeType.NONE -> TODO()
-            }
+            when (item.exchangeType) {
+                ExchangeType.DELIVERY -> {
+                    startActivity(Intent(requireContext(), HostActivity::class.java).apply {
+                        putExtra("group_id", item.groupId)
+                    })
+                }
 
-            val intent = Intent(requireContext(), target).apply {
-                putExtra("group_id", item.groupId)
+                ExchangeType.DIRECT -> {
+                    startActivity(Intent(requireContext(), DirectHostActivity::class.java).apply {
+                        putExtra("group_id", item.groupId)
+                    })
+                }
+
+                ExchangeType.NONE -> {
+                    // TODO: 나중에 연결
+                    return@TrackerAdapter
+                }
             }
-            startActivity(intent)
         }
 
         footerAdapter = CreateGroupFooterAdapter(
@@ -72,7 +80,6 @@ class TrkHostMainFragment : Fragment() {
             setHasFixedSize(true)
         }
 
-        // 화면 렌더링
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.trackers.collect { list ->
@@ -88,14 +95,25 @@ class TrkHostMainFragment : Fragment() {
 
     private fun setupToggleLogic() {
         binding.myGroupBt.setOnClickListener {
+            if (parentFragmentManager.backStackEntryCount > 0) {
+                parentFragmentManager.popBackStack()
+            }
             updateTabState(isMyGroup = true)
         }
 
         binding.joinedGroupBt.setOnClickListener {
-            parentFragmentManager.commit {
-                replace(R.id.fragmentContainer, TrkGuestMainFragment())
-                addToBackStack(null)
+            val tag = "TrkGuestMainFragment"
+            val current = parentFragmentManager.findFragmentById(R.id.fragmentContainer)
+            if (current is TrkGuestMainFragment) {
+                updateTabState(isMyGroup = false)
+                return@setOnClickListener
             }
+
+            parentFragmentManager.commit {
+                replace(R.id.fragmentContainer, TrkGuestMainFragment(), tag)
+                addToBackStack(tag)
+            }
+            updateTabState(isMyGroup = false)
         }
     }
 

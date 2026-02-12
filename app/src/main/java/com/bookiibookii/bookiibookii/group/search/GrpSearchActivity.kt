@@ -67,9 +67,14 @@ class GrpSearchActivity : AppCompatActivity() {
 
         // 2. 검색 결과 어댑터 초기화 (처음엔 빈 리스트로 시작)
         groupAdapter = GroupAdapter(emptyList()) { group ->
-            // 클릭 시 상세 화면 이동
-            val intent = Intent(this, GroupDetailActivity::class.java)
+            val intent = Intent(this, GroupDetailActivity::class.java).apply {
+                // 그룹의 식별자(ID)를 넘겨줍니다.
+                // 키값("GROUP_ID")은 GroupDetailActivity에서 받는 키값과 동일해야 합니다.
+                putExtra("GROUP_ID", group.groupId.toLong())
 
+                // 만약 그룹 객체 전체를 넘기고 싶다면, Group 모델이 Parcelable을 구현해야 합니다.
+                // putExtra("GROUP_DATA", group)
+            }
             startActivity(intent)
         }
 

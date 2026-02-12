@@ -18,13 +18,14 @@ data class BookResult(
     val image: String?,              // ★ 수정: URL은 없을 수 있으므로 Nullable 권장
     val hostId: Int,
     val hostProfileImageUrl: String?, // ★ 수정: Nullable 권장
-    val hostNickname: String?,
+    val hostNickName: String?,
     val startDate: String,
     val endDate : String?,
     val duration: Int,
     val rating: Double,
     val comment: String?,
-    val groupType: String            // "RELAY" or "TOGETHER"
+    val groupType: String ,           // "RELAY" or "TOGETHER"
+    val groupStatus : String,
 )
 
 // UI에서 사용하는 모델 (Adapter용)
@@ -42,7 +43,9 @@ data class LibBook(
     val readStatus: ReadStatus,
     val progress: String?,
     val rating: Double,
-    val groupType: String // ★ 추가됨: 프래그먼트 분기 처리를 위해 필요
+    val groupType: String, // ★ 추가됨: 프래그먼트 분기 처리를 위해 필요
+    val groupState : String,
+    val isMine: Boolean
 )
 
 enum class ReadStatus { READING, DONE }
@@ -59,10 +62,18 @@ data class GroupCardListResponse(
 
 data class GroupCardResult(
     val groupId: Int,
-    val currentBookOwner: OwnerInfo?, // 현재 책 소유자 (이어읽기용)
-    val myComment: String?,           // 내 한줄평/후기
-    val partnerComment: String?,      // 상대 한줄평/후기
+    val currentBookOwner: OwnerInfo?,
+    val myComment: String?,
+    val partnerComment: String?,
+    val togetherComments: List<TogetherComment>?, // ★ [추가됨] 함께읽기 코멘트 배열
     val cards: List<CardItem>
+)
+
+// ★ [추가됨] 함께읽기 코멘트 모델
+data class TogetherComment(
+    val userId: Int,
+    val nickname: String,
+    val comment: String
 )
 
 data class OwnerInfo(
@@ -78,7 +89,7 @@ data class CardItem(
     val createdAt: String,
     val bookTitle: String,
     val isBookmarked: Boolean,
-    val creatorName: String // 작성자 이름
+    val creatorName: String
 )
 
 data class CardImage(
@@ -143,7 +154,7 @@ data class CommentItem(
 data class CommentWriter(
     val userId: Int,
     val name: String,
-    val profileImage: String?
+    val profileImageUrl: String?
 )
 
 // ==========================================
@@ -283,4 +294,12 @@ data class CompleteReadingResult(
     val matchedMemberId: Int,
     val currentReadingRate: Int,
     val completedAt: String
+)
+
+data class RelayReviewRequest(
+    val bookRating: Double,      // 책 별점 (0.5 단위)
+    val bookComment: String,     // 책 코멘트
+    val partnerRating: Double,   // 파트너 별점 (0.5 단위)
+    val partnerComment: String,  // 파트너 코멘트
+    val badgeCodes: List<String> // 선택된 배지(태그) 영문 코드 리스트
 )

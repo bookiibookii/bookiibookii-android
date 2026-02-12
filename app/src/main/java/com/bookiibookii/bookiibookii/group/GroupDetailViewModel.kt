@@ -43,31 +43,25 @@ class GroupDetailViewModel : ViewModel() {
     }
 
     // --- 댓글 작성 ---
-    fun postComment(groupId: Long, content: String, parentId: Long?) {
+    fun postComment(groupId: Long, content: String, parentId: Long? = null, secret : Boolean) {
         viewModelScope.launch {
             try {
+                // parentId가 있으면 답글 요청, 없으면 일반 댓글 요청
+                // (서버 API 스펙에 따라 Request 객체 생성 부분이 달라질 수 있음)
                 val request = GroupItemDto.CommentCreateRequest(
                     content = content,
-                    parentId = parentId
+                    parentId = parentId, // ★ 서버로 이 값을 보내야 함
+                    secret = secret
                 )
                 val response = RetrofitClient.api().postComment(groupId, request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    // 성공!
                     _commentWriteSuccess.value = true
-                    // (옵션) 바로 false로 돌려놓거나 Event Wrapper를 쓰면 더 좋음
-                    _commentWriteSuccess.value = false
                 } else {
-                    val errorString = response.errorBody()?.string()
-                    val msg = try {
-                        JSONObject(errorString ?: "{}").getString("message")
-                    } catch (e: Exception) {
-                        "댓글 등록 실패"
-                    }
-                    _errorMessage.value = msg
+                    // 에러 처리
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "네트워크 오류가 발생했습니다."
+                // 예외 처리
             }
         }
     }

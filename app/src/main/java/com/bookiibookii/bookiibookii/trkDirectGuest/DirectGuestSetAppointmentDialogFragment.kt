@@ -86,6 +86,8 @@ class DirectGuestSetAppointmentDialogFragment : DialogFragment() {
 
             binding.btnRegister.isEnabled = false
             vm.makeMeeting(groupId, apiDate, place)
+
+            dismiss()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

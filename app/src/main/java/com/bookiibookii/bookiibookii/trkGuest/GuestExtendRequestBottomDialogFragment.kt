@@ -14,6 +14,9 @@ import com.bookiibookii.bookiibookii.trkHost.TrackerDateUtil
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 class GuestExtendRequestBottomDialogFragment : BottomSheetDialogFragment() {
 
@@ -44,17 +47,38 @@ class GuestExtendRequestBottomDialogFragment : BottomSheetDialogFragment() {
                 vm.uiState.collectLatest { state ->
                     val data = state.data
 
-                    binding.tvOldEndDate.text =
-                        TrackerDateUtil.prettyDate(data?.endDate)
+                    val oldEndRaw = data?.endDate
+                    val extensionDays = data?.extensionDays ?: 0
 
-                    binding.tvNewEndDate.text =
-                        TrackerDateUtil.prettyDate(data?.endDate)
+                    binding.tvOldEndDate.text = TrackerDateUtil.prettyDate(oldEndRaw)
+
+                    val newEndRaw = addDaysToEndDate(oldEndRaw, extensionDays)
+                    binding.tvNewEndDate.text = TrackerDateUtil.prettyDate(newEndRaw)
                 }
             }
         }
 
-        binding.btnConfirm.setOnClickListener{
+        binding.btnConfirm.setOnClickListener {
             dismiss()
+        }
+    }
+
+    private fun addDaysToEndDate(raw: String?, days: Int): String? {
+        if (raw.isNullOrBlank()) return raw
+        if (days == 0) return raw
+
+        return try {
+            if (raw.endsWith("Z")) {
+                OffsetDateTime.parse(raw).plusDays(days.toLong()).toString()
+            } else {
+                val datePart = raw.substring(0, 10)
+                val d = LocalDate.parse(datePart, DateTimeFormatter.ISO_LOCAL_DATE)
+                val newDate = d.plusDays(days.toLong())
+
+                newDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + raw.substring(10)
+            }
+        } catch (_: Exception) {
+            raw
         }
     }
 
@@ -78,5 +102,4 @@ class GuestExtendRequestBottomDialogFragment : BottomSheetDialogFragment() {
     override fun getTheme(): Int {
         return R.style.Theme_Bookii_BottomSheet_NoDim
     }
-
 }

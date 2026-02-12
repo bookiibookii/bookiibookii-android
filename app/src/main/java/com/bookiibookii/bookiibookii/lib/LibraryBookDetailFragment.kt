@@ -14,6 +14,7 @@ import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.CommonDialog
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailBinding
@@ -26,7 +27,8 @@ class LibraryBookDetailFragment : Fragment() {
     private var _binding: FragmentLibBookDetailBinding? = null
     private val binding get() = _binding!!
 
-    // ★ [1] ViewModel 공유 (MyPageViewModel)
+    private lateinit var loadingDialog: LoadingDialog
+
     private val myPageViewModel: MyPageViewModel by activityViewModels()
 
     private var groupId: Int = -1
@@ -36,13 +38,9 @@ class LibraryBookDetailFragment : Fragment() {
     private var bookCover = ""
     private var hostName = ""
     private var hostProfileUrl = ""
-
-    // ★ [추가] 날짜 및 평점 정보
     private var startDate = ""
     private var endDate = ""
     private var rating: Double = 0.0
-
-    // ★ [2] 내 닉네임 변수 (기본값 설정)
     private var myNickname = "나"
 
     private lateinit var cardAdapter: LibraryReviewAdapter
@@ -58,8 +56,6 @@ class LibraryBookDetailFragment : Fragment() {
             bookCover = it.getString("bookCover", "") ?: ""
             hostName = it.getString("hostName", "") ?: ""
             hostProfileUrl = it.getString("hostProfileUrl", "") ?: ""
-
-            // ★ [추가] 전달받은 데이터 꺼내기
             startDate = it.getString("startDate", "") ?: ""
             endDate = it.getString("endDate", "") ?: ""
             rating = it.getDouble("rating", 0.0)
@@ -73,17 +69,15 @@ class LibraryBookDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingDialog = LoadingDialog(requireContext())
 
-        // ★ [3] 뷰모델에서 내 닉네임 가져오기
         setupMyProfileData()
-
         initView()
         initRecyclerView()
         initListeners()
         fetchData()
     }
 
-    // ★ [4] 닉네임 로드 함수
     private fun setupMyProfileData() {
         myPageViewModel.profileData.value?.let { myNickname = it.nickname }
         myPageViewModel.profileData.observe(viewLifecycleOwner) { profile ->
@@ -101,55 +95,45 @@ class LibraryBookDetailFragment : Fragment() {
         binding.libDetailTitleTv.text = bookTitle
         binding.libDetailBookTitleTv.text = bookTitle
         binding.libDetailBookAuthorTv.text = bookAuthor
-
-        // 마키 효과
         binding.libDetailBookTitleTv.isSelected = true
         binding.libDetailBookAuthorTv.isSelected = true
 
         Glide.with(this).load(bookCover).placeholder(R.drawable.bg_round_20dp_gray200)
             .transform(CenterCrop(), RoundedCorners(dpToPx(10))).into(binding.libDetailImageIv)
 
-        Glide.with(this)
-            .load(hostProfileUrl)
-            .placeholder(R.drawable.bg_round_20dp_gray200)
-            .error(R.drawable.img_profile_default)
-            .circleCrop()
-            .into(binding.libDetailProfileIv)
+        Glide.with(this).load(hostProfileUrl).placeholder(R.drawable.bg_round_20dp_gray200)
+            .error(R.drawable.img_profile_default).circleCrop().into(binding.libDetailProfileIv)
 
         binding.libDetailProfileTv.text = hostName
 
-        // ★ [핵심] 평점 유무에 따른 UI 분기 (0.0이면 아예 안 보이게)
-        if (rating > 0.0) {
-            // [상태 A] 후기 있음 (완료됨) -> 별점 리스트 표시
-            binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
+        // ★ [핵심] 날짜는 무조건 표시되게 밖으로 뺐습니다.
+        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
 
+        // 별점만 유무에 따라 띄웁니다.
+        if (rating > 0.0) {
             binding.libDetailRateList.visibility = View.VISIBLE
             setRatingStars(rating)
         } else {
-            // [상태 B] 후기 없음 (진행 중) -> 별점 리스트 숨김 (GONE)
-            binding.libDetailDateTv.text = "$startDate ~"
-
             binding.libDetailRateList.visibility = View.GONE
         }
 
-        // 초기 뷰 상태 설정
         binding.groupReviewSection.visibility = View.GONE
         binding.bookDetailNoCardHost.visibility = View.GONE
         binding.bookDetailNoCardGuest.visibility = View.GONE
         binding.libReviewAddBtn.visibility = View.GONE
     }
 
-    // 별점 채우기 함수
     private fun setRatingStars(score: Double) {
         val scoreInt = score.toInt()
+        val hasHalfStar = (score - scoreInt) >= 0.5
         val container = binding.libDetailRateList
 
         for (i in 0 until container.childCount) {
-            val star = container.getChildAt(i) as? ImageView
-            if (i < scoreInt) {
-                star?.setImageResource(R.drawable.ic_star_filled)
-            } else {
-                star?.setImageResource(R.drawable.ic_star_none)
+            val star = container.getChildAt(i) as? ImageView ?: continue
+            when {
+                i < scoreInt -> star.setImageResource(R.drawable.ic_star_filled)
+                i == scoreInt && hasHalfStar -> star.setImageResource(R.drawable.ic_star_half)
+                else -> star.setImageResource(R.drawable.ic_star_none)
             }
         }
     }
@@ -157,6 +141,7 @@ class LibraryBookDetailFragment : Fragment() {
     private fun fetchData() {
         if (groupId == -1) return
         lifecycleScope.launch {
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getGroupCards(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -195,6 +180,7 @@ class LibraryBookDetailFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) { e.printStackTrace() }
+            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
         }
     }
 
@@ -204,12 +190,11 @@ class LibraryBookDetailFragment : Fragment() {
                 val detailFragment = LibraryCardDetailFragment().apply {
                     arguments = Bundle().apply {
                         putLong("cardId", clickedCard.cardId.toLong())
-                        val isMine = clickedCard.creatorName == myNickname
-                        putBoolean("isMine", isMine)
+                        putBoolean("isMine", clickedCard.creatorName == myNickname)
                         putString("writerName", clickedCard.creatorName)
                     }
                 }
-                parentFragmentManager.beginTransaction().replace(R.id.fragmentContainer, detailFragment).addToBackStack(null).commit()
+                requireActivity().supportFragmentManager.beginTransaction().replace(R.id.fragmentContainer, detailFragment).addToBackStack(null).commit()
             },
             onBookmarkClick = { card, _ -> toggleBookmark(card) }
         )
@@ -237,10 +222,12 @@ class LibraryBookDetailFragment : Fragment() {
     }
 
     private fun initListeners() {
-        binding.libDetailBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.libDetailBackIv.setOnClickListener {
+            requireActivity().supportFragmentManager.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        }
 
         binding.libDetailMoreIv.setOnClickListener {
-            LibraryGroupDeleteBottomSheet { showDeleteConfirmDialog() }.show(parentFragmentManager, "GroupDeleteSheet")
+            LibraryGroupDeleteBottomSheet { showDeleteConfirmDialog() }.show(requireActivity().supportFragmentManager, "GroupDeleteSheet")
         }
 
         binding.libDetailLatelyTv.setOnClickListener { cardAdapter.submitList(originalList.sortedByDescending { it.createdAt }) }
@@ -248,7 +235,7 @@ class LibraryBookDetailFragment : Fragment() {
 
         val goAdd = View.OnClickListener {
             val fragment = LibraryAddCardFragment().apply { arguments = Bundle().apply { putInt("userBookId", userBookId) } }
-            parentFragmentManager.beginTransaction().replace(R.id.fragmentContainer, fragment).addToBackStack(null).commit()
+            requireActivity().supportFragmentManager.beginTransaction().replace(R.id.fragmentContainer, fragment).addToBackStack(null).commit()
         }
         binding.libReviewAddBtn.setOnClickListener(goAdd)
         binding.libReviewNoAddBtn.setOnClickListener(goAdd)
@@ -269,15 +256,17 @@ class LibraryBookDetailFragment : Fragment() {
     private fun deleteGroup() {
         if (userBookId == -1) return
         lifecycleScope.launch {
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "그룹이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-                    parentFragmentManager.popBackStack()
+                    requireActivity().supportFragmentManager.popBackStack()
                 } else {
                     Toast.makeText(context, "삭제 실패", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) { e.printStackTrace() }
+            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
         }
     }
 

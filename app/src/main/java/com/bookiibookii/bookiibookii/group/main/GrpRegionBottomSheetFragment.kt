@@ -54,8 +54,8 @@ class GrpRegionBottomSheetFragment : BottomSheetDialogFragment() {
             bottomSheet?.let { sheet ->
                 val behavior = BottomSheetBehavior.from(sheet)
                 val layoutParams = sheet.layoutParams
-                // 높이 60% 설정
-                layoutParams.height = (resources.displayMetrics.heightPixels * 0.6).toInt()
+                // 높이 40% 설정
+                layoutParams.height = (resources.displayMetrics.heightPixels * 0.4).toInt()
                 sheet.layoutParams = layoutParams
                 behavior.state = BottomSheetBehavior.STATE_EXPANDED
                 behavior.skipCollapsed = true
@@ -100,19 +100,28 @@ class GrpRegionBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun initLeftList() {
+        // 현재 선택된 도시(currentCity)가 리스트의 몇 번째인지 찾기
+        val initialIndex = allCityData.indexOfFirst { it.name == currentCity }
+        val safeIndex = if (initialIndex != -1) initialIndex else 0
+
         leftAdapter = MypCityAdapter(allCityData) { city ->
             if (currentCity != city.name) {
                 currentCity = city.name
-
                 selectedDistricts.clear()
                 updateSummaryUI()
                 updateDistrictChips(city.districts)
 
-                // 스크롤 맨 위로 이동
+                // (선택 사항) 오른쪽 칩 스크롤 맨 위로
                 binding.grpBottomSheetScrollView.scrollTo(0, 0)
             }
         }
-        binding.grpBottomSheetRegionCityRv.layoutManager = LinearLayoutManager(requireContext())
+        // ★ [어댑터에게 초기 선택 위치 알려주기
+        leftAdapter.selectedPosition = safeIndex
+
+        // ★ 리사이클러뷰도 해당 위치로 스크롤 이동 (ex: 경남 선택 시 아래로 스크롤)
+        binding.grpBottomSheetRegionCityRv.layoutManager = LinearLayoutManager(requireContext()).apply {
+            scrollToPositionWithOffset(safeIndex, 0)
+        }
         binding.grpBottomSheetRegionCityRv.adapter = leftAdapter
     }
 
@@ -230,14 +239,14 @@ class GrpRegionBottomSheetFragment : BottomSheetDialogFragment() {
         binding.grpBottomSheetCancelBtn.setOnClickListener { dismiss() }
 
         binding.grpBottomSheetEnterBtn.setOnClickListener {
-            // ★ [결과 전달 로직]
             val resultString = if (selectedDistricts.isNotEmpty()) {
-                // 예: "서울 강남구/서초구"
+                // 구/군을 1개 이상 선택한 경우 -> "서울 강남구/서초구"
                 "$currentCity ${selectedDistricts.joinToString("/")}"
             } else {
-                // 예: "서울 전체"
+                // 구/군을 아무것도 선택 안 함 (== 전체) -> "서울 전체"
                 "$currentCity 전체"
             }
+
             setFragmentResult("requestKeyRegion", bundleOf("regionResult" to resultString))
             dismiss()
         }
