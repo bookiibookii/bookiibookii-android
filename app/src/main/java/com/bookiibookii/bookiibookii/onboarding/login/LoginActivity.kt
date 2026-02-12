@@ -1,11 +1,18 @@
 package com.bookiibookii.bookiibookii.onboarding.login
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.Group
 import androidx.credentials.CredentialManager
@@ -55,6 +62,7 @@ class LoginActivity : AppCompatActivity() {
         credentialManager = CredentialManager.create(this)
 
         bindLoginButtons()
+        setupTermsNotice()
 
         // TODO: 추후 로그 삭제 (카카오 키해시 확인용)
         Log.e("KeyHash_Check", "내 앱의 현재 키 해시: ${com.kakao.sdk.common.KakaoSdk.keyHash}")
@@ -63,11 +71,7 @@ class LoginActivity : AppCompatActivity() {
     private fun routeAutoLoginIfPossible(): Boolean {
         if (!TokenManager.hasAccessToken(this)) return false
 
-        if (TokenManager.isOnboardingDone(this)) {
-            moveToMain()
-        } else {
-            moveToOnboarding()
-        }
+        showLoginCompleteThenRoute()
         return true
     }
 
@@ -106,7 +110,7 @@ class LoginActivity : AppCompatActivity() {
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
             .setServerClientId(webClientId)
-            .setAutoSelectEnabled(true)
+            .setAutoSelectEnabled(false)
             .build()
 
         val request = GetCredentialRequest.Builder()
@@ -234,17 +238,59 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun onLoginSuccess() {
+        if (isNavigating) return
         isNavigating = true
-        if (TokenManager.isOnboardingDone(this)) {
-            moveToMain()
-        } else {
-            moveToOnboarding()
+
+        showLoadingState(true)
+
+        val tvComplete = findViewById<TextView>(R.id.tv_login_complete)
+        tvComplete.visibility = View.VISIBLE
+
+        tvComplete.postDelayed({
+            val isNewUser = !TokenManager.isOnboardingDone(this)
+
+            if (isNewUser) {
+                moveToIntroAnim()
+            } else {
+                moveToMain()
+            }
+        }, 800L)
+    }
+
+    private fun moveToIntroAnim() {
+        val intent = Intent(this, LoginIntroAnimActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
+        startActivity(intent)
+        finish()
     }
 
     private fun showLoadingState(isLoading: Boolean) {
         val buttonsGroup = findViewById<Group>(R.id.group_login_buttons)
+        val terms = findViewById<TextView>(R.id.tv_terms_notice)
+
         buttonsGroup.visibility = if (isLoading) View.GONE else View.VISIBLE
+        terms.visibility = if (isLoading) View.GONE else View.VISIBLE
+    }
+
+    private fun showLoginCompleteThenRoute() {
+        if (isNavigating) return
+        isNavigating = true
+
+        showLoadingState(true)
+
+        val tvComplete = findViewById<TextView>(R.id.tv_login_complete)
+        tvComplete.visibility = View.VISIBLE
+
+        tvComplete.postDelayed({
+            if (TokenManager.isOnboardingDone(this)) {
+                moveToMain()
+            } else {
+                moveToOnboarding()
+            }
+        }, 1500L)
     }
 
     private fun setupButtonUI(
@@ -293,4 +339,70 @@ class LoginActivity : AppCompatActivity() {
         val message: String,
         val result: MypageResult?
     )
+
+    private fun setupTermsNotice() {
+        val tv = findViewById<TextView>(R.id.tv_terms_notice)
+
+        val prefix = "로그인하면 "
+        val terms = "서비스 약관"
+        val mid = " 및 "
+        val privacy = "개인정보 처리방침"
+        val suffix = "에 동의한 것으로 간주합니다."
+
+        val full = prefix + terms + mid + privacy + suffix
+        val spannable = SpannableString(full)
+
+        val termsStart = prefix.length
+        val termsEnd = termsStart + terms.length
+
+        val privacyStart = termsEnd + mid.length
+        val privacyEnd = privacyStart + privacy.length
+
+        spannable.setSpan(object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                showTermsDialog(
+                    title = "서비스 약관",
+                    rawResId = R.raw.terms_service
+                )
+            }
+        }, termsStart, termsEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        spannable.setSpan(object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                showTermsDialog(
+                    title = "개인정보 처리방침",
+                    rawResId = R.raw.terms_privacy
+                )
+            }
+        }, privacyStart, privacyEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        tv.text = spannable
+        tv.movementMethod = LinkMovementMethod.getInstance()
+        tv.highlightColor = Color.TRANSPARENT
+    }
+
+    private fun showTermsDialog(title: String, rawResId: Int) {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_login_terms, null, false)
+
+        val tvTitle = view.findViewById<TextView>(R.id.tv_title)
+        val tvContent = view.findViewById<TextView>(R.id.tv_content)
+        val ivClose = view.findViewById<ImageView>(R.id.iv_close)
+
+        tvTitle.text = title
+        tvContent.text = readRawText(rawResId)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(view)
+            .create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        ivClose.setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
+    }
+
+    private fun readRawText(rawResId: Int): String {
+        return resources.openRawResource(rawResId).bufferedReader().use { it.readText() }
+    }
 }

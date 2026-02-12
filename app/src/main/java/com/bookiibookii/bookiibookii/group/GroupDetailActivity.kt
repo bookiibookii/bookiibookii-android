@@ -31,6 +31,8 @@ import com.bookiibookii.bookiibookii.databinding.DialogGroupJoinBinding
 import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.group.viewmodel.GroupDetailViewModel
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
@@ -50,18 +52,18 @@ class GroupDetailActivity : AppCompatActivity() {
     private var allCommentsList: List<GroupItemDto.CommentItem> = emptyList()
 
     // 어댑터 클릭 리스너 수정
-    private val commentAdapter = GroupChatAdapter { commentId, writerName ->
-        // 1. 전체 부모 리스트(allCommentsList)에서 클릭된 ID를 찾습니다.
-        // 자식 댓글(대댓글)은 allCommentsList 안에 중첩되어 있으므로 find로 찾아지지 않습니다.
-        val isParentItem = allCommentsList.any { it.id == commentId }
-
-        if (isParentItem) {
-            // 부모 댓글인 경우에만 답글 모드 실행
-            enterReplyMode(commentId, writerName)
-        } else {
-            // 자식 댓글을 클릭했을 때는 아무 동작도 하지 않음 (필요 시 토스트 메시지)
-          }
-    }
+    private val commentAdapter = GroupChatAdapter(
+        onReplyClick = { commentId, writerName ->
+            val isParentItem = allCommentsList.any { it.id == commentId }
+            if (isParentItem) {
+                enterReplyMode(commentId, writerName)
+            }
+        },
+        onDeleteClick = { commentId ->
+            // [추가] 삭제 팝업에서 삭제 버튼 클릭 시 실행될 로직
+            viewModel.deleteComment(currentGroupId.toInt(), commentId.toInt())
+        }
+    )
 
     private val viewModel: GroupDetailViewModel by viewModels()
     private val userViewModel: MyPageViewModel by viewModels() // 추가
@@ -261,13 +263,18 @@ class GroupDetailActivity : AppCompatActivity() {
         // 3. 콜백 설정 (드래그 시 동작)
         bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                // 필요 시 상태 변화에 따른 로직 추가 (예: 뒤로가기 버튼 모양 변경 등)
+                if (newState == BottomSheetBehavior.STATE_EXPANDED) {
+                    // 펼쳐졌을 때의 로직
+                }
             }
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 // slideOffset: 0.0 (접힘) -> 1.0 (펼쳐짐)
-                // 새로고침 아이콘 투명도 조절 (펼칠수록 잘 보이게)
+                // 새로고침 아이콘 투명도 조절
                 binding.grpMgBottomSheetReloadIv.alpha = slideOffset
+
+                // 만약 뒤가 비치는 현상을 해결하기 위해
+                // 배경 투명도를 조절하고 싶다면 여기서 처리 가능합니다.
             }
         })
     }
@@ -369,6 +376,17 @@ class GroupDetailActivity : AppCompatActivity() {
             }
         }
 
+        viewModel.commentDeleteEvent.observe(this) { isSuccess ->
+            if (isSuccess) {
+                Toast.makeText(this, "댓글이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                // fetchComments는 이미 ViewModel 내부 deleteComment에서 호출하므로
+                // 여기서는 UI 피드백(토스트 등)만 주면 됩니다.
+            } else {
+                Toast.makeText(this, "삭제 권한이 없거나 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+
         viewModel.errorMessage.observe(this) { msg ->
             if (!msg.isNullOrBlank()) Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
@@ -446,8 +464,12 @@ class GroupDetailActivity : AppCompatActivity() {
             grpItemMemStatusNoTv.text = "${data.matchedCount}"
 
             Glide.with(this@GroupDetailActivity).load(data.bookImage).centerCrop().into(grpItemCoverIv)
-            Glide.with(this@GroupDetailActivity).load(data.hostProfileImageUrl).placeholder(R.drawable.ic_profile).circleCrop().into(grpItemProfileIv)
-
+            Glide.with(this@GroupDetailActivity)
+                .load(data.hostProfileImageUrl)
+                .transform(CenterCrop(), RoundedCorners(dpToPx(6))) // 6dp 라운드 적용
+                .placeholder(R.drawable.ic_profile)
+                .error(R.drawable.ic_profile)
+                .into(binding.actGrpHoIncludedItem.grpItemProfileIv)
             grpItemHotCp.visibility = if (data.isHot) View.VISIBLE else View.GONE
 
             // 4. 태그 칩 그룹 (grpItemChipGroup) - 여기는 건드리지 않음
@@ -636,7 +658,11 @@ private fun requestCancelGroup(groupId: Long) {
 
     private fun setupMoreMenu(isHost: Boolean) {
         binding.actGrpHoMoreIv.setOnClickListener {
-            val bottomSheet = GroupMoreBottomSheet(isHost) { action ->
+            // 1. 현재 상태값 가져오기
+            val currentStatus = viewModel.groupDetail.value?.groupStatus ?: "RECRUITING"
+
+            // 2. 바텀시트 생성 시 'currentStatus'를 함께 전달
+            val bottomSheet = GroupMoreBottomSheet(isHost, currentStatus) { action ->
                 when (action) {
                     "EDIT" -> {
                         val currentData = viewModel.groupDetail.value

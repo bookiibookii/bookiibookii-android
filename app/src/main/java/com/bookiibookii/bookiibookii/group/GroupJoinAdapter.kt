@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.group
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +9,9 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bookiibookii.bookiibookii.databinding.ItemGroupJoinManagementBinding
 import com.bumptech.glide.Glide // Glide 임포트 필수
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import kotlin.math.roundToInt
 
 class GroupJoinAdapter(
     private var dataList: MutableList<GroupJoinData>,
@@ -38,12 +42,12 @@ class GroupJoinAdapter(
                 itemGrpJoinManageContentTv.text = item.intro
 
                 // 2. [변경] 프로필 이미지 (Glide 사용)
-                Glide.with(root.context)
-                    .load(item.profileImgUrl)          // URL 로드
-                    .placeholder(R.drawable.ic_profile) // 로딩/실패/null 시 기본 이미지
+                Glide.with(binding.root.context)
+                    .load(item.profileImgUrl)
+                    .transform(CenterCrop(), RoundedCorners(dpToPx(binding.root.context, 6)))
+                    .placeholder(R.drawable.ic_profile)
                     .error(R.drawable.ic_profile)
-                    .circleCrop()                       // 원형으로 자르기
-                    .into(itemGrpJoinManageProfileIv)
+                    .into(binding.itemGrpJoinManageProfileIv)
 
                 // 3. 태그 칩 설정 (기존 로직 유지)
                 val chipViews = listOf(
@@ -76,5 +80,10 @@ class GroupJoinAdapter(
         dataList.clear()
         dataList.addAll(newItemList)
         notifyDataSetChanged()
+    }
+
+    private fun dpToPx(context: Context, dp: Int): Int {
+        val density = context.resources.displayMetrics.density
+        return (dp * density).roundToInt()
     }
 }

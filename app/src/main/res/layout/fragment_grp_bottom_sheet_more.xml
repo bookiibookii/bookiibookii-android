@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
     android:background="@drawable/bg_bottom_sheet_top_round"
     android:paddingBottom="24dp">
 
@@ -35,8 +35,8 @@
         android:id="@+id/rp_bottom_sheet_more_divider_line"
         android:layout_width="0dp"
         android:layout_height="1dp"
-        android:layout_marginTop="16dp"
         android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
         android:background="@color/grey_200"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -49,6 +49,43 @@
         android:paddingHorizontal="24dp"
         app:layout_constraintTop_toBottomOf="@id/rp_bottom_sheet_more_divider_line">
 
+        <LinearLayout
+            android:id="@+id/grp_bottom_sheet_warning_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_round_20dp_red105"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_warning"
+                app:tint="@color/ui_point_red" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:fontFamily="@font/pretendard_variable"
+                android:text="진행 중인 그룹은 수정할 수 없습니다."
+                android:textColor="@color/ui_point_red"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/grp_bottom_sheet_menu_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="@color/grey_200"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
         <TextView
             android:id="@+id/grp_bottom_sheet_edit_Tv"
             android:layout_width="match_parent"
@@ -59,7 +96,7 @@
             android:textColor="@color/grey_900"
             android:textSize="18sp"
             android:visibility="gone"
-            tools:visibility="visible"/>
+            tools:visibility="visible" />
 
         <TextView
             android:id="@+id/grp_bottom_sheet_more_delete_Tv"
@@ -71,7 +108,7 @@
             android:textColor="@color/ui_point_red"
             android:textSize="18sp"
             android:visibility="gone"
-            tools:visibility="visible"/>
+            tools:visibility="visible" />
 
         <TextView
             android:id="@+id/grp_bottom_sheet_report_Tv"
@@ -83,7 +120,7 @@
             android:textColor="@color/ui_point_red"
             android:textSize="18sp"
             android:visibility="gone"
-            tools:visibility="gone"/>
+            tools:visibility="visible" />
 
     </LinearLayout>
 
