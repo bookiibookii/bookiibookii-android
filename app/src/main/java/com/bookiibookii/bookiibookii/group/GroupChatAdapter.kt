@@ -98,9 +98,9 @@ class GroupChatAdapter(
                 }
             }
 
-            // 4. 프로필 이미지 (충돌 해결: profileImageUrl 사용)
-            Glide.with(binding.root.context)
-                .load(item.writer.profileImageUrl)
+            // 프로필 이미지
+            Glide.with(context)
+                .load(item.writer.profileImage)
                 .placeholder(R.drawable.ic_profile)
                 .error(R.drawable.ic_profile)
                 .circleCrop()
