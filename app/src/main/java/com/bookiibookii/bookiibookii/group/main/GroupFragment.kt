@@ -367,7 +367,7 @@ class GroupFragment : Fragment() {
         intent.putExtra("READING_PERIOD", groupData.readingPeriod)
         intent.putExtra("MEMBER_COUNT", groupData.memberCount)
         intent.putExtra("IS_HOT", groupData.isHot)
-        intent.putExtra("GROUP_ID", groupData.groupId)
+        intent.putExtra("GROUP_ID", groupData.groupId.toLong())
         startActivity(intent)
     }
 

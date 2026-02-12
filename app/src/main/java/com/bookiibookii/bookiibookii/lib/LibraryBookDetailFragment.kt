@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.lib
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,9 +19,13 @@ import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 class LibraryBookDetailFragment : Fragment() {
 
@@ -102,13 +107,16 @@ class LibraryBookDetailFragment : Fragment() {
             .transform(CenterCrop(), RoundedCorners(dpToPx(10))).into(binding.libDetailImageIv)
 
         Glide.with(this).load(hostProfileUrl).placeholder(R.drawable.bg_round_20dp_gray200)
-            .error(R.drawable.img_profile_default).circleCrop().into(binding.libDetailProfileIv)
+            .error(R.drawable.img_profile_default).transform(CenterCrop(), RoundedCorners(dpToPx(8))).into(binding.libDetailProfileIv)
 
         binding.libDetailProfileTv.text = hostName
 
-        // ★ [핵심] 날짜는 무조건 표시되게 밖으로 뺐습니다.
-        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
+        val formattedStart = formatDate(startDate)
+        val formattedEnd = formatDate(endDate)
 
+        binding.libDetailDateTv.text = if (formattedEnd.isNotEmpty()) "$formattedStart ~ $formattedEnd" else "$formattedStart ~"
+
+        // 별점만 유무에 따라 띄웁니다.
         // 별점만 유무에 따라 띄웁니다.
         if (rating > 0.0) {
             binding.libDetailRateList.visibility = View.VISIBLE
@@ -135,6 +143,24 @@ class LibraryBookDetailFragment : Fragment() {
                 i == scoreInt && hasHalfStar -> star.setImageResource(R.drawable.ic_star_half)
                 else -> star.setImageResource(R.drawable.ic_star_none)
             }
+        }
+    }
+
+    private fun formatDate(dateString: String): String {
+        if (dateString.isEmpty()) return ""
+        return try {
+            // 1. 서버 UTC 시간 파싱
+            val format = if (dateString.contains(".")) "yyyy-MM-dd'T'HH:mm:ss.SSS" else "yyyy-MM-dd'T'HH:mm:ss"
+            val parser = SimpleDateFormat(format, Locale.getDefault())
+            parser.timeZone = TimeZone.getTimeZone("UTC")
+            val date = parser.parse(dateString) ?: return dateString
+
+            // 2. 한국 시간 포맷으로 변환
+            val formatter = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
+            formatter.timeZone = TimeZone.getDefault()
+            formatter.format(date)
+        } catch (e: Exception) {
+            dateString // 변환 실패 시 원본 사용
         }
     }
 
@@ -227,7 +253,17 @@ class LibraryBookDetailFragment : Fragment() {
         }
 
         binding.libDetailMoreIv.setOnClickListener {
-            LibraryGroupDeleteBottomSheet { showDeleteConfirmDialog() }.show(requireActivity().supportFragmentManager, "GroupDeleteSheet")
+            LibraryGroupDeleteBottomSheet(
+                onDetailClick = {
+                    val intent = Intent(requireContext(), GroupDetailActivity::class.java)
+                    intent.putExtra("GROUP_ID", groupId.toLong())
+                    intent.putExtra("GROUP_TYPE", "RELAY") // 이어읽기 완료이므로 RELAY
+                    startActivity(intent)
+                },
+                onDeleteClick = {
+                    showDeleteConfirmDialog()
+                }
+            ).show(requireActivity().supportFragmentManager, "GroupDeleteSheet")
         }
 
         binding.libDetailLatelyTv.setOnClickListener { cardAdapter.submitList(originalList.sortedByDescending { it.createdAt }) }

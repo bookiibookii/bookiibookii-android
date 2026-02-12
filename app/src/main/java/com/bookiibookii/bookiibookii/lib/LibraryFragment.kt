@@ -161,23 +161,31 @@ class LibraryFragment : Fragment() {
 
     private fun initRecyclerView() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
-            // ★ 여기에 로그 추가
-            Log.d("LibraryClick", "클릭된 책: ${clickedBook.title}, isMine 값: ${clickedBook.isMine}")
+            Log.d("LibraryClick", "클릭: ${clickedBook.title}, Type: ${clickedBook.groupType}, Status: ${clickedBook.readStatus}, Reviewed: ${clickedBook.isReviewed}")
 
+            // 1. 함께 읽기 (TOGETHER) 처리
             if (clickedBook.groupType == "TOGETHER") {
-                val targetFragment: Fragment = if (clickedBook.readStatus == ReadStatus.DONE) {
+
+                // ★ [핵심 수정]
+                // 그룹 상태가 DONE(완료)이거나,
+                // 상태는 ING(진행중)이지만 내가 이미 후기를 썼다면(isReviewed) -> Together(완료) 화면으로 이동
+                val targetFragment: Fragment = if (clickedBook.readStatus == ReadStatus.DONE || clickedBook.isReviewed) {
                     LibraryBookDetailTogetherFragment()
                 } else {
                     LibraryBookDetailIngFragment()
                 }
+
                 navigateToFragment(targetFragment, clickedBook)
                 return@LibraryBookAdapter
+            }
+
+            // 2. 이어 읽기 (RELAY) 처리
+            if (clickedBook.readStatus == ReadStatus.DONE) {
+                // 종료됨 -> 상세 화면 Fragment (Bundle 전달)
+                navigateToFragment(LibraryBookDetailFragment(), clickedBook)
             } else {
-                if (clickedBook.readStatus == ReadStatus.DONE) {
-                    navigateToFragment(LibraryBookDetailFragment(), clickedBook)
-                } else {
-                    checkTradeTypeAndNavigate(clickedBook) // 추후 교체
-                }
+                // 진행 중 -> 트래커 Activity
+                checkTradeTypeAndNavigate(clickedBook)
             }
         }
 

@@ -11,10 +11,13 @@ import com.bookiibookii.bookiibookii.data.model.GroupItemDto.ParticipantSlot
 import com.bookiibookii.bookiibookii.databinding.ItemGrpMemberBinding
 import com.bumptech.glide.Glide
 
-class GroupMemberAdapter : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHolder>() {
+// Activity에서 GroupMemberAdapter { } 형태로 호출할 수 있도록 생성자 파라미터 추가
+class GroupMemberAdapter(
+    private val onMemberClick: (Long) -> Unit
+) : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHolder>() {
 
     private var memberList = listOf<ParticipantSlot>()
-    private var myNickname: String? = null // 액티비티에서 받아올 내 닉네임
+    private var myNickname: String? = null
 
     fun submitList(list: List<ParticipantSlot>?, myNick: String? = null) {
         memberList = list ?: emptyList()
@@ -41,50 +44,48 @@ class GroupMemberAdapter : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHol
         fun bind(slot: ParticipantSlot) {
             val context = itemView.context
             with(binding) {
-                // 1. 공통 초기화
-                itemMemberHostCp.visibility = View.GONE
+
+                // 클릭 리스너 연결 (필요 시 사용)
+                root.setOnClickListener {
+                    // slot에 memberId가 있다면: onMemberClick(slot.memberId)
+                }
 
                 if (slot.role == "EMPTY") {
                     itemMemberProfileIv.setImageResource(R.drawable.ic_profile)
                     itemMemberProfileIv.alpha = 0.3f
                     itemMemberNicknameTv.text = "모집중"
                     itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_400))
+                    itemMemberHostCp.visibility = View.GONE
                 } else {
                     itemMemberProfileIv.alpha = 1.0f
                     itemMemberNicknameTv.text = slot.nickname
                     itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_900))
 
-                    // 2. 프로필 이미지 채우기
-                    // [수정] 배경이나 이전 이미지가 남지 않도록 Glide 설정 강화
+                    // ★ 충돌 해결: profileImageUrl 사용 & CenterCrop
                     Glide.with(context)
                         .load(slot.profileImage)
                         .placeholder(R.drawable.ic_profile)
                         .error(R.drawable.ic_profile)
-                        .centerCrop() // 사진을 카드뷰 모양에 꽉 채우기 위해 centerCrop만 사용!
+                        .centerCrop()
                         .into(itemMemberProfileIv)
-                    // 3. 태그 로직 (HOST 우선, 그다음 ME)
+
+                    // ★ 충돌 해결: 중복된 태그 로직 하나로 통합
                     when {
                         slot.role == "HOST" -> {
                             itemMemberHostCp.visibility = View.VISIBLE
                             itemMemberHostCp.text = "HOST"
-                            // 호스트는 기존처럼 메인 강조색
                             itemMemberHostCp.setChipBackgroundColorResource(R.color.pre_main)
                             itemMemberHostCp.setTextColor(Color.WHITE)
                         }
                         slot.nickname == myNickname -> {
                             itemMemberHostCp.visibility = View.VISIBLE
                             itemMemberHostCp.text = "ME"
-
-                            // ★ [수정] 요청하신 색상 조합 적용
-                            // 배경색: sub_pale (연한색)
                             itemMemberHostCp.setChipBackgroundColorResource(R.color.pre_sub_pale)
-                            // 텍스트색: pre_sub (강조색)
                             itemMemberHostCp.setTextColor(ContextCompat.getColor(context, R.color.pre_sub))
                         }
                         else -> {
                             itemMemberHostCp.visibility = View.GONE
                         }
-
                     }
                 }
             }

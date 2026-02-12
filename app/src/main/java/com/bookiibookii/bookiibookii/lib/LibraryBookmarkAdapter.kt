@@ -78,7 +78,7 @@ class LibraryBookmarkAdapter(
                             if (userImageKey != null) {
                                 Glide.with(itemView.context)
                                     .load(userImageKey)
-                                    .circleCrop()
+                                    .transform(CenterCrop(), RoundedCorners(dpToPx(10)))
                                     .placeholder(R.drawable.img_profile_default)
                                     .into(binding.itemReviewProfileIv)
                             }

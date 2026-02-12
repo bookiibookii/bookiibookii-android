@@ -42,7 +42,8 @@ class GroupDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGrpHostBinding
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout> // 타입 변경 (View -> ConstraintLayout)
 
-    private val memberAdapter = GroupMemberAdapter()
+    private val memberAdapter = GroupMemberAdapter{}
+
 
 
     // 댓글 어댑터: (부모ID, 작성자명) 콜백 -> 답글 모드 진입
@@ -69,11 +70,14 @@ class GroupDetailActivity : AppCompatActivity() {
     private var isReplyMode = false
     private var isSecretMode = false
 
+    private var currentGroupType: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGrpHostBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        currentGroupType = intent.getStringExtra("GROUP_TYPE") // 타입 수신
         // Intent 데이터 수신
         currentGroupId = intent.getLongExtra("GROUP_ID", -1L)
         if (currentGroupId <= 0L) {
@@ -398,78 +402,82 @@ class GroupDetailActivity : AppCompatActivity() {
 
 
     private fun bindUi(data: GroupItemDto.GroupDetailResult) {
-
-        // 1. 직접 교환 여부 확인
+        // 1. 직접 교환/지역 설정 (기존 유지)
         val isDirectExchange = !data.meetPlace.isNullOrBlank()
-
-        if (isDirectExchange) {
-            // 직접거래일 때: 레이아웃을 보여주고 실제 장소명을 세팅
-            binding.actGrpHoRegionLayout.visibility = View.VISIBLE
-            binding.actGrpHoIntroRealRegionTv.text = data.meetPlace
-        } else {
-            // 택배일 때 (meetPlace가 null인 경우): 레이아웃 자체를 숨김
-            binding.actGrpHoRegionLayout.visibility = View.GONE
-        }
+        binding.actGrpHoRegionLayout.visibility = if (isDirectExchange) View.VISIBLE else View.GONE
+        binding.actGrpHoIntroRealRegionTv.text = if (isDirectExchange) data.meetPlace else data.preferRegion
 
         with(binding.actGrpHoIncludedItem) {
+            // --- [핵심 수정] 2. 그룹 상태 칩 (grpItemStatusCp) 스타일 정의 ---
+            // 이 칩은 태그 리스트와 별개로 상단에 고정된 녀석입니다.
+            when (data.groupStatus) {
+                "RECRUITING" -> {
+                    grpItemStatusCp.text = "모집 중"
+                    // 기존 스타일 (필요시 ColorStateList 설정)
+                    grpItemStatusCp.chipBackgroundColor = ColorStateList.valueOf(getColor(R.color.pre_main))
+                    grpItemStatusCp.chipStrokeColor = ColorStateList.valueOf(getColor(R.color.pre_main))
+                    grpItemStatusCp.setTextColor(getColor(R.color.white))
+                }
+                "MATCHED" -> {
+                    grpItemStatusCp.text = "진행 중"
+                    // 요청하신 스타일: 배경 White / 테두리 Main.105 / 글자 Pre_Main
+                    grpItemStatusCp.chipBackgroundColor = ColorStateList.valueOf(Color.WHITE)
+                    grpItemStatusCp.chipStrokeColor = ColorStateList.valueOf(getColor(R.color.ui_main_105))
+                    grpItemStatusCp.setTextColor(getColor(R.color.pre_main))
+                }
+                "COMPLETED" -> {
+                    grpItemStatusCp.text = "종료"
+                    grpItemStatusCp.chipBackgroundColor = ColorStateList.valueOf(getColor(R.color.grey_200))
+                    grpItemStatusCp.chipStrokeColor = ColorStateList.valueOf(Color.TRANSPARENT)
+                    grpItemStatusCp.setTextColor(getColor(R.color.grey_500))
+                }
+                else -> {
+                    grpItemStatusCp.text = "마감"
+                }
+            }
+
+            // 3. 도서 정보 바인딩 (기존 유지)
             grpItemBookTitleTv.text = data.bookTitle
             grpItemBookAuthorTv.text = data.author
-            val genreText = data.category
-            grpItemBookGenreTv.text = if (!genreText.isNullOrEmpty()) "($genreText)" else ""
+            grpItemBookGenreTv.text = if (!data.category.isNullOrEmpty()) "(${data.category})" else ""
             grpItemDateTv.text = data.startDate.replace("-", ".")
             grpItemNicknameTv.text = data.hostNickname
-            grpItemStatusCp.text = if (data.groupStatus == "RECRUITING") "모집 중" else "마감"
             grpItemDeadlineNoTv.text = data.readingPeriod.toString()
             grpItemMemStatusNoTv.text = "${data.matchedCount}"
 
-            Glide.with(this@GroupDetailActivity)
-                .load(data.bookImage)
-                .centerCrop()
-                .into(grpItemCoverIv)
+            Glide.with(this@GroupDetailActivity).load(data.bookImage).centerCrop().into(grpItemCoverIv)
+            Glide.with(this@GroupDetailActivity).load(data.hostProfileImageUrl).placeholder(R.drawable.ic_profile).circleCrop().into(grpItemProfileIv)
 
-            Glide.with(this@GroupDetailActivity)
-                .load(data.hostProfileImageUrl) // 데이터 클래스 변수명과 일치하는지 확인!
-                .placeholder(R.drawable.ic_profile)
-                .circleCrop()
-                .into(grpItemProfileIv)
             grpItemHotCp.visibility = if (data.isHot) View.VISIBLE else View.GONE
 
-            // 모든 칩 리스트 (XML에 5개 이상 넉넉히 있다고 가정)
-            with(binding.actGrpHoIncludedItem.grpItemChipGroup) {
-                removeAllViews() // 초기화
-
+            // 4. 태그 칩 그룹 (grpItemChipGroup) - 여기는 건드리지 않음
+            // 여기는 #포스트잇, #경제/경영 같은 실제 태그들이 들어가는 곳입니다.
+            with(grpItemChipGroup) {
+                removeAllViews()
                 val displayTags = ArrayList<String>()
                 if (!data.customTag.isNullOrBlank()) displayTags.add("#${data.customTag}")
                 data.groupTags?.forEach { displayTags.add(GroupTagMapper.toKoreanTag(it)) }
 
-                // 상세 페이지는 개수 제한 없이 루프 실행
                 displayTags.forEach { tagText ->
                     val chip = layoutInflater.inflate(R.layout.item_chip_tag, this, false) as Chip
                     chip.text = tagText
                     this.addView(chip)
                 }
             }
-
             grpItemBottomBtnLayout.visibility = View.VISIBLE
-
         }
 
+        // 5. 하단 정보 및 멤버 리스트 (기존 유지)
         binding.actGrpHoIntroContTv.text = data.groupComment
-        binding.actGrpHoIntroRealRegionTv.text = data.preferRegion
         binding.actGrpHoMainTitleTv.text = data.title
         binding.actGrpHoMemberStatus1Tv.text = "${data.matchedCount}"
         binding.actGrpHoMemberStatus3Tv.text = "${data.maxCapacity}"
-//        memberAdapter.submitList(data.participantSlots)
 
         val processedSlots = data.participantSlots?.map { slot ->
-            if (slot.role == "HOST" && slot.profileImageUrl.isNullOrBlank()) {
-                // 호스트인데 이미지가 비어있다면, 상세 정보의 호스트 이미지를 넣어줌
-                slot.copy(profileImageUrl = data.hostProfileImageUrl)
-            } else {
-                slot
-            }
+            if (slot.role == "HOST" && slot.profileImage.isNullOrBlank()) {
+                slot.copy(profileImage = data.hostProfileImageUrl)
+            } else slot
         }
-
         updateMemberAdapter(processedSlots, data.hostProfileImageUrl)
     }
 
@@ -477,8 +485,8 @@ class GroupDetailActivity : AppCompatActivity() {
         val myNickname = userViewModel.profileData.value?.nickname
 
         val processed = slots?.map { slot ->
-            if (slot.role == "HOST" && slot.profileImageUrl.isNullOrBlank()) {
-                slot.copy(profileImageUrl = hostProfile)
+            if (slot.role == "HOST" && slot.profileImage.isNullOrBlank()) {
+                slot.copy(profileImage = hostProfile)
             } else {
                 slot
             }
@@ -496,6 +504,8 @@ class GroupDetailActivity : AppCompatActivity() {
         btnLayout.setOnClickListener(null)
         btnCount.visibility = View.GONE
         btnLayout.isEnabled = true
+
+        android.util.Log.d("GroupDetail", "현재 버튼 상태값: ${data.buttonStatus}")
 
         when (data.buttonStatus) {
             "MANAGE" -> {
@@ -523,7 +533,16 @@ class GroupDetailActivity : AppCompatActivity() {
                 btnLayout.isEnabled = false
             }
             "TRACKER" -> {
-                btnTitle.text = "활동/배송 현황"
+                btnTitle.text = if (currentGroupType == "TOGETHER") "서재 보기" else "트래커 보기"
+                btnLayout.setOnClickListener {
+                    if (currentGroupType == "TOGETHER") {
+                        // 서재(Library)로 돌아감
+                         finish()
+                    } else {
+                        // 트래커(Tracker)로 돌아감
+                        finish()
+                    }
+                }
             }
         }
     }
@@ -582,14 +601,30 @@ class GroupDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun requestCancelGroup(groupId: Long) {
-        lifecycleScope.launch {
-            try {
-                val response = RetrofitClient.api().cancelGroupApplication(groupId)
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(this@GroupDetailActivity, "신청 취소 완료", Toast.LENGTH_SHORT).show()
-                    viewModel.fetchGroupDetail(currentGroupId.toInt())
-                } else {
+//    private fun requestCancelGroup(groupId: Long) {
+//        lifecycleScope.launch {
+//            try {
+//                val response = RetrofitClient.api().cancelGroupApplication(groupId)
+//                if (response.isSuccessful && response.body()?.isSuccess == true) {
+//                    Toast.makeText(this@GroupDetailActivity, "신청 취소 완료", Toast.LENGTH_SHORT).show()
+//                    viewModel.fetchGroupDetail(currentGroupId.toInt())
+//                }
+private fun requestCancelGroup(groupId: Long) {
+    lifecycleScope.launch {
+        try {
+            val response = RetrofitClient.api().cancelGroupApplication(groupId)
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                Toast.makeText(this@GroupDetailActivity, "신청 취소 완료", Toast.LENGTH_SHORT).show()
+
+                // [기존 코드 문제점] 취소 후 그룹 정보를 다시 불러오려다 404 에러 발생
+                // viewModel.fetchGroupDetail(currentGroupId.toInt())
+
+                // [수정 제안 1] 깔끔하게 화면 종료 (목록으로 복귀)
+                finish()
+
+                // [수정 제안 2] 혹은 버튼 상태만 '신청하기'로 변경 (서버가 비회원 조회 허용 시)
+                // 만약 서버가 비회원 조회를 막는다면 finish()가 맞습니다.
+            } else {
                     val msg = try { JSONObject(response.errorBody()?.string() ?: "{}").getString("message") } catch (e: Exception) { "취소 실패" }
                     Toast.makeText(this@GroupDetailActivity, msg, Toast.LENGTH_SHORT).show()
                 }

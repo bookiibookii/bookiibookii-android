@@ -139,7 +139,7 @@ data class GroupItemDto(
         val result: List<String>? // ["최강록", "한강", ...]
     )
 
- // 그룹 검색하기
+    // 그룹 검색하기
     // 서버 응답 껍데기
     data class GroupSearchResponse(
         val isSuccess: Boolean,
@@ -166,7 +166,7 @@ data class GroupItemDto(
     )
 
     data class GroupDetailResult(
-        val groupId: Int,
+        val groupId: Long,
         val title: String,
         val bookTitle: String,
         val bookImage: String?,
@@ -256,7 +256,8 @@ data class GroupItemDto(
         val name: String,        // 닉네임
         val tags: List<String>?, // 태그 코드들
         val createdAt: String,
-        val applyMsg: String
+        val applyMsg: String,
+        val profileImageUrl: String?,
     )
 
     //참여요청 수락/거절
@@ -328,6 +329,7 @@ data class GroupItemDto(
     data class CommentWriter(
         val userId: Long,
         val name: String,
+        @SerializedName("profileImageUrl")
         val profileImage: String?,
         val role: String
     )
