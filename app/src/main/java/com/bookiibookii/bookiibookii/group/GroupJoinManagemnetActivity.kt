@@ -25,12 +25,16 @@ class GroupJoinManagementActivity : AppCompatActivity() {
     private var currentGroupId: Long = 0L
     private var currentBookTitle = ""
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGrpJoinManagementBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         currentGroupId = intent.getLongExtra("GROUP_ID", 0L)
+
+        // 1. Intent 데이터 수신
+
         currentBookTitle = intent.getStringExtra("BOOK_TITLE") ?: "모임 신청 관리"
 
         if (currentGroupId == 0L) {
@@ -121,7 +125,7 @@ class GroupJoinManagementActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val msg = if (status == "ACCEPTED") "$nickname 님이 게스트가 되었습니다." else "$nickname 님의 요청을 거절했습니다."
                     showCustomToast(msg)
-                    fetchApplicationList() // 목록 갱신
+                    //fetchApplicationList() // 목록 갱신 // 있으면 삭제됨
                 } else {
                     val errorMsg = response.body()?.message ?: "처리 실패"
                     Toast.makeText(this@GroupJoinManagementActivity, errorMsg, Toast.LENGTH_SHORT).show()

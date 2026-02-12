@@ -42,7 +42,7 @@ class GroupDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGrpHostBinding
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout> // 타입 변경 (View -> ConstraintLayout)
 
-    private val memberAdapter = GroupMemberAdapter()
+    private val memberAdapter = GroupMemberAdapter{}
 
 
 
@@ -505,6 +505,8 @@ class GroupDetailActivity : AppCompatActivity() {
         btnCount.visibility = View.GONE
         btnLayout.isEnabled = true
 
+        android.util.Log.d("GroupDetail", "현재 버튼 상태값: ${data.buttonStatus}")
+
         when (data.buttonStatus) {
             "MANAGE" -> {
                 btnTitle.text = "참여 요청 관리"
@@ -599,14 +601,30 @@ class GroupDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun requestCancelGroup(groupId: Long) {
-        lifecycleScope.launch {
-            try {
-                val response = RetrofitClient.api().cancelGroupApplication(groupId)
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(this@GroupDetailActivity, "신청 취소 완료", Toast.LENGTH_SHORT).show()
-                    viewModel.fetchGroupDetail(currentGroupId.toInt())
-                } else {
+//    private fun requestCancelGroup(groupId: Long) {
+//        lifecycleScope.launch {
+//            try {
+//                val response = RetrofitClient.api().cancelGroupApplication(groupId)
+//                if (response.isSuccessful && response.body()?.isSuccess == true) {
+//                    Toast.makeText(this@GroupDetailActivity, "신청 취소 완료", Toast.LENGTH_SHORT).show()
+//                    viewModel.fetchGroupDetail(currentGroupId.toInt())
+//                }
+private fun requestCancelGroup(groupId: Long) {
+    lifecycleScope.launch {
+        try {
+            val response = RetrofitClient.api().cancelGroupApplication(groupId)
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                Toast.makeText(this@GroupDetailActivity, "신청 취소 완료", Toast.LENGTH_SHORT).show()
+
+                // [기존 코드 문제점] 취소 후 그룹 정보를 다시 불러오려다 404 에러 발생
+                // viewModel.fetchGroupDetail(currentGroupId.toInt())
+
+                // [수정 제안 1] 깔끔하게 화면 종료 (목록으로 복귀)
+                finish()
+
+                // [수정 제안 2] 혹은 버튼 상태만 '신청하기'로 변경 (서버가 비회원 조회 허용 시)
+                // 만약 서버가 비회원 조회를 막는다면 finish()가 맞습니다.
+            } else {
                     val msg = try { JSONObject(response.errorBody()?.string() ?: "{}").getString("message") } catch (e: Exception) { "취소 실패" }
                     Toast.makeText(this@GroupDetailActivity, msg, Toast.LENGTH_SHORT).show()
                 }

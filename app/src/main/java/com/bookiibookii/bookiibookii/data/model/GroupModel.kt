@@ -139,7 +139,7 @@ data class GroupItemDto(
         val result: List<String>? // ["최강록", "한강", ...]
     )
 
- // 그룹 검색하기
+    // 그룹 검색하기
     // 서버 응답 껍데기
     data class GroupSearchResponse(
         val isSuccess: Boolean,
