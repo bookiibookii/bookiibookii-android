@@ -11,13 +11,17 @@ import com.bookiibookii.bookiibookii.data.model.GroupItemDto.ParticipantSlot
 import com.bookiibookii.bookiibookii.databinding.ItemGrpMemberBinding
 import com.bumptech.glide.Glide
 
-class GroupMemberAdapter : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHolder>() {
+// Activity에서 GroupMemberAdapter { } 형태로 호출할 수 있도록 생성자 파라미터 추가
+class GroupMemberAdapter(
+    private val onMemberClick: (Long) -> Unit
+) : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHolder>() {
 
     private var memberList = listOf<ParticipantSlot>()
+    private var myNickname: String? = null
 
-    // 데이터 갱신용 함수
-    fun submitList(list: List<ParticipantSlot>?) {
+    fun submitList(list: List<ParticipantSlot>?, myNick: String? = null) {
         memberList = list ?: emptyList()
+        myNickname = myNick
         notifyDataSetChanged()
     }
 
@@ -38,35 +42,50 @@ class GroupMemberAdapter : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHol
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(slot: ParticipantSlot) {
+            val context = itemView.context
             with(binding) {
 
-                val context = itemView.context
+                // 클릭 리스너 연결 (필요 시 사용)
+                root.setOnClickListener {
+                    // slot에 memberId가 있다면: onMemberClick(slot.memberId)
+                }
 
-                // 1. 상태별 분기 처리 (EMPTY / MEMBER / HOST)
                 if (slot.role == "EMPTY") {
-                    // 대기중 상태
                     itemMemberProfileIv.setImageResource(R.drawable.ic_profile)
                     itemMemberProfileIv.alpha = 0.3f
                     itemMemberNicknameTv.text = "모집중"
-                    itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_700))
+                    itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_400))
                     itemMemberHostCp.visibility = View.GONE
                 } else {
-                    // 참여중 상태
                     itemMemberProfileIv.alpha = 1.0f
                     itemMemberNicknameTv.text = slot.nickname
-                    itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_900))// 검정
+                    itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_900))
 
-                    Glide.with(itemView.context)
+                    // ★ 충돌 해결: profileImageUrl 사용 & CenterCrop
+                    Glide.with(context)
                         .load(slot.profileImage)
                         .placeholder(R.drawable.ic_profile)
-                        .circleCrop()
+                        .error(R.drawable.ic_profile)
+                        .centerCrop()
                         .into(itemMemberProfileIv)
 
-                    // 호스트 뱃지
-                    if (slot.role == "HOST") {
-                        itemMemberHostCp.visibility = View.VISIBLE
-                    } else {
-                        itemMemberHostCp.visibility = View.GONE
+                    // ★ 충돌 해결: 중복된 태그 로직 하나로 통합
+                    when {
+                        slot.role == "HOST" -> {
+                            itemMemberHostCp.visibility = View.VISIBLE
+                            itemMemberHostCp.text = "HOST"
+                            itemMemberHostCp.setChipBackgroundColorResource(R.color.pre_main)
+                            itemMemberHostCp.setTextColor(Color.WHITE)
+                        }
+                        slot.nickname == myNickname -> {
+                            itemMemberHostCp.visibility = View.VISIBLE
+                            itemMemberHostCp.text = "ME"
+                            itemMemberHostCp.setChipBackgroundColorResource(R.color.pre_sub_pale)
+                            itemMemberHostCp.setTextColor(ContextCompat.getColor(context, R.color.pre_sub))
+                        }
+                        else -> {
+                            itemMemberHostCp.visibility = View.GONE
+                        }
                     }
                 }
             }

@@ -34,7 +34,7 @@ class MypSetFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.mypSettingBackIv.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.mypSettingBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
         // 1. 공지사항 이동
         binding.layoutNotice.setOnClickListener {
@@ -106,7 +106,7 @@ class MypSetFragment : Fragment() {
     }
 
     private fun navigateTo(fragment: Fragment) {
-        parentFragmentManager.beginTransaction()
+        requireActivity().supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment) // 메인 액티비티의 컨테이너 ID 확인 필요
             .addToBackStack(null)
             .commit()

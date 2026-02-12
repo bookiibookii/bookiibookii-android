@@ -85,8 +85,8 @@ data class ReportSummary(
 
 // 신고 작성 요청
 data class ReportRequest(
-    val groupName: String,
-    val targetMember: String, // API 스펙상 필요할 것으로 추정 (XML 입력 필드 존재)
+    val groupId: Int,
+    val targetId: Int, // API 스펙상 필요할 것으로 추정 (XML 입력 필드 존재)
     val reportType: String,   // "ABUSE", "SPAM" ...
     val content: String
 )
@@ -107,7 +107,9 @@ data class MyGroupResponse(
 
 data class GroupSummary(
     val groupId: Int,
-    val name: String
+    val groupName: String,       // 👈 name 대신 groupName으로 변경!
+    val groupHostNickname: String,
+    val isHost: Boolean
 )
 
 // 그룹 멤버 조회 응답
@@ -144,6 +146,11 @@ data class NicknameCheckResponse(
 //    val presignedPutUrl: String
 //)
 
+data class MypReview(
+    val content: String,
+    val count: Int
+)
+
 // 프로필 수정 요청
 data class UserUpdateRequest(
     val nickname: String,
@@ -153,7 +160,8 @@ data class UserUpdateRequest(
     val address: String,
     val addressDetail: String,
     val meetPlace: String,
-    val region: String
+    val region: String,
+    val s3Key : String,
 )
 
 data class UserUpdateResponse(
@@ -161,4 +169,35 @@ data class UserUpdateResponse(
     val code: String,
     val message: String,
     val result: String?
+)
+
+data class MypRelayReviewResponse(
+    val isSuccess: Boolean,
+    val code: String,
+    val message: String,
+    val result: MypRelayReviewResult?
+)
+
+data class MypRelayReviewResult(
+    val reviews: List<MypRelayReview>
+)
+
+data class MypRelayReview(
+    val groupId: Long,
+    val bookTitle: String,
+    val bookImage: String?,
+    val startDate: String,
+    val finishedDate: String,
+    val partnerNickname: String,
+    val partnerToMeRating: Double, // 나에 대한 별점
+    val partnerToMeComment: String, // 나에 대한 코멘트
+    val partnerBadges: List<MypBadge>, // 태그 리스트
+    val partnerBookRating: Double, // 책에 대한 별점
+    val partnerBookComment: String, // 책에 대한 코멘트
+    val partnerBookReviewDate: String
+)
+
+data class MypBadge(
+    val code: String,
+    val description: String
 )

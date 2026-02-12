@@ -76,4 +76,39 @@
         app:layout_constraintTop_toBottomOf="@id/top_bar"
         tools:listitem="@layout/item_myp_notice" />
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/myp_no_notice_cl"
+        android:layout_width="0dp"
+        android:layout_height="120dp"
+        android:background="@drawable/bg_round_24dp_white"
+        android:layout_marginTop="16dp"
+        android:padding="24dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/top_bar"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end">
+        <TextView
+            android:id="@+id/myp_no_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="아직 문의 공지사항이 없어요.😊"
+            android:gravity="center_horizontal"
+            android:textAppearance="@style/medium16"
+            android:textColor="@color/grey_900"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="공지가 생기면 바로 전달드릴게요."
+            android:gravity="center_horizontal"
+            android:textAppearance="@style/regular14"
+            android:textColor="@color/grey_600"
+            android:layout_marginTop="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/myp_no_text"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

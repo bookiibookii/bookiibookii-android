@@ -10,10 +10,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectHostReceiveBottomDialogBinding
-import com.bookiibookii.bookiibookii.trkDirectHost.DateTimeUtils.formatMeetingTime
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class DirectHostReceiveBottomDialogFragment : BottomSheetDialogFragment() {
 
@@ -52,7 +53,7 @@ class DirectHostReceiveBottomDialogFragment : BottomSheetDialogFragment() {
 
                         is UiState.Success -> {
                             val dto = state.data
-                            binding.tvAppointmentDatetime.text = formatMeetingTime(dto.meetingTime)
+                            binding.tvAppointmentDatetime.text = formatCardDateTime(dto.meetingTime)
 
                             binding.tvAppointmentPlace.text = dto.meetingPlace ?: "-"
                         }
@@ -100,6 +101,20 @@ class DirectHostReceiveBottomDialogFragment : BottomSheetDialogFragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun formatCardDateTime(rawIso: String?): String {
+        val dt = parseIso(rawIso) ?: return "-"
+        return dt.format(DateTimeFormatter.ofPattern("yyyy. MM. dd. HH:mm "))
+    }
+
+    private fun parseIso(rawIso: String?): LocalDateTime? {
+        if (rawIso.isNullOrBlank()) return null
+        return try {
+            LocalDateTime.parse(rawIso, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     companion object {

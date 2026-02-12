@@ -25,6 +25,7 @@ import com.bookiibookii.bookiibookii.data.model.LoginRequest
 import com.bookiibookii.bookiibookii.data.model.LoginResponse
 import com.bookiibookii.bookiibookii.data.model.LogoutResponse
 import com.bookiibookii.bookiibookii.data.model.MyGroupResponse
+import com.bookiibookii.bookiibookii.data.model.MypRelayReviewResponse
 import com.bookiibookii.bookiibookii.data.model.MypageResponse
 import com.bookiibookii.bookiibookii.data.model.NicknameValidationResponse
 import com.bookiibookii.bookiibookii.data.model.NoticeDetailResponse
@@ -38,6 +39,7 @@ import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
 import com.bookiibookii.bookiibookii.data.model.ProfileResponse
 import com.bookiibookii.bookiibookii.data.model.RecommendedBookmateDto
 import com.bookiibookii.bookiibookii.data.model.RecommendedGroupDto
+import com.bookiibookii.bookiibookii.data.model.RelayReviewRequest
 import com.bookiibookii.bookiibookii.data.model.ReportCreateResponse
 import com.bookiibookii.bookiibookii.data.model.ReportListResponse
 import com.bookiibookii.bookiibookii.data.model.ReportRequest
@@ -146,12 +148,6 @@ interface ApiService: TrkApi {
     suspend fun getCardComments(
         @Path("cardId") cardId: Long
     ): Response<CommentListResponse>
-
-    //  Presigned URL 발급
-    @POST("api/card/{userBookId}/presigned-url")
-    suspend fun getPresignedUrl(
-        @Path("userBookId") userBookId: Int
-    ): Response<PresignedUrlResponse>
 
 
     // 닉네임 중복 검증
@@ -333,10 +329,19 @@ interface ApiService: TrkApi {
     suspend fun deleteKeyword(
         @Path("keywordId") keywordId: Long
     ): Response<com.bookiibookii.bookiibookii.trkData.dto.ApiResponse<String>>
-  
+
     @DELETE("api/cards/{cardId}")
     suspend fun deleteCard(
         @Path("cardId") cardId: Long
+    ): Response<BaseResponse>
+
+    @GET("/api/reviews/me/relay")
+    suspend fun getRelayReviews(): Response<MypRelayReviewResponse>
+
+    @POST("/api/reviews/relay/{userBookId}")
+    suspend fun postRelayReview(
+        @Path("userBookId") userBookId: Int,
+        @Body request: RelayReviewRequest
     ): Response<BaseResponse>
 
     //그룹 삭제하기
