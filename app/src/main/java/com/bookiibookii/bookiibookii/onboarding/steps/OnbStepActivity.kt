@@ -65,7 +65,7 @@ class OnbStepActivity : AppCompatActivity() {
         progress1 = findViewById(R.id.progress1)
         progress2 = findViewById(R.id.progress2)
         progress3 = findViewById(R.id.progress3)
-        btnNext = findViewById(R.id.include_footer_button)
+        btnNext = findViewById(R.id.btn_footer)
     }
 
     // 클릭 이벤트 바인딩
