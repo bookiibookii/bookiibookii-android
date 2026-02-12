@@ -6,17 +6,12 @@ import android.graphics.Rect
 import android.os.Bundle
 import android.transition.AutoTransition
 import android.transition.TransitionManager
-import android.view.Gravity
 import android.view.KeyEvent
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -35,24 +30,29 @@ class GrpSearchActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGrpSearchBinding
     private val viewModel: GrpSearchViewModel by viewModels()
 
-    // Properties - Adapters & Managers
     private lateinit var groupAdapter: GroupAdapter
+
     private lateinit var historyManager: SearchHistoryManager
+
+    // 상태 변수
+    private var currentSortType = "LATEST" // "LATEST" or "POPULAR"
+    private var lastQuery = ""
+
+    // 어댑터 설정
+    // [인기 검색어 어댑터]
     private val popularAdapter by lazy {
         PopularSearchAdapter { keyword ->
             binding.actGrpSearchBar.setText(keyword)
-            performSearch(keyword)
+            performSearch(keyword) // 클릭 시 바로 검색
         }
     }
-    private var currentSortType = "LATEST"
-    private var lastQuery = ""
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGrpSearchBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // 매니저 초기화
         historyManager = SearchHistoryManager(this)
 
         initViews()
@@ -61,104 +61,159 @@ class GrpSearchActivity : AppCompatActivity() {
         setupChipGroup()
     }
 
-    // Initialization & UI Setup
     private fun initViews() {
+        // 인기 검색어 어댑터 연결 (기존 코드)
         binding.actSearchHotGrpRv.adapter = popularAdapter
 
+        // 2. 검색 결과 어댑터 초기화 (처음엔 빈 리스트로 시작)
         groupAdapter = GroupAdapter(emptyList()) { group ->
             val intent = Intent(this, GroupDetailActivity::class.java).apply {
+                // 그룹의 식별자(ID)를 넘겨줍니다.
+                // 키값("GROUP_ID")은 GroupDetailActivity에서 받는 키값과 동일해야 합니다.
                 putExtra("GROUP_ID", group.groupId.toLong())
+
+                // 만약 그룹 객체 전체를 넘기고 싶다면, Group 모델이 Parcelable을 구현해야 합니다.
+                // putExtra("GROUP_DATA", group)
             }
             startActivity(intent)
         }
 
+        // 3. 리사이클러뷰에 연결
         binding.rvSearchResult.apply {
             adapter = groupAdapter
             layoutManager = LinearLayoutManager(this@GrpSearchActivity)
+
             addItemDecoration(VerticalSpaceItemDecoration(16))
         }
     }
-
     private fun initViewModel() {
+        // 인기 검색어 리스트 관찰
         viewModel.displayList.observe(this) { list ->
             TransitionManager.beginDelayedTransition(binding.root as ViewGroup, AutoTransition())
             popularAdapter.submitList(list)
         }
 
+        // 화살표 회전 관찰
         viewModel.isExpanded.observe(this) { isExpanded ->
             val angle = if (isExpanded) 180f else 0f
             binding.actSearchHotGrpCardArrowDownIv.animate().rotation(angle).setDuration(300).start()
         }
 
+        // 검색 결과 관찰 및 어댑터 갱신
         viewModel.searchResult.observe(this) { groupList ->
             binding.tvResultCount.text = "${groupList.size} 권"
+
+            // ★ 여기서 데이터 갱신!
             groupAdapter.updateList(groupList)
 
+            // (선택사항) 결과가 없을 때 처리
             if (groupList.isEmpty()) {
-                showAppToast("검색 결과가 없습니다.", isSuccess = false)
+                // binding.layoutEmpty.visibility = View.VISIBLE
+            } else {
+                // binding.layoutEmpty.visibility = View.GONE
             }
         }
     }
 
     private fun initListeners() {
-        with(binding) {
-            actGrpSearchBackIv.setOnClickListener { handleBackPress() }
-            actSearchHotGrpCardArrowDownIv.setOnClickListener { viewModel.toggleExpansion() }
+        // [뒤로가기 버튼]
+        binding.actGrpSearchBackIv.setOnClickListener {
+            handleBackPress()
+        }
 
-            actGrpSearchBar.setOnEditorActionListener { v, actionId, event ->
-                if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE || actionId == 0 ||
-                    (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
-                    val query = actGrpSearchBar.text.toString()
-                    if (query.isNotBlank()) performSearch(query) else showAppToast("검색어를 입력해주세요.", isSuccess = false)
-                    true
-                } else false
-            }
+        // [인기 검색어 펼치기/접기]
+        binding.actSearchHotGrpCardArrowDownIv.setOnClickListener {
+            viewModel.toggleExpansion()
+        }
 
-            actGrpSearchBar.setOnTouchListener { v, event ->
-                if (event.action == MotionEvent.ACTION_UP) {
-                    if (event.x <= actGrpSearchBar.totalPaddingStart) {
-                        val query = actGrpSearchBar.text.toString()
-                        if (query.isNotBlank()) performSearch(query) else showAppToast("검색어를 입력해주세요.", isSuccess = false)
-                        return@setOnTouchListener true
-                    }
+        // [검색 실행 (엔터키)]
+        binding.actGrpSearchBar.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                actionId == EditorInfo.IME_ACTION_DONE ||
+                actionId == 0 || // ★ 추가: 키보드가 아무 액션 ID도 안 줄 때(기본 엔터) 처리
+                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
+            ) {
+                val query = binding.actGrpSearchBar.text.toString()
+                if (query.isNotBlank()) {
+                    performSearch(query)
                 }
+                true
+            } else {
                 false
             }
+        }
 
-            actGrpNextBtn.setOnClickListener {
-                startActivity(Intent(this@GrpSearchActivity, GroupGenerationActivity::class.java).apply {
-                    putExtra("IS_EDIT_MODE", false)
-                })
+        binding.actGrpSearchBar.setOnTouchListener { v, event ->
+            // 터치를 했다가 손을 뗐을 때 (ACTION_UP)
+            if (event.action == MotionEvent.ACTION_UP) {
+                // 터치한 위치(event.x)가 왼쪽 아이콘 영역(totalPaddingStart) 안쪽인지 확인
+                if (event.x <= binding.actGrpSearchBar.totalPaddingStart) {
+                    val query = binding.actGrpSearchBar.text.toString()
+                    if (query.isNotBlank()) {
+                        performSearch(query)
+                    }
+                    // 터치 이벤트를 여기서 소비함 (키보드 올라오는 것 방지 등)
+                    return@setOnTouchListener true
+                }
             }
+            // 그 외 영역(글자 입력 부분)을 터치하면 정상적으로 입력 모드 진입
+            false
+        }
 
-            tvSortLatest.setOnClickListener { changeSortType("LATEST") }
-            tvSortPopular.setOnClickListener { changeSortType("POPULAR") }
+        // [그룹 만들기 버튼]
+        binding.actGrpNextBtn.setOnClickListener {
+            val intent = Intent(this, GroupGenerationActivity::class.java)
+            intent.putExtra("IS_EDIT_MODE", false)
+            startActivity(intent)
+        }
+
+        // [정렬 필터 버튼]
+        binding.tvSortLatest.setOnClickListener {
+            changeSortType("LATEST")
+        }
+        binding.tvSortPopular.setOnClickListener {
+            changeSortType("POPULAR")
         }
     }
 
-
-    // 3. Search Logic
+    // 검색 실행 로직
     private fun performSearch(query: String) {
         lastQuery = query
         hideKeyboard()
+
+        // ★ 4. 검색할 때마다 저장하고 -> 칩 갱신
         historyManager.addHistory(query)
-        setupChipGroup()
+        setupChipGroup() // 칩 화면 새로고침
+
         viewModel.searchGroups(query, currentSortType)
         showResultView()
     }
 
+    // 정렬 타입 변경
     private fun changeSortType(type: String) {
-        if (currentSortType == type) return
+        if (currentSortType == type) return // 이미 선택된 상태면 무시
+
         currentSortType = type
-        updateSortUi()
-        if (lastQuery.isNotBlank()) viewModel.searchGroups(lastQuery, currentSortType)
+        updateSortUi() // 텍스트 색상 변경
+
+        // 검색어가 있을 때만 다시 검색 수행
+        if (lastQuery.isNotBlank()) {
+            viewModel.searchGroups(lastQuery, currentSortType)
+        }
     }
 
+    // 정렬 UI (색상) 업데이트
     private fun updateSortUi() {
-        val isLatest = currentSortType == "LATEST"
-        binding.tvSortLatest.setTextColor(ContextCompat.getColor(this, if (isLatest) R.color.pre_main else R.color.grey_500))
-        binding.tvSortPopular.setTextColor(ContextCompat.getColor(this, if (isLatest) R.color.grey_500 else R.color.pre_main))
+        if (currentSortType == "LATEST") {
+            binding.tvSortLatest.setTextColor(ContextCompat.getColor(this, R.color.pre_main))
+            binding.tvSortPopular.setTextColor(ContextCompat.getColor(this, R.color.grey_500))
+        } else {
+            binding.tvSortLatest.setTextColor(ContextCompat.getColor(this, R.color.grey_500))
+            binding.tvSortPopular.setTextColor(ContextCompat.getColor(this, R.color.pre_main))
+        }
     }
+
+    // --- 화면 전환 (Visibility) 헬퍼 함수들 ---
 
     private fun showResultView() {
         binding.layoutSearchBefore.visibility = View.GONE
@@ -168,15 +223,51 @@ class GrpSearchActivity : AppCompatActivity() {
     private fun showBeforeView() {
         binding.layoutSearchBefore.visibility = View.VISIBLE
         binding.layoutSearchResult.visibility = View.GONE
+
+        // (선택) 검색창 텍스트 지우기
         binding.actGrpSearchBar.text.clear()
     }
 
+    // --- 유틸리티 ---
 
-    // 4. Recent Search Chips
+    private fun handleBackPress() {
+        // 검색 결과 화면이 떠 있다면 -> 검색 전 화면으로
+        if (binding.layoutSearchResult.visibility == View.VISIBLE) {
+            showBeforeView()
+        } else {
+            // 검색 전 화면이라면 -> 액티비티 종료
+            finish()
+        }
+    }
+
+//    // 시스템 뒤로가기 버튼(하단바) 눌렀을 때도 동일하게 동작하도록 오버라이드
+//    override fun onBackPressed() {
+//        // super.onBackPressed() // 이걸 지우거나 조건부 호출
+//        if (binding.layoutSearchResult.visibility == View.VISIBLE) {
+//            showBeforeView()
+//        } else {
+//            super.onBackPressed()
+//        }
+//    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.actGrpSearchBar.windowToken, 0)
+    }
+
+    // --- 칩(Chip) 관련 로직 (기존 유지) ---
     private fun setupChipGroup() {
+        // 기존 칩 다 지우기 (초기화)
         binding.chipGroupRecentSearch.removeAllViews()
+
+        // ★ 저장된 리스트 가져와서 칩 만들기
         val historyList = historyManager.getHistoryList()
-        if (historyList.isNotEmpty()) {
+
+        // 리스트가 비어있으면 숨기거나 처리 가능 (선택사항)
+        if (historyList.isEmpty()) {
+            // binding.actGrpTitleTv.visibility = View.GONE // "최근 검색어" 타이틀 숨기기 등
+        } else {
+            // binding.actGrpTitleTv.visibility = View.VISIBLE
             historyList.forEach { addChip(it) }
         }
     }
@@ -184,47 +275,38 @@ class GrpSearchActivity : AppCompatActivity() {
     private fun addChip(text: String) {
         val chip = layoutInflater.inflate(R.layout.view_chip_entry, binding.chipGroupRecentSearch, false) as Chip
         chip.text = text
+
+        // 클릭 시 검색
         chip.setOnClickListener {
             binding.actGrpSearchBar.setText(text)
             performSearch(text)
         }
+
+        // ★ X 버튼 클릭 시 삭제 로직 연결
         chip.setOnCloseIconClickListener {
-            historyManager.removeHistory(text)
-            binding.chipGroupRecentSearch.removeView(chip)
+            historyManager.removeHistory(text) // 저장소에서 삭제
+            binding.chipGroupRecentSearch.removeView(chip) // 화면에서 삭제
         }
+
         binding.chipGroupRecentSearch.addView(chip)
     }
 
-    // 5. Utilities & Common UI
-    private fun handleBackPress() {
-        if (binding.layoutSearchResult.visibility == View.VISIBLE) showBeforeView() else finish()
-    }
-
-    private fun hideKeyboard() {
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(binding.actGrpSearchBar.windowToken, 0)
-    }
-
-    private fun showAppToast(message: String, isSuccess: Boolean = true) {
-        val layout = LayoutInflater.from(this).inflate(R.layout.toast_custom, null)
-        layout.findViewById<TextView>(R.id.toast_message_tv).text = message
-        val iconRes = if (isSuccess) R.drawable.ic_check else R.drawable.ic_info
-        layout.findViewById<ImageView>(R.id.toast_icon_iv)?.setImageResource(iconRes)
-
-        with(Toast(applicationContext)) {
-            setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
-            duration = Toast.LENGTH_SHORT
-            view = layout
-            show()
-        }
-    }
-
+    // 리사이클러뷰 아이템 간격 조절용 클래스
     class VerticalSpaceItemDecoration(private val verticalSpaceDp: Int) : RecyclerView.ItemDecoration() {
+
         override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+            // 마지막 아이템이 아니면 바텀 마진 추가 (마지막 아이템은 바닥에 딱 붙게 하고 싶으면 조건문 유지)
             if (parent.getChildAdapterPosition(view) != parent.adapter!!.itemCount - 1) {
-                outRect.bottom = (verticalSpaceDp * parent.context.resources.displayMetrics.density).toInt()
+                outRect.bottom = dpToPx(parent.context, verticalSpaceDp)
+            } else {
+                // 마지막 아이템에도 여백 주고 싶으면 위 조건문 지우고 그냥 이것만 쓰면 됨:
+                // outRect.bottom = dpToPx(parent.context, verticalSpaceDp)
             }
         }
-    }
 
+        // dp -> px 변환 함수
+        private fun dpToPx(context: Context, dp: Int): Int {
+            return (dp * context.resources.displayMetrics.density).toInt()
+        }
+    }
 }
