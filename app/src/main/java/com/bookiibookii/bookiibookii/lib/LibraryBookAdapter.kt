@@ -125,7 +125,7 @@ class LibraryBookAdapter(
             // 1. 책등 동적 높이 계산 (최대 높이를 260 -> 200으로 축소)
             val titleLength = item.title.length
             val calculatedHeight = (titleLength * 15) + 60
-            val finalHeightDp = calculatedHeight.coerceIn(120, 200) // 👈 여기를 수정!
+            val finalHeightDp = calculatedHeight.coerceIn(120, 180) // 👈 여기를 수정!
             val finalHeightPx = dpToPx(binding.root.context, finalHeightDp)
 
             // 2. 부모(책등 컨테이너)의 높이 적용

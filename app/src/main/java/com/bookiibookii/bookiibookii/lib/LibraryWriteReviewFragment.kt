@@ -87,11 +87,18 @@ class LibraryWriteReviewFragment : Fragment() {
         val comment = binding.libWriteReviewEt.text.toString()
         val rating = currentRating
 
+        // ★ 로딩바가 없다면 추가해주는 것이 좋습니다 (사용자 중복 클릭 방지)
+        // binding.loadingPb.visibility = View.VISIBLE
+        // binding.libReviewAddBtn.isEnabled = false
+
         lifecycleScope.launch {
             try {
                 val request = ReviewRequest(rating, comment)
                 val response = RetrofitClient.api().postBookReview(userBookId, request)
                 Log.d("Library", "${response.body()}")
+
+                // ★ 프래그먼트가 이미 종료되었거나 분리된 상태라면 중단 (크래시 방지)
+                if (!isAdded || activity == null) return@launch
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val togetherFragment = LibraryBookDetailTogetherFragment().apply {
@@ -109,28 +116,39 @@ class LibraryWriteReviewFragment : Fragment() {
                         }
                     }
 
-                    // ★ [핵심 로직 수정] 백스택 정리 및 화면 이동 순서 재정의
                     val fm = requireActivity().supportFragmentManager
 
-                    // 1. 기존에 쌓여있던 Ing(진행), Write(작성) 화면들을 모두 제거합니다.
-                    fm.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+                    // ★ [수정 핵심] 안전한 화면 전환 로직
+                    try {
+                        // 1. 쌓여있는 화면들을 '즉시' 비웁니다 (동기 처리)
+                        // 이렇게 해야 다음 명령어가 빈 스택 위에서 실행됩니다.
+                        fm.popBackStackImmediate(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
 
-                    // 2. 바닥에 '서재 목록(LibraryFragment)'을 먼저 깔아줍니다. (나중에 백버튼 누르면 여기로 오게 됨)
-                    fm.beginTransaction()
-                        .replace(R.id.fragmentContainer, LibraryFragment())
-                        .commit()
+                        // 2. 바닥에 '서재(LibraryFragment)'를 깝니다.
+                        fm.beginTransaction()
+                            .replace(R.id.fragmentContainer, LibraryFragment())
+                            .commit()
 
-                    // 3. 그 위에 '결과 화면(TogetherFragment)'을 얹습니다.
-                    // addToBackStack(null)을 해야 백버튼 시 2번(LibraryFragment)이 보입니다.
-                    fm.beginTransaction()
-                        .replace(R.id.fragmentContainer, togetherFragment)
-                        .addToBackStack(null)
-                        .commit()
+                        // 3. 그 위에 '결과(TogetherFragment)'를 올립니다.
+                        // (commit()은 비동기지만, 순서대로 스케줄링되므로 2번 뒤에 3번이 실행됩니다)
+                        fm.beginTransaction()
+                            .replace(R.id.fragmentContainer, togetherFragment)
+                            .addToBackStack(null) // 백버튼 누르면 2번(서재)으로 이동
+                            .commitAllowingStateLoss() // 상태 손실 허용 (안전장치)
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        // 만약 위의 복잡한 로직이 실패하면, 최소한 결과 화면으로라도 이동시킵니다.
+                        fm.beginTransaction()
+                            .replace(R.id.fragmentContainer, togetherFragment)
+                            .commitAllowingStateLoss()
+                    }
                 }
-            } catch (e: Exception) { e.printStackTrace() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
-
     private fun initStarRating() {
         val stars = listOf(
             binding.libDetailRateList.getChildAt(0) as ImageView,

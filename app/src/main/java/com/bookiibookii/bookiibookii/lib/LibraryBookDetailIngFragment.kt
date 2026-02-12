@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.lib
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -17,6 +18,7 @@ import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailIngBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
@@ -268,7 +270,17 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.libDetailBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
         binding.libDetailMoreIv.setOnClickListener {
-            LibraryGroupDeleteBottomSheet { showDeleteConfirmDialog() }.show(requireActivity().supportFragmentManager, "GroupDeleteSheet")
+            LibraryGroupDeleteBottomSheet(
+                onDetailClick = {
+                    val intent = Intent(requireContext(), GroupDetailActivity::class.java)
+                    intent.putExtra("GROUP_ID", groupId.toLong())
+                    intent.putExtra("GROUP_TYPE", "TOGETHER") // 함께읽기 진행중이므로 TOGETHER
+                    startActivity(intent)
+                },
+                onDeleteClick = {
+                    showDeleteConfirmDialog()
+                }
+            ).show(requireActivity().supportFragmentManager, "GroupDeleteSheet")
         }
 
         binding.libWriteDoneBtn.setOnClickListener {

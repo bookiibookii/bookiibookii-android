@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.lib
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -19,6 +20,7 @@ import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.data.model.GroupCardResult
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailTogetherBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
@@ -257,7 +259,18 @@ class LibraryBookDetailTogetherFragment : Fragment() {
         }
 
         binding.libDetailMoreIv.setOnClickListener {
-            LibraryGroupDeleteBottomSheet { showDeleteConfirmDialog() }.show(parentFragmentManager, "GroupDeleteSheet")
+            // ★ 바텀시트 생성 시 상세페이지 이동 로직 추가
+            LibraryGroupDeleteBottomSheet(
+                onDetailClick = {
+                    val intent = Intent(requireContext(), GroupDetailActivity::class.java)
+                    intent.putExtra("GROUP_ID", groupId.toLong()) // groupId를 Long으로 변환
+                    intent.putExtra("GROUP_TYPE", "TOGETHER")     // 타입은 TOGETHER
+                    startActivity(intent)
+                },
+                onDeleteClick = {
+                    showDeleteConfirmDialog()
+                }
+            ).show(parentFragmentManager, "GroupDeleteSheet")
         }
 
         binding.bookDetailDownArrowIv.setOnClickListener {
