@@ -12,44 +12,43 @@ class PopularSearchAdapter(
     private val onItemClick: (String) -> Unit
 ) : RecyclerView.Adapter<PopularSearchAdapter.Holder>() {
 
-    // Data Update
+    override fun onBindViewHolder(holder: Holder, position: Int) {
+        holder.bind(items[position])
+    }
     fun submitList(newItems: List<PopularSearchItem>) {
         this.items = newItems
         notifyDataSetChanged()
     }
 
-
-    // Adapter Overrides
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val binding = ItemPopularSearchBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return Holder(binding)
     }
 
-    override fun onBindViewHolder(holder: Holder, position: Int) {
-        holder.bind(items[position])
-    }
 
     override fun getItemCount(): Int = items.size
 
-
-    // [ViewHolder
     inner class Holder(private val binding: ItemPopularSearchBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: PopularSearchItem) {
-            with(binding) {
-                // 데이터 매핑
-                itemPopularSearchRankTv.text = item.rank.toString()
-                itemPopularSearchKeywordTv.text = item.keyword
+            binding.itemPopularSearchRankTv.text = item.rank.toString()
+            binding.itemPopularSearchKeywordTv.text = item.keyword
 
-                // 순위에 따른 스타일링 (1~3위 강조)
-                val isTopRank = item.rank <= 3
-                val rankColor = if (isTopRank) R.color.pre_main else R.color.grey_500
-                val keywordColor = if (isTopRank) R.color.grey_900 else R.color.grey_500
+            val context = binding.root.context
 
-                itemPopularSearchRankTv.setTextColor(ContextCompat.getColor(root.context, rankColor))
-                itemPopularSearchKeywordTv.setTextColor(ContextCompat.getColor(root.context, keywordColor))
+            // ★ [핵심 로직] 4위부터는 회색(grey_500), 1~3위는 원래 색상
+            if (item.rank >= 4) {
+                // 4위 이상: 회색
+                val greyColor = ContextCompat.getColor(context, R.color.grey_500) // colors.xml에 정의된 색상
+                binding.itemPopularSearchRankTv.setTextColor(greyColor)
+                binding.itemPopularSearchKeywordTv.setTextColor(greyColor)
+            } else {
+                // 1~3위: 랭킹은 메인컬러, 키워드는 검정 (원복)
+                binding.itemPopularSearchRankTv.setTextColor(ContextCompat.getColor(context, R.color.pre_main))
+                binding.itemPopularSearchKeywordTv.setTextColor(ContextCompat.getColor(context, R.color.grey_900))
+            }
 
-                // 클릭 리스너
-                root.setOnClickListener { onItemClick(item.keyword) }
+            itemView.setOnClickListener {
+                onItemClick(item.keyword)
             }
         }
     }

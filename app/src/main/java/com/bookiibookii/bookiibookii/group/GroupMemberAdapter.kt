@@ -11,6 +11,7 @@ import com.bookiibookii.bookiibookii.data.model.GroupItemDto.ParticipantSlot
 import com.bookiibookii.bookiibookii.databinding.ItemGrpMemberBinding
 import com.bumptech.glide.Glide
 
+// Activity에서 GroupMemberAdapter { } 형태로 호출할 수 있도록 생성자 파라미터 추가
 class GroupMemberAdapter(
     private val onMemberClick: (Long) -> Unit
 ) : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHolder>() {
@@ -18,9 +19,6 @@ class GroupMemberAdapter(
     private var memberList = listOf<ParticipantSlot>()
     private var myNickname: String? = null
 
-    /**
-     * 멤버 리스트 및 내 닉네임 정보를 업데이트
-     */
     fun submitList(list: List<ParticipantSlot>?, myNick: String? = null) {
         memberList = list ?: emptyList()
         myNickname = myNick
@@ -47,21 +45,23 @@ class GroupMemberAdapter(
             val context = itemView.context
             with(binding) {
 
-                // 1. 빈 슬롯 (모집 중) 상태 UI 처리
+                // 클릭 리스너 연결 (필요 시 사용)
+                root.setOnClickListener {
+                    // slot에 memberId가 있다면: onMemberClick(slot.memberId)
+                }
+
                 if (slot.role == "EMPTY") {
                     itemMemberProfileIv.setImageResource(R.drawable.ic_profile)
                     itemMemberProfileIv.alpha = 0.3f
                     itemMemberNicknameTv.text = "모집중"
                     itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_400))
                     itemMemberHostCp.visibility = View.GONE
-                }
-                // 2. 실제 참여 멤버 UI 처리
-                else {
+                } else {
                     itemMemberProfileIv.alpha = 1.0f
                     itemMemberNicknameTv.text = slot.nickname
                     itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_900))
 
-                    // 프로필 이미지 로드 (CenterCrop 적용)
+                    // ★ 충돌 해결: profileImageUrl 사용 & CenterCrop
                     Glide.with(context)
                         .load(slot.profileImage)
                         .placeholder(R.drawable.ic_profile)
@@ -69,7 +69,7 @@ class GroupMemberAdapter(
                         .centerCrop()
                         .into(itemMemberProfileIv)
 
-                    // 역할별 칩(HOST / ME) 표시 로직
+                    // ★ 충돌 해결: 중복된 태그 로직 하나로 통합
                     when {
                         slot.role == "HOST" -> {
                             itemMemberHostCp.visibility = View.VISIBLE

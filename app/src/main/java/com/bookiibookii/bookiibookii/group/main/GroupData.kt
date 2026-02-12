@@ -18,5 +18,6 @@ data class GroupData(
     val groupType: String,
     val tradeType: String?,
     val maxMemberCount: Int?,
-    val badgeContent: String // ★ [추가] 칩에 들어갈 텍스트 ("택배", "송파구" 등)
+    // ★ [추가] 칩에 들어갈 텍스트 ("택배", "송파구" 등)
+    val badgeContent: String
 )

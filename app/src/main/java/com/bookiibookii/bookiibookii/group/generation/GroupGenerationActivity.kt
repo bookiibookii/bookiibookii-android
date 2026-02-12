@@ -12,7 +12,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -44,8 +43,8 @@ class GroupGenerationActivity : AppCompatActivity() {
 
     // --- 모드 및 데이터 변수 ---
     private var isEditMode = false
-    private var currentGroupId = 0
-    private var groupType = "RELAY"
+    private var currentGroupId = 0 // 수정 시 사용
+    private var groupType = "RELAY" // RELAY or TOGETHER
 
     // --- 검색 관련 변수 ---
     private lateinit var searchAdapter: GrpGenAladinSearchAdapter
@@ -68,15 +67,24 @@ class GroupGenerationActivity : AppCompatActivity() {
         binding = ActivityGrpGenerationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // 1. 인텐트 데이터 처리
         processIntentData()
+
+        // 2. UI 초기 상태 설정 (Create vs Edit / Relay vs Together)
         initUiState()
+
+        // 3. 리스너 등록 (클릭, 텍스트 변경 등)
         initListeners()
-        initHashTagSystem()
-        initSearchSystem()
+        initHashTagSystem() // 태그/칩 관련 리스너 분리
+        initSearchSystem()  // 검색 리스너 분리
+
+        // 4. 데이터 로딩 (수정 모드 채우기 OR 마이페이지 불러오기)
         loadInitialData()
     }
 
+    // ============================================================================================
     //  1. 초기화 및 UI 설정
+    // ============================================================================================
 
     private fun processIntentData() {
         isEditMode = intent.getBooleanExtra("IS_EDIT_MODE", false)
@@ -86,10 +94,14 @@ class GroupGenerationActivity : AppCompatActivity() {
 
     private fun initUiState() {
         with(binding) {
+            // -----------------------------------------------------------------
+            // [A] 수정 모드 (Edit Mode)
+            // -----------------------------------------------------------------
             if (isEditMode) {
                 actGrpGenMainTitleTv.text = "그룹 수정"
                 actGrpGenRunBtn.text = "수정 완료"
 
+                // 1. 책 검색 숨김 & 제목 표시
                 actGrpGenBookSerachTv.visibility = View.GONE
                 actGrpGenBookSerachStarTv.visibility = View.GONE
                 actGrpGenBookSearchBar.visibility = View.GONE
@@ -97,31 +109,39 @@ class GroupGenerationActivity : AppCompatActivity() {
                 actGrpGenEditBookTitleTv.visibility = View.VISIBLE
                 actGrpGenEditBookTitleTv.text = intent.getStringExtra("BOOK_TITLE") ?: ""
 
-                actGrpGenBookPossessionGroup.visibility = View.GONE
-                actGrpGenMethodContainer.visibility = View.GONE
-                actGrpGenDirectInputGroup.visibility = View.GONE
-                actGrpGenMemberCountGroup.visibility = View.GONE
+                // 2. 수정 불가능한 영역 숨김 (책 소유, 거래 방식, 지역 입력)
+                actGrpGenBookPossessionGroup.visibility = View.GONE // 책 소유 여부
+                actGrpGenMethodContainer.visibility = View.GONE     // 거래 방식(택배/직거래)
+                actGrpGenDirectInputGroup.visibility = View.GONE    // 지역 입력창
+                actGrpGenMemberCountGroup.visibility = View.GONE    // 인원 설정
 
-            } else {
+            }
+            // -----------------------------------------------------------------
+            // [B] 생성 모드 (Create Mode)
+            // -----------------------------------------------------------------
+            else {
                 actGrpGenMainTitleTv.text = "그룹 만들기"
                 actGrpGenRunBtn.text = "그룹 만들기"
 
+                // 검색창 보이기
                 actGrpGenBookSerachTv.visibility = View.VISIBLE
                 actGrpGenBookSerachStarTv.visibility = View.VISIBLE
                 actGrpGenBookSearchBar.visibility = View.VISIBLE
                 actGrpGenEditBookTitleTv.visibility = View.GONE
 
+                // 타입별 UI 분기 (Relay vs Together)
                 val isRelay = (groupType == "RELAY")
 
                 if (isRelay) {
-                    actGrpGenMethodContainer.visibility = View.VISIBLE
-                    actGrpGenBookPossessionGroup.visibility = View.VISIBLE
-                    actGrpGenMemberCountGroup.visibility = View.GONE
+                    actGrpGenMethodContainer.visibility = View.VISIBLE      // 거래 방식 보이기
+                    actGrpGenBookPossessionGroup.visibility = View.VISIBLE  // 책 소유 여부 보이기
+                    actGrpGenMemberCountGroup.visibility = View.GONE        // 인원 설정 숨김 (고정)
                 } else {
+                    // 같이 읽기
                     actGrpGenMethodContainer.visibility = View.GONE
                     actGrpGenDirectInputGroup.visibility = View.GONE
                     actGrpGenBookPossessionGroup.visibility = View.GONE
-                    actGrpGenMemberCountGroup.visibility = View.VISIBLE
+                    actGrpGenMemberCountGroup.visibility = View.VISIBLE     // 인원 설정 보이기
                 }
             }
         }
@@ -131,8 +151,12 @@ class GroupGenerationActivity : AppCompatActivity() {
         if (isEditMode) {
             fillEditData()
         }
+//        else if (groupType == "RELAY") {
+//            fetchMyPageDataAndPreFill()
+//        }
     }
 
+    // [API] 마이페이지 정보로 자동 채우기 (생성 시에만 사용)
     private fun fetchMyPageDataAndPreFill() {
         lifecycleScope.launch {
             try {
@@ -140,25 +164,35 @@ class GroupGenerationActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val profile = response.body()?.result
                     profile?.let { data ->
+                        // 1. 데이터 확인
                         val hasRegion = !data.region.isNullOrBlank()
                         val hasPlace = !data.meetPlace.isNullOrBlank()
 
+                        // 2. 텍스트 필드 채우기
                         if (hasRegion) binding.actGrpGenRegionEt.setText(data.region)
                         if (hasPlace) binding.actGrpGenPlaceEt.setText(data.meetPlace)
 
+                        // ★ [핵심 수정] 데이터가 하나라도 있으면 '직거래' 모드로 상태 변경 및 UI 갱신!
                         if (hasRegion || hasPlace) {
+                            // 이 함수가 selectedTradeType = "DIRECT" 로 설정하고,
+                            // UI(버튼 색상, 인풋창 보이기)를 업데이트하며,
+                            // 마지막에 checkInputs()까지 호출해줍니다.
                             setTradeType("DIRECT")
                         } else {
+                            // 데이터가 없으면 그냥 유효성 검사만 한번 수행
                             checkInputs()
                         }
                     }
                 }
             } catch (e: Exception) {
+                // 자동입력 실패는 조용히 무시
             }
         }
     }
 
+    // [Logic] 수정 모드일 때 기존 데이터 채우기
     private fun fillEditData() {
+        // 날짜
         val sDate = intent.getStringExtra("START_DATE")
         if (!sDate.isNullOrEmpty()) {
             selectedDate = sDate
@@ -166,18 +200,21 @@ class GroupGenerationActivity : AppCompatActivity() {
             binding.actGrpGenBookSelectDateTv.setTextColor(getColor(R.color.grey_900))
         }
 
+        // 기간 & 소개글
         val period = intent.getIntExtra("PERIOD", 0)
         binding.actGrpGenBookLimitBar.setText(period.toString())
 
         val comment = intent.getStringExtra("COMMENT") ?: ""
         binding.actGrpGenIntroduceBar.setText(comment)
 
+        // 커스텀 태그
         val customTag = intent.getStringExtra("CUSTOM_TAG")
         if (!customTag.isNullOrBlank()) {
             binding.actGrpGenDirectInputEt.setText("#$customTag")
             setCustomTagState(true)
         }
 
+        // 일반 태그
         val tags = intent.getStringArrayListExtra("TAGS")
         tags?.forEach { code -> checkChipByCode(code) }
 
@@ -197,12 +234,15 @@ class GroupGenerationActivity : AppCompatActivity() {
         chipId?.let { binding.actGrpGenChipGroup.check(it) }
     }
 
+    // ============================================================================================
     //  2. 리스너 설정
+    // ============================================================================================
 
     private fun initListeners() {
         with(binding) {
             actGrpGenBackIv.setOnClickListener { finish() }
 
+            // 텍스트 변경 감지
             val commonTextWatcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { checkInputs() }
@@ -215,31 +255,34 @@ class GroupGenerationActivity : AppCompatActivity() {
             actGrpGenRegionEt.addTextChangedListener(commonTextWatcher)
             actGrpGenPlaceEt.addTextChangedListener(commonTextWatcher)
 
+            // 소개글 포커스 아웃 경고
             actGrpGenIntroduceBar.setOnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
                     val input = actGrpGenIntroduceBar.text.toString()
                     if (input.isNotEmpty() && input.length < 10) {
-                        showCustomToast("그룹 소개는 최소 10자 이상 입력해주세요.", false)
+                        showCustomToast("그룹 소개는 최소 10자 이상 입력해주세요.")
                     }
                 }
             }
 
             actGrpGenBookDateContainer.setOnClickListener { showDatePicker() }
 
+            // 거래 방식/책 소유 버튼 (생성 시에만 작동)
             actGrpGenBookDeliveryBtn.setOnClickListener { setTradeType("DELIVERY") }
 
             actGrpGenBookDirectBtn.setOnClickListener {
-                setTradeType("DIRECT")
-                fetchMyPageDataAndPreFill()
+                setTradeType("DIRECT")      // 1. UI를 직거래 모드로 변경 (입력창 보이기)
+                fetchMyPageDataAndPreFill() // 2. 마이페이지 정보 가져와서 채워넣기
             }
             actGrpGenBookYesBtn.setOnClickListener { updateBookHaveState(true); checkInputs() }
             actGrpGenBookNoBtn.setOnClickListener { updateBookHaveState(false); showBuyDialog() }
 
+            // 실행 버튼
             actGrpGenRunBtn.setOnClickListener {
                 if (!it.isEnabled) {
                     if (binding.actGrpGenChipGroup.checkedChipIds.isEmpty()) {
-                        showCustomToast("기본 태그를 최소 1개 이상 선택해주세요.", false)
-                    }
+                    showCustomToast("기본 태그를 최소 1개 이상 선택해주세요.")
+                }
                     return@setOnClickListener
                 }
                 if (isEditMode) modifyGroupApi() else createGroupApi()
@@ -294,8 +337,10 @@ class GroupGenerationActivity : AppCompatActivity() {
         )
 
         binding.actGrpGenChipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
+            // [수정] 3개 제한 로직 삭제
+            // 이제 개수 제한 없이 선택 가능 (필요하다면 여기서 5개 등으로 조절 가능)
             previousCheckedIds = checkedIds
-            checkInputs()
+            checkInputs() // 상태가 바뀔 때마다 유효성 검사
         }
 
         val et = binding.actGrpGenDirectInputEt
@@ -306,7 +351,7 @@ class GroupGenerationActivity : AppCompatActivity() {
                 val text = et.text.toString()
                 if (text.isEmpty() || text == "#") setCustomTagState(false)
                 else if (!isCustomTagSelected) setCustomTagState(true)
-                checkInputs()
+                checkInputs() // 커스텀 태그 입력 시에도 유효성 검사
             }
         })
 
@@ -332,13 +377,17 @@ class GroupGenerationActivity : AppCompatActivity() {
         }
     }
 
+    // ============================================================================================
     //  3. 로직 및 유효성 검사
+    // ============================================================================================
 
     private fun checkInputs() {
         val hasDate = !selectedDate.isNullOrEmpty()
         val hasPeriod = binding.actGrpGenBookLimitBar.text.toString().isNotEmpty()
         val commentText = binding.actGrpGenIntroduceBar.text.toString()
         val hasValidComment = commentText.length >= 10
+
+        // ★ [핵심 수정] 커스텀 태그 여부와 상관없이 '기본 칩'이 최소 1개 있어야 함
         val hasValidTag = binding.actGrpGenChipGroup.checkedChipIds.isNotEmpty()
 
         var isValid = false
@@ -355,6 +404,7 @@ class GroupGenerationActivity : AppCompatActivity() {
                     binding.actGrpGenRegionEt.text.toString().isNotEmpty() &&
                             binding.actGrpGenPlaceEt.text.toString().isNotEmpty()
                 }
+                // hasValidTag(기본태그 필수) 포함
                 isValid = hasIsbn && hasDate && hasPeriod && hasPossession &&
                         hasTradeType && hasDirectLocation && hasValidComment && hasValidTag
             } else {
@@ -402,7 +452,9 @@ class GroupGenerationActivity : AppCompatActivity() {
         }
     }
 
+    // ============================================================================================
     //  4. API 호출
+    // ============================================================================================
 
     private suspend fun searchBooksFromApi(query: String) {
         try {
@@ -423,6 +475,7 @@ class GroupGenerationActivity : AppCompatActivity() {
         }
     }
 
+    // [생성]
     private fun createGroupApi() {
         val (finalTags, customTagString) = getCombinedTags()
         val duration = binding.actGrpGenBookLimitBar.text.toString().toIntOrNull() ?: 0
@@ -450,15 +503,17 @@ class GroupGenerationActivity : AppCompatActivity() {
             try {
                 val response = RetrofitClient.api().createGroup(request)
                 handleApiResponse(response.isSuccessful, response.errorBody()?.string()) {
-                    showCustomToast(" 그룹 생성 완료 하였습니다.", true)
+                    showCustomToast("🎉 그룹 생성 완료 🎉")
                     finish()
                 }
             } catch (e: Exception) {
-                showCustomToast("네트워크 오류가 발생했습니다.", false)
+                showCustomToast("네트워크 오류가 발생했습니다.")
             }
         }
     }
 
+    // [수정] - 날짜, 기간, 태그, 소개글만 전송
+// [수정] - 날짜, 기간, 태그, 소개글만 전송
     private fun modifyGroupApi() {
         val (finalTags, customTagString) = getCombinedTags()
         val duration = binding.actGrpGenBookLimitBar.text.toString().toIntOrNull() ?: 0
@@ -473,23 +528,34 @@ class GroupGenerationActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
+                // 1. API 호출
                 val response = RetrofitClient.api().modifyGroup(currentGroupId.toLong(), request)
 
+                // 2. 응답 처리
                 if (response.isSuccessful) {
-                    showCustomToast("그룹 정보가 수정되었습니다", true)
+                    // 성공했을 때 (200 OK)
+                    showCustomToast("그룹 정보가 수정되었습니다")
                     finish()
                 } else {
+                    // 서버가 거절했을 때 (4xx, 5xx)
                     val errorString = response.errorBody()?.string()
                     val msg = try {
                         JSONObject(errorString ?: "{}").getString("message")
                     } catch (e: Exception) {
                         "수정에 실패했습니다."
                     }
-                    showCustomToast(msg, false)
+                    showCustomToast(msg)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
-                showCustomToast("오류: ${e.message}", false)
+                // 3. 앱 내부 에러 (JSON 파싱 실패 등)
+                e.printStackTrace() // 로그캣에 빨간 에러 표시 (필수 확인!)
+
+                // ★ 여기가 중요! "네트워크 오류" 대신 진짜 에러 메시지를 띄웁니다.
+                showCustomToast("오류: ${e.message}")
+
+                // (임시 해결책) 만약 데이터는 수정되는데 여기서만 에러가 난다면,
+                // 아래 주석을 풀어서 강제로 닫아버릴 수도 있습니다.
+                // finish()
             }
         }
     }
@@ -499,14 +565,17 @@ class GroupGenerationActivity : AppCompatActivity() {
         else {
             try {
                 val msg = if (errorBody != null) JSONObject(errorBody).getString("message") else "실패했습니다."
-                showCustomToast(msg, false)
+                showCustomToast(msg)
             } catch (e: Exception) {
-                showCustomToast("오류가 발생했습니다.", false)
+                showCustomToast("오류가 발생했습니다.")
             }
         }
     }
 
-   //  5. 유틸리티
+    // ============================================================================================
+    //  5. 유틸리티
+    // ============================================================================================
+
     private fun showDatePicker() {
         val today = MaterialDatePicker.todayInUtcMilliseconds()
         val tomorrow = today + (24L * 60 * 60 * 1000)
@@ -568,9 +637,9 @@ class GroupGenerationActivity : AppCompatActivity() {
                 if (selectedBookLink.isNotEmpty()) {
                     lifecycleScope.launch {
                         try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(selectedBookLink))) }
-                        catch (e: Exception) { showCustomToast("링크 연결 실패", false) }
+                        catch (e: Exception) { showCustomToast("링크 연결 실패") }
                     }
-                } else showCustomToast("링크가 없습니다.", false)
+                } else showCustomToast("링크가 없습니다.")
             },
             onCancelClick = { updateBookHaveState(null) }
         ).show()
@@ -625,13 +694,10 @@ class GroupGenerationActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private fun showCustomToast(message: String, isSuccess: Boolean) {
+    private fun showCustomToast(message: String) {
         val inflater = LayoutInflater.from(this)
         val layout = inflater.inflate(R.layout.toast_custom, null)
         layout.findViewById<TextView>(R.id.toast_message_tv).text = message
-        val iconRes = if (isSuccess) R.drawable.ic_check else R.drawable.ic_info
-        layout.findViewById<ImageView>(R.id.toast_icon_iv).setImageResource(iconRes)
-
         with(Toast(applicationContext)) {
             setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
             duration = Toast.LENGTH_SHORT
