@@ -36,9 +36,10 @@
             android:id="@+id/iv_profile"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@drawable/bg_onb_profile"
+            android:clipToOutline="true"
             android:src="@drawable/img_profile_default"
-            android:scaleType="centerCrop"
-            android:clipToOutline="true" />
+            android:scaleType="centerCrop" />
 
         <ImageView
             android:id="@+id/iv_profile_edit"

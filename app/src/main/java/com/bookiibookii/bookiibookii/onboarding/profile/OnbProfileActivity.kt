@@ -85,7 +85,10 @@ class OnbProfileActivity : AppCompatActivity() {
     // 초기 UI 상태 설정
     private fun initView() {
         binding.btnCheck.isEnabled = false
-        binding.includeFooterButton.btnFooter.isEnabled = false
+        binding.includeFooterButton.btnOnbFooter.apply {
+            text = "다음"
+            isEnabled = false
+        }
         binding.layoutValidation.visibility = View.GONE
     }
 
@@ -97,7 +100,7 @@ class OnbProfileActivity : AppCompatActivity() {
 
             // 입력 변경 시 중복 확인 상태 초기화
             isNicknameChecked = false
-            binding.includeFooterButton.btnFooter.isEnabled = false
+            binding.includeFooterButton.btnOnbFooter.isEnabled = false
             binding.layoutValidation.visibility = View.GONE
 
             // 형식이 유효한 경우에만 중복 확인 버튼 활성화
@@ -133,7 +136,7 @@ class OnbProfileActivity : AppCompatActivity() {
         }
 
         // 다음 버튼 클릭
-        binding.includeFooterButton.btnFooter.setOnClickListener {
+        binding.includeFooterButton.btnOnbFooter.setOnClickListener {
             if (!isNicknameChecked) return@setOnClickListener
 
             val nickname = binding.etNickname.text.toString().trim()
@@ -154,7 +157,7 @@ class OnbProfileActivity : AppCompatActivity() {
 
                 NicknameCheckState.Loading -> {
                     binding.btnCheck.isEnabled = false
-                    binding.includeFooterButton.btnFooter.isEnabled = false
+                    binding.includeFooterButton.btnOnbFooter.isEnabled = false
                     binding.layoutValidation.visibility = View.GONE
                 }
 
@@ -181,19 +184,19 @@ class OnbProfileActivity : AppCompatActivity() {
 
                 ProfileImageUploadState.Loading -> {
                     binding.ivProfileEdit.isEnabled = false
-                    binding.includeFooterButton.btnFooter.isEnabled = false
+                    binding.includeFooterButton.btnOnbFooter.isEnabled = false
                 }
 
                 is ProfileImageUploadState.Success -> {
                     uploadedS3Key = state.s3Key
                     binding.ivProfileEdit.isEnabled = true
-                    binding.includeFooterButton.btnFooter.isEnabled = isNicknameChecked
+                    binding.includeFooterButton.btnOnbFooter.isEnabled = isNicknameChecked
                     showCustomToast("프로필 이미지가 업로드되었습니다.")
                 }
 
                 is ProfileImageUploadState.Error -> {
                     binding.ivProfileEdit.isEnabled = true
-                    binding.includeFooterButton.btnFooter.isEnabled = isNicknameChecked
+                    binding.includeFooterButton.btnOnbFooter.isEnabled = isNicknameChecked
                     showCustomToast(message = state.message)
                 }
             }
@@ -220,7 +223,7 @@ class OnbProfileActivity : AppCompatActivity() {
         binding.tvValidation.text = message
         binding.tvValidation.setTextColor("#00C317".toColorInt())
 
-        binding.includeFooterButton.btnFooter.isEnabled = true
+        binding.includeFooterButton.btnOnbFooter.isEnabled = true
     }
 
     // 닉네임 오류 UI 처리
@@ -236,7 +239,7 @@ class OnbProfileActivity : AppCompatActivity() {
         binding.tvValidation.text = message
         binding.tvValidation.setTextColor(getColor(R.color.ui_point_red))
 
-        binding.includeFooterButton.btnFooter.isEnabled = false
+        binding.includeFooterButton.btnOnbFooter.isEnabled = false
     }
 
     // 닉네임 형식 검증

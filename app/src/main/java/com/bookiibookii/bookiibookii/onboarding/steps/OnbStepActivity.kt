@@ -65,8 +65,17 @@ class OnbStepActivity : AppCompatActivity() {
         progress1 = findViewById(R.id.progress1)
         progress2 = findViewById(R.id.progress2)
         progress3 = findViewById(R.id.progress3)
-        btnNext = findViewById(R.id.btn_footer)
+
+        // 1순위: 원래 의도(btn_footer)
+        val btn1 = findViewById<MaterialButton>(R.id.btn_onb_footer)
+
+        // 2순위: 현재 기기에서 실제로 존재하는 버튼(id가 include_footer_button로 되어있는 케이스)
+        val btn2 = findViewById<MaterialButton>(R.id.include_footer_button)
+
+        btnNext = btn1 ?: btn2 ?: throw IllegalStateException("Next button not found")
     }
+
+
 
     // 클릭 이벤트 바인딩
     private fun bindActions() {
