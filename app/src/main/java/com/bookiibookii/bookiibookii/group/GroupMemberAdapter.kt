@@ -8,10 +8,9 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto.ParticipantSlot
-import com.bookiibookii.bookiibookii.databinding.ItemGrpMemberBinding
+import com.bookiibookii.bookiibookii.databinding.ItemGrpMemberBinding // XML 파일명 확인 필요
 import com.bumptech.glide.Glide
 
-// Activity에서 GroupMemberAdapter { } 형태로 호출할 수 있도록 생성자 파라미터 추가
 class GroupMemberAdapter(
     private val onMemberClick: (Long) -> Unit
 ) : RecyclerView.Adapter<GroupMemberAdapter.MemberViewHolder>() {
@@ -26,6 +25,7 @@ class GroupMemberAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemberViewHolder {
+
         val binding = ItemGrpMemberBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
@@ -43,45 +43,60 @@ class GroupMemberAdapter(
 
         fun bind(slot: ParticipantSlot) {
             val context = itemView.context
-            with(binding) {
 
-                // 클릭 리스너 연결 (필요 시 사용)
+            with(binding) {
+                // 클릭 리스너 (필요시)
                 root.setOnClickListener {
-                    // slot에 memberId가 있다면: onMemberClick(slot.memberId)
+                    // slot.memberId 등을 이용해 클릭 이벤트 처리
                 }
 
+                // 1. "모집중(EMPTY)" 상태 처리
                 if (slot.role == "EMPTY") {
+                    // 이미지는 기본 이미지
                     itemMemberProfileIv.setImageResource(R.drawable.ic_profile)
-                    itemMemberProfileIv.alpha = 0.3f
+                    itemMemberProfileIv.alpha = 0.3f // 흐릿하게
+
+                    // 텍스트 설정
                     itemMemberNicknameTv.text = "모집중"
                     itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_400))
+
+                    // 뱃지 숨김
                     itemMemberHostCp.visibility = View.GONE
-                } else {
-                    itemMemberProfileIv.alpha = 1.0f
+                }
+                // 2. "참여자(HOST, GUEST)" 상태 처리
+                else {
+                    itemMemberProfileIv.alpha = 1.0f // 투명도 복구
                     itemMemberNicknameTv.text = slot.nickname
                     itemMemberNicknameTv.setTextColor(ContextCompat.getColor(context, R.color.grey_900))
 
-                    // ★ 충돌 해결: profileImageUrl 사용 & CenterCrop
+                    // ★ [이미지 로드]
                     Glide.with(context)
-                        .load(slot.profileImage)
-                        .placeholder(R.drawable.ic_profile)
-                        .error(R.drawable.ic_profile)
-                        .into(itemMemberProfileIv)
+                        .load(slot.profileImage) // URL 확인
+                        .placeholder(R.drawable.ic_profile) // 로딩 중
+                        .error(R.drawable.ic_profile)       // 에러/URL null일 때
+                        .fallback(R.drawable.ic_profile)    // URL이 null일 때
+                        .into(itemMemberProfileIv)          // ★ ImageView에 넣기
 
-                    // ★ 충돌 해결: 중복된 태그 로직 하나로 통합
+                    // 3. 뱃지(Chip) 처리
                     when {
+                        // 호스트인 경우
                         slot.role == "HOST" -> {
                             itemMemberHostCp.visibility = View.VISIBLE
                             itemMemberHostCp.text = "HOST"
                             itemMemberHostCp.setChipBackgroundColorResource(R.color.pre_main)
                             itemMemberHostCp.setTextColor(Color.WHITE)
+                            // Stroke(테두리) 없애기
+                            itemMemberHostCp.chipStrokeWidth = 0f
                         }
+                        // 나(ME)인 경우 (호스트가 아니면서)
                         slot.nickname == myNickname -> {
                             itemMemberHostCp.visibility = View.VISIBLE
                             itemMemberHostCp.text = "ME"
                             itemMemberHostCp.setChipBackgroundColorResource(R.color.pre_sub_pale)
+                            itemMemberHostCp.setChipStrokeColorResource(R.color.pre_sub_pale)
                             itemMemberHostCp.setTextColor(ContextCompat.getColor(context, R.color.pre_sub))
                         }
+                        // 일반 게스트인 경우
                         else -> {
                             itemMemberHostCp.visibility = View.GONE
                         }

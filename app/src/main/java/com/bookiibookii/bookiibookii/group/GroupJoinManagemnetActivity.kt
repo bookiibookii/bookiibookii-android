@@ -23,7 +23,7 @@ class GroupJoinManagementActivity : AppCompatActivity() {
     private lateinit var groupJoinAdapter: GroupJoinAdapter
 
     private var currentGroupId: Long = 0L
-    private var currentBookTitle = ""
+    private var currentBookTitle = "모임 신청 관리"
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +35,9 @@ class GroupJoinManagementActivity : AppCompatActivity() {
 
         // 1. Intent 데이터 수신
 
-        currentBookTitle = intent.getStringExtra("BOOK_TITLE") ?: "모임 신청 관리"
+        intent.getStringExtra("BOOK_TITLE")?.let {
+            currentBookTitle = it
+        }
 
         if (currentGroupId == 0L) {
             Toast.makeText(this, "잘못된 접근입니다.", Toast.LENGTH_SHORT).show()
@@ -45,10 +47,12 @@ class GroupJoinManagementActivity : AppCompatActivity() {
 
         initView()
         initListener()
+        fetchGroupInfo()
         fetchApplicationList()
     }
 
     private fun initView() {
+
         groupJoinAdapter = GroupJoinAdapter(mutableListOf()) { item, isAccept ->
             if (isAccept) showAgreeDialog(item) else showRefusalDialog(item)
         }
@@ -57,9 +61,24 @@ class GroupJoinManagementActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@GroupJoinManagementActivity)
             adapter = groupJoinAdapter
         }
+    }
 
-        // (옵션) 타이틀 설정이 필요하다면
-        // binding.actGrpJoinMgTitleTv.text = currentBookTitle
+    private fun fetchGroupInfo() {
+        lifecycleScope.launch {
+            try {
+                // 기존에 있던 그룹 상세 조회 API 재활용
+                val response = RetrofitClient.api().getGroupDetail(currentGroupId.toInt())
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val groupData = response.body()?.result
+                    if (groupData != null) {
+                        currentBookTitle = groupData.bookTitle
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("JoinManage", "Title Fetch Error", e)
+            }
+        }
     }
 
     // ★ [핵심 수정] 데이터 로드 및 변환

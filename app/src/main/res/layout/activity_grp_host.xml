@@ -315,7 +315,7 @@
         android:layout_width="match_parent"
         android:layout_height="650dp"
         android:background="@drawable/bg_bottom_sheet_round"
-        app:behavior_peekHeight="170dp"
+        app:behavior_peekHeight="150dp"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
         <View

@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -260,7 +261,7 @@ class GroupGenerationActivity : AppCompatActivity() {
                 if (!hasFocus) {
                     val input = actGrpGenIntroduceBar.text.toString()
                     if (input.isNotEmpty() && input.length < 10) {
-                        showCustomToast("그룹 소개는 최소 10자 이상 입력해주세요.")
+                        showCustomToast("그룹 소개는 최소 10자 이상 입력해주세요.",false)
                     }
                 }
             }
@@ -281,7 +282,7 @@ class GroupGenerationActivity : AppCompatActivity() {
             actGrpGenRunBtn.setOnClickListener {
                 if (!it.isEnabled) {
                     if (binding.actGrpGenChipGroup.checkedChipIds.isEmpty()) {
-                    showCustomToast("기본 태그를 최소 1개 이상 선택해주세요.")
+                    showCustomToast("기본 태그를 최소 1개 이상 선택해주세요.",false)
                 }
                     return@setOnClickListener
                 }
@@ -503,11 +504,11 @@ class GroupGenerationActivity : AppCompatActivity() {
             try {
                 val response = RetrofitClient.api().createGroup(request)
                 handleApiResponse(response.isSuccessful, response.errorBody()?.string()) {
-                    showCustomToast("🎉 그룹 생성 완료 🎉")
+                    showCustomToast("그룹 생성 완료되었습니다. ",true)
                     finish()
                 }
             } catch (e: Exception) {
-                showCustomToast("네트워크 오류가 발생했습니다.")
+                showCustomToast("네트워크 오류가 발생했습니다.",false)
             }
         }
     }
@@ -534,7 +535,7 @@ class GroupGenerationActivity : AppCompatActivity() {
                 // 2. 응답 처리
                 if (response.isSuccessful) {
                     // 성공했을 때 (200 OK)
-                    showCustomToast("그룹 정보가 수정되었습니다")
+                    showCustomToast("그룹 정보가 정상적으로 수정 되었습니다",true)
                     finish()
                 } else {
                     // 서버가 거절했을 때 (4xx, 5xx)
@@ -544,18 +545,14 @@ class GroupGenerationActivity : AppCompatActivity() {
                     } catch (e: Exception) {
                         "수정에 실패했습니다."
                     }
-                    showCustomToast(msg)
+                    showCustomToast(msg,false)
                 }
             } catch (e: Exception) {
                 // 3. 앱 내부 에러 (JSON 파싱 실패 등)
-                e.printStackTrace() // 로그캣에 빨간 에러 표시 (필수 확인!)
+                e.printStackTrace()
 
-                // ★ 여기가 중요! "네트워크 오류" 대신 진짜 에러 메시지를 띄웁니다.
-                showCustomToast("오류: ${e.message}")
+                showCustomToast("오류: ${e.message}",false)
 
-                // (임시 해결책) 만약 데이터는 수정되는데 여기서만 에러가 난다면,
-                // 아래 주석을 풀어서 강제로 닫아버릴 수도 있습니다.
-                // finish()
             }
         }
     }
@@ -565,17 +562,14 @@ class GroupGenerationActivity : AppCompatActivity() {
         else {
             try {
                 val msg = if (errorBody != null) JSONObject(errorBody).getString("message") else "실패했습니다."
-                showCustomToast(msg)
+                showCustomToast(msg,false)
             } catch (e: Exception) {
-                showCustomToast("오류가 발생했습니다.")
+                showCustomToast("오류가 발생했습니다.",false)
             }
         }
     }
 
-    // ============================================================================================
     //  5. 유틸리티
-    // ============================================================================================
-
     private fun showDatePicker() {
         val today = MaterialDatePicker.todayInUtcMilliseconds()
         val tomorrow = today + (24L * 60 * 60 * 1000)
@@ -637,9 +631,9 @@ class GroupGenerationActivity : AppCompatActivity() {
                 if (selectedBookLink.isNotEmpty()) {
                     lifecycleScope.launch {
                         try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(selectedBookLink))) }
-                        catch (e: Exception) { showCustomToast("링크 연결 실패") }
+                        catch (e: Exception) { showCustomToast("링크 연결 실패",false) }
                     }
-                } else showCustomToast("링크가 없습니다.")
+                } else showCustomToast("책 정보가 없습니다.",false)
             },
             onCancelClick = { updateBookHaveState(null) }
         ).show()
@@ -694,10 +688,12 @@ class GroupGenerationActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private fun showCustomToast(message: String) {
-        val inflater = LayoutInflater.from(this)
-        val layout = inflater.inflate(R.layout.toast_custom, null)
+    private fun showCustomToast(message: String, isSuccess: Boolean) {
+        val layout = LayoutInflater.from(this).inflate(R.layout.toast_custom, null)
         layout.findViewById<TextView>(R.id.toast_message_tv).text = message
+        val iconRes = if (isSuccess) R.drawable.ic_check else R.drawable.ic_info
+        layout.findViewById<ImageView>(R.id.toast_icon_iv).setImageResource(iconRes)
+
         with(Toast(applicationContext)) {
             setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
             duration = Toast.LENGTH_SHORT

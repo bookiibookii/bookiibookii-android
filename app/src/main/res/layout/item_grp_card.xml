@@ -168,10 +168,11 @@
         android:id="@+id/grp_item_profile_card"
         android:layout_width="20dp"
         android:layout_height="20dp"
-        app:cardCornerRadius="7dp"
+        app:cardCornerRadius="8dp"
         app:cardElevation="0dp"
         app:strokeWidth="0dp"
-        android:backgroundTint="#C6C5C2"
+        android:backgroundTint="@color/grey_300"
+        android:layout_marginTop="4dp"
         app:layout_constraintStart_toStartOf="@id/grp_item_book_title_Tv"
         app:layout_constraintTop_toBottomOf="@id/grp_item_cal_Iv">
 
