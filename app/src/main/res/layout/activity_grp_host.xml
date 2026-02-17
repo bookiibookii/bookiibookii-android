@@ -5,12 +5,74 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/ui_bg"
-    android:fitsSystemWindows="true">
+    android:background="@color/ui_bg">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_header_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="4dp"> <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/header_guideline_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.08" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/header_guideline_end"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.92" />
+
+        <ImageView
+            android:id="@+id/act_grp_ho_dashBoard_Iv"
+            android:layout_width="match_parent"
+            android:layout_height="68dp"
+            android:background="@drawable/bg_grp_dashboard_border"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ImageView
+            android:id="@+id/act_grp_ho_back_Iv"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_back_button"
+            app:layout_constraintStart_toStartOf="@id/header_guideline_start"
+            app:layout_constraintTop_toTopOf="@id/act_grp_ho_dashBoard_Iv"
+            app:layout_constraintBottom_toBottomOf="@id/act_grp_ho_dashBoard_Iv" />
+
+        <ImageView
+            android:id="@+id/act_grp_ho_more_Iv"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_more_btn"
+            app:layout_constraintEnd_toEndOf="@id/header_guideline_end"
+            app:layout_constraintTop_toTopOf="@id/act_grp_ho_dashBoard_Iv"
+            app:layout_constraintBottom_toBottomOf="@id/act_grp_ho_dashBoard_Iv" />
+
+        <TextView
+            android:id="@+id/act_grp_ho_main_title_Tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:fontFamily="@font/pretendard_variable"
+            android:textSize="20sp"
+            android:textColor="@color/grey_900"
+            app:layout_constraintStart_toEndOf="@id/act_grp_ho_back_Iv"
+            app:layout_constraintTop_toTopOf="@id/act_grp_ho_dashBoard_Iv"
+            app:layout_constraintEnd_toStartOf="@id/act_grp_ho_more_Iv"
+            app:layout_constraintBottom_toBottomOf="@id/act_grp_ho_dashBoard_Iv"
+            tools:text="괴테는 모든 것을 말했다" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="68dp"
         android:fillViewport="true"
         android:paddingBottom="180dp"
         android:clipToPadding="false">
@@ -34,55 +96,13 @@
                 android:orientation="vertical"
                 app:layout_constraintGuide_percent="0.92" />
 
-            <ImageView
-                android:id="@+id/act_grp_ho_dashBoard_Iv"
-                android:layout_width="match_parent"
-                android:layout_height="68dp"
-                android:background="@drawable/bg_grp_dashboard_border"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <ImageView
-                android:id="@+id/act_grp_ho_back_Iv"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_back_button"
-                app:layout_constraintStart_toStartOf="@id/act_grp_ho_guideline_start"
-                app:layout_constraintTop_toTopOf="@id/act_grp_ho_dashBoard_Iv"
-                app:layout_constraintBottom_toBottomOf="@id/act_grp_ho_dashBoard_Iv" />
-
-            <ImageView
-                android:id="@+id/act_grp_ho_more_Iv"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_more_btn"
-                app:layout_constraintEnd_toEndOf="@id/act_grp_ho_guideline_end"
-                app:layout_constraintTop_toTopOf="@id/act_grp_ho_dashBoard_Iv"
-                app:layout_constraintBottom_toBottomOf="@id/act_grp_ho_dashBoard_Iv" />
-
-            <TextView
-                android:id="@+id/act_grp_ho_main_title_Tv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:fontFamily="@font/pretendard_variable"
-                android:textSize="20sp"
-                android:textColor="@color/grey_900"
-                app:layout_constraintStart_toEndOf="@id/act_grp_ho_back_Iv"
-                app:layout_constraintTop_toTopOf="@id/act_grp_ho_dashBoard_Iv"
-                app:layout_constraintEnd_toStartOf="@id/act_grp_ho_more_Iv"
-                app:layout_constraintBottom_toBottomOf="@id/act_grp_ho_dashBoard_Iv"
-                tools:text="괴테는 모든 것을 말했다" />
-
             <include
                 android:id="@+id/act_grp_ho_included_item"
                 layout="@layout/item_grp_card"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:layout_constraintTop_toBottomOf="@id/act_grp_ho_dashBoard_Iv"
+                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="@id/act_grp_ho_guideline_start"
                 app:layout_constraintEnd_toEndOf="@id/act_grp_ho_guideline_end" />
 
@@ -296,8 +316,7 @@
         android:layout_height="650dp"
         android:background="@drawable/bg_bottom_sheet_round"
         app:behavior_peekHeight="170dp"
-        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
-        >
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
         <View
             android:id="@+id/grp_mg_bottom_sheet_handle"

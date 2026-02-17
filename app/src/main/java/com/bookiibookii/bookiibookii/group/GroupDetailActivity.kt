@@ -464,12 +464,14 @@ class GroupDetailActivity : AppCompatActivity() {
             grpItemMemStatusNoTv.text = "${data.matchedCount}"
 
             Glide.with(this@GroupDetailActivity).load(data.bookImage).centerCrop().into(grpItemCoverIv)
+
             Glide.with(this@GroupDetailActivity)
                 .load(data.hostProfileImageUrl)
-                .transform(CenterCrop(), RoundedCorners(dpToPx(6))) // 6dp 라운드 적용
-                .placeholder(R.drawable.ic_profile)
-                .error(R.drawable.ic_profile)
+                .dontTransform() // 혹시 모를 transform 방지
                 .into(binding.actGrpHoIncludedItem.grpItemProfileIv)
+
+
+
             grpItemHotCp.visibility = if (data.isHot) View.VISIBLE else View.GONE
 
             // 4. 태그 칩 그룹 (grpItemChipGroup) - 여기는 건드리지 않음

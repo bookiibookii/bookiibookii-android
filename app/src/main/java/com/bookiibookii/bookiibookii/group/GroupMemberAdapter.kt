@@ -66,7 +66,6 @@ class GroupMemberAdapter(
                         .load(slot.profileImage)
                         .placeholder(R.drawable.ic_profile)
                         .error(R.drawable.ic_profile)
-                        .centerCrop()
                         .into(itemMemberProfileIv)
 
                     // ★ 충돌 해결: 중복된 태그 로직 하나로 통합
