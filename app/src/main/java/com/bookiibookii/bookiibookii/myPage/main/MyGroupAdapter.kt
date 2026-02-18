@@ -21,17 +21,12 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
             binding.itemMypGroupBookTitle.text = item.bookTitle
 
             // 2. 작가 및 장르 (예: 소설 | 스즈키 유이)
-            // 데이터에 작가(auth)와 장르(GENRE)가 있으므로 이를 조합
             binding.itemMypGroupBookAuthor.text = "${item.auth} (${item.GENRE})"
 
             // 3. 그룹 상태 배지 (모집 중 vs 모집 완료) 색상 처리
-            binding.itemMypGroupBadgeTv.text = item.group_status
-
-            // API에서 "RECRUITING"으로 오는지, 한글 "모집 중"으로 오는지에 따라 조건문 조정 필요
-            // 여기서는 둘 다 체크하도록 작성함
             val isRecruiting = item.group_status == "RECRUITING" || item.group_status == "모집 중"
-
             val context = itemView.context
+
             if (isRecruiting) {
                 // 모집 중: 배경 pre_main / 글자 white
                 binding.itemMypGroupBadgeTv.text = "모집 중"
@@ -54,8 +49,11 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
             binding.itemMypGroupTagsLl.removeAllViews() // [중요] 뷰 재사용 시 기존 태그 삭제
 
             item.groupTags.forEach { tagText ->
+                // ★ 영어 뱃지 텍스트를 한글로 변환
+                val translatedText = translateBadge(tagText)
+
                 val textView = TextView(context).apply {
-                    text = "#$tagText"
+                    text = "#$translatedText"
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f) // 글자 크기 11sp
                     setTextColor(ContextCompat.getColor(context, R.color.ui_main_sub))
 
@@ -78,6 +76,19 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
                     layoutParams = params
                 }
                 binding.itemMypGroupTagsLl.addView(textView)
+            }
+        }
+
+        // ★ 태그 한글 번역 함수
+        private fun translateBadge(englishText: String): String {
+            return when (englishText.uppercase()) {
+                "MEMO" -> "메모환영"
+                "POSTIT" -> "포스트잇"
+                "CLEAN" -> "깔끔"
+                "SERIOUS" -> "진지함"
+                "LIGHT_FUN" -> "재미있게"
+                "INSIGHT" -> "인사이트"
+                else -> englishText // 매핑되는 단어가 없으면 원래 영어 그대로 출력
             }
         }
 

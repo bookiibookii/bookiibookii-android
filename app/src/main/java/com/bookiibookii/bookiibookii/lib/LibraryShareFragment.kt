@@ -8,8 +8,10 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -18,13 +20,20 @@ import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.target.Target
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentLibShareBinding
+import com.bookiibookii.bookiibookii.lib.imgModel.ImgBBRetrofitClient
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
@@ -36,6 +45,10 @@ class LibraryShareFragment : DialogFragment() {
     private var cardId: Long = -1L
     private var bookTitle: String = ""
     private var isTypeA = true
+
+    // ★ 로딩 다이얼로그와 이미지 로드 상태 카운터
+    private lateinit var loadingDialog: LoadingDialog
+    private var loadedImageCount = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +66,8 @@ class LibraryShareFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        loadingDialog = LoadingDialog(requireContext()) // ★ 초기화
+
         updateTypeVisibility(true)
         initListeners()
         fetchShareData()
@@ -64,6 +79,8 @@ class LibraryShareFragment : DialogFragment() {
             return
         }
 
+        loadingDialog.show() // ★ API 호출 시작 시 화면 클릭 방지(로딩 띄우기)
+
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().getCardDetail(cardId)
@@ -74,15 +91,18 @@ class LibraryShareFragment : DialogFragment() {
                             title = result.bookTitle,
                             content = result.memo,
                             author = result.creatorName ?: "Unknown",
-                            // ★ 공백 제거만 안전하게 처리
                             imgUrl = result.cardImage?.presignedGetUrl?.trim()
                         )
+                    } else {
+                        if (loadingDialog.isShowing) loadingDialog.dismiss()
                     }
                 } else {
                     Toast.makeText(context, "정보를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    if (loadingDialog.isShowing) loadingDialog.dismiss()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
@@ -93,7 +113,6 @@ class LibraryShareFragment : DialogFragment() {
         val safeContent = if (content.length > 100) content.take(100) + "..." else content
         val titleForView = if (title.length > 18) title.take(18) + "..." else title
 
-        // 텍스트 바인딩
         binding.shareTitleA.text = titleForView
         binding.shareContentA.text = safeContent
         binding.shareAuthorA.text = author
@@ -102,30 +121,67 @@ class LibraryShareFragment : DialogFragment() {
         binding.shareContentB.text = safeContent
         binding.shareAuthorB.text = "by. $author"
 
-        // ★ [핵심 수정] Glide 로드 로직 변경
         if (!imgUrl.isNullOrEmpty()) {
-            // Type A
-            Glide.with(requireContext()) // 1. Context 변경
+            loadedImageCount = 0
+
+            // ★ Glide가 이미지를 화면에 다 그렸는지(성공/실패) 감지하는 리스너
+            val listener = object : RequestListener<Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<Drawable?>,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    checkImageLoad() // ★ 이것만 추가
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: Drawable,
+                    model: Any,
+                    target: Target<Drawable?>?,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    checkImageLoad() // ★ 이것만 추가
+                    return false
+                }
+            }
+
+            // requireContext() 대신 this를 써서 Fragment 수명주기를 따르도록 함
+            Glide.with(this)
                 .load(imgUrl)
                 .placeholder(R.drawable.bg_round_top_20dp_white)
                 .error(R.drawable.bg_round_top_20dp_white)
-                .override(Target.SIZE_ORIGINAL) // 2. ★ 중요: 뷰 크기 무시하고 이미지 원본 크기로 강제 로드
-                .dontAnimate() // 3. 애니메이션 제거 (흰 깜빡임 방지)
+                .override(Target.SIZE_ORIGINAL)
+                .dontAnimate()
                 .centerCrop()
+                .listener(listener) // ★ 리스너 부착
                 .into(binding.shareImageA)
 
-            // Type B
-            Glide.with(requireContext())
+            Glide.with(this)
                 .load(imgUrl)
                 .placeholder(R.drawable.bg_round_20dp_white)
                 .error(R.drawable.bg_round_20dp_white)
-                .override(Target.SIZE_ORIGINAL) // ★ 중요
+                .override(Target.SIZE_ORIGINAL)
                 .dontAnimate()
                 .centerCrop()
+                .listener(listener) // ★ 리스너 부착
                 .into(binding.shareImageB)
         } else {
             binding.shareImageA.setImageResource(R.drawable.bg_round_top_20dp_white)
             binding.shareImageB.setImageResource(R.drawable.bg_round_20dp_white)
+            if (loadingDialog.isShowing) loadingDialog.dismiss()
+        }
+    }
+
+    // ★ 이미지 2개가 다 로드되었는지 체크하고 로딩 다이얼로그를 닫아주는 함수
+    private fun checkImageLoad() {
+        loadedImageCount++
+        if (loadedImageCount >= 2) { // A타입, B타입 모두 처리가 끝났다면
+            if (isAdded && loadingDialog.isShowing) {
+                loadingDialog.dismiss() // 로딩 종료! 사용자가 이제 버튼을 누를 수 있음
+            }
         }
     }
 
@@ -141,10 +197,10 @@ class LibraryShareFragment : DialogFragment() {
             updateTypeVisibility(false)
         }
 
-        binding.shareInsta.setOnClickListener { shareToInstagramStory() }
-        binding.shareKakao.setOnClickListener { shareLinkToApp("com.kakao.talk") }
-        binding.shareX.setOnClickListener { shareToTwitter() }
-        binding.shareLink.setOnClickListener { copyLinkToClipboard() }
+        binding.shareInsta.setOnClickListener { processAndShareImage(isInstagram = true, targetPackage = null) }
+        binding.shareKakao.setOnClickListener { processAndShareImage(isInstagram = false, targetPackage = "com.kakao.talk") }
+        binding.shareX.setOnClickListener { processAndShareImage(isInstagram = false, targetPackage = "com.twitter.android") }
+        binding.shareLink.setOnClickListener { uploadToImgBBAndCopyLink() }
     }
 
     private fun updateTypeVisibility(isA: Boolean) {
@@ -161,185 +217,185 @@ class LibraryShareFragment : DialogFragment() {
         }
     }
 
-    // --- 공유 기능 ---
+    // =========================================================================
+    // ★ [핵심] 뷰를 캡처하면서 완벽한 라운드와 그림자를 입혀주는 마법의 함수
+    // =========================================================================
+    private fun captureCardBitmap(view: View): Bitmap? {
+        if (view.width == 0 || view.height == 0) return null
 
-    private fun getShareUrl(): String = "https://bookiibookii.com/card/$cardId"
+        val density = resources.displayMetrics.density
+        val radius = 20f * density // 20dp 라운드
+        val shadowRadius = 8f * density // 그림자 퍼짐 정도 (8dp)
+        val shadowDy = 2f * density // 그림자가 아래로 향하는 정도 (2dp)
 
-    // ★ 1. 공유 버튼 함수 (post 복구 및 색상 코드 완전 수정)
-    private fun shareToInstagramStory() {
+        // 1. 그림자가 잘리지 않도록 여백을 포함한 넉넉한 사이즈의 비트맵 생성
+        val bitmapWidth = view.width + (shadowRadius * 2).toInt()
+        val bitmapHeight = view.height + (shadowRadius * 2).toInt() + shadowDy.toInt()
+        val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        // 배경을 완전히 투명하게 초기화 (이게 없으면 모서리에 까만색이 남음)
+        canvas.drawColor(Color.TRANSPARENT)
+
+        // 2. 카드가 그려질 위치 계산 (여백만큼 밀어줌)
+        val rectF = android.graphics.RectF(
+            shadowRadius,
+            shadowRadius,
+            shadowRadius + view.width,
+            shadowRadius + view.height
+        )
+
+        // 3. 그림자 직접 그리기 (소프트웨어 렌더링 지원)
+        val shadowPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            // 20% 투명도의 검정색 그림자 부여
+            setShadowLayer(shadowRadius, 0f, shadowDy, Color.parseColor("#33000000"))
+        }
+        // 둥근 사각형을 그리면서 그림자도 같이 렌더링됨
+        canvas.drawRoundRect(rectF, radius, radius, shadowPaint)
+
+        // 4. 뷰의 내용물이 둥근 테두리 밖으로 삐져나가지 못하게 캔버스를 둥글게 자르기 (클리핑)
+        canvas.save()
+        val path = android.graphics.Path().apply {
+            addRoundRect(rectF, radius, radius, android.graphics.Path.Direction.CW)
+        }
+        canvas.clipPath(path)
+
+        // 5. 뷰의 실제 내용을 캔버스(그림자가 시작되는 위치)에 그리기
+        canvas.translate(shadowRadius, shadowRadius)
+        // 뷰의 배경이 투명할 경우를 대비해 흰색 한 번 깔아주기
+        canvas.drawColor(Color.WHITE)
+        view.draw(canvas)
+        canvas.restore()
+
+        return bitmap
+    }
+
+    // =========================================================================
+    // 인스타, 카톡, X 공유
+    // =========================================================================
+    private fun processAndShareImage(isInstagram: Boolean, targetPackage: String?) {
         val targetView = if (isTypeA) binding.typeACard else binding.typeBCard
 
-        // 뷰가 화면에 완전히 그려진 후 안전하게 캡처하도록 targetView.post 블록을 사용합니다.
-        targetView.post {
-            val uri = getViewBitmapUri(targetView)
+        // ★ 새로 만든 완벽한 캡처 함수 사용
+        val bitmap = captureCardBitmap(targetView) ?: run {
+            Toast.makeText(context, "화면을 불러오는 중입니다. 잠시 후 시도해주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-            if (uri != null) {
-                val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
-                    type = "image/*"
-                    setPackage("com.instagram.android")
-                    putExtra("interactive_asset_uri", uri)
+        Toast.makeText(context, "이미지를 준비 중입니다...", Toast.LENGTH_SHORT).show()
 
-                    // ★ [핵심] HEX 코드 6자리 (#FFFFFF) 정확히 기입
-                    putExtra("top_background_color", "#FAE0D4")
-                    putExtra("bottom_background_color", "#FFFFFF")
-                }
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val imagesFolder = File(requireContext().cacheDir, "images")
+                if (!imagesFolder.exists()) imagesFolder.mkdirs()
+                imagesFolder.listFiles()?.forEach { it.delete() }
 
-                requireActivity().grantUriPermission(
-                    "com.instagram.android",
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                val file = File(imagesFolder, "share_${System.currentTimeMillis()}.png")
+                val stream = FileOutputStream(file)
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                stream.flush()
+                stream.close()
+
+                val uri = FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.fileprovider",
+                    file
                 )
 
-                try {
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    Toast.makeText(context, "인스타그램이 설치되어 있지 않거나 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                withContext(Dispatchers.Main) {
+                    if (isInstagram) {
+                        launchInstagramStoryIntent(uri)
+                    } else {
+                        launchGenericImageShareIntent(uri, targetPackage)
+                    }
                 }
-            } else {
-                Toast.makeText(context, "이미지 캡처에 실패했습니다.", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "이미지 저장에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
-    // ★ 2. 뷰 캡처 함수 (Type A 크기 측정 완전 보장)
-// ★ 2. 뷰 캡처 함수 (그림자 효과 추가 버전)
-    private fun getViewBitmapUri(view: View): Uri? {
+    private fun launchInstagramStoryIntent(uri: Uri) {
+        val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
+            type = "image/*"
+            setPackage("com.instagram.android")
+            putExtra("interactive_asset_uri", uri)
+            putExtra("top_background_color", "#FAE0D4")
+            putExtra("bottom_background_color", "#FFFFFF")
+        }
+        requireActivity().grantUriPermission("com.instagram.android", uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         try {
-            // 1. 강제 측정 로직 (기존 유지)
-            // Type A: 340dp(다이얼로그) - 48dp(좌우패딩) = 292dp
-            val targetWidthPx = (292 * resources.displayMetrics.density).toInt()
-
-            if (view.width == 0 || view.height == 0) {
-                view.measure(
-                    View.MeasureSpec.makeMeasureSpec(targetWidthPx, View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-                )
-                view.layout(0, 0, view.measuredWidth, view.measuredHeight)
-            }
-
-            val width = view.width.takeIf { it > 0 } ?: view.measuredWidth
-            val height = view.height.takeIf { it > 0 } ?: view.measuredHeight
-
-            if (width <= 0 || height <= 0) return null
-
-            // ---------------------------------------------------------
-            // ★ [수정] 그림자를 위한 여백 및 Paint 설정
-            // ---------------------------------------------------------
-            val shadowMargin = 24 // 그림자가 그려질 여백 (px 단위, 적절히 조절 가능)
-            val cornerRadius = 20f * resources.displayMetrics.density // 카드 둥글기 (XML과 동일하게)
-
-            // 전체 비트맵 크기 = 뷰 크기 + 양쪽 여백
-            val bitmap = Bitmap.createBitmap(
-                width + (shadowMargin * 2),
-                height + (shadowMargin * 2),
-                Bitmap.Config.ARGB_8888
-            )
-            val canvas = Canvas(bitmap)
-
-            // 배경 투명 초기화
-            canvas.drawColor(Color.TRANSPARENT)
-
-            // 그림자 설정을 위한 페인트 객체
-            val paint = android.graphics.Paint().apply {
-                color = Color.WHITE // 카드 배경색 (흰색)
-                style = android.graphics.Paint.Style.FILL
-                isAntiAlias = true
-
-                // 그림자 설정: (반경, X오프셋, Y오프셋, 그림자색상)
-                // 0x33000000: 투명도 약 20% 검정색
-                setShadowLayer(16f, 0f, 8f, 0x33000000.toInt())
-            }
-
-            // 그림자가 포함된 흰색 배경 그리기 (중앙에 위치하도록 shadowMargin 만큼 띄움)
-            val rectF = android.graphics.RectF(
-                shadowMargin.toFloat(),
-                shadowMargin.toFloat(),
-                (width + shadowMargin).toFloat(),
-                (height + shadowMargin).toFloat()
-            )
-            canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, paint)
-
-            // ---------------------------------------------------------
-            // ★ [수정] 실제 뷰 그리기
-            // ---------------------------------------------------------
-            canvas.save()
-            // 뷰를 그림자 안쪽 중앙으로 이동
-            canvas.translate(shadowMargin.toFloat(), shadowMargin.toFloat())
-
-            // 뷰 내부 내용이 둥근 모서리를 벗어나지 않도록 클리핑 (기존 로직 응용)
-            val path = android.graphics.Path().apply {
-                addRoundRect(
-                    android.graphics.RectF(0f, 0f, width.toFloat(), height.toFloat()),
-                    cornerRadius,
-                    cornerRadius,
-                    android.graphics.Path.Direction.CW
-                )
-            }
-            canvas.clipPath(path)
-
-            // 뷰 그리기
-            view.draw(canvas)
-            canvas.restore()
-
-            // ---------------------------------------------------------
-            // 파일 저장 (기존 유지)
-            // ---------------------------------------------------------
-            val imagesFolder = File(requireContext().cacheDir, "images")
-            if (!imagesFolder.exists()) imagesFolder.mkdirs()
-
-            val file = File(imagesFolder, "share_${System.currentTimeMillis()}.png")
-            val stream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            stream.flush()
-            stream.close()
-
-            return FileProvider.getUriForFile(
-                requireContext(),
-                "${requireContext().packageName}.fileprovider",
-                file
-            )
+            startActivity(intent)
         } catch (e: Exception) {
-            Log.e("ShareError", "Bitmap Capture Error", e)
-            return null
+            Toast.makeText(context, "인스타그램 앱을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
         }
     }
-    private fun shareLinkToApp(packageName: String) {
+
+    private fun launchGenericImageShareIntent(uri: Uri, packageName: String?) {
         val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, getShareUrl())
-            setPackage(packageName)
+            type = "image/*"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            if (packageName != null) setPackage(packageName)
         }
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         try {
             startActivity(intent)
         } catch (e: Exception) {
-            shareGenericLink()
+            startActivity(Intent.createChooser(intent, "공유하기"))
         }
     }
 
-    private fun shareToTwitter() {
-        val text = "[$bookTitle] 독서 카드 공유\n${getShareUrl()}"
-        val tweetUrl = "https://twitter.com/intent/tweet?text=${Uri.encode(text)}"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(tweetUrl))
-        try {
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, "브라우저를 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
+    // =========================================================================
+    // ImgBB 업로드 후 링크 복사
+    // =========================================================================
+    private fun uploadToImgBBAndCopyLink() {
+        val targetView = if (isTypeA) binding.typeACard else binding.typeBCard
+
+        // ★ 새로 만든 완벽한 캡처 함수 사용
+        val bitmap = captureCardBitmap(targetView) ?: run {
+            Toast.makeText(context, "화면을 불러오는 중입니다. 잠시 후 시도해주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        Toast.makeText(context, "링크를 생성하고 있습니다. 잠시만 기다려주세요...", Toast.LENGTH_SHORT).show()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val baos = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
+                val imageBytes = baos.toByteArray()
+                val base64Image = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
+
+                val apiKey = "303037b8fddf70fbb18c66be562b475a"
+                val response = ImgBBRetrofitClient.api.uploadImage(apiKey, base64Image)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        val imgbbLink = response.body()?.data?.url ?: ""
+                        copyToClipboard(imgbbLink)
+                        Toast.makeText(context, "링크가 복사되었습니다.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "링크 생성에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                        Log.e("ImgBBError", "Code: ${response.code()}, Message: ${response.message()}")
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
-    private fun copyLinkToClipboard() {
+    private fun copyToClipboard(text: String) {
         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("BookCardLink", getShareUrl())
+        val clip = ClipData.newPlainText("BookCardLink", text)
         clipboard.setPrimaryClip(clip)
-        Toast.makeText(context, "링크가 복사되었습니다.", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun shareGenericLink() {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, getShareUrl())
-        }
-        startActivity(Intent.createChooser(intent, "공유하기"))
     }
 
     override fun onResume() {

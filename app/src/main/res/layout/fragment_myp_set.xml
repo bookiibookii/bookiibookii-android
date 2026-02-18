@@ -127,6 +127,8 @@
                     android:id="@+id/myp_set_push_iv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    app:thumbTint="@color/white"
+                    app:trackTint="@color/selector_switch_track"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"/>

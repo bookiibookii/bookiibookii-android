@@ -92,7 +92,7 @@
                 android:text="[noshel] 참을 수 없는 존재의 가벼움"
                 android:textAppearance="@style/regular15"
                 android:textColor="@color/grey_900"
-                android:paddingStart="20dp"/>
+                android:paddingHorizontal="20dp"/>
 
             <TextView
                 android:layout_width="wrap_content"

@@ -141,29 +141,49 @@
                     app:layout_constraintTop_toTopOf="@id/lib_detail_profile_iv"
                     app:layout_constraintBottom_toBottomOf="@id/lib_detail_profile_iv"/>
 
-                <TextView
-                    android:id="@+id/lib_detail_book_title_tv"
-                    android:layout_width="wrap_content"
+                <HorizontalScrollView
+                    android:id="@+id/lib_detail_book_title_scroll"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/regular14"
-                    android:textColor="@color/grey_900"
-                    android:text="괴테는 모든 것을 말했다."
                     android:layout_marginTop="11dp"
                     android:layout_marginStart="14dp"
+                    android:scrollbars="none"
                     app:layout_constraintStart_toEndOf="@id/lib_detail_image_iv"
-                    app:layout_constraintTop_toBottomOf="@id/lib_detail_profile_iv"/>
+                    app:layout_constraintEnd_toEndOf="@id/card_guideline_end"
+                    app:layout_constraintTop_toBottomOf="@id/lib_detail_profile_iv">
 
-                <TextView
-                    android:id="@+id/lib_detail_book_author_tv"
-                    android:layout_width="wrap_content"
+                    <TextView
+                        android:id="@+id/lib_detail_book_title_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/regular14"
+                        android:textColor="@color/grey_900"
+                        android:text="괴테는 모든 것을 말했다."
+                        android:maxLines="1"
+                        android:scrollHorizontally="true"/>
+                </HorizontalScrollView>
+
+                <HorizontalScrollView
+                    android:id="@+id/lib_detail_book_author_scroll"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/regular12"
-                    android:textColor="@color/grey_500"
-                    android:text="스즈키 유이 (소설)"
                     android:layout_marginTop="4dp"
                     android:layout_marginStart="14dp"
+                    android:scrollbars="none"
                     app:layout_constraintStart_toEndOf="@id/lib_detail_image_iv"
-                    app:layout_constraintTop_toBottomOf="@id/lib_detail_book_title_tv"/>
+                    app:layout_constraintEnd_toEndOf="@id/card_guideline_end"
+                    app:layout_constraintTop_toBottomOf="@id/lib_detail_book_title_scroll">
+
+                    <TextView
+                        android:id="@+id/lib_detail_book_author_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/regular12"
+                        android:textColor="@color/grey_500"
+                        android:text="스즈키 유이 (소설)"
+                        android:maxLines="1"
+                        android:scrollHorizontally="true"/>
+                </HorizontalScrollView>
 
 
                 <TextView
