@@ -1,11 +1,13 @@
 package com.bookiibookii.bookiibookii.trkDirectGuest
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestAppointmentBottomDialogBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class DirectGuestAppointmentBottomDialogFragment : BottomSheetDialogFragment() {
@@ -32,6 +34,15 @@ class DirectGuestAppointmentBottomDialogFragment : BottomSheetDialogFragment() {
             DirectGuestSetAppointmentDialogFragment
                 .newInstance(groupId)
                 .show(parentFragmentManager, DirectGuestSetAppointmentDialogFragment.TAG)
+        }
+
+        binding.btnGoComment.setOnClickListener{
+            val intent = Intent(requireContext(), GroupDetailActivity::class.java).apply {
+                putExtra("GROUP_ID", groupId)
+                putExtra("GROUP_TYPE", "RELAY")
+            }
+            startActivity(intent)
+            dismiss()
         }
     }
 

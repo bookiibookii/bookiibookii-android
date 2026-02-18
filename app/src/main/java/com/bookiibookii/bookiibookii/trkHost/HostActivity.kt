@@ -138,6 +138,9 @@ class HostActivity : AppCompatActivity() {
                     val title = dto.bookTitle?.trim().orEmpty()
                     binding.tvToolbarTitle.text = if (title.isBlank()) " " else title
 
+                    val nickname = dto.partnerNickname?.trim().orEmpty()
+                    binding.tvUserName.text = if (nickname.isBlank()) " " else nickname
+
                     binding.cardWidget.isEnabled = true
 
                     if (!didAutoShowSheet && savedInstanceState == null && !pendingShowAfterRefresh) {
