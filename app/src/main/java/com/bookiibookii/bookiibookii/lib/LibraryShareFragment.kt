@@ -126,13 +126,24 @@ class LibraryShareFragment : DialogFragment() {
 
             // ★ Glide가 이미지를 화면에 다 그렸는지(성공/실패) 감지하는 리스너
             val listener = object : RequestListener<Drawable> {
-                override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean): Boolean {
-                    checkImageLoad()
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<Drawable?>,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    checkImageLoad() // ★ 이것만 추가
                     return false
                 }
 
-                override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
-                    checkImageLoad()
+                override fun onResourceReady(
+                    resource: Drawable,
+                    model: Any,
+                    target: Target<Drawable?>?,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    checkImageLoad() // ★ 이것만 추가
                     return false
                 }
             }
