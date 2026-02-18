@@ -53,6 +53,15 @@
         app:layout_constraintTop_toTopOf="@id/lib_card_chat_tv"
         app:layout_constraintBottom_toBottomOf="@id/lib_card_chat_tv"/>
 
+    <ImageView
+        android:id="@+id/lib_card_loading_iv"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:src="@drawable/ic_reload"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintTop_toTopOf="@id/lib_card_chat_tv"
+        app:layout_constraintBottom_toBottomOf="@id/lib_card_chat_tv"/>
+
     <View
         android:id="@+id/lib_line_v"
         android:layout_width="match_parent"
