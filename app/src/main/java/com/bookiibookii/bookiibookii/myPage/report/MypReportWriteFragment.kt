@@ -47,6 +47,15 @@ class MypReportWriteFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        //특정 그룹 내 신고하기
+        arguments?.getInt("FIXED_ID", -1)?.takeIf { it != -1 }?.let { id ->
+            selectedGroupId = id
+            binding.mypReportGroupEt.setText(arguments?.getString("FIXED_NAME"))
+            binding.mypReportGroupEt.isEnabled = false // 수정 불가하게 막기
+            binding.mypReportGroupPlusIv.visibility = View.GONE // 버튼 치우기
+        }
+
         loadingDialog = LoadingDialog(requireContext())
 
         // 1. 기본적으로 EditText 입력 불가하게 설정 (클릭만 가능)

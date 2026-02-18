@@ -5,13 +5,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <ImageView
-        android:id="@+id/item_grp_chat_card_profile_Iv"
-        android:src="@drawable/ic_profile"
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/item_grp_chat_card_profile_card"
         android:layout_width="36dp"
         android:layout_height="36dp"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        app:cardBackgroundColor="@color/grey_300"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/item_grp_chat_card_profile_Iv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"/>
+
+    </com.google.android.material.card.MaterialCardView>
+
+
     <TextView
         android:id="@+id/item_grp_chat_card_nickname_Iv"
         android:layout_width="wrap_content"
@@ -20,8 +34,8 @@
         android:textColor="@color/pre_main"
         android:textSize="14sp"
         android:layout_marginStart="12dp"
-        app:layout_constraintStart_toEndOf="@id/item_grp_chat_card_profile_Iv"
-        app:layout_constraintTop_toTopOf="@id/item_grp_chat_card_profile_Iv"
+        app:layout_constraintStart_toEndOf="@id/item_grp_chat_card_profile_card"
+        app:layout_constraintTop_toTopOf="@id/item_grp_chat_card_profile_card"
         tools:text="noshel"/>
 
     <TextView
