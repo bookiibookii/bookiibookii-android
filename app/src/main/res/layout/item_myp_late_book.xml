@@ -8,8 +8,7 @@
     android:paddingHorizontal="16dp"
     android:paddingVertical="12dp"
     android:layout_marginBottom="8dp"
-    android:background="@drawable/bg_round_20dp_white"
-    android:elevation="1dp">
+    android:background="@drawable/bg_round_20dp_white">
 
     <TextView
         android:id="@+id/item_myp_late_title_tv"

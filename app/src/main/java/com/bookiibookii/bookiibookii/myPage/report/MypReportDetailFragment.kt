@@ -75,7 +75,7 @@ class MypReportDetailFragment : Fragment() {
 
         selectedRb.setBackgroundResource(R.drawable.bg_round_20dp_orange_stroke)
         selectedRb.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check_orange, 0, 0, 0)
-        selectedRb.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_900))
+        selectedRb.setTextColor(ContextCompat.getColor(requireContext(), R.color.pre_main))
     }
 
     override fun onDestroyView() {

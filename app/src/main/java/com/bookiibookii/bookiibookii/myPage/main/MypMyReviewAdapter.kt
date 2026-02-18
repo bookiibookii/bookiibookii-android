@@ -83,9 +83,20 @@ class MypMyReviewAdapter(private var items: List<MypRelayReview>) : RecyclerView
             binding.itemMypPartnerCommentTv.text = item.partnerToMeComment
 
             // 열린 상태 태그 (전부 표시 - XML 상 3개 슬롯 매핑)
-            bindPartnerTag(binding.partnerTag1, tags.getOrNull(0))
-            bindPartnerTag(binding.partnerTag2, tags.getOrNull(1))
-            bindPartnerTag(binding.partnerTag3, tags.getOrNull(2))
+            val expandedTags = listOf(
+                binding.partnerTag1, binding.partnerTag2, binding.partnerTag3,
+                binding.partnerTag4, binding.partnerTag5, binding.partnerTag6
+            )
+
+// 전체 태그 리스트를 순회하며 텍스트를 넣고, 모자란 부분은 GONE 처리
+            expandedTags.forEachIndexed { index, textView ->
+                if (index < tags.size) {
+                    textView.text = "#${tags[index]}"
+                    textView.visibility = View.VISIBLE
+                } else {
+                    textView.visibility = View.GONE
+                }
+            }
 
             // 4. 펼침/접힘 상태 로직
             val isExpanded = expandedState[item.groupId] ?: false

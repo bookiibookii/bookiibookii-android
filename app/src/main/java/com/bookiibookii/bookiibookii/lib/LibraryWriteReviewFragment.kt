@@ -136,9 +136,39 @@ class LibraryWriteReviewFragment : Fragment() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "리뷰가 등록되었습니다.", Toast.LENGTH_SHORT).show()
 
-                    // ★ [수정] 단순히 뒤로가기
+                    // 전송 완료 상태 업데이트
+                    isReviewSubmitted = true
+
+                    // 라이브러리 목록 새로고침 신호
                     requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
-                    requireActivity().supportFragmentManager.popBackStack()
+
+                    // 투게더 화면으로 넘어갈 데이터 세팅
+                    val togetherFragment = LibraryBookDetailTogetherFragment().apply {
+                        arguments = Bundle().apply {
+                            putInt("userBookId", userBookId)
+                            putInt("groupId", groupId)
+                            putString("bookTitle", bookTitle)
+                            putString("bookAuthor", bookAuthor)
+                            putString("bookCover", bookCover)
+                            putString("hostName", hostName)
+                            putString("hostProfileUrl", hostProfileUrl)
+                            putString("startDate", startDate)
+                            putString("endDate", endDate)
+                            putDouble("rating", currentRating)
+                        }
+                    }
+
+                    // ★ [핵심 수정 부분] 꼬임 방지를 위한 안전한 화면 전환 로직
+                    val fm = requireActivity().supportFragmentManager
+
+                    // 1. 현재 화면(리뷰 작성)을 '즉시' 스택에서 제거합니다.
+                    fm.popBackStackImmediate()
+
+                    // 2. 밑에 깔려있던 '아이엔지 화면'을 '투게더 화면'으로 교체합니다.
+                    // (addToBackStack을 쓰지 않으면 투게더 화면에서 뒤로가기 시 자연스럽게 메인 라이브러리로 돌아갑니다)
+                    fm.beginTransaction()
+                        .replace(R.id.fragmentContainer, togetherFragment)
+                        .commit()
 
                 } else {
                     Toast.makeText(context, "리뷰 등록 실패: ${response.message()}", Toast.LENGTH_SHORT).show()
@@ -149,6 +179,7 @@ class LibraryWriteReviewFragment : Fragment() {
             }
         }
     }
+
     private fun initStarRating() {
         val stars = listOf(
             binding.libDetailRateList.getChildAt(0) as ImageView,
