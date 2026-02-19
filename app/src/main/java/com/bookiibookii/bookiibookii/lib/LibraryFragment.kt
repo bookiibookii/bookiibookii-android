@@ -21,6 +21,7 @@ import com.bookiibookii.bookiibookii.data.model.ReadStatus
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryViewModel
 import com.bookiibookii.bookiibookii.data.viewModel.SortType
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBinding
+import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.trkDirectGuest.DirectGuestActivity
 import com.bookiibookii.bookiibookii.trkDirectHost.DirectHostActivity
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
@@ -139,19 +140,25 @@ class LibraryFragment : Fragment() {
         updateButtonStyles(status)
 
         if (filteredList.isEmpty()) {
-            binding.mypNoBookCl.visibility = View.VISIBLE
+            // ★ [수정] XML의 include ID(layoutEmptyGroup)를 통해 접근
+            binding.layoutEmptyGroup.root.visibility = View.VISIBLE
             binding.libBookListRv.visibility = View.GONE
             binding.libGridIv.visibility = View.GONE
             binding.libTotalTv.visibility = View.GONE
             binding.libSortIv.visibility = View.GONE
 
             if (status == ReadStatus.READING) {
-                binding.mypNoText.text = "아직 진행 중인 독서가 없어요"
+                binding.layoutEmptyGroup.tvEmptyTitle.text = "아직 진행 중인 독서가 없어요 \uD83D\uDE2D"
+                binding.layoutEmptyGroup.tvEmptyDesc.text = "읽고 싶은 책을 골라 그룹을 만들어볼까요?"
+                binding.layoutEmptyGroup.btnCreateGroup.visibility = View.VISIBLE
             } else {
-                binding.mypNoText.text = "완료한 독서가 없어요"
+                binding.layoutEmptyGroup.tvEmptyTitle.text = "완료한 독서가 없어요 \uD83D\uDE2D"
+                binding.layoutEmptyGroup.tvEmptyDesc.text = "진행 중인 독서를 완료하고 기록을 남겨보세요!"
+                // 완료 탭에서는 그룹 만들기 버튼을 가리려면 GONE, 보이게 두려면 VISIBLE로 설정하세요
+                binding.layoutEmptyGroup.btnCreateGroup.visibility = View.GONE
             }
         } else {
-            binding.mypNoBookCl.visibility = View.GONE
+            binding.layoutEmptyGroup.root.visibility = View.GONE
             binding.libBookListRv.visibility = View.VISIBLE
             binding.libGridIv.visibility = View.VISIBLE
             binding.libTotalTv.visibility = View.VISIBLE
@@ -165,10 +172,6 @@ class LibraryFragment : Fragment() {
 
             // 1. 함께 읽기 (TOGETHER) 처리
             if (clickedBook.groupType == "TOGETHER") {
-
-                // ★ [핵심 수정]
-                // 그룹 상태가 DONE(완료)이거나,
-                // 상태는 ING(진행중)이지만 내가 이미 후기를 썼다면(isReviewed) -> Together(완료) 화면으로 이동
                 val targetFragment: Fragment = if (clickedBook.readStatus == ReadStatus.DONE || clickedBook.isReviewed) {
                     LibraryBookDetailTogetherFragment()
                 } else {
@@ -181,10 +184,8 @@ class LibraryFragment : Fragment() {
 
             // 2. 이어 읽기 (RELAY) 처리
             if (clickedBook.readStatus == ReadStatus.DONE) {
-                // 종료됨 -> 상세 화면 Fragment (Bundle 전달)
                 navigateToFragment(LibraryBookDetailFragment(), clickedBook)
             } else {
-                // 진행 중 -> 트래커 Activity
                 checkTradeTypeAndNavigate(clickedBook)
             }
         }
@@ -195,39 +196,32 @@ class LibraryFragment : Fragment() {
     }
 
     private fun checkTradeTypeAndNavigate(book: LibBook) {
-        // [로그 1] 함수 시작 확인
         Log.d("TrackerCheck", "========== 네비게이션 로직 시작 ==========")
         Log.d("TrackerCheck", "Target GroupID: ${book.groupId}, isMine(Host여부): ${book.isMine}")
 
         lifecycleScope.launch {
             loadingDialog.show()
             try {
-                // 1. 내 트래커 목록 조회 API 호출
                 val response = RetrofitClient.api().getMyTrackers()
 
-                // [로그 2] API 응답 코드 확인
                 Log.d("TrackerCheck", "API Response Code: ${response.code()}")
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val trackerList = response.body()?.result ?: emptyList()
 
-                    // [로그 3] 받아온 리스트 크기 및 포함된 ID들 확인
                     Log.d("TrackerCheck", "받아온 트래커 개수: ${trackerList.size}")
                     Log.d("TrackerCheck", "목록 내 ID들: ${trackerList.map { it.groupId }}")
 
-                    // 2. 클릭한 책의 groupId와 일치하는 트래커 찾기
                     val targetTracker = trackerList.find { it.groupId == book.groupId }
 
                     if (targetTracker != null) {
-                        // [로그 4] 찾은 트래커 정보 상세 확인 (null, 공백 여부 등 체크)
-                        val tradeType = targetTracker.tradeType // "DELIVERY" or "DIRECT"
+                        val tradeType = targetTracker.tradeType
                         val isHost = book.isMine
 
                         Log.d("TrackerCheck", ">> 매칭된 트래커 발견!")
-                        Log.d("TrackerCheck", "   - tradeType: '$tradeType'") // 따옴표로 감싸서 공백 확인
+                        Log.d("TrackerCheck", "   - tradeType: '$tradeType'")
                         Log.d("TrackerCheck", "   - isHost: $isHost")
 
-                        // 3. 4가지 경우의 수에 따라 액티비티 클래스 결정
                         val targetActivityClass = when {
                             isHost && tradeType == "DELIVERY" -> {
                                 Log.d("TrackerCheck", "결정: HostActivity (택배/호스트)")
@@ -251,7 +245,6 @@ class LibraryFragment : Fragment() {
                             }
                         }
 
-                        // 4. 액티비티 이동
                         if (targetActivityClass != null) {
                             val intent = Intent(requireActivity(), targetActivityClass)
                             intent.putExtra("group_id", book.groupId.toLong())
@@ -277,6 +270,7 @@ class LibraryFragment : Fragment() {
             }
         }
     }
+
     private fun navigateToFragment(targetFragment: Fragment, book: LibBook) {
         val bundle = Bundle().apply {
             putInt("userBookId", book.id)
@@ -324,6 +318,12 @@ class LibraryFragment : Fragment() {
                 setCoverModeLayout()
                 binding.libGridIv.setImageResource(R.drawable.ic_grid)
             }
+        }
+
+        // ★ [수정] 포함된 레이아웃의 그룹 생성 버튼 클릭 리스너 연결
+        binding.layoutEmptyGroup.btnCreateGroup.setOnClickListener {
+            val intent = Intent(requireContext(), GroupGenerationActivity::class.java)
+            startActivity(intent)
         }
     }
 

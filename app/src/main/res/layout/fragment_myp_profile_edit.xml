@@ -153,7 +153,11 @@
                 android:textAppearance="@style/regular15"
                 android:textColor="@color/grey_500"
                 android:paddingHorizontal="20dp"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="12dp"
+
+                android:inputType="phone"
+                android:digits="0123456789-"
+                android:maxLength="13" />
 
             <FrameLayout
                 android:layout_width="match_parent"
