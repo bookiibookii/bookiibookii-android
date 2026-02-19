@@ -17,9 +17,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
@@ -38,9 +41,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class GroupGenerationActivity : AppCompatActivity() {
+class GroupGenerationActivity :
+    BaseActivity<ActivityGrpGenerationBinding>() {
 
-    private lateinit var binding: ActivityGrpGenerationBinding
+    override fun getViewBinding(): ActivityGrpGenerationBinding {
+        return ActivityGrpGenerationBinding.inflate(layoutInflater)
+    }
 
     // --- 모드 및 데이터 변수 ---
     private var isEditMode = false
@@ -67,8 +73,8 @@ class GroupGenerationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityGrpGenerationBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+       // binding = ActivityGrpGenerationBinding.inflate(layoutInflater)
+       // setContentView(binding.root)
 
         // 1. 인텐트 데이터 처리
         processIntentData()
@@ -85,10 +91,24 @@ class GroupGenerationActivity : AppCompatActivity() {
         loadInitialData()
     }
 
-    // ============================================================================================
-    //  1. 초기화 및 UI 설정
-    // ============================================================================================
+    override fun setupWindowInsets(view: View) {
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
 
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            v.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom
+            )
+
+            insets
+        }
+    }
+
+
+    //  1. 초기화 및 UI 설정
     private fun processIntentData() {
         isEditMode = intent.getBooleanExtra("IS_EDIT_MODE", false)
         currentGroupId = intent.getIntExtra("GROUP_ID", 0)
@@ -97,9 +117,7 @@ class GroupGenerationActivity : AppCompatActivity() {
 
     private fun initUiState() {
         with(binding) {
-            // -----------------------------------------------------------------
             // [A] 수정 모드 (Edit Mode)
-            // -----------------------------------------------------------------
             if (isEditMode) {
                 actGrpGenMainTitleTv.text = "그룹 수정"
                 actGrpGenRunBtn.text = "수정 완료"
@@ -119,9 +137,7 @@ class GroupGenerationActivity : AppCompatActivity() {
                 actGrpGenMemberCountGroup.visibility = View.GONE    // 인원 설정
 
             }
-            // -----------------------------------------------------------------
             // [B] 생성 모드 (Create Mode)
-            // -----------------------------------------------------------------
             else {
                 actGrpGenMainTitleTv.text = "그룹 만들기"
                 actGrpGenRunBtn.text = "그룹 만들기"
@@ -534,10 +550,7 @@ class GroupGenerationActivity : AppCompatActivity() {
         }
     }
 
-    // ============================================================================================
     //  4. API 호출
-    // ============================================================================================
-
     private suspend fun searchBooksFromApi(query: String) {
         try {
             val response = RetrofitClient.api().searchBooks(query, 1, 10)

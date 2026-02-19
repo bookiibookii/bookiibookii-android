@@ -21,13 +21,18 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.GroupTagMapper
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpHostBinding
@@ -41,9 +46,12 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 
-class GroupDetailActivity : AppCompatActivity() {
+class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
 
-    private lateinit var binding: ActivityGrpHostBinding
+    override fun getViewBinding(): ActivityGrpHostBinding {
+        return ActivityGrpHostBinding.inflate(layoutInflater)
+    }
+
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
 
     private val memberAdapter = GroupMemberAdapter {}
@@ -85,8 +93,46 @@ class GroupDetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityGrpHostBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+//        binding = ActivityGrpHostBinding.inflate(layoutInflater)
+//        setContentView(binding.root)
+
+        val originalBottomPadding = binding.inputAreaContainer.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+
+            // 상태바 대응
+            binding.root.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                0
+            )
+
+            // 🔥 기존 padding + ime 높이
+            binding.inputAreaContainer.setPadding(
+                binding.inputAreaContainer.paddingLeft,
+                binding.inputAreaContainer.paddingTop,
+                binding.inputAreaContainer.paddingRight,
+                originalBottomPadding + imeInsets.bottom
+            )
+
+            bottomSheetBehavior.state =
+                if (imeVisible) BottomSheetBehavior.STATE_EXPANDED
+                else BottomSheetBehavior.STATE_COLLAPSED
+
+            insets
+        }
+
+
+
+
+
+
+
 
         currentGroupType = intent.getStringExtra("GROUP_TYPE")
         currentGroupId = intent.getLongExtra("GROUP_ID", -1L)
@@ -221,15 +267,16 @@ class GroupDetailActivity : AppCompatActivity() {
     private fun initBottomSheet() {
         val bottomSheetLayout = binding.persistentBottomSheet
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetLayout)
+
+        bottomSheetBehavior.isHideable = false
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
-        bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-            override fun onStateChanged(bottomSheet: View, newState: Int) {}
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                binding.grpMgBottomSheetReloadIv.alpha = slideOffset
-            }
-        })
+        // 🔥 layout 완전히 끝난 후 딱 한 번만 세팅
+        binding.root.doOnLayout {
+            adjustPeekHeight()
+        }
     }
+
 
     private fun deactivateReplyMode() {
         targetParentId = null
@@ -678,6 +725,7 @@ class GroupDetailActivity : AppCompatActivity() {
             viewModel.fetchGroupDetail(currentGroupId.toInt())
             viewModel.fetchComments(currentGroupId)
         }
+
     }
 
     private fun dpToPx(dp: Int): Int {
@@ -685,17 +733,20 @@ class GroupDetailActivity : AppCompatActivity() {
         return (dp * density).toInt()
     }
 
-    private fun showCustomToast(message: String, isSuccess: Boolean) {
-        val layout = LayoutInflater.from(this).inflate(R.layout.toast_custom, null)
-        layout.findViewById<TextView>(R.id.toast_message_tv).text = message
-        val iconRes = if (isSuccess) R.drawable.ic_check else R.drawable.ic_info
-        layout.findViewById<ImageView>(R.id.toast_icon_iv).setImageResource(iconRes)
-
-        with(Toast(applicationContext)) {
-            setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
-            duration = Toast.LENGTH_SHORT
-            view = layout
-            show()
-        }
+    override fun setupWindowInsets(view: View) {
+        // 아무것도 하지 않음 (BaseActivity의 기본 로직 차단)
     }
+
+    private var peekInitialized = false
+
+    private fun adjustPeekHeight() {
+        if (peekInitialized) return
+
+        val inputHeight = binding.inputAreaContainer.height
+        val peekBase = dpToPx(80)
+
+        bottomSheetBehavior.peekHeight = peekBase + inputHeight
+        peekInitialized = true
+    }
+
 }
