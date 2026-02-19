@@ -75,7 +75,7 @@ class TrkGuestMainFragment : Fragment() {
         footerAdapter = CreateGroupFooterAdapter(
             mode = FooterMode.GUEST_JOIN,
             onActionClick = {
-                // TODO: 그룹 참여 화면 이동
+                (requireActivity() as? MainActivity)?.moveToGroupTab()
             }
         )
 
@@ -92,6 +92,8 @@ class TrkGuestMainFragment : Fragment() {
                 vm.trackers.collect { list ->
                     trackerAdapter.submitList(list) {
                         footerAdapter.setShowEmptyText(trackerAdapter.itemCount == 0)
+
+                        binding.trkRecyclerview.scrollToPosition(0)
                     }
                 }
             }

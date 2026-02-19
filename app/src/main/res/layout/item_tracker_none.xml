@@ -165,7 +165,7 @@
                 android:id="@+id/view_track_bg"
                 android:layout_width="0dp"
                 android:layout_height="6dp"
-                android:background="@color/grey_200"
+                android:background="@drawable/bg_progress_track"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -175,7 +175,7 @@
                 android:id="@+id/view_track_group"
                 android:layout_width="0dp"
                 android:layout_height="6dp"
-                android:background="@color/grey_900"
+                android:background="@drawable/bg_progress_group"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/view_track_bg"
                 app:layout_constraintTop_toTopOf="@id/view_track_bg"
@@ -188,7 +188,7 @@
                 android:id="@+id/view_track_fill"
                 android:layout_width="0dp"
                 android:layout_height="6dp"
-                android:background="@color/pre_main"
+                android:background="@drawable/bg_progress_fill"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/view_track_bg"
                 app:layout_constraintTop_toTopOf="@id/view_track_bg"
@@ -203,8 +203,11 @@
                 android:layout_height="10dp"
                 app:srcCompat="@drawable/bg_circle_grey100"
                 app:layout_constraintStart_toEndOf="@id/view_track_fill"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constrainedWidth="true"
+                android:translationX="-5dp"/>
 
             <ImageView
                 android:id="@+id/dot_group"

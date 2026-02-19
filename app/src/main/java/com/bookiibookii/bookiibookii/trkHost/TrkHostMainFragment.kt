@@ -72,7 +72,7 @@ class TrkHostMainFragment : Fragment() {
         footerAdapter = CreateGroupFooterAdapter(
             mode = FooterMode.HOST_CREATE,
             onActionClick = {
-
+                (requireActivity() as? MainActivity)?.moveToGroupTab()
             }
         )
 
@@ -89,6 +89,8 @@ class TrkHostMainFragment : Fragment() {
                 vm.trackers.collect { list ->
                     trackerAdapter.submitList(list) {
                         footerAdapter.setShowEmptyText(trackerAdapter.itemCount == 0)
+
+                        binding.trkRecyclerview.scrollToPosition(0)
                     }
                 }
             }
@@ -119,6 +121,7 @@ class TrkHostMainFragment : Fragment() {
             }
             updateTabState(isMyGroup = false)
         }
+
     }
 
     private fun updateTabState(isMyGroup: Boolean) {
@@ -130,4 +133,5 @@ class TrkHostMainFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
 }
