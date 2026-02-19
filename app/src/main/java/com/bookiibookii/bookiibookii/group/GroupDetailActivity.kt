@@ -40,9 +40,6 @@ import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-// ★ [TODO] 실제로 이동할 액티비티를 import 해주세요.
-// import com.bookiibookii.bookiibookii.library.LibraryActivity
-// import com.bookiibookii.bookiibookii.tracker.TrackerActivity
 
 class GroupDetailActivity : AppCompatActivity() {
 
@@ -363,6 +360,7 @@ class GroupDetailActivity : AppCompatActivity() {
 
     private fun bindUi(data: GroupItemDto.GroupDetailResult) {
         val isDirectExchange = !data.meetPlace.isNullOrBlank()
+        val strokeWidth1dp = dpToPx(1).toFloat()
         binding.actGrpHoRegionLayout.visibility = if (isDirectExchange) View.VISIBLE else View.GONE
         binding.actGrpHoIntroRealRegionTv.text = if (isDirectExchange) data.meetPlace else data.preferRegion
 
@@ -372,18 +370,21 @@ class GroupDetailActivity : AppCompatActivity() {
                     grpItemStatusCp.text = "모집 중"
                     grpItemStatusCp.chipBackgroundColor = ColorStateList.valueOf(getColor(R.color.pre_main))
                     grpItemStatusCp.chipStrokeColor = ColorStateList.valueOf(getColor(R.color.pre_main))
+                    grpItemStatusCp.chipStrokeWidth = strokeWidth1dp
                     grpItemStatusCp.setTextColor(getColor(R.color.white))
                 }
                 "MATCHED" -> {
                     grpItemStatusCp.text = "진행 중"
                     grpItemStatusCp.chipBackgroundColor = ColorStateList.valueOf(Color.WHITE)
                     grpItemStatusCp.chipStrokeColor = ColorStateList.valueOf(getColor(R.color.ui_main_105))
+                    grpItemStatusCp.chipStrokeWidth = strokeWidth1dp
                     grpItemStatusCp.setTextColor(getColor(R.color.pre_main))
                 }
                 "COMPLETED" -> {
                     grpItemStatusCp.text = "종료"
                     grpItemStatusCp.chipBackgroundColor = ColorStateList.valueOf(getColor(R.color.grey_200))
                     grpItemStatusCp.chipStrokeColor = ColorStateList.valueOf(Color.TRANSPARENT)
+                    grpItemStatusCp.chipStrokeWidth = strokeWidth1dp
                     grpItemStatusCp.setTextColor(getColor(R.color.grey_500))
                 }
                 else -> {
@@ -456,6 +457,7 @@ class GroupDetailActivity : AppCompatActivity() {
                 btnLayout.setOnClickListener {
                     val intent = Intent(this, com.bookiibookii.bookiibookii.group.GroupJoinManagementActivity::class.java)
                     intent.putExtra("GROUP_ID", currentGroupId)
+                    intent.putExtra("GROUP_TYPE", currentGroupType)
                     startActivity(intent)
                 }
             }
@@ -472,41 +474,60 @@ class GroupDetailActivity : AppCompatActivity() {
             "FULL" -> {
                 btnTitle.text = "모집 완료"
                 btnLayout.isEnabled = false
-            }
-            "TRACKER" -> {
-                // 1. 버튼 텍스트 설정 (함께읽기면 서재, 이어읽기면 트래커)
-                btnTitle.text = if (currentGroupType == "TOGETHER") "서재 보기" else "트래커 보기"
 
-                // 2. 클릭 리스너: 상태 체크 후 분기
-                btnLayout.setOnClickListener {
-                    // ★ 아직 모집중(RECRUITING)이라면 토스트만 띄움
-                    if (data.groupStatus == "RECRUITING") {
-                        val msg = if (currentGroupType == "TOGETHER") {
-                            "모임이 시작되면 서재가 생성됩니다!"
-                        } else {
-                            "모임이 시작되면 트래커가 생성됩니다!"
-                        }
-                     showCustomToast(msg,false)
+            }"TRACKER" -> {
+            btnTitle.text = if (currentGroupType == "TOGETHER") "서재 보기" else "트래커 보기"
+
+            btnLayout.setOnClickListener {
+                if (data.groupStatus == "RECRUITING") {
+                    val msg = if (currentGroupType == "TOGETHER") {
+                        "모임이 시작되면 서재가 생성됩니다!"
+                    } else {
+                        "모임이 시작되면 트래커가 생성됩니다!"
                     }
-                    // ★ 모집이 끝나고 매칭(MATCHED)되었거나 종료된 상태라면 이동
-                    else {
-                        /* TODO: 실제 이동할 액티비티 클래스로 교체해주세요!
-                           예: LibraryActivity::class.java / TrackerActivity::class.java
-                        */
-                        // val targetActivity = if (currentGroupType == "TOGETHER") {
-                        //     LibraryActivity::class.java
-                        // } else {
-                        //     TrackerActivity::class.java
-                        // }
-
-                        // val intent = Intent(this, targetActivity)
-                        // intent.putExtra("GROUP_ID", currentGroupId)
-                        // startActivity(intent)
-
-                        showCustomToast("서재/트래커로 이동합니다! (코드 연결 필요)",true)
-                    }
+                    showCustomToast(msg, false)
+                }
+                else {
+                    // ★ 단순히 이전 화면으로 돌아가기
+                    finish()
                 }
             }
+        }
+            // 여기 세부 사항 봐야할듯?
+//            "TRACKER" -> {
+//                // 1. 버튼 텍스트 설정 (함께읽기면 서재, 이어읽기면 트래커)
+//                btnTitle.text = if (currentGroupType == "TOGETHER") "서재 보기" else "트래커 보기"
+//
+//                // 2. 클릭 리스너: 상태 체크 후 분기
+//                btnLayout.setOnClickListener {
+//                    // ★ 아직 모집중(RECRUITING)이라면 토스트만 띄움
+//                    if (data.groupStatus == "RECRUITING") {
+//                        val msg = if (currentGroupType == "TOGETHER") {
+//                            "모임이 시작되면 서재가 생성됩니다!"
+//                        } else {
+//                            "모임이 시작되면 트래커가 생성됩니다!"
+//                        }
+//                     showCustomToast(msg,false)
+//                    }
+//                    // ★ 모집이 끝나고 매칭(MATCHED)되었거나 종료된 상태라면 이동
+//                    else {
+//                        /* TODO: 실제 이동할 액티비티 클래스로 교체해주세요!
+//                           예: LibraryActivity::class.java / TrackerActivity::class.java
+//                        */
+//                        // val targetActivity = if (currentGroupType == "TOGETHER") {
+//                        //     LibraryActivity::class.java
+//                        // } else {
+//                        //     TrackerActivity::class.java
+//                        // }
+//
+//                        // val intent = Intent(this, targetActivity)
+//                        // intent.putExtra("GROUP_ID", currentGroupId)
+//                        // startActivity(intent)
+//
+//                        showCustomToast("서재/트래커로 이동합니다! (코드 연결 필요)",true)
+//                    }
+//                }
+//            }
         }
     }
 
@@ -550,17 +571,15 @@ class GroupDetailActivity : AppCompatActivity() {
                 val request = GroupItemDto.GroupApplyRequest(applyMsg = message)
                 val response = RetrofitClient.api().applyGroup(groupId, request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    //Toast.makeText(this@GroupDetailActivity, "신청되었습니다!", Toast.LENGTH_SHORT).show()
+
                     showCustomToast("그룹 신청 되었습니다.",true)
                     dialog.dismiss()
                     viewModel.fetchGroupDetail(currentGroupId.toInt())
                 } else {
                     val msg = try { JSONObject(response.errorBody()?.string() ?: "{}").getString("message") } catch (e: Exception) { "신청 실패" }
-                    //Toast.makeText(this@GroupDetailActivity, msg, Toast.LENGTH_SHORT).show()
                     showCustomToast(msg,false)
                 }
             } catch (e: Exception) {
-                //Toast.makeText(this@GroupDetailActivity, "네트워크 오류", Toast.LENGTH_SHORT).show()
                 showCustomToast("네트워크 오류",false)
             }
         }
@@ -571,12 +590,10 @@ class GroupDetailActivity : AppCompatActivity() {
             try {
                 val response = RetrofitClient.api().cancelGroupApplication(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    //Toast.makeText(this@GroupDetailActivity, "신청 취소 완료", Toast.LENGTH_SHORT).show()
                     showCustomToast("신청 취소 요청되었습니다.",true)
                     finish()
                 } else {
                     val msg = try { JSONObject(response.errorBody()?.string() ?: "{}").getString("message") } catch (e: Exception) { "취소 실패" }
-                    //Toast.makeText(this@GroupDetailActivity, msg, Toast.LENGTH_SHORT).show()
                     showCustomToast(msg,false)
                 }
             } catch (e: Exception) {
@@ -613,8 +630,6 @@ class GroupDetailActivity : AppCompatActivity() {
                         if (currentData != null) {
                             intent.putExtra("GROUP_ID", currentGroupId)
                             intent.putExtra("GROUP_NAME", currentData.bookTitle)
-                            val memberNames = currentData.participantSlots?.map { it.nickname }
-                            intent.putStringArrayListExtra("MEMBER_LIST", ArrayList(memberNames))
                         }
                         startActivity(intent)
                     }
@@ -630,7 +645,7 @@ class GroupDetailActivity : AppCompatActivity() {
             context = this,
             title = "그룹 삭제",
             subtitle = bookTitle,
-            content = "정말로 이 모임을 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.",
+            content = "그룹을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
             confirmBtnText = "삭제",
             confirmBtnColor = R.color.ui_point_red,
             onConfirmClick = { requestDeleteGroup(currentGroupId.toLong()) }
