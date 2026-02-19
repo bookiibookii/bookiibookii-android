@@ -209,8 +209,6 @@ class LibraryBookDetailIngFragment : Fragment() {
     }
 
     private fun updateProgressBar(myProgress: Int, groupProgress: Int) {
-        binding.readingProgressBar.progress = myProgress
-        binding.readingProgressBar.secondaryProgress = groupProgress
         binding.myPercent.text = "$myProgress%"
         binding.avgPercent.text = "$groupProgress%"
 
@@ -219,7 +217,22 @@ class LibraryBookDetailIngFragment : Fragment() {
         constraintSet.clone(constraintLayout)
         constraintSet.setGuidelinePercent(R.id.guideline_my_progress, myProgress / 100f)
         constraintSet.setGuidelinePercent(R.id.guideline_group_progress, groupProgress / 100f)
-        constraintSet.applyTo(constraintLayout)
+        constraintSet.applyTo (constraintLayout)
+
+        // ★ [핵심] 더 짧은 막대의 Z축 값을 높여서 맨 위로 가져오기
+        if (myProgress > groupProgress) {
+            // 주황색이 더 길면 -> 검정색(그룹)이 가려지지 않게 맨 위로
+            binding.barGroup.translationZ = 1f
+            binding.barMine.translationZ = 0f
+        } else {
+            // 검정색이 더 길거나 같으면 -> 주황색(나)을 맨 위로
+            binding.barMine.translationZ = 1f
+            binding.barGroup.translationZ = 0f
+        }
+
+        // 꼬리표 역할을 하는 점(Dot)들이 막대에 가려지지 않도록 최상단으로 보장
+        binding.myProgressDot.translationZ = 2f
+        binding.groupAvgDot.translationZ = 2f
     }
 
     private fun initRecyclerView() {
@@ -360,6 +373,7 @@ class LibraryBookDetailIngFragment : Fragment() {
         Log.d("CompleteReading", "완독 요청 시작 - GroupID: $groupId")
 
         lifecycleScope.launch {
+            if (!isAdded) return@launch
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().completeReading(groupId)

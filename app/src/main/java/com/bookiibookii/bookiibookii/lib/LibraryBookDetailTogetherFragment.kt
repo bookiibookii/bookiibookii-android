@@ -192,6 +192,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private fun fetchData() {
         if (groupId == -1) return
         lifecycleScope.launch {
+            if (!isAdded) return@launch
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getGroupCards(groupId)
@@ -255,7 +256,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
 
     private fun initListeners() {
         binding.libDetailBackIv.setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+            requireActivity().supportFragmentManager.popBackStack()
         }
 
         binding.libDetailMoreIv.setOnClickListener {
