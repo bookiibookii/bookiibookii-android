@@ -301,11 +301,6 @@ class LibrarySearchFragment : Fragment() {
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
     inner class RecentSearchAdapter(
         private val items: List<String>,
         private val onDelete: (String) -> Unit,
@@ -330,5 +325,16 @@ class LibrarySearchFragment : Fragment() {
         }
 
         override fun getItemCount() = items.size
+    }
+
+    override fun onResume() {
+        super.onResume()
+        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
+        _binding = null
     }
 }
