@@ -53,6 +53,13 @@ class GuestActivity : AppCompatActivity() {
         binding.cardWidget.isEnabled = false
         binding.btnBack.setOnClickListener { finish() }
 
+        binding.btnMore.setOnClickListener {
+            GuestGroupManageBottomDialogFragment.newInstance(groupId).show(
+                supportFragmentManager,
+                GuestGroupManageBottomDialogFragment.TAG
+            )
+        }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.steps.collectLatest { steps ->
