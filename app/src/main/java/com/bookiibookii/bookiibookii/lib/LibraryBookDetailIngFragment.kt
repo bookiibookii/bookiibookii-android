@@ -373,6 +373,7 @@ class LibraryBookDetailIngFragment : Fragment() {
         Log.d("CompleteReading", "완독 요청 시작 - GroupID: $groupId")
 
         lifecycleScope.launch {
+            if (!isAdded) return@launch
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().completeReading(groupId)

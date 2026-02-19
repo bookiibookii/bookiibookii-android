@@ -60,11 +60,34 @@ class LibraryFragment : Fragment() {
 
         initRecyclerView()
         initClickListeners()
-        fetchBooks()
+        setupProfileAndFetchBooks()
 
         viewModel.sortType.observe(viewLifecycleOwner) { sortType -> applySort(sortType) }
 
         requireActivity().supportFragmentManager.setFragmentResultListener("REFRESH_LIBRARY", viewLifecycleOwner) { _, _ ->
+            fetchBooks()
+        }
+    }
+    // ★ 새로 추가되는 함수
+    private fun setupProfileAndFetchBooks() {
+        // 프로필 정보가 서버에서 도착하면 실행됨
+        myPageViewModel.profileData.observe(viewLifecycleOwner) { profile ->
+            if (profile != null) {
+                if (allMyBooks.isEmpty()) {
+                    // 책 목록이 없으면 새로 불러오기
+                    fetchBooks()
+                } else {
+                    // 책 목록이 이미 있으면 내 닉네임과 비교해서 isMine 상태만 업데이트 후 색상 새로고침
+                    allMyBooks.forEach { it.isMine = (it.hostName == profile.nickname) }
+                    libraryAdapter.notifyDataSetChanged()
+                }
+            }
+        }
+
+        // 프로필 데이터가 아직 비어있다면 API 요청, 이미 있다면 바로 책 불러오기
+        if (myPageViewModel.profileData.value == null) {
+            myPageViewModel.fetchMypageData()
+        } else {
             fetchBooks()
         }
     }
@@ -77,8 +100,7 @@ class LibraryFragment : Fragment() {
                 val response = RetrofitClient.api().getLibraryBooks()
                 Log.d("LibraryAPI", "${response.body()}")
 
-                val myNickname = myPageViewModel.confirmedNickname ?: myPageViewModel.profileData.value?.nickname ?: ""
-
+                val myNickname = myPageViewModel.profileData.value?.nickname ?: ""
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val resultList = response.body()?.result ?: emptyList()
 
