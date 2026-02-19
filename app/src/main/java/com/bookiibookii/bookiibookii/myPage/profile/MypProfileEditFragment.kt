@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.myPage.profile
 
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -90,7 +91,7 @@ class MypProfileEditFragment : Fragment() {
                     .load(imageUrl)
                     .placeholder(R.drawable.img_profile_default)
                     .error(R.drawable.img_profile_default)
-                    .transform(CenterCrop(), RoundedCorners(dpToPx(60)))
+                    .transform(CenterCrop(), RoundedCorners(dpToPx(45)))
                     .into(binding.mypEditProfileIv)
 
                 validateAllFields() // 데이터가 채워진 후 버튼 상태 업데이트
@@ -118,6 +119,49 @@ class MypProfileEditFragment : Fragment() {
 
     private fun initListeners() {
         binding.mypEditBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
+
+        binding.mypEditNumEt.addTextChangedListener(object : TextWatcher {
+            private var isFormatting = false
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (isFormatting) return
+                isFormatting = true
+
+                // 1. 숫자만 남기기
+                val digits = s.toString().replace(Regex("\\D"), "")
+                val formatted = StringBuilder()
+
+                // 2. 길이에 따라 하이픈 위치 조정 (10자리 or 11자리 대응)
+                if (digits.length == 10) {
+                    // 예: 010-123-4567
+                    formatted.append(digits.substring(0, 3)).append("-")
+                    formatted.append(digits.substring(3, 6)).append("-")
+                    formatted.append(digits.substring(6))
+                } else if (digits.length > 3) {
+                    // 예: 010-1234-5678 (입력 중 포함)
+                    formatted.append(digits.substring(0, 3)).append("-")
+                    if (digits.length > 7) {
+                        formatted.append(digits.substring(3, 7)).append("-")
+                        formatted.append(digits.substring(7, minOf(digits.length, 11)))
+                    } else {
+                        formatted.append(digits.substring(3))
+                    }
+                } else {
+                    formatted.append(digits)
+                }
+
+                // 3. 텍스트가 변경되었을 때만 갱신 (무한루프 방지)
+                if (s.toString() != formatted.toString()) {
+                    binding.mypEditNumEt.setText(formatted.toString())
+                    // 커서를 항상 텍스트 맨 끝으로 이동
+                    binding.mypEditNumEt.setSelection(formatted.length)
+                }
+
+                isFormatting = false
+            }
+        })
 
         // 모든 입력 필드 변화를 감지하기 위한 공통 와처
         val commonWatcher = object : TextWatcher {
@@ -265,17 +309,24 @@ class MypProfileEditFragment : Fragment() {
     }
 
     private fun showImagePickerOption() {
-        val dialogView = LayoutInflater.from(context).inflate(R.layout.fragment_host_photo_selection_dialog, null)
-        val dialog = AlertDialog.Builder(context).setView(dialogView).setCancelable(true).create()
+        // 1. AlertDialog 대신 일반 Dialog 객체를 생성합니다.
+        val dialog = Dialog(requireContext())
+        dialog.setContentView(R.layout.fragment_host_photo_selection_dialog)
+        dialog.setCancelable(true)
+
+        // 2. 다이얼로그 기본 배경을 투명하게 날려줍니다. (커스텀 둥근 모서리 적용을 위해)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        // 3. show()를 먼저 호출한 뒤에 사이즈를 WRAP_CONTENT로 꽉 맞게 세팅합니다.
         dialog.show()
         dialog.window?.setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 
-        dialogView.findViewById<ConstraintLayout>(R.id.layout_pick_photo).setOnClickListener {
+        // 4. 클릭 리스너 연결 (dialogView 대신 dialog 안에서 바로 findViewById로 찾습니다)
+        dialog.findViewById<ConstraintLayout>(R.id.layout_pick_photo).setOnClickListener {
             dialog.dismiss()
             pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
-        dialogView.findViewById<ConstraintLayout>(R.id.layout_take_camera).setOnClickListener {
+        dialog.findViewById<ConstraintLayout>(R.id.layout_take_camera).setOnClickListener {
             dialog.dismiss()
             cameraUri = createImageUri()
             if (cameraUri != null) takePicture.launch(cameraUri)
@@ -284,7 +335,7 @@ class MypProfileEditFragment : Fragment() {
 
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess ->
         if (isSuccess && cameraUri != null) {
-            Glide.with(this).load(cameraUri).transform(CenterCrop(), RoundedCorners(dpToPx(25))).into(binding.mypEditProfileIv)
+            Glide.with(this).load(cameraUri).transform(CenterCrop(), RoundedCorners(dpToPx(45))).into(binding.mypEditProfileIv)
             selectedImageFile = File(requireContext().cacheDir, "camera/temp_profile.jpg")
         }
     }
@@ -302,7 +353,7 @@ class MypProfileEditFragment : Fragment() {
 
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            Glide.with(this).load(uri).transform(CenterCrop(), RoundedCorners(dpToPx(25))).into(binding.mypEditProfileIv)
+            Glide.with(this).load(uri).transform(CenterCrop(), RoundedCorners(dpToPx(45))).into(binding.mypEditProfileIv)
             selectedImageFile = uriToFile(uri)
         }
     }

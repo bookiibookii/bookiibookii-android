@@ -33,6 +33,7 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
 import android.graphics.drawable.Drawable
+import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
@@ -92,16 +93,26 @@ class MypageFragment : Fragment() {
     }
 
     private fun setupRecyclerViews() {
-        binding.mypReviewsRv.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        // ★ [수정됨] 세로 스크롤, 가로 2열 그리드로 변경
+        binding.mypReviewsRv.layoutManager = GridLayoutManager(context, 2)
+
         binding.mypGroupsRv.layoutManager = LinearLayoutManager(context)
         binding.mypGroupsRv.isNestedScrollingEnabled = false
         binding.rvBooks.layoutManager = LinearLayoutManager(context)
         binding.rvBooks.isNestedScrollingEnabled = false
     }
 
-    // ★ [수정됨] 제공된 이미지 규칙에 맞게 매핑 로직 추가
     private fun translateBadge(englishText: String): String {
         return when (englishText.uppercase()) {
+            "KINDNESS" -> "친절하고 매너가 좋아요"
+            "GOOD_HANDWRITING" -> "글씨가 예뻐요"
+            "SWEET_COMMENT" -> "코멘트가 다정해요"
+            "INSIGHTFUL" -> "책에 대한 인사이트가 넘쳐요"
+            "FAST_SHIPPING" -> "책을 빠르게 보내줬어요"
+            "FUNNY" -> "코멘트가 재미있어요"
+            "CLEAN_CONDITION" -> "책을 깨끗하고 깔끔하게 읽어요"
+
+            // 기존 방어 코드 (위 목록에 없는 예전 데이터가 올 경우를 대비)
             "MEMO" -> "메모환영"
             "POSTIT" -> "포스트잇"
             "CLEAN" -> "깔끔"
@@ -178,7 +189,7 @@ class MypageFragment : Fragment() {
         }
 
         // ★ [핵심] 획득한 후기(뱃지) 리스트도 한글로 변환
-        val badgeList = data.userBadge?.map {
+        val badgeList = data.userBadges?.map {
             MypReview(content = translateBadge(it.userBadge), count = it.count)
         } ?: emptyList()
         binding.mypReviewsRv.adapter = MypReviewAdapter(badgeList)
@@ -249,4 +260,5 @@ class MypageFragment : Fragment() {
         _binding = null
         _profileBinding = null
     }
+
 }

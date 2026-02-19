@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.trkDirectGuest
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestAppointmentEditBottomDialogBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -78,7 +80,12 @@ class DirectGuestAppointmentEditBottomDialogFragment : BottomSheetDialogFragment
         }
 
         binding.btnGoComment.setOnClickListener {
-            // TODO: 댓글/채팅 화면 이동
+            val intent = Intent(requireContext(), GroupDetailActivity::class.java).apply {
+                putExtra("GROUP_ID", groupId)
+                putExtra("GROUP_TYPE", "RELAY")
+            }
+            startActivity(intent)
+            dismiss()
         }
     }
 

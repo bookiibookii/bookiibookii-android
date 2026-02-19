@@ -63,6 +63,8 @@ class GroupGenerationActivity : AppCompatActivity() {
     private var previousCheckedIds: List<Int> = emptyList()
     private var isCustomTagSelected = false
 
+    private var selectedBookTitle: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGrpGenerationBinding.inflate(layoutInflater)
@@ -173,11 +175,7 @@ class GroupGenerationActivity : AppCompatActivity() {
                         if (hasRegion) binding.actGrpGenRegionEt.setText(data.region)
                         if (hasPlace) binding.actGrpGenPlaceEt.setText(data.meetPlace)
 
-                        // ★ [핵심 수정] 데이터가 하나라도 있으면 '직거래' 모드로 상태 변경 및 UI 갱신!
                         if (hasRegion || hasPlace) {
-                            // 이 함수가 selectedTradeType = "DIRECT" 로 설정하고,
-                            // UI(버튼 색상, 인풋창 보이기)를 업데이트하며,
-                            // 마지막에 checkInputs()까지 호출해줍니다.
                             setTradeType("DIRECT")
                         } else {
                             // 데이터가 없으면 그냥 유효성 검사만 한번 수행
@@ -280,13 +278,97 @@ class GroupGenerationActivity : AppCompatActivity() {
 
             // 실행 버튼
             actGrpGenRunBtn.setOnClickListener {
-                if (!it.isEnabled) {
-                    if (binding.actGrpGenChipGroup.checkedChipIds.isEmpty()) {
-                    showCustomToast("기본 태그를 최소 1개 이상 선택해주세요.",false)
-                }
+                val durationText = binding.actGrpGenBookLimitBar.text.toString().trim()
+                val duration = durationText.toIntOrNull() ?: 0
+                val comment = binding.actGrpGenIntroduceBar.text.toString().trim()
+                val checkedTagIds = binding.actGrpGenChipGroup.checkedChipIds
+
+                // [1] 수정 모드 (Edit Mode) 검증
+                if (isEditMode) {
+                    if (selectedDate.isNullOrEmpty()) {
+                        showCustomToast("시작 날짜를 선택해주세요.", false)
+                        return@setOnClickListener
+                    }
+                    if (durationText.isEmpty() || duration < 3 || duration > 30) {
+                        showCustomToast("기간은 3일에서 30일 사이로 입력해주세요.", false)
+                        return@setOnClickListener
+                    }
+                    if (checkedTagIds.isEmpty()) {
+                        showCustomToast("독서 태그를 최소 1개 이상 선택해주세요.", false)
+                        return@setOnClickListener
+                    }
+                    if (comment.length < 10) {
+                        showCustomToast("그룹 소개는 최소 10자 이상 입력해주세요.", false)
+                        return@setOnClickListener
+                    }
+
+                    modifyGroupApi()
                     return@setOnClickListener
                 }
-                if (isEditMode) modifyGroupApi() else createGroupApi()
+
+                // [2] 생성 모드 (Create Mode) 검증 - 공통 선행 조건 (도서 검색)
+                if (selectedIsbn.isEmpty()) {
+                    showCustomToast("먼저 읽을 책을 검색하여 선택해주세요.", false)
+                    return@setOnClickListener
+                }
+                
+                // [3] 모드별 상세 검증 (이어읽기 vs 함께읽기)
+
+                if (groupType == "RELAY") {
+                    // 이어읽기(RELAY) 순서: 책 소유 -> 교환방법 -> 시작날짜 -> 기간 -> 태그 -> 소개
+                    if (selectedBookHave == null) {
+                        showCustomToast("책 소유 여부를 선택해주세요.", false)
+                        return@setOnClickListener
+                    }
+                    if (selectedTradeType == null) {
+                        showCustomToast("교환 방식을 선택해주세요.", false)
+                        return@setOnClickListener
+                    }
+                    if (selectedTradeType == "DIRECT") {
+                        if (binding.actGrpGenRegionEt.text.toString().trim().isEmpty() ||
+                            binding.actGrpGenPlaceEt.text.toString().trim().isEmpty()) {
+                            showCustomToast("직접 교환할 지역과 장소를 입력해주세요.", false)
+                            return@setOnClickListener
+                        }
+                    }
+                    if (selectedDate.isNullOrEmpty()) {
+                        showCustomToast("시작 날짜를 선택해주세요.", false)
+                        return@setOnClickListener
+                    }
+                    if (durationText.isEmpty() || duration < 3 || duration > 30) {
+                        showCustomToast("기간은 3일에서 30일 사이로 입력해주세요.", false)
+                        return@setOnClickListener
+                    }
+                } else {
+                    // 함께읽기(TOGETHER) 순서: 시작날짜 -> 기간 -> 최대인원 -> 태그 -> 소개
+                    if (selectedDate.isNullOrEmpty()) {
+                        showCustomToast("시작 날짜를 선택해주세요.", false)
+                        return@setOnClickListener
+                    }
+                    if (durationText.isEmpty() || duration < 3 || duration > 30) {
+                        showCustomToast("기간은 3일에서 30일 사이로 입력해주세요.", false)
+                        return@setOnClickListener
+                    }
+                    val capacityText = binding.actGrpGenMemberCountEt.text.toString().trim()
+                    val capacity = capacityText.toIntOrNull() ?: 0
+                    if (capacityText.isEmpty() || capacity < 2 || capacity > 8) {
+                        showCustomToast("모집 인원은 2명에서 8명 사이로 설정해주세요.", false)
+                        return@setOnClickListener
+                    }
+                }
+
+                // [공통 후행 조건] 태그 & 소개글
+                if (checkedTagIds.isEmpty()) {
+                    showCustomToast("독서 태그를 최소 1개 이상 선택해주세요.", false)
+                    return@setOnClickListener
+                }
+                if (comment.length < 10) {
+                    showCustomToast("그룹 소개는 최소 10자 이상 입력해주세요.", false)
+                    return@setOnClickListener
+                }
+
+                // 모든 검증 통과 시 생성 API 호출
+                createGroupApi()
             }
         }
     }
@@ -299,6 +381,7 @@ class GroupGenerationActivity : AppCompatActivity() {
 
             selectedIsbn = bookItem.isbn13
             selectedBookLink = bookItem.link
+            selectedBookTitle = bookItem.title
 
             binding.actGrpGenBookSearchRv.visibility = View.GONE
             hideKeyboard(binding.actGrpGenBookSearchBar)
@@ -338,8 +421,6 @@ class GroupGenerationActivity : AppCompatActivity() {
         )
 
         binding.actGrpGenChipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
-            // [수정] 3개 제한 로직 삭제
-            // 이제 개수 제한 없이 선택 가능 (필요하다면 여기서 5개 등으로 조절 가능)
             previousCheckedIds = checkedIds
             checkInputs() // 상태가 바뀔 때마다 유효성 검사
         }
@@ -608,7 +689,8 @@ class GroupGenerationActivity : AppCompatActivity() {
     }
 
     private fun updateRunButtonState(isEnabled: Boolean) {
-        binding.actGrpGenRunBtn.isEnabled = isEnabled
+        //binding.actGrpGenRunBtn.isEnabled = isEnabled
+
         if (isEnabled) {
             binding.actGrpGenRunBtn.backgroundTintList = ContextCompat.getColorStateList(this, R.color.grey_900)
             binding.actGrpGenRunBtn.setTextColor(ContextCompat.getColor(this, R.color.white))
@@ -622,7 +704,7 @@ class GroupGenerationActivity : AppCompatActivity() {
         CommonDialog(
             context = this,
             title = "책을 먼저 구매하시겠습니까?",
-            subtitle = "선택하신 도서",
+            subtitle = if (selectedBookTitle.isNotEmpty()) selectedBookTitle else "선택하신 도서",
             content = "실물 책이 필요합니다.\n구매페이지로 이동할까요?",
             confirmBtnText = "구매하러 가기",
             confirmBtnColor = R.color.grey_900,

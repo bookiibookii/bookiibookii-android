@@ -46,7 +46,6 @@
             android:id="@+id/myp_setting_back_iv"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="16dp"
             android:src="@drawable/ic_back"
             app:layout_constraintStart_toStartOf="@id/guideline_start_inner"
             app:layout_constraintTop_toTopOf="parent"
@@ -92,7 +91,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_round_20dp_white"
                 android:paddingVertical="16dp"
-                android:paddingHorizontal="12dp">
+                android:paddingHorizontal="16dp">
 
                 <ImageView
                     android:id="@+id/myp_set_bell_iv"
@@ -100,7 +99,8 @@
                     android:layout_height="40dp"
                     android:src="@drawable/ic_bell"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
 
                 <TextView
                     android:id="@+id/myp_set_push_tv"
@@ -148,7 +148,6 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_round_20dp_white"
                 android:orientation="vertical">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -157,6 +156,7 @@
                     android:layout_height="wrap_content"
                     android:paddingVertical="16dp"
                     android:paddingHorizontal="12dp"
+                    android:background="@drawable/bg_round_20dp_white"
                     android:layout_marginBottom="12dp">
                     <ImageView
                         android:id="@+id/myp_set_notice_iv"
@@ -165,6 +165,7 @@
                         android:src="@drawable/ic_bell"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBaseline_toBottomOf="parent"
                         app:layout_constraintBottom_toBottomOf="parent"/>
 
                     <TextView
@@ -201,8 +202,10 @@
                     android:id="@+id/layout_question"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/bg_round_20dp_white"
                     android:paddingVertical="16dp"
                     android:paddingHorizontal="12dp"
+                    android:layout_marginTop="12dp"
                     android:layout_marginBottom="12dp">
                     <ImageView
                         android:id="@+id/myp_set_question_iv"
@@ -211,6 +214,7 @@
                         android:src="@drawable/ic_question"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBaseline_toBottomOf="parent"
                         app:layout_constraintBottom_toBottomOf="parent"/>
 
                     <TextView
@@ -247,6 +251,8 @@
                     android:id="@+id/layout_report"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/bg_round_20dp_white"
+                    android:layout_marginTop="12dp"
                     android:paddingVertical="16dp"
                     android:paddingHorizontal="12dp">
                     <ImageView
@@ -256,6 +262,7 @@
                         android:src="@drawable/ic_notice"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBaseline_toBottomOf="parent"
                         app:layout_constraintBottom_toBottomOf="parent"/>
 
                     <TextView
@@ -372,6 +379,7 @@
                 android:background="@drawable/bg_round_20dp_white"
                 android:paddingVertical="16dp"
                 android:paddingHorizontal="12dp"
+                android:layout_marginBottom="100dp"
                 android:text="v1.0.0"
                 android:textAppearance="@style/regular15"
                 android:textColor="@color/grey_600"/>

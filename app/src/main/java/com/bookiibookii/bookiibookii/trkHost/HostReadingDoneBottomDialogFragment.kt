@@ -1,9 +1,11 @@
 package com.bookiibookii.bookiibookii.trkHost
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentHostReadingDoneBottomDialogBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -30,13 +32,12 @@ class HostReadingDoneBottomDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnGoCard.setOnClickListener{
-            parentFragmentManager.setFragmentResult(
-                HostReadingDoneBottomDialogFragment.RESULT_KEY,
-                Bundle().apply {
-                    putString(HostReadingDoneBottomDialogFragment.BUNDLE_ACTION, "GUEST_SHIPPED")
-                }
-            )
-
+            val intent = Intent(requireContext(), MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("NAV_ACTION", "OPEN_LIBRARY_DETAIL")
+                putExtra("target_group_id", groupId)
+            }
+            startActivity(intent)
             dismiss()
         }
     }

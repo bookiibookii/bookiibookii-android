@@ -12,20 +12,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.08" />
+        app:layout_constraintGuide_percent="0.06" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_end"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.92" />
+        app:layout_constraintGuide_percent="0.94" />
 
     <!-- 상단 배경 영역 -->
     <LinearLayout
         android:id="@+id/lib_top_layout"
         android:layout_width="match_parent"
-        android:layout_height="73dp"
+        android:layout_height="0dp"
+        app:layout_constraintHeight_percent="0.11"
         android:orientation="vertical"
         android:background="@color/white"
         app:layout_constraintTop_toTopOf="parent">
@@ -41,14 +42,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.08" />
+                app:layout_constraintGuide_percent="0.06" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline_end_inner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.92" />
+                app:layout_constraintGuide_percent="0.94" />
 
             <TextView
                 android:id="@+id/lib_title_tv"
@@ -98,8 +99,10 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:elevation="0dp"
             android:text="진행 중"
             android:textAppearance="@style/medium14"
+            android:stateListAnimator="@null"
             android:textColor="@color/white"
             android:background="@drawable/bg_toggle_black10" />
 
@@ -109,8 +112,10 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginStart="12dp"
+            android:elevation="0dp"
             android:text="종료"
             android:textAppearance="@style/regular14"
+            android:stateListAnimator="@null"
             android:textColor="@color/grey_900"
             android:background="@drawable/bg_toggle_white10" />
     </LinearLayout>
@@ -167,39 +172,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/myp_no_book_cl"
+    <include
+        android:id="@+id/layout_empty_group"
+        layout="@layout/item_trk_create_group_footer"
         android:layout_width="0dp"
-        android:layout_height="120dp"
-        android:background="@drawable/bg_round_24dp_white"
+        android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:padding="24dp"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/lib_btns_ll"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintEnd_toEndOf="@id/guideline_end">
-        <TextView
-            android:id="@+id/myp_no_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="아직 진행 중인 독서가 없어요"
-            android:gravity="center_horizontal"
-            android:textAppearance="@style/medium16"
-            android:textColor="@color/grey_900"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="그룹에 참여해 독서해 보아요!"
-            android:gravity="center_horizontal"
-            android:textAppearance="@style/regular14"
-            android:textColor="@color/grey_600"
-            android:layout_marginTop="8dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/myp_no_text"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintEnd_toEndOf="@id/guideline_end" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

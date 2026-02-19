@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityDirectGuestBinding
+import com.bookiibookii.bookiibookii.trkGuest.GuestGroupManageBottomDialogFragment
 import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
@@ -41,6 +42,13 @@ class DirectGuestActivity : AppCompatActivity() {
         if (groupId <= 0) {
             finish()
             return
+        }
+
+        binding.btnMore.setOnClickListener {
+            GuestGroupManageBottomDialogFragment.newInstance(groupId).show(
+                supportFragmentManager,
+                GuestGroupManageBottomDialogFragment.TAG
+            )
         }
 
         binding.btnBack.setOnClickListener { finish() }
@@ -73,7 +81,6 @@ class DirectGuestActivity : AppCompatActivity() {
                             }
 
                             is UiState.Error -> {
-                                showOrReplaceBottomSheetByStatus(groupId, null, null)
                             }
                         }
                     }
@@ -179,7 +186,7 @@ class DirectGuestActivity : AppCompatActivity() {
 
             "COMPLETED" -> null
 
-            else -> DirectGuestStartBottomDialogFragment.newInstance(groupId)
+            else -> null
         }
     }
 

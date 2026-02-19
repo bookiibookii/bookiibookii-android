@@ -20,7 +20,7 @@ data class MypageResult(
     val completeBook: Int,         // 완독 수
     val relayGroup: Int,
     val togetherGroup: Int,
-    val userBadge: List<UserBadge>?,
+    val userBadges: List<UserBadge>?,
     val groups: List<MypageGroup>?, // 주최한 그룹 (null 가능성 대비)
     val books: List<MypageBook>?,   // 최근 읽은 책 (null 가능성 대비)
 

@@ -11,7 +11,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.CommonDialog
@@ -20,6 +19,7 @@ import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailBinding
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity
+import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
@@ -167,6 +167,8 @@ class LibraryBookDetailFragment : Fragment() {
     private fun fetchData() {
         if (groupId == -1) return
         lifecycleScope.launch {
+            if (!isAdded) return@launch
+
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getGroupCards(groupId)
@@ -257,7 +259,7 @@ class LibraryBookDetailFragment : Fragment() {
 
     private fun initListeners() {
         binding.libDetailBackIv.setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+            requireActivity().supportFragmentManager.popBackStack()
         }
 
         binding.libDetailMoreIv.setOnClickListener {
@@ -274,8 +276,8 @@ class LibraryBookDetailFragment : Fragment() {
             ).show(requireActivity().supportFragmentManager, "GroupDeleteSheet")
         }
 
-        binding.libDetailLatelyTv.setOnClickListener { cardAdapter.submitList(originalList.sortedByDescending { it.createdAt }) }
-        binding.libDetailPageTv.setOnClickListener { cardAdapter.submitList(originalList.sortedBy { it.page }) }
+        binding.libDetailLatelyTv.setOnClickListener { sortCards(isLately = true) }
+        binding.libDetailPageTv.setOnClickListener { sortCards(isLately = false) }
 
         val goAdd = View.OnClickListener {
             val fragment = LibraryAddCardFragment().apply { arguments = Bundle().apply { putInt("userBookId", userBookId) } }
@@ -283,6 +285,28 @@ class LibraryBookDetailFragment : Fragment() {
         }
         binding.libReviewAddBtn.setOnClickListener(goAdd)
         binding.libReviewNoAddBtn.setOnClickListener(goAdd)
+    }
+
+    private fun sortCards(isLately: Boolean) {
+        // 1. 리스트 정렬
+        if (isLately) {
+            cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
+        } else {
+            cardAdapter.submitList(originalList.sortedBy { it.page })
+        }
+
+        // 2. 글자 색상 변경 로직
+        val context = requireContext()
+        val activeColor = androidx.core.content.ContextCompat.getColor(context, R.color.pre_main)
+        val inactiveColor = androidx.core.content.ContextCompat.getColor(context, R.color.grey_500)
+
+        if (isLately) {
+            binding.libDetailLatelyTv.setTextColor(activeColor)
+            binding.libDetailPageTv.setTextColor(inactiveColor)
+        } else {
+            binding.libDetailLatelyTv.setTextColor(inactiveColor)
+            binding.libDetailPageTv.setTextColor(activeColor)
+        }
     }
 
     private fun showDeleteConfirmDialog() {

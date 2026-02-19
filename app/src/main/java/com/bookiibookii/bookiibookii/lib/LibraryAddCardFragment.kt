@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,11 +12,13 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
 import com.bookiibookii.bookiibookii.data.model.UpdateCardRequest
@@ -35,7 +36,7 @@ class LibraryAddCardFragment : Fragment() {
     private var _binding: FragmentLibAddCardBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 다이얼로그 선언
+    private lateinit var loadingDialog: LoadingDialog
 
     // 데이터 변수
     private var isEditMode = false
@@ -87,11 +88,22 @@ class LibraryAddCardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 다이얼로그 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
         initView()
         initListeners()
         setupFragmentResultListener()
+
+        // ★ [수정됨] 키보드(IME) 높이를 무시하도록 변경
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBarHeight = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+
+            // 기존 코드: val bottomPadding = if (imeHeight > 0) imeHeight else systemBarHeight
+            // 수정 코드: 키보드가 올라오더라도 패딩을 늘리지 않고, 시스템 바 높이만 유지합니다.
+            v.setPadding(0, 0, 0, systemBarHeight)
+
+            insets
+        }
     }
 
     private fun initView() {
@@ -143,7 +155,7 @@ class LibraryAddCardFragment : Fragment() {
         binding.libAddBtn.isEnabled = false
 
         lifecycleScope.launch {
-            loadingDialog.show() // ★ API 호출 전 로딩 시작
+            loadingDialog.show()
             try {
                 // [수정 모드]
                 if (isEditMode) {
@@ -222,7 +234,7 @@ class LibraryAddCardFragment : Fragment() {
                 Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
                 binding.libAddBtn.isEnabled = true
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 종료 시 로딩 해제
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }

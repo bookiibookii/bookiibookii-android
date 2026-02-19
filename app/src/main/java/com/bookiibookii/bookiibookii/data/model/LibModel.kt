@@ -45,7 +45,7 @@ data class LibBook(
     val rating: Double,
     val groupType: String, // ★ 추가됨: 프래그먼트 분기 처리를 위해 필요
     val groupState : String,
-    val isMine: Boolean
+    var isMine: Boolean
 )
 
 enum class ReadStatus { READING, DONE }

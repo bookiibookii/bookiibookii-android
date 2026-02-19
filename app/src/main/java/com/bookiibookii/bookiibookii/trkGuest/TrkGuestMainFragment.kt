@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.databinding.FragmentTrkGuestMainBinding
 import com.bookiibookii.bookiibookii.trkDirectGuest.DirectGuestActivity
 import com.bookiibookii.bookiibookii.trkHost.CreateGroupFooterAdapter
@@ -47,23 +48,34 @@ class TrkGuestMainFragment : Fragment() {
         updateTabState(isMyGroup = false)
 
         trackerAdapter = TrackerAdapter { item ->
-            val target = when (item.exchangeType) {
-                ExchangeType.DELIVERY -> GuestActivity::class.java
-                ExchangeType.DIRECT -> DirectGuestActivity::class.java
-                ExchangeType.NONE -> TODO()
-            }
+            when (item.exchangeType) {
 
-            val intent = Intent(requireContext(), target).apply {
-                putExtra("group_id", item.groupId)
-            }
+                ExchangeType.DELIVERY -> {
+                    startActivity(Intent(requireContext(), GuestActivity::class.java).apply {
+                        putExtra("group_id", item.groupId)
+                    })
+                }
 
-            startActivity(intent)
+                ExchangeType.DIRECT -> {
+                    startActivity(Intent(requireContext(), DirectGuestActivity::class.java).apply {
+                        putExtra("group_id", item.groupId)
+                    })
+                }
+
+                ExchangeType.NONE -> {
+                    startActivity(Intent(requireContext(), MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        putExtra("NAV_ACTION", "OPEN_LIBRARY_ING")
+                        putExtra("target_group_id", item.groupId)
+                    })
+                }
+            }
         }
 
         footerAdapter = CreateGroupFooterAdapter(
             mode = FooterMode.GUEST_JOIN,
             onActionClick = {
-                // TODO: 그룹 참여 화면 이동
+                (requireActivity() as? MainActivity)?.moveToGroupTab()
             }
         )
 
@@ -80,6 +92,8 @@ class TrkGuestMainFragment : Fragment() {
                 vm.trackers.collect { list ->
                     trackerAdapter.submitList(list) {
                         footerAdapter.setShowEmptyText(trackerAdapter.itemCount == 0)
+
+                        binding.trkRecyclerview.scrollToPosition(0)
                     }
                 }
             }

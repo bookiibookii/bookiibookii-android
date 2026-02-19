@@ -17,15 +17,18 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
 
     inner class ViewHolder(val binding: ItemMypGroupsBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: MypageGroup) {
+            val context = itemView.context
+
             // 1. 책 제목
             binding.itemMypGroupBookTitle.text = item.bookTitle
 
-            // 2. 작가 및 장르 (예: 소설 | 스즈키 유이)
-            binding.itemMypGroupBookAuthor.text = "${item.auth} (${item.GENRE})"
+            // 2. 작가 및 장르 (예: 스즈키 유이 (소설/장르))
+            // ★ 장르 한글 변환 적용
+            val translatedGenre = translateGenre(item.GENRE)
+            binding.itemMypGroupBookAuthor.text = "${item.auth} ($translatedGenre)"
 
             // 3. 그룹 상태 배지 (모집 중 vs 모집 완료) 색상 처리
             val isRecruiting = item.group_status == "RECRUITING" || item.group_status == "모집 중"
-            val context = itemView.context
 
             if (isRecruiting) {
                 // 모집 중: 배경 pre_main / 글자 white
@@ -76,6 +79,23 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
                     layoutParams = params
                 }
                 binding.itemMypGroupTagsLl.addView(textView)
+            }
+        }
+
+        // ★ 장르 한글 번역 함수 추가
+        private fun translateGenre(englishGenre: String): String {
+            return when (englishGenre.uppercase()) {
+                "ECON_BIZ" -> "경제/경영"
+                "SCI_IT" -> "과학/IT"
+                "NOVEL_GENRE" -> "소설/장르"
+                "POEM_ESSAY" -> "시/에세이"
+                "HOME_HOBBY" -> "가정/취미"
+                "ART_CULTURE" -> "예술/문화"
+                "HUMAN_HISTORY" -> "인문/역사"
+                "SELF_DEV" -> "자기계발"
+                "POL_SOC" -> "정치/사회"
+                "ESC" -> "기타"
+                else -> englishGenre // 매핑되는 단어가 없으면 원래 데이터 그대로 출력
             }
         }
 
