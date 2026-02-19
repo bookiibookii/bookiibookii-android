@@ -88,7 +88,7 @@ class MypMyReviewFragment : Fragment() {
         }
         reviewAdapter.submitList(sortedList)
 
-        val activeColor = ContextCompat.getColor(requireContext(), R.color.grey_700)
+        val activeColor = ContextCompat.getColor(requireContext(), R.color.pre_main)
         val inactiveColor = ContextCompat.getColor(requireContext(), R.color.grey_500)
 
         if (isNewest) {

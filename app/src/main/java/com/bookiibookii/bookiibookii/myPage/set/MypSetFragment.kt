@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypSetBinding
 import com.bookiibookii.bookiibookii.myPage.Notice.MypNoticeFragment
@@ -83,8 +84,31 @@ class MypSetFragment : Fragment() {
         // 5. 개인정보 처리방침 이동
         binding.mypInformationTv.setOnClickListener { navigateTo(MypInformationFragment()) }
 
-        binding.mypSetLogoutTv.setOnClickListener { performLogout() }
-        binding.mypSetQuitTv.setOnClickListener { performWithdraw() }
+        // ★ 로그아웃 다이얼로그 연동
+        binding.mypSetLogoutTv.setOnClickListener {
+            CommonDialog(
+                context = requireContext(),
+                title = "로그아웃",
+                subtitle = "",
+                content = "로그아웃 하시겠습니까?",
+                confirmBtnText = "로그아웃",
+                confirmBtnColor = R.color.ui_point_red, // 앱에서 사용하는 빨간색 리소스
+                onConfirmClick = { performLogout() }
+            ).show()
+        }
+
+        // ★ 회원탈퇴 다이얼로그 연동
+        binding.mypSetQuitTv.setOnClickListener {
+            CommonDialog(
+                context = requireContext(),
+                title = "회원탈퇴",
+                subtitle = "",
+                content = "회원탈퇴 시 되돌릴 수 없습니다.\n그래도 하시겠습니까?",
+                confirmBtnText = "회원탈퇴",
+                confirmBtnColor = R.color.ui_point_red, // 앱에서 사용하는 빨간색 리소스
+                onConfirmClick = { performWithdraw() }
+            ).show()
+        }
     }
 
     private fun initPushToggle() {
