@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.trkDirectGuest
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectGuestAppointmentStatusBottomDialogBinding
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -72,7 +74,12 @@ class DirectGuestAppointmentStatusBottomDialogFragment : BottomSheetDialogFragme
         }
 
         binding.btnGoChat.setOnClickListener {
-
+            val intent = Intent(requireContext(), GroupDetailActivity::class.java).apply {
+                putExtra("GROUP_ID", groupId)
+                putExtra("GROUP_TYPE", "RELAY")
+            }
+            startActivity(intent)
+            dismiss()
         }
     }
 

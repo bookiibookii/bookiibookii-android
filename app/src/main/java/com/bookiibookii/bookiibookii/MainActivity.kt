@@ -8,16 +8,22 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.group.main.GroupFragment
 import com.bookiibookii.bookiibookii.home.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.home.OtherProfileFragment
+import com.bookiibookii.bookiibookii.lib.LibraryAddCardFragment
+import com.bookiibookii.bookiibookii.lib.LibraryBookDetailFragment
+import com.bookiibookii.bookiibookii.lib.LibraryBookDetailIngFragment
 import com.bookiibookii.bookiibookii.lib.LibraryBookDetailRelayWriteFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
 import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private enum class NavTab { HOME, GROUP, TRACKER, LIBRARY, MY }
@@ -56,37 +62,201 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleNavigationIntent(intent: Intent?) {
-        if (intent?.getStringExtra("NAV_ACTION") == "OPEN_RELAY_WRITE") {
-            val groupId = intent.getLongExtra("target_group_id", -1L)
-            val userBookId = intent.getIntExtra("target_user_book_id", -1)
+        when (intent?.getStringExtra("NAV_ACTION")) {
+            "OPEN_RELAY_WRITE" -> {
+                val groupId = intent.getLongExtra("target_group_id", -1L)
+                val userBookId = intent.getIntExtra("target_user_book_id", -1)
+                if (groupId != -1L && userBookId != -1) {
+                    moveToRelayWriteFragment(groupId, userBookId)
+                }
+            }
 
-            if (groupId != -1L && userBookId != -1) {
-                moveToRelayWriteFragment(groupId, userBookId)
+            "OPEN_LIBRARY_ING" -> {
+                val groupId = intent.getLongExtra("target_group_id", -1L)
+                if (groupId != -1L) {
+                    moveToLibraryIngFragment(groupId)
+                }
+            }
+
+            "OPEN_ADD_CARD" -> {
+                val groupId = intent.getLongExtra("target_group_id", -1L)
+                if (groupId != -1L) {
+                    moveToLibraryAddCardFragment(groupId)
+                }
+            }
+
+            "OPEN_LIBRARY_DETAIL" -> {
+                val groupId = intent.getLongExtra("target_group_id", -1L)
+                if (groupId != -1L) {
+                    moveToLibraryDetailFragment(groupId)
+                }
+            }
+
+            "OPEN_MYP_REPORT" -> {
+                moveToMypReportFragment()
+            }
+        }
+    }
+
+    private fun moveToMypReportFragment() {
+        setBottomNavSelected(NavTab.MY)
+
+        val fragment = com.bookiibookii.bookiibookii.myPage.report.MypReportFragment()
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+
+        intent.removeExtra("NAV_ACTION")
+    }
+
+
+    private fun moveToLibraryDetailFragment(groupId: Long) {
+        setBottomNavSelected(NavTab.LIBRARY)
+
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.api().getLibraryBooks()
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val list = response.body()?.result ?: emptyList()
+
+                    val target = list.find { it.groupId.toLong() == groupId } ?: return@launch
+
+                    val fragment = LibraryBookDetailFragment().apply {
+                        arguments = Bundle().apply {
+                            putInt("groupId", target.groupId)
+                            putInt("userBookId", target.userBookId)
+
+                            putString("bookTitle", target.title)
+                            putString("bookAuthor", target.author)
+                            putString("bookCover", target.image ?: "")
+
+                            putString("hostName", target.hostNickName ?: "")
+                            putString("hostProfileUrl", target.hostProfileImageUrl ?: "")
+
+                            putString("startDate", target.startDate)
+                            putString("endDate", target.endDate ?: "")
+
+                            putDouble("rating", target.rating)
+                        }
+                    }
+
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, fragment)
+                        .addToBackStack(null)
+                        .commit()
+
+                    intent.removeExtra("NAV_ACTION")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun moveToLibraryAddCardFragment(groupId: Long) {
+        setBottomNavSelected(NavTab.LIBRARY)
+
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.api().getLibraryBooks()
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val list = response.body()?.result ?: emptyList()
+
+                    val target = list.find { it.groupId.toLong() == groupId }
+                    if (target == null) {
+                        return@launch
+                    }
+
+                    val fragment = LibraryAddCardFragment().apply {
+                        arguments = Bundle().apply {
+                            putBoolean("isEdit", false)
+                            putInt("userBookId", target.userBookId)
+                        }
+                    }
+
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, fragment)
+                        .addToBackStack(null)
+                        .commit()
+
+                    intent.removeExtra("NAV_ACTION")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
 
     private fun moveToRelayWriteFragment(groupId: Long, userBookId: Int) {
-        // 1. 바텀 네비게이션 상태를 Library로 변경 (선택 사항)
         setBottomNavSelected(NavTab.LIBRARY)
 
-        // 2. Fragment 생성 및 데이터 전달
         val fragment = LibraryBookDetailRelayWriteFragment().apply {
             arguments = Bundle().apply {
-                putInt("groupId", groupId.toInt()) // Fragment에서 Int로 받고 있다면 형변환 주의
+                putInt("groupId", groupId.toInt())
                 putInt("userBookId", userBookId)
             }
         }
 
-        // 3. Fragment 교체
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
-            .addToBackStack(null) // 뒤로가기 시 이전 화면으로
+            .addToBackStack(null)
             .commit()
 
-        // Intent 데이터 소비 처리 (중복 실행 방지용, 필요시)
         intent.removeExtra("NAV_ACTION")
     }
+
+    private fun moveToLibraryIngFragment(groupId: Long) {
+        setBottomNavSelected(NavTab.LIBRARY)
+
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.api().getLibraryBooks()
+
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    val list = response.body()?.result ?: emptyList()
+
+                    val target = list.find { it.groupId.toLong() == groupId }
+                    if (target == null) {
+                        return@launch
+                    }
+
+                    val fragment = LibraryBookDetailIngFragment().apply {
+                        arguments = Bundle().apply {
+                            putInt("userBookId", target.userBookId)
+                            putInt("groupId", target.groupId)
+
+                            putString("bookTitle", target.title)
+                            putString("bookAuthor", target.author)
+                            putString("bookCover", target.image ?: "")
+
+                            putString("hostName", target.hostNickName ?: "")
+                            putString("hostProfileUrl", target.hostProfileImageUrl ?: "")
+
+                            putString("startDate", target.startDate)
+                            putString("endDate", target.endDate ?: "")
+                        }
+                    }
+
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, fragment)
+                        .addToBackStack(null)
+                        .commit()
+
+                    intent.removeExtra("NAV_ACTION")
+
+                } else {
+
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
 
     private fun initBottomNav() {
 

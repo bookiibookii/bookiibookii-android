@@ -52,6 +52,13 @@ class HostActivity : AppCompatActivity() {
 
         binding.cardWidget.isEnabled = false
 
+        binding.btnMore.setOnClickListener {
+            HostGroupManageBottomDialogFragment.newInstance(groupId).show(
+                supportFragmentManager,
+                HostGroupManageBottomDialogFragment.TAG
+            )
+        }
+
         supportFragmentManager.setFragmentResultListener(
             HostStartBottomDialogFragment.RESULT_KEY,
             this
@@ -137,6 +144,9 @@ class HostActivity : AppCompatActivity() {
 
                     val title = dto.bookTitle?.trim().orEmpty()
                     binding.tvToolbarTitle.text = if (title.isBlank()) " " else title
+
+                    val nickname = dto.partnerNickname?.trim().orEmpty()
+                    binding.tvUserName.text = if (nickname.isBlank()) " " else nickname
 
                     binding.cardWidget.isEnabled = true
 

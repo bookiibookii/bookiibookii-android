@@ -75,7 +75,7 @@ class GroupAdapter(
         // 5. 책 표지 이미지 (Cover)
         Glide.with(context)
             .load(item.coverImgUrl)
-            .transform(CenterCrop(), RoundedCorners(30))
+            .transform(CenterCrop(), RoundedCorners(10))
             .placeholder(R.drawable.bg_round_10dp_gray300)
             .into(holder.ivCover)
 

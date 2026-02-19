@@ -110,7 +110,7 @@ class TrackerAdapter(
                 0 -> 0.1f
                 1 -> 1.0f / 3.0f
                 2 -> 2.0f / 3.0f
-                3 -> 1.0f
+                3 -> 0.88f
                 else -> 0.0f
             }
             setWidthPercent(viewProgressTrackActive, percent)
