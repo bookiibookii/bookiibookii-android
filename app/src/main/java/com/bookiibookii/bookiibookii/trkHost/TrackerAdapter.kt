@@ -99,6 +99,8 @@ class TrackerAdapter(
             val inactiveColor = ContextCompat.getColor(ctx, R.color.grey_400)
             val accentColor = ContextCompat.getColor(ctx, R.color.pre_main)
 
+            val currentDotColor = ContextCompat.getColor(ctx, R.color.white)
+
             tvDateStep1.text = formatStepDate(stepDates.getOrNull(0))
             tvDateStep2.text = formatStepDate(stepDates.getOrNull(1))
             tvDateStep3.text = formatStepDate(stepDates.getOrNull(2))
@@ -120,10 +122,10 @@ class TrackerAdapter(
             tvLabelStep3.setTextColor(if (idx == 2) accentColor else inactiveColor)
             tvLabelStep4.setTextColor(if (idx == 3) accentColor else inactiveColor)
 
-            setDot(dotStep1, dotColorForStep(0, idx, activeColor, accentColor, inactiveColor))
-            setDot(dotStep2, dotColorForStep(1, idx, activeColor, accentColor, inactiveColor))
-            setDot(dotStep3, dotColorForStep(2, idx, activeColor, accentColor, inactiveColor))
-            setDot(dotStep4, dotColorForStep(3, idx, activeColor, accentColor, inactiveColor))
+            setDot(dotStep1, dotColorForStep(0, idx, activeColor, currentDotColor, inactiveColor))
+            setDot(dotStep2, dotColorForStep(1, idx, activeColor, currentDotColor, inactiveColor))
+            setDot(dotStep3, dotColorForStep(2, idx, activeColor, currentDotColor, inactiveColor))
+            setDot(dotStep4, dotColorForStep(3, idx, activeColor, currentDotColor, inactiveColor))
 
             bindStepProfiles(hostProfileUrl, guestProfileUrl, idx)
         }

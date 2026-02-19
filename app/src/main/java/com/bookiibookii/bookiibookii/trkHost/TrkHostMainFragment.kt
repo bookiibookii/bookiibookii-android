@@ -72,7 +72,7 @@ class TrkHostMainFragment : Fragment() {
         footerAdapter = CreateGroupFooterAdapter(
             mode = FooterMode.HOST_CREATE,
             onActionClick = {
-
+                (requireActivity() as? MainActivity)?.moveToGroupTab()
             }
         )
 
@@ -119,6 +119,7 @@ class TrkHostMainFragment : Fragment() {
             }
             updateTabState(isMyGroup = false)
         }
+
     }
 
     private fun updateTabState(isMyGroup: Boolean) {
@@ -130,4 +131,5 @@ class TrkHostMainFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
 }

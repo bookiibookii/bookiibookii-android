@@ -74,7 +74,7 @@ class HostViewModel : ViewModel() {
 
     private val _confirmReceptionState =
         MutableStateFlow<UiState<TrackerDetailResponseDto>>(UiState.Idle)
-    val confirmReceptionState: StateFlow<UiState<TrackerDetailResponseDto>> = _confirmReceptionState
+    val confirmReceptionState: StateFlow<UiState<TrackerDetailResponseDto>> = _confirmReceptionState.asStateFlow()
 
     private val _receivedImageState =
         MutableStateFlow<UiState<TrackerCheckImageResponseDto>>(UiState.Idle)

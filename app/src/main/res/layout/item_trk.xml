@@ -285,7 +285,7 @@
             android:id="@+id/iv_step4_profile"
             android:layout_width="18dp"
             android:layout_height="18dp"
-            android:visibility="visible"
+            android:visibility="invisible"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toTopOf="@id/tv_label_step4"
             app:layout_constraintStart_toStartOf="@id/dot_step4"
