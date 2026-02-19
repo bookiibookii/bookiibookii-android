@@ -2,7 +2,7 @@
     <string name="app_name">BookiiBookii</string>
 
     <string name="splash_loading">로그인 중입니다...</string>
-    
+
     <!-- com error -->
     <string name="type_system_error_title">현재 서비스 이용이\n원활하지 않습니다.</string>
 

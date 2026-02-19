@@ -52,6 +52,13 @@ class HostActivity : AppCompatActivity() {
 
         binding.cardWidget.isEnabled = false
 
+        binding.btnMore.setOnClickListener {
+            HostGroupManageBottomDialogFragment.newInstance(groupId).show(
+                supportFragmentManager,
+                HostGroupManageBottomDialogFragment.TAG
+            )
+        }
+
         supportFragmentManager.setFragmentResultListener(
             HostStartBottomDialogFragment.RESULT_KEY,
             this
