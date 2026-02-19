@@ -86,7 +86,6 @@ class DirectHostActivity : AppCompatActivity() {
                             }
 
                             is UiState.Error -> {
-                                showOrReplaceBottomSheetByStatus(groupId, null, null)
                             }
                         }
                     }
@@ -193,7 +192,7 @@ class DirectHostActivity : AppCompatActivity() {
 
             "COMPLETED" -> null
 
-            else -> DirectHostStartBottomDialogFragment.newInstance(groupId)
+            else -> null
         }
     }
 

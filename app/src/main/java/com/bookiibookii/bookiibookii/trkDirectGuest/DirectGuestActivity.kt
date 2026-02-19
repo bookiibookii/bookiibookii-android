@@ -81,7 +81,6 @@ class DirectGuestActivity : AppCompatActivity() {
                             }
 
                             is UiState.Error -> {
-                                showOrReplaceBottomSheetByStatus(groupId, null, null)
                             }
                         }
                     }
@@ -187,7 +186,7 @@ class DirectGuestActivity : AppCompatActivity() {
 
             "COMPLETED" -> null
 
-            else -> DirectGuestStartBottomDialogFragment.newInstance(groupId)
+            else -> null
         }
     }
 

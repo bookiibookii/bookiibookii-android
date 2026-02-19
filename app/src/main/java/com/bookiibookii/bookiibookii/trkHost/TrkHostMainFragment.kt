@@ -89,6 +89,8 @@ class TrkHostMainFragment : Fragment() {
                 vm.trackers.collect { list ->
                     trackerAdapter.submitList(list) {
                         footerAdapter.setShowEmptyText(trackerAdapter.itemCount == 0)
+
+                        binding.trkRecyclerview.scrollToPosition(0)
                     }
                 }
             }
