@@ -42,10 +42,15 @@ class DirectHostActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { finish() }
 
         binding.btnMore.setOnClickListener {
-            HostGroupManageBottomDialogFragment.newInstance(groupId).show(
-                supportFragmentManager,
-                HostGroupManageBottomDialogFragment.TAG
-            )
+            val dto = (vm.trackerState.value as? UiState.Success)?.data
+                ?: return@setOnClickListener
+
+            HostGroupManageBottomDialogFragment
+                .newInstance(
+                    groupId = groupId,
+                    bookTitle = dto.bookTitle.orEmpty()
+                )
+                .show(supportFragmentManager, HostGroupManageBottomDialogFragment.TAG)
         }
 
         if (groupId <= 0) {
@@ -81,7 +86,6 @@ class DirectHostActivity : AppCompatActivity() {
                             }
 
                             is UiState.Error -> {
-                                showOrReplaceBottomSheetByStatus(groupId, null, null)
                             }
                         }
                     }
@@ -188,7 +192,7 @@ class DirectHostActivity : AppCompatActivity() {
 
             "COMPLETED" -> null
 
-            else -> DirectHostStartBottomDialogFragment.newInstance(groupId)
+            else -> null
         }
     }
 
