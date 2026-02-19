@@ -90,7 +90,7 @@ class MypProfileEditFragment : Fragment() {
                     .load(imageUrl)
                     .placeholder(R.drawable.img_profile_default)
                     .error(R.drawable.img_profile_default)
-                    .transform(CenterCrop(), RoundedCorners(dpToPx(60)))
+                    .transform(CenterCrop(), RoundedCorners(dpToPx(45)))
                     .into(binding.mypEditProfileIv)
 
                 validateAllFields() // 데이터가 채워진 후 버튼 상태 업데이트
@@ -284,7 +284,7 @@ class MypProfileEditFragment : Fragment() {
 
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess ->
         if (isSuccess && cameraUri != null) {
-            Glide.with(this).load(cameraUri).transform(CenterCrop(), RoundedCorners(dpToPx(25))).into(binding.mypEditProfileIv)
+            Glide.with(this).load(cameraUri).transform(CenterCrop(), RoundedCorners(dpToPx(45))).into(binding.mypEditProfileIv)
             selectedImageFile = File(requireContext().cacheDir, "camera/temp_profile.jpg")
         }
     }
@@ -302,7 +302,7 @@ class MypProfileEditFragment : Fragment() {
 
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            Glide.with(this).load(uri).transform(CenterCrop(), RoundedCorners(dpToPx(25))).into(binding.mypEditProfileIv)
+            Glide.with(this).load(uri).transform(CenterCrop(), RoundedCorners(dpToPx(45))).into(binding.mypEditProfileIv)
             selectedImageFile = uriToFile(uri)
         }
     }

@@ -12,14 +12,14 @@ android:background="@color/ui_bg">
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    app:layout_constraintGuide_percent="0.08" />
+    app:layout_constraintGuide_percent="0.06" />
 
 <androidx.constraintlayout.widget.Guideline
     android:id="@+id/guideline_end"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    app:layout_constraintGuide_percent="0.92" />
+    app:layout_constraintGuide_percent="0.94" />
 
 <!-- 상단 배경 영역 -->
 <LinearLayout
@@ -41,14 +41,14 @@ android:background="@color/ui_bg">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.08" />
+            app:layout_constraintGuide_percent="0.06" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline_end_inner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.92" />
+            app:layout_constraintGuide_percent="0.94" />
 
         <ImageView
             android:id="@+id/lib_search_back_iv"

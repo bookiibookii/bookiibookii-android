@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -149,19 +151,57 @@ class LibraryCardDetailFragment : Fragment() {
     private fun initBottomSheet() {
         val bottomSheet = binding.bottomSheetContainer
         val displayMetrics = resources.displayMetrics
-        val maxHeight = (displayMetrics.heightPixels * 0.4).toInt()
+
+        // 1. 원하시는 대로 기본 높이를 화면의 45%로 설정 (0.45)
+        val baseHeight = (displayMetrics.heightPixels * 0.45).toInt()
+
         val layoutParams = bottomSheet.layoutParams
-        layoutParams.height = maxHeight
+        layoutParams.height = baseHeight
         bottomSheet.layoutParams = layoutParams
 
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
         bottomSheetBehavior.apply {
             peekHeight = dpToPx(80)
             state = BottomSheetBehavior.STATE_COLLAPSED
+
+            // 중간에 멈추는(절반만 펴지는) 현상을 없애고 한 번에 펴지게 만듦
             isFitToContents = true
             isHideable = false
         }
+
+        // 2. 키보드 대응: 높이와 패딩을 동시에 조절하는 마법의 로직
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val imeVisible = insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())
+            val imeHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
+
+            val params = bottomSheet.layoutParams
+
+            if (imeVisible) {
+                // [키보드가 켜질 때]
+                // 기존 45% 높이 + 키보드 높이만큼 바텀시트 몸집을 훅 늘려줍니다.
+                params.height = baseHeight + imeHeight
+                // 늘어난 크기 하단에 키보드 높이만큼 투명한 패딩을 줘서, 입력창을 위로 싹 밀어올립니다.
+                bottomSheet.setPadding(0, 0, 0, imeHeight)
+
+                // 키보드가 올라오면 바텀시트도 무조건 열림 상태로!
+                if (bottomSheetBehavior.state != BottomSheetBehavior.STATE_EXPANDED) {
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                }
+            } else {
+                // [키보드가 꺼질 때]
+                // 다시 원래의 45% 높이와 기본 패딩(0)으로 얌전하게 복구합니다.
+                params.height = baseHeight
+                bottomSheet.setPadding(0, 0, 0, 0)
+            }
+
+            // 변경된 레이아웃 크기 즉시 반영
+            bottomSheet.layoutParams = params
+            bottomSheet.requestLayout()
+
+            insets
+        }
     }
+
 
     private fun initListeners() {
         binding.libCardBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }

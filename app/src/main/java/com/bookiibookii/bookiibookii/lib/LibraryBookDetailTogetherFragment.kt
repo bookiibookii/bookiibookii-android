@@ -283,8 +283,30 @@ class LibraryBookDetailTogetherFragment : Fragment() {
             }
         }
 
-        binding.libDetailLatelyTv.setOnClickListener { cardAdapter.submitList(originalList.sortedByDescending { it.createdAt }) }
-        binding.libDetailPageTv.setOnClickListener { cardAdapter.submitList(originalList.sortedBy { it.page }) }
+        binding.libDetailLatelyTv.setOnClickListener { sortCards(isLately = true) }
+        binding.libDetailPageTv.setOnClickListener { sortCards(isLately = false) }
+    }
+
+    private fun sortCards(isLately: Boolean) {
+        // 1. 리스트 정렬
+        if (isLately) {
+            cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
+        } else {
+            cardAdapter.submitList(originalList.sortedBy { it.page })
+        }
+
+        // 2. 글자 색상 변경 로직
+        val context = requireContext()
+        val activeColor = androidx.core.content.ContextCompat.getColor(context, R.color.pre_main)
+        val inactiveColor = androidx.core.content.ContextCompat.getColor(context, R.color.grey_500)
+
+        if (isLately) {
+            binding.libDetailLatelyTv.setTextColor(activeColor)
+            binding.libDetailPageTv.setTextColor(inactiveColor)
+        } else {
+            binding.libDetailLatelyTv.setTextColor(inactiveColor)
+            binding.libDetailPageTv.setTextColor(activeColor)
+        }
     }
 
     private fun showDeleteConfirmDialog() {
