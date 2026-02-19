@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentTrkHostMainBinding
 import com.bookiibookii.bookiibookii.trkDirectHost.DirectHostActivity
@@ -59,8 +60,11 @@ class TrkHostMainFragment : Fragment() {
                 }
 
                 ExchangeType.NONE -> {
-                    // TODO: 나중에 연결
-                    return@TrackerAdapter
+                    startActivity(Intent(requireContext(), MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        putExtra("NAV_ACTION", "OPEN_LIBRARY_ING")
+                        putExtra("target_group_id", item.groupId)
+                    })
                 }
             }
         }
@@ -68,7 +72,7 @@ class TrkHostMainFragment : Fragment() {
         footerAdapter = CreateGroupFooterAdapter(
             mode = FooterMode.HOST_CREATE,
             onActionClick = {
-                // TODO: 그룹 만들기 화면 이동
+
             }
         )
 

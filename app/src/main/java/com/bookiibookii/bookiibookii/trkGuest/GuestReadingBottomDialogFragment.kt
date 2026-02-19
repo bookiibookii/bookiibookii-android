@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.trkGuest
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +9,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentGuestReadingBottomDialogBinding
 import com.bookiibookii.bookiibookii.trkHost.TrackerDateUtil.prettyDate
@@ -40,6 +42,16 @@ class GuestReadingBottomDialogFragment : BottomSheetDialogFragment() {
 
         vm.resetDoneState()
         vm.loadTracker(groupId)
+
+        binding.btnWriteCard.setOnClickListener {
+            val intent = Intent(requireContext(), MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                putExtra("NAV_ACTION", "OPEN_ADD_CARD")
+                putExtra("target_group_id", groupId)
+            }
+            startActivity(intent)
+            dismiss()
+        }
 
         binding.btnExtendPeriod.setOnClickListener {
             if (parentFragmentManager.findFragmentByTag(GuestExtendPeriodDialogFragment.TAG) != null) {

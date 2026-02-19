@@ -1,10 +1,12 @@
 package com.bookiibookii.bookiibookii.trkDirectHost
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.databinding.FragmentDirectHostReceiveIssueDialogBinding
 
 class DirectHostReceiveIssueDialogFragment : DialogFragment() {
@@ -43,11 +45,20 @@ class DirectHostReceiveIssueDialogFragment : DialogFragment() {
         binding.btnClose.setOnClickListener{dismiss()}
 
         binding.btnReport.setOnClickListener{
-
+            val intent = Intent(requireContext(), MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("NAV_ACTION", "OPEN_MYP_REPORT")
+            }
+            startActivity(intent)
+            dismissAllowingStateLoss()
         }
 
         binding.btnReschedule.setOnClickListener{
+            dismiss()
 
+            DirectHostAppointmentEditDialogFragment
+                .newInstance(groupId)
+                .show(parentFragmentManager, DirectHostAppointmentEditDialogFragment.TAG)
         }
 
     }
