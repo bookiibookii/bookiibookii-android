@@ -22,6 +22,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
@@ -29,6 +30,9 @@ import com.bookiibookii.bookiibookii.databinding.FragmentGrpBinding
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.group.search.GrpSearchActivity
+import com.bookiibookii.bookiibookii.myPage.MypageFragment
+import com.bookiibookii.bookiibookii.myPage.profile.MypProfileEditFragment
+import com.bookiibookii.bookiibookii.myPage.set.MypSetFragment
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
 
@@ -466,6 +470,14 @@ class GroupFragment : Fragment() {
         dialog.findViewById<View>(R.id.dialog_none_address_close_iv).setOnClickListener {
             dialog.dismiss()
         }
+
+        dialog.findViewById<View>(R.id.dialog_none_address_go_myp_btn).setOnClickListener {
+            dialog.dismiss()
+
+            // activity를 MainActivity로 형변환해서 공개 함수 호출
+            (activity as? MainActivity)?.moveToMyPageTab()
+        }
+
 
         // 7. 다이얼로그 띄우기
         dialog.show()
