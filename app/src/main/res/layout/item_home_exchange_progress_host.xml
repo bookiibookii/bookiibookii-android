@@ -5,7 +5,9 @@
     android:id="@+id/card_exchange_progress"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_round_20dp_white"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="20dp"
+    app:strokeWidth="0dp"
     app:cardElevation="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout

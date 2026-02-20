@@ -261,7 +261,7 @@ class NotificationKeywordSettingActivity : AppCompatActivity() {
 
     private fun renderSortUi(isLatest: Boolean) {
         if (isLatest) {
-            tvSortLatest.setTextColor(getColor(R.color.grey_700))
+            tvSortLatest.setTextColor(getColor(R.color.pre_main))
             tvSortLatest.setTypeface(null, Typeface.BOLD)
 
             tvSortAbc.setTextColor(getColor(R.color.grey_500))
@@ -270,7 +270,7 @@ class NotificationKeywordSettingActivity : AppCompatActivity() {
             tvSortLatest.setTextColor(getColor(R.color.grey_500))
             tvSortLatest.setTypeface(null, Typeface.NORMAL)
 
-            tvSortAbc.setTextColor(getColor(R.color.grey_700))
+            tvSortAbc.setTextColor(getColor(R.color.pre_main))
             tvSortAbc.setTypeface(null, Typeface.BOLD)
         }
     }
