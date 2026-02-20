@@ -78,8 +78,14 @@ class MypReportDetailFragment : Fragment() {
         selectedRb.setTextColor(ContextCompat.getColor(requireContext(), R.color.pre_main))
     }
 
+    override fun onResume() {
+        super.onResume()
+        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }

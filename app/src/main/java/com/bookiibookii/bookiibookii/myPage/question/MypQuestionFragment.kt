@@ -84,6 +84,7 @@ class MypQuestionFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }
