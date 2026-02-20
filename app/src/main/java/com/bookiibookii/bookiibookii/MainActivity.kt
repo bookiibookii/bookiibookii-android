@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -31,9 +30,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        val at = prefs.getString("access_token", null)
 
         // TODO: 추후 로그 삭제
         Log.d("ONB_FLOW", "MainActivity started")

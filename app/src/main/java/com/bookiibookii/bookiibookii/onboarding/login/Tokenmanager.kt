@@ -79,22 +79,15 @@ object TokenManager {
      */
     suspend fun refreshAccessToken(context: Context, refreshToken: String): Boolean {
         return try {
-            if (refreshToken.isBlank()) return false
-
-            val accessToken = getAccessToken(context)?.takeIf { it.isNotBlank() } ?: return false
-
-            val response = RetrofitClient.apiNoAuth().postRefresh(
-                authorization = "Bearer $accessToken",
-                request = TokenRefreshRequest(refreshToken)
-            )
+            val response = RetrofitClient.api().postRefresh(TokenRefreshRequest(refreshToken))
 
             if (!response.isSuccessful) return false
-
             val body = response.body() ?: return false
             if (!body.isSuccess) return false
 
             val result = body.result ?: return false
             saveTokens(context, result.accessToken, result.refreshToken, result.userId)
+
             true
         } catch (e: Exception) {
             false
