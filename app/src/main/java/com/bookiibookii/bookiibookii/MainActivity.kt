@@ -8,9 +8,15 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.main.GroupFragment
 import com.bookiibookii.bookiibookii.home.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
@@ -26,7 +32,11 @@ import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
 import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity<ActivityMainBinding>() {
+
+    override fun getViewBinding(): ActivityMainBinding {
+        return ActivityMainBinding.inflate(layoutInflater)
+    }
     private enum class NavTab { HOME, GROUP, TRACKER, LIBRARY, MY }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +56,7 @@ class MainActivity : AppCompatActivity() {
 //            insets
 //        }
 
-        setContentView(R.layout.activity_main)
+      //  setContentView(R.layout.activity_main)
 
 
         // 최초 진입 시 홈 Fragment
@@ -324,6 +334,12 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
+    fun moveToMyPageTab() {
+        // 내부적으로 탭 아이콘을 바꾸고(setBottomNavSelected),
+        // 프래그먼트를 마이페이지로 교체(replaceFragment)합니다.
+        selectTab(NavTab.MY, MypageFragment())
+    }
+
     private fun setBottomNavSelected(tab: NavTab) {
 
         fun setItem(
@@ -378,4 +394,26 @@ class MainActivity : AppCompatActivity() {
             tab == NavTab.MY
         )
     }
+
+    override fun setupWindowInsets(view: View) {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            // 상단은 fragmentContainer에만 적용
+            binding.fragmentContainer.updatePadding(
+                top = systemBars.top
+            )
+
+            // 하단은 bottomNav에 padding ❌
+            // margin으로 처리해야 constraint 안 깨짐
+
+            val params = binding.bottomNav.root.layoutParams as ConstraintLayout.LayoutParams
+            params.bottomMargin = systemBars.bottom
+            binding.bottomNav.root.layoutParams = params
+
+            insets
+        }
+    }
+
 }

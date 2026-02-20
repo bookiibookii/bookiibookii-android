@@ -4,10 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseActivity
+import com.bookiibookii.bookiibookii.databinding.ActivityNotificationBinding
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 
-class NotificationActivity : AppCompatActivity() {
+class NotificationActivity : BaseActivity<ActivityNotificationBinding>() {
+
+    override fun getViewBinding(): ActivityNotificationBinding {
+        return ActivityNotificationBinding.inflate(layoutInflater)
+    }
 
     private lateinit var toolbar: MaterialToolbar
     private lateinit var btnSystem: MaterialButton
@@ -15,7 +21,7 @@ class NotificationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_notification)
+       // setContentView(R.layout.activity_notification)
 
         toolbar = findViewById(R.id.toolbar)
 

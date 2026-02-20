@@ -101,7 +101,11 @@
 
         <activity android:name=".group.GroupDetailReportContainerActivity"
             android:screenOrientation="portrait" />
-      
+
+        <activity
+            android:name=".common.BaseActivity"
+            android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".trkHost.HostActivity"
             android:exported="false" />
