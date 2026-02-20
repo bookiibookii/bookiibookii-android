@@ -458,6 +458,7 @@ class LibraryCardDetailFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
         _binding = null
     }
 }

@@ -448,6 +448,7 @@ class MypReportWriteFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLEG
         _binding = null
     }
 }
