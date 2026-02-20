@@ -5,9 +5,10 @@
     android:id="@+id/card_bookii_mate"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="0dp"
-    app:strokeWidth="0dp">
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="20dp"
+    app:strokeWidth="0dp"
+    app:cardElevation="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -22,46 +23,48 @@
             android:id="@+id/iv_mate_profile"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/img_profile_default"
+            android:background="@drawable/bg_home_profile"
+            android:clipToOutline="true"
+            android:src="@drawable/img_profile_default"
+            android:scaleType="centerCrop"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-        <!-- 이름 -->
-        <TextView
-            android:id="@+id/tv_mate_name"
-            android:layout_width="wrap_content"
-            android:layout_height="25dp"
-            android:text="닉네임"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/grey_900"
-            app:layout_constraintStart_toEndOf="@id/iv_mate_profile"
-            app:layout_constraintTop_toTopOf="@id/iv_mate_profile"
-            android:layout_marginStart="12dp"/>
-
-        <!-- 해시태그 칩 2개 (가로로) -->
         <LinearLayout
-            android:id="@+id/layout_mate_tags"
+            android:id="@+id/layout_mate_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginStart="8dp"
-            app:layout_constraintStart_toEndOf="@id/tv_mate_name"
-            app:layout_constraintTop_toTopOf="@id/tv_mate_name"
+            android:gravity="center_vertical"
+            app:layout_constraintStart_toEndOf="@id/iv_mate_profile"
+            app:layout_constraintTop_toTopOf="@id/iv_mate_profile"
+            app:layout_constraintBottom_toTopOf="@id/tv_recent_book"
+            android:layout_marginStart="12dp"
             app:layout_constraintEnd_toStartOf="@id/iv_mate_arrow">
+
+            <!-- 이름 -->
+            <TextView
+                android:id="@+id/tv_mate_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="닉네임"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/grey_900"
+                android:gravity="center_vertical" />
 
             <TextView
                 android:id="@+id/tv_tag_1"
                 android:layout_width="wrap_content"
-                android:layout_height="25dp"
+                android:layout_height="wrap_content"
                 style="@style/BookiiChip"
+                android:layout_marginStart="8dp"
                 android:text="#마로형" />
 
             <TextView
                 android:id="@+id/tv_tag_2"
                 android:layout_width="wrap_content"
-                android:layout_height="25dp"
+                android:layout_height="wrap_content"
                 style="@style/BookiiChip"
                 android:layout_marginStart="6dp"
                 android:text="#인사이트" />
@@ -78,9 +81,10 @@
             android:textColor="@color/grey_600"
             android:maxLines="1"
             android:ellipsize="end"
-            app:layout_constraintStart_toStartOf="@id/tv_mate_name"
-            app:layout_constraintTop_toBottomOf="@id/tv_mate_name"
-            app:layout_constraintEnd_toStartOf="@id/iv_mate_arrow" />
+            app:layout_constraintStart_toStartOf="@id/layout_mate_title"
+            app:layout_constraintTop_toBottomOf="@id/layout_mate_title"
+            app:layout_constraintEnd_toStartOf="@id/iv_mate_arrow"
+            app:layout_constraintBottom_toBottomOf="@id/iv_mate_profile" />
 
         <!-- 오른쪽 화살표 -->
         <ImageView

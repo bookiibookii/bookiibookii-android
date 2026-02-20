@@ -53,7 +53,7 @@ class OtherProfileFragment : Fragment(R.layout.fragment_other_profile) {
 
     private fun bindProfile(result: ProfileResult) {
         // include 된 카드 루트
-        val cardRoot = binding.root.findViewById<View>(R.id.layout_profile)
+        val cardRoot = binding.root.findViewById<View>(R.id.layout_home_profile)
 
         val ivProfile = cardRoot.findViewById<android.widget.ImageView>(R.id.myp_profile_iv)
         val ivEdit = cardRoot.findViewById<android.widget.ImageView>(R.id.myp_edit_iv)

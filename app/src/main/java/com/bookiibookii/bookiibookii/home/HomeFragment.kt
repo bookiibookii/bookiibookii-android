@@ -86,10 +86,12 @@ class HomeFragment : Fragment() {
         }
 
         mateBinding.rvMate.apply {
-            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
             adapter = mateAdapter
+            isNestedScrollingEnabled = false
+
             val spacing = resources.getDimensionPixelSize(R.dimen.spacing_12)
-            addItemDecoration(HorizontalSpacingItemDecoration(spacing))
+            addItemDecoration(VerticalSpacingItemDecoration(spacing))
         }
 
         // empty 카드 문구

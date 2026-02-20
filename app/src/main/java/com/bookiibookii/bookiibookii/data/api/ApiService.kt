@@ -33,6 +33,7 @@ import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
 import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
 import com.bookiibookii.bookiibookii.data.model.NotificationListResultDto
 import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
+import com.bookiibookii.bookiibookii.data.model.OtherProfileResponse
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentResponse
 import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
@@ -263,7 +264,7 @@ interface ApiService: TrkApi {
     @GET("/api/profiles/{nickname}")
     suspend fun getUserProfile(
         @Path("nickname") nickname: String
-    ): Response<LoginActivity.ProfileResponse> // ProfileResponse는 MypageResult를 감싸는 형태여야 함
+    ): Response<OtherProfileResponse>
 
     @GET("/api/groups/me/trackers")
     suspend fun getMyTrackers(): Response<TrackerResponse>

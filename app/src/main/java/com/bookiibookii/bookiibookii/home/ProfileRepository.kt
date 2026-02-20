@@ -1,7 +1,7 @@
 package com.bookiibookii.bookiibookii.home
 
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.MypageResult
+import com.bookiibookii.bookiibookii.data.model.OtherProfileApiResult
 import com.bookiibookii.bookiibookii.data.model.ProfileResult
 
 class ProfileRepository {
@@ -14,16 +14,16 @@ class ProfileRepository {
 
         if (!response.isSuccessful || body?.isSuccess != true) return null
 
-        val r: MypageResult = body.result ?: return null
+        val r: OtherProfileApiResult = body.result ?: return null
 
         return ProfileResult(
             userId = r.userId,
-            profileImageUrl = null,          // MypageResult에는 URL이 없음 (s3Key만 있음)
+            profileImageUrl = r.profileImageUrl,
             nickname = r.nickname,
             manner = r.manner,
-            topTags = r.topTags,             // 널 아님 → ?: emptyList() 쓰면 안 됨
+            topTags = r.topTags.orEmpty(),
             completeBook = r.completeBook,
-            readingGroup = r.relayGroup,     // 여기 중요: relayGroup -> readingGroup
+            readingGroup = r.readingGroup,
             togetherGroup = r.togetherGroup
         )
     }
