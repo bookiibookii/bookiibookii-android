@@ -1,4 +1,21 @@
-# bookiibookii-android
+# 부키부키 안드로이드팀 README
+<img width="7680" height="4320" alt="배너2" src="https://github.com/user-attachments/assets/bd0d766f-fce3-45df-ab09-5defda749bb1" />
+
+<br><br>
+
+## 🔎 About the Project
+![x배너 (1)](https://github.com/user-attachments/assets/40112447-e22d-4cb8-b611-8395f2274232)
+> design by loverlikewater@gmail.com / @aoree.lim
+
+<br><br>
+
+## 🤝 Team
+| 남유정 | 박태훈 | 이중희 | 김종하 |
+|:------:|:------:|:------:|:------:|
+| <img src="이미지주소" width="120"/> | <img src="이미지주소" width="120"/> | <img src="이미지주소" width="120"/> | <img src="이미지주소" width="120"/> |
+| [@N-yujeong](https://github.com/N-yujeong) | [@xogns02178-dev](https://github.com/xogns02178-dev) | [@whdgk0602](https://github.com/whdgk0602) | [@jungee123213](https://github.com/jungee123213) |
+
+<br/>
 
 ## 🛠 𝙏𝙚𝙘𝙝 𝙎𝙩𝙖𝙘𝙠
 -𝙆𝙤𝙩𝙡𝙞𝙣
