@@ -13,7 +13,7 @@
 | 남유정 | 박태훈 | 이중희 | 김종하 |
 |:------:|:------:|:------:|:------:|
 | <img src="이미지주소" width="120"/> | <img src="이미지주소" width="120"/> | <img src="이미지주소" width="120"/> | <img src="이미지주소" width="120"/> |
-| [@N-yujeong](https://github.com/N-yujeong) | [@xogns02178-dev](https://github.com/xogns02178-dev) | [@whdgk0602](https://github.com/whdgk0602) | [@jungee123213](https://github.com/jungee123213) |
+| [@N-yujeong](https://github.com/N-yujeong) | [@xogns02178-dev](https://github.com/xogns02178-dev) | [@jungee123213](https://github.com/jungee123213) | [@whdgk0602](https://github.com/whdgk0602) |
 
 <br/>
 
