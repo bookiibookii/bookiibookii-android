@@ -86,10 +86,8 @@ dependencies {
     //viewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
 
+    // chip
     implementation("com.google.android.material:material:1.13.0")
-
-    //chip
-    implementation("com.google.android.material:material:1.12.0")
 
     //glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
@@ -114,7 +112,6 @@ dependencies {
 
     implementation("com.kakao.sdk:v2-all:2.20.1")
 
-    implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
     implementation("io.coil-kt:coil:2.6.0")

@@ -59,7 +59,7 @@ class TrackerAdapter(
             binding.tvBookTitle.text = item.bookTitle
             binding.tvBookAuthor.text = item.bookAuthor
             binding.tvWithUser.text = item.withUserName ?: ""
-            binding.tvBookCategory.text = item.bookCategory.orEmpty()
+            binding.tvBookCategory.text = mapCategoryToKo(item.bookCategory)
 
             Glide.with(binding.ivBookCover)
                 .load(item.coverImageUrl)
@@ -214,7 +214,7 @@ class TrackerAdapter(
         fun bind(item: TrackerData, onItemClicked: (TrackerData) -> Unit) {
             binding.tvBookTitle.text = item.bookTitle
             binding.tvBookAuthor.text = item.bookAuthor
-            binding.tvBookCategory.text = item.bookCategory.orEmpty()
+            binding.tvBookCategory.text = mapCategoryToKo(item.bookCategory)
             binding.tvWithUser.text = item.withUserName ?: ""
 
             Glide.with(binding.ivBookCover)
@@ -274,6 +274,25 @@ class TrackerAdapter(
     companion object {
         private const val VIEW_TYPE_EXCHANGE = 0
         private const val VIEW_TYPE_NONE = 1
+
+        private fun mapCategoryToKo(raw: String?): String {
+            val key = raw?.trim().orEmpty()
+            return when (key) {
+                "ECON_BIZ" -> "경제/경영"
+                "SCI_IT" -> "과학/IT"
+                "NOVEL_GENRE" -> "(소설)"
+                "POEM_ESSAY" -> "시/에세이"
+                "HOME_HOBBY" -> "가정/취미"
+                "ART_CULTURE" -> "예술/문화"
+                "HUMAN_HISTORY" -> "인문/역사"
+                "SELF_DEV" -> "자기계발"
+                "POL_SOC" -> "정치/사회"
+                "ETC" -> "기타"
+                else -> {
+                    key
+                }
+            }
+        }
 
         val DIFF = object : DiffUtil.ItemCallback<TrackerData>() {
             override fun areItemsTheSame(old: TrackerData, new: TrackerData): Boolean {

@@ -6,12 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentHostReceiveConfirmDialogBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -47,7 +49,7 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentHostReceiveConfirmDialogBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -70,8 +72,8 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
 
         vm.resetReceiveState()
 
-        binding.btnFinish.isEnabled = false
-        binding.btnFinish.alpha = 0.45f
+        updateCheckUi()
+        updateFinishButtonState()
 
         childFragmentManager.setFragmentResultListener(
             HostPhotoSelectionDialogFragment.REQ_KEY,
@@ -95,8 +97,9 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
                 .show(childFragmentManager, HostPhotoSelectionDialogFragment.TAG)
         }
 
-        binding.cbCheck.setOnCheckedChangeListener { _, checked ->
-            isChecked = checked
+        binding.cbCheck.setOnClickListener {
+            isChecked = !isChecked
+            updateCheckUi()
             updateFinishButtonState()
         }
 
@@ -116,7 +119,7 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.receiveState.collectLatest { state ->
                     when (state) {
                         is UiState.Idle -> Unit
@@ -136,7 +139,6 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
 
                             dismissAllowingStateLoss()
                         }
-
 
                         is UiState.Error -> {
                             updateFinishButtonState()
@@ -159,6 +161,21 @@ class HostReceiveConfirmDialogFragment : DialogFragment() {
         binding.tvUploadHint.visibility = View.GONE
 
         updateFinishButtonState()
+    }
+
+    private fun updateCheckUi() {
+        val bgRes = if (isChecked) {
+            R.drawable.bg_round_4dp_main_pale
+        } else {
+            R.drawable.bg_round_4dp_gray200
+        }
+        binding.cbCheck.setBackgroundResource(bgRes)
+
+        binding.ivCheck.imageTintList =
+            ContextCompat.getColorStateList(
+                requireContext(),
+                if (isChecked) R.color.pre_main else R.color.white
+            )
     }
 
     private fun updateFinishButtonState() {

@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="게스트가 책을 읽고 있어요!"
+        android:text="호스트가 책을 읽고 있어요!"
         android:textColor="@color/grey_900"
         android:textSize="20sp"/>
 
@@ -65,7 +65,7 @@
                 android:layout_height="wrap_content"
                 android:text="~ "
                 android:fontFamily="@font/pretendard_regular"
-                android:textColor="@color/pre_main"
+                android:textColor="@color/pre_sub"
                 android:textSize="14sp"
                 android:includeFontPadding="false" />
 
@@ -75,7 +75,7 @@
                 android:layout_height="wrap_content"
                 android:text="2025. 12. 25."
                 android:fontFamily="@font/pretendard_regular"
-                android:textColor="@color/pre_main"
+                android:textColor="@color/pre_sub"
                 android:textSize="14sp"
                 android:includeFontPadding="false" />
         </LinearLayout>

@@ -6,12 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentGuestReceiveConfirmDialogBinding
 import com.bookiibookii.bookiibookii.trkHost.HostPhotoSelectionDialogFragment
 import com.bookiibookii.bookiibookii.trkHost.UiState
@@ -73,8 +75,8 @@ class GuestReceiveConfirmDialogFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         vm.resetReceiveState()
 
-        binding.btnFinish.isEnabled = false
-        binding.btnFinish.alpha = 0.45f
+        updateCheckUi()
+        updateFinishButtonState()
 
         childFragmentManager.setFragmentResultListener(
             HostPhotoSelectionDialogFragment.REQ_KEY,
@@ -97,8 +99,9 @@ class GuestReceiveConfirmDialogFragment : DialogFragment() {
                 .show(childFragmentManager, HostPhotoSelectionDialogFragment.TAG)
         }
 
-        binding.cbCheck.setOnCheckedChangeListener { _, checked ->
-            isChecked = checked
+        binding.cbCheck.setOnClickListener {
+            isChecked = !isChecked
+            updateCheckUi()
             updateFinishButtonState()
         }
 
@@ -161,6 +164,21 @@ class GuestReceiveConfirmDialogFragment : DialogFragment() {
         binding.tvUploadHint.visibility = View.GONE
 
         updateFinishButtonState()
+    }
+
+    private fun updateCheckUi() {
+        val bgRes = if (isChecked) {
+            R.drawable.bg_round_4dp_sub_pale
+        } else {
+            R.drawable.bg_round_4dp_gray200
+        }
+        binding.cbCheck.setBackgroundResource(bgRes)
+
+        binding.ivCheck.imageTintList =
+            ContextCompat.getColorStateList(
+                requireContext(),
+                if (isChecked) R.color.pre_sub else R.color.white
+            )
     }
 
     private fun updateFinishButtonState() {

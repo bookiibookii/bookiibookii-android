@@ -3,10 +3,6 @@
     <!--    기본 테마 설정-->
     <style name="Base.Theme.BookiiBookii" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/app_background</item>
-
-        <!--        폰트 나중에 수정-->
-        <item name="android:fontFamily">@font/pretendard_variable</item>
-        <item name="fontFamily">@font/pretendard_variable</item>
     </style>
 
     <!-- application 단위 기본 테마 -->
