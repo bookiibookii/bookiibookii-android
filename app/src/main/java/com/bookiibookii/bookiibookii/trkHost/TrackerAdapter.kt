@@ -95,11 +95,8 @@ class TrackerAdapter(
             guestProfileUrl: String?
         ) {
             val ctx = root.context
-            val activeColor = ContextCompat.getColor(ctx, R.color.grey_900)
             val inactiveColor = ContextCompat.getColor(ctx, R.color.grey_400)
             val accentColor = ContextCompat.getColor(ctx, R.color.pre_main)
-
-            val currentDotColor = ContextCompat.getColor(ctx, R.color.white)
 
             tvDateStep1.text = formatStepDate(stepDates.getOrNull(0))
             tvDateStep2.text = formatStepDate(stepDates.getOrNull(1))
@@ -108,13 +105,7 @@ class TrackerAdapter(
 
             val idx = stepIndex(step)
 
-            val percent = when (idx) {
-                0 -> 0.1f
-                1 -> 1.0f / 3.0f
-                2 -> 2.0f / 3.0f
-                3 -> 0.88f
-                else -> 0.0f
-            }
+            val percent = trackPercentForStep(idx)
             setWidthPercent(viewProgressTrackActive, percent)
 
             tvLabelStep1.setTextColor(if (idx == 0) accentColor else inactiveColor)
@@ -122,12 +113,26 @@ class TrackerAdapter(
             tvLabelStep3.setTextColor(if (idx == 2) accentColor else inactiveColor)
             tvLabelStep4.setTextColor(if (idx == 3) accentColor else inactiveColor)
 
-            setDot(dotStep1, dotColorForStep(0, idx, currentDotColor, currentDotColor, inactiveColor))
-            setDot(dotStep2, dotColorForStep(1, idx, currentDotColor, currentDotColor, inactiveColor))
-            setDot(dotStep3, dotColorForStep(2, idx, currentDotColor, currentDotColor, inactiveColor))
-            setDot(dotStep4, dotColorForStep(3, idx, currentDotColor, currentDotColor, inactiveColor))
-
             bindStepProfiles(hostProfileUrl, guestProfileUrl, idx)
+        }
+
+        // xml cardView 크기 달라지면 여기도 수정해야함
+        private fun trackPercentForStep(index: Int): Float {
+            val trackWidth = 332f
+            val edgeInset = 20f
+            val dotSize = 6f
+
+            val firstCenter = edgeInset + dotSize / 2f
+            val lastCenter = trackWidth - edgeInset - dotSize / 2f
+            val gap = (lastCenter - firstCenter) / 3f
+
+            return when (index) {
+                0 -> 0f
+                1 -> (firstCenter + gap) / trackWidth
+                2 -> (firstCenter + gap * 2f) / trackWidth
+                3 -> lastCenter / trackWidth
+                else -> 0f
+            }.coerceIn(0f, 1f)
         }
 
         private fun stepIndex(status: TrackerStatus): Int = when (status) {
@@ -171,8 +176,8 @@ class TrackerAdapter(
             view.requestLayout()
         }
 
-        private fun setDot(dotView: ImageView, color: Int) {
-            dotView.setColorFilter(color)
+        private fun setDot(dotView: View, color: Int) {
+            dotView.backgroundTintList = android.content.res.ColorStateList.valueOf(color)
         }
 
         private fun formatStepDate(raw: String?): String {
@@ -231,13 +236,6 @@ class TrackerAdapter(
 
             val myPercent = (myRate / 100f).coerceIn(0f, 1f)
             val groupPercent = (groupRate / 100f).coerceIn(0f, 1f)
-
-//            binding.viewTrackFill.setBackgroundColor(
-//                ContextCompat.getColor(binding.root.context, R.color.pre_main)
-//            )
-//            binding.viewTrackGroup.setBackgroundColor(
-//                ContextCompat.getColor(binding.root.context, R.color.grey_900)
-//            )
 
             setWidthPercent(binding.viewTrackFill, myPercent)
             setWidthPercent(binding.viewTrackGroup, groupPercent)

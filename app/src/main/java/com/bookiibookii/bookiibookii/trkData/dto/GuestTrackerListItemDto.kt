@@ -22,7 +22,9 @@ data class GuestTrackerListItemDto(
 
 data class GuestTrackerRelayDetailDto(
     val partnerNickname: String?,
+    @SerializedName("hostProfileImageUrl")
     val hostProfileImage: String?,
+    @SerializedName("guestProfileImageUrls")
     val guestProfileImages: List<String>?,
     val trackerStatus: String?,
     val stepDates: List<String?>?

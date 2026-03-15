@@ -2,26 +2,25 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_width="364dp"
+    android:layout_height="215dp"
+    app:cardCornerRadius="24dp"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
-    app:cardCornerRadius="24dp"
     app:cardElevation="0dp"
     app:strokeWidth="0dp"
     app:cardBackgroundColor="@android:color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="24dp">
+        android:layout_height="match_parent">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/iv_book_cover"
-            android:layout_width="80dp"
-            android:layout_height="110dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="24dp"
+            android:layout_width="60dp"
+            android:layout_height="85dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
             android:scaleType="centerCrop"
             android:src="@android:color/darker_gray"
             app:layout_constraintStart_toStartOf="parent"
@@ -31,15 +30,13 @@
             android:id="@+id/tv_book_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginStart="12dp"
             android:ellipsize="end"
             android:maxLines="2"
             android:text="책 제목"
             android:textColor="@color/grey_800"
             android:textSize="16sp"
             android:fontFamily="@font/pretendard_medium"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/iv_book_cover"
             app:layout_constraintTop_toTopOf="@id/iv_book_cover" />
 
@@ -59,8 +56,7 @@
             android:id="@+id/tv_book_category"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginStart="4dp"
             android:text="카테고리"
             android:textColor="@color/grey_600"
             android:textSize="12sp"
@@ -72,7 +68,7 @@
             android:id="@+id/tv_with"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:text="with"
             android:textColor="@color/grey_500"
             android:textSize="12sp"
@@ -84,12 +80,12 @@
             android:id="@+id/tv_with_user"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="4dp"
             android:text="noshel"
             android:textColor="@color/grey_800"
             android:textSize="12sp"
             android:fontFamily="@font/pretendard_medium"
+            app:layout_constraintTop_toTopOf="@id/tv_with"
             app:layout_constraintStart_toEndOf="@id/tv_with"
             app:layout_constraintTop_toBottomOf="@id/tv_book_author" />
 
@@ -97,22 +93,22 @@
             android:id="@+id/divider"
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="16dp"
             android:background="@color/grey_100"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@id/layout_progress_compare"
+            app:layout_constraintEnd_toEndOf="@id/layout_progress_compare"
             app:layout_constraintTop_toBottomOf="@id/iv_book_cover" />
 
         <TextView
             android:id="@+id/tv_message"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:layout_marginTop="12dp"
             android:text="좋아요! 계속 이대로만 읽어주세요 😊"
             android:textColor="@color/grey_500"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:fontFamily="@font/pretendard_medium"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -122,10 +118,10 @@
             android:id="@+id/tv_my_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="14dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
             android:text="나의 독서율"
-            android:textSize="14sp"
+            android:textSize="11sp"
             android:textColor="@color/pre_main"
             android:fontFamily="@font/pretendard_medium"
             app:layout_constraintStart_toStartOf="parent"
@@ -135,21 +131,20 @@
             android:id="@+id/tv_my_percent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="24dp"
             android:text="79%"
-            android:textSize="14sp"
+            android:textSize="11sp"
             android:textColor="@color/pre_main"
             android:fontFamily="@font/pretendard_medium"
             app:layout_constraintBaseline_toBaselineOf="@id/tv_my_label"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="@id/layout_progress_compare" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layout_progress_compare"
             android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="24dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="4dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_my_label">
@@ -164,7 +159,7 @@
             <View
                 android:id="@+id/view_track_bg"
                 android:layout_width="0dp"
-                android:layout_height="6dp"
+                android:layout_height="8dp"
                 android:background="@drawable/bg_progress_track"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -174,7 +169,7 @@
             <View
                 android:id="@+id/view_track_group"
                 android:layout_width="0dp"
-                android:layout_height="6dp"
+                android:layout_height="8dp"
                 android:background="@drawable/bg_progress_group"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/view_track_bg"
@@ -187,7 +182,7 @@
             <View
                 android:id="@+id/view_track_fill"
                 android:layout_width="0dp"
-                android:layout_height="6dp"
+                android:layout_height="8dp"
                 android:background="@drawable/bg_progress_fill"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/view_track_bg"
@@ -199,25 +194,24 @@
 
             <ImageView
                 android:id="@+id/dot_my"
-                android:layout_width="10dp"
-                android:layout_height="10dp"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
                 app:srcCompat="@drawable/bg_circle_grey100"
                 app:layout_constraintStart_toEndOf="@id/view_track_fill"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constrainedWidth="true"
-                android:translationX="-5dp"/>
+                android:translationX="-7dp"/>
 
             <ImageView
                 android:id="@+id/dot_group"
-                android:layout_width="10dp"
-                android:layout_height="10dp"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
                 app:srcCompat="@drawable/bg_circle_grey100"
                 app:layout_constraintStart_toStartOf="@id/guideline_group"
-                app:layout_constraintEnd_toEndOf="@id/guideline_group"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:translationX="-7dp"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -225,10 +219,10 @@
             android:id="@+id/tv_group_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
             android:text="그룹 평균 독서율"
-            android:textSize="14sp"
+            android:textSize="11sp"
             android:textColor="@color/grey_800"
             android:fontFamily="@font/pretendard_medium"
             app:layout_constraintStart_toStartOf="parent"
@@ -238,14 +232,13 @@
             android:id="@+id/tv_group_percent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="24dp"
+            android:layout_marginEnd="16dp"
             android:text="83%"
-            android:textSize="14sp"
+            android:textSize="11sp"
             android:textColor="@color/grey_800"
             android:fontFamily="@font/pretendard_medium"
             app:layout_constraintBaseline_toBaselineOf="@id/tv_group_label"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
