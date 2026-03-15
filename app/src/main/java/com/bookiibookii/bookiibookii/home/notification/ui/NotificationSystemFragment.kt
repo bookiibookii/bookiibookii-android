@@ -24,6 +24,7 @@ import com.bookiibookii.bookiibookii.home.notification.util.TimeAgoFormatter
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModel
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModelFactory
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class NotificationSystemFragment : Fragment(R.layout.fragment_notification_system) {
 
@@ -189,5 +190,36 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
                 Toast.makeText(requireContext(), "지원하지 않는 알림입니다.", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+}
+
+object NotificationPayloadParser {
+
+    fun getGroupId(dto: NotificationItemDto): Long? {
+        val raw = dto.payload ?: return null
+        return runCatching {
+            val obj = JSONObject(raw)
+            when {
+                obj.has("groupId") -> obj.getLong("groupId")
+                obj.has("group_id") -> obj.getLong("group_id")
+                obj.has("targetGroupId") -> obj.getLong("targetGroupId")
+                obj.has("target_group_id") -> obj.getLong("target_group_id")
+                else -> null
+            }
+        }.getOrNull()
+    }
+
+    fun getRole(dto: NotificationItemDto): String? {
+        val raw = dto.payload ?: return null
+        return runCatching {
+            val obj = JSONObject(raw)
+            val role = when {
+                obj.has("role") -> obj.optString("role", null)
+                obj.has("trackerRole") -> obj.optString("trackerRole", null)
+                obj.has("exchangeRole") -> obj.optString("exchangeRole", null)
+                else -> null
+            }
+            role?.takeIf { it.isNotBlank() }?.uppercase()
+        }.getOrNull()
     }
 }

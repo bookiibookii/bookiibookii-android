@@ -60,19 +60,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <CheckBox
+        <FrameLayout
             android:id="@+id/cb_check"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:buttonTint="#222222"
-            android:textColor="#222222"
-            android:textSize="16sp" />
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:background="@drawable/bg_round_4dp_gray200"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/ivCheck"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check_outline"
+                android:contentDescription="@null" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tvInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="12dp"
             android:text="책의 상태를 확인했습니다"
             android:textColor="@color/grey_900"
             android:textSize="14sp" />
