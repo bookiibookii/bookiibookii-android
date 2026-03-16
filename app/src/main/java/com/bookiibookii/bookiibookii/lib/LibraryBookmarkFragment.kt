@@ -7,17 +7,20 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
+import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookmarkBinding
 import kotlinx.coroutines.launch
 
-class LibraryBookmarkFragment : Fragment() {
+class LibraryBookmarkFragment : BaseDetailFragment() {
 
     private var _binding: FragmentLibBookmarkBinding? = null
     private val binding get() = _binding!!
@@ -29,6 +32,8 @@ class LibraryBookmarkFragment : Fragment() {
 
     private lateinit var bookmarkAdapter: LibraryBookmarkAdapter
     private var originalList: List<CardItem> = emptyList()
+
+    private val cardViewModel: LibraryCardViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,6 +50,22 @@ class LibraryBookmarkFragment : Fragment() {
         setupMyProfileData()
         initRecyclerView()
         initListeners()
+        setupObservers()
+    }
+
+    private fun setupObservers() {
+        cardViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                if (!loadingDialog.isShowing) loadingDialog.show()
+            } else {
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
+            }
+        }
+
+        cardViewModel.cardList.observe(viewLifecycleOwner) { cards ->
+            bookmarkAdapter.submitList(cards)
+            updateTotalCount(cards.size)
+        }
     }
 
     private fun setupMyProfileData() {
@@ -59,8 +80,7 @@ class LibraryBookmarkFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        fetchBookmarks()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
+        cardViewModel.fetchBookmarkedCards()
     }
 
     private fun initRecyclerView() {
@@ -85,7 +105,7 @@ class LibraryBookmarkFragment : Fragment() {
     }
 
     private fun fetchBookmarks() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show() // ★ 로딩 시작
             try {
                 val response = RetrofitClient.api().getBookmarkedCards()
@@ -104,12 +124,7 @@ class LibraryBookmarkFragment : Fragment() {
     }
 
     private fun sortBookmarks(isLatest: Boolean) {
-        val sortedList = if (isLatest) {
-            originalList.sortedByDescending { it.createdAt }
-        } else {
-            originalList.sortedBy { it.bookTitle }
-        }
-        bookmarkAdapter.submitList(sortedList)
+        cardViewModel.sortCards(isLatest)
 
         val activeColor = ContextCompat.getColor(requireContext(), R.color.grey_900)
         val inactiveColor = ContextCompat.getColor(requireContext(), R.color.grey_500)
@@ -140,7 +155,6 @@ class LibraryBookmarkFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }

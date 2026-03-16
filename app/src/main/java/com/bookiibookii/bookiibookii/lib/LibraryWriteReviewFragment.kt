@@ -17,13 +17,14 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.ReviewRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailWrtieReviewBinding
 import kotlinx.coroutines.launch
 
-class LibraryWriteReviewFragment : Fragment() {
+class LibraryWriteReviewFragment : BaseDetailFragment() {
 
     private var _binding: FragmentLibBookDetailWrtieReviewBinding? = null
     private val binding get() = _binding!!
@@ -125,7 +126,7 @@ class LibraryWriteReviewFragment : Fragment() {
         val comment = binding.libWriteReviewEt.text.toString()
         val rating = currentRating
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val request = ReviewRequest(rating, comment)
                 val response = RetrofitClient.api().postBookReview(userBookId, request)
@@ -247,17 +248,10 @@ class LibraryWriteReviewFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        hideBottomNavigation(true)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        hideBottomNavigation(false)
         _binding = null
-    }
-
-    private fun hideBottomNavigation(shouldHide: Boolean) {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
     }
 }

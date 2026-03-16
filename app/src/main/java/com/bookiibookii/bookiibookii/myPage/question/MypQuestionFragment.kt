@@ -9,12 +9,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypQuestionBinding
 import kotlinx.coroutines.launch
 
-class MypQuestionFragment : Fragment() {
+class MypQuestionFragment : BaseDetailFragment() {
     private var _binding: FragmentMypQuestionBinding? = null
     private val binding get() = _binding!!
 
@@ -47,7 +48,7 @@ class MypQuestionFragment : Fragment() {
     }
 
     private fun fetchInquiryList() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show() // ★ API 호출 전 로딩 시작
             try {
                 val response = RetrofitClient.api().getInquiryList()
@@ -79,12 +80,10 @@ class MypQuestionFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         fetchInquiryList()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }

@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.myPage.Notice
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,12 +10,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypNoticeBinding
 import kotlinx.coroutines.launch
 
-class MypNoticeFragment : Fragment() {
+class MypNoticeFragment : BaseDetailFragment() {
 
     private var _binding: FragmentMypNoticeBinding? = null
     private val binding get() = _binding!!
@@ -39,7 +41,7 @@ class MypNoticeFragment : Fragment() {
     }
 
     private fun fetchNoticeList() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getNoticeList()
@@ -55,8 +57,9 @@ class MypNoticeFragment : Fragment() {
                         // 데이터가 있다면: 안내 문구 숨김, 리스트 표시
                         binding.mypNoNoticeCl.visibility = View.GONE
                         binding.rvNoticeList.visibility = View.VISIBLE
+                        val prefs = requireContext().getSharedPreferences("NoticePrefs", Context.MODE_PRIVATE)
 
-                        val adapter = MypNoticeAdapter(noticeList) { noticeId ->
+                        val adapter = MypNoticeAdapter(noticeList, prefs) { noticeId ->
                             val fragment = MypNoticeDetailFragment().apply {
                                 arguments = Bundle().apply { putInt("noticeId", noticeId) }
                             }
@@ -83,12 +86,10 @@ class MypNoticeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }

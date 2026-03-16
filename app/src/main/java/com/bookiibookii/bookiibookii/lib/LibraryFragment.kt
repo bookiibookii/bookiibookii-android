@@ -93,7 +93,7 @@ class LibraryFragment : Fragment() {
     }
 
     private fun fetchBooks() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             binding.libBookListRv.visibility = View.INVISIBLE
             try {
@@ -221,7 +221,7 @@ class LibraryFragment : Fragment() {
         Log.d("TrackerCheck", "========== 네비게이션 로직 시작 ==========")
         Log.d("TrackerCheck", "Target GroupID: ${book.groupId}, isMine(Host여부): ${book.isMine}")
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getMyTrackers()

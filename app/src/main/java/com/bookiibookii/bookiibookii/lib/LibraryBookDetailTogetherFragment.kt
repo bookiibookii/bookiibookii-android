@@ -9,16 +9,19 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.data.model.GroupCardResult
+import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailTogetherBinding
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
@@ -28,7 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-class LibraryBookDetailTogetherFragment : Fragment() {
+class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
 
     private var _binding: FragmentLibBookDetailTogetherBinding? = null
     private val binding get() = _binding!!
@@ -52,6 +55,8 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     private lateinit var cardAdapter: LibraryReviewAdapter
     private lateinit var partnerReviewAdapter: LibraryCardReviewAdapter
     private var originalList: List<CardItem> = emptyList()
+
+    private val cardViewModel: LibraryCardViewModel by viewModels()
 
     private var currentGroupResult: GroupCardResult? = null
 
@@ -84,7 +89,48 @@ class LibraryBookDetailTogetherFragment : Fragment() {
         initView()
         initRecyclerView()
         initListeners()
-        fetchData()
+        setupObservers()
+        cardViewModel.fetchGroupCards(groupId)
+    }
+
+    private fun setupObservers() {
+        // 로딩 다이얼로그 처리
+        cardViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                if (!loadingDialog.isShowing) loadingDialog.show()
+            } else {
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
+            }
+        }
+
+        // 완성된 카드 리스트 수신 시 어댑터에 넘김
+        cardViewModel.cardList.observe(viewLifecycleOwner) { cards ->
+            cardAdapter.submitList(cards)
+            binding.libDetailTotalTv.text = "${cards.size}개"
+
+            if (cards.isNotEmpty()) {
+                binding.groupDataExist.visibility = View.VISIBLE
+                binding.layoutEmpty.visibility = View.GONE
+            } else {
+                binding.groupDataExist.visibility = View.GONE
+                binding.layoutEmpty.visibility = View.VISIBLE
+            }
+        }
+
+        // 에러 메시지 처리
+        cardViewModel.errorMessage.observe(viewLifecycleOwner) { msg ->
+            if (msg != null) {
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // 전체 그룹 결과 (내 코멘트, 파트너 코멘트 등 UI 업데이트용)
+        cardViewModel.groupCardResult.observe(viewLifecycleOwner) { result ->
+            if (result != null) {
+                currentGroupResult = result
+                updateReviewUI()
+            }
+        }
     }
 
     private fun setupMyProfileData() {
@@ -189,35 +235,6 @@ class LibraryBookDetailTogetherFragment : Fragment() {
         binding.libReviewListRv.addItemDecoration(LibDetailGridDecoration(2, dpToPx(10), dpToPx(12), false))
     }
 
-    private fun fetchData() {
-        if (groupId == -1) return
-        lifecycleScope.launch {
-            if (!isAdded) return@launch
-            loadingDialog.show()
-            try {
-                val response = RetrofitClient.api().getGroupCards(groupId)
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    currentGroupResult = response.body()?.result
-                    updateReviewUI()
-
-                    val apiCards = currentGroupResult?.cards ?: emptyList()
-                    originalList = apiCards
-                    cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
-                    binding.libDetailTotalTv.text = "${apiCards.size}개"
-
-                    if (apiCards.isNotEmpty()) {
-                        binding.groupDataExist.visibility = View.VISIBLE
-                        binding.layoutEmpty.visibility = View.GONE
-                    } else {
-                        binding.groupDataExist.visibility = View.GONE
-                        binding.layoutEmpty.visibility = View.VISIBLE
-                    }
-                }
-            } catch (e: Exception) { e.printStackTrace() }
-            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
-        }
-    }
-
     private fun updateReviewUI() {
         val result = currentGroupResult ?: return
 
@@ -237,7 +254,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
     }
 
     private fun toggleBookmark(card: CardItem) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().toggleBookmark(card.cardId.toLong())
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -324,7 +341,7 @@ class LibraryBookDetailTogetherFragment : Fragment() {
 
     private fun deleteGroup() {
         if (userBookId == -1) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
@@ -341,17 +358,10 @@ class LibraryBookDetailTogetherFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        hideBottomNavigation(true)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        hideBottomNavigation(false)
         _binding = null
-    }
-
-    private fun hideBottomNavigation(shouldHide: Boolean) {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
     }
 }

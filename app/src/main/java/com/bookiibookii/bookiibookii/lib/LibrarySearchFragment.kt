@@ -13,15 +13,18 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.data.model.LibBook
 import com.bookiibookii.bookiibookii.data.model.ReadStatus
+import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibSearchBinding
 import com.bookiibookii.bookiibookii.databinding.ItemLibSearchLatelyBinding
 import com.google.android.flexbox.FlexDirection
@@ -32,13 +35,14 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
 
-class LibrarySearchFragment : Fragment() {
+class LibrarySearchFragment : BaseDetailFragment() {
 
     private var _binding: FragmentLibSearchBinding? = null
     private val binding get() = _binding!!
 
     // 내 닉네임을 가져오기 위한 뷰모델 추가 (LibBook 생성 시 isMine 판별용)
     private val myPageViewModel: MyPageViewModel by activityViewModels()
+    private val cardViewModel: LibraryCardViewModel by viewModels()
 
     private var source: String = "LIBRARY"
 
@@ -72,6 +76,7 @@ class LibrarySearchFragment : Fragment() {
 
         initRecyclerView()
         initRecentSearch()
+        setupObservers()
         initData()
         initListeners()
 
@@ -79,9 +84,20 @@ class LibrarySearchFragment : Fragment() {
         updateSearchState(isSearching = false)
     }
 
-    // ★ [수정됨] 뷰모델이 아닌 API에서 직접 데이터를 확실하게 당겨옵니다.
+    private fun setupObservers() {
+        cardViewModel.cardList.observe(viewLifecycleOwner) { cards ->
+            allBookmarks = cards
+
+            // 만약 검색어가 이미 입력되어 있다면 즉시 필터링 반영
+            val query = binding.searchInputEt.text.toString().trim()
+            if (query.isNotEmpty() && source == "BOOKMARK") {
+                filterList(query)
+            }
+        }
+    }
+
     private fun initData() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 if (source == "LIBRARY") {
                     val response = RetrofitClient.api().getLibraryBooks()
@@ -121,10 +137,7 @@ class LibrarySearchFragment : Fragment() {
                         }
                     }
                 } else {
-                    val response = RetrofitClient.api().getBookmarkedCards()
-                    if (response.isSuccessful && response.body()?.isSuccess == true) {
-                        allBookmarks = response.body()?.result ?: emptyList()
-                    }
+                    cardViewModel.fetchBookmarkedCards()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -329,12 +342,10 @@ class LibrarySearchFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
         _binding = null
     }
 }

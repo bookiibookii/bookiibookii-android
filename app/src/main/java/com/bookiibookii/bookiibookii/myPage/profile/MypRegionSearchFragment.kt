@@ -11,9 +11,10 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.Data.City
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.databinding.FragmentMypRegionSearchBinding
 
-class MypRegionSearchFragment : Fragment() {
+class MypRegionSearchFragment : BaseDetailFragment() {
     private var _binding: FragmentMypRegionSearchBinding? = null
     private val binding get() = _binding!!
 
@@ -89,7 +90,6 @@ class MypRegionSearchFragment : Fragment() {
     }
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {

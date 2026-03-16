@@ -7,9 +7,10 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.databinding.FragmentMypReportDetailBinding
 
-class MypReportDetailFragment : Fragment() {
+class MypReportDetailFragment : BaseDetailFragment() {
 
     private var _binding: FragmentMypReportDetailBinding? = null
     private val binding get() = _binding!!
@@ -80,12 +81,10 @@ class MypReportDetailFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }

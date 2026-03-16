@@ -9,12 +9,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypReportBinding
 import kotlinx.coroutines.launch
 
-class MypReportFragment : Fragment() {
+class MypReportFragment : BaseDetailFragment() {
     private var _binding: FragmentMypReportBinding? = null
     private val binding get() = _binding!!
 
@@ -61,7 +62,7 @@ class MypReportFragment : Fragment() {
     }
 
     private fun fetchReportList() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getReportList()
@@ -93,12 +94,10 @@ class MypReportFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         fetchReportList()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }

@@ -6,15 +6,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.InquiryRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentMypQuestionWriteBinding
 import kotlinx.coroutines.launch
 
-class MypQuestionWriteFragment : Fragment() {
+class MypQuestionWriteFragment : BaseDetailFragment() {
     private var _binding: FragmentMypQuestionWriteBinding? = null
     private val binding get() = _binding!!
 
@@ -25,6 +28,19 @@ class MypQuestionWriteFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+
+            // 키보드(IME)가 올라왔는지 여부
+            val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+
+            // ★ 핵심: 키보드가 보이면 '키보드 높이'만큼, 안 보이면 '기본 네비게이션바 높이'만큼 하단 패딩 적용
+            val bottomPadding = if (isImeVisible) ime.bottom else systemBars.bottom
+
+            v.setPadding(0, 0, 0, bottomPadding)
+            insets
+        }
 
         binding.mypWriteBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
@@ -47,7 +63,7 @@ class MypQuestionWriteFragment : Fragment() {
     }
 
     private fun sendInquiry(title: String, content: String) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val request = InquiryRequest(title, content)
                 val response = RetrofitClient.api().postInquiry(request)
@@ -68,12 +84,10 @@ class MypQuestionWriteFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }

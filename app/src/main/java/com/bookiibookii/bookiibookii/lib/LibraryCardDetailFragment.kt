@@ -19,6 +19,7 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
@@ -30,7 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-class LibraryCardDetailFragment : Fragment() {
+class LibraryCardDetailFragment : BaseDetailFragment() {
 
     private var _binding: FragmentLibCardBinding? = null
     private val binding get() = _binding!!
@@ -260,7 +261,7 @@ class LibraryCardDetailFragment : Fragment() {
 
     private fun loadInitialData() {
         if (cardId == -1L) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 fetchCardDetail()
@@ -370,7 +371,7 @@ class LibraryCardDetailFragment : Fragment() {
 
     private fun postComment(content: String) {
         if (cardId == -1L) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val request = PostCommentRequest(content)
@@ -389,7 +390,7 @@ class LibraryCardDetailFragment : Fragment() {
 
     private fun toggleBookmark() {
         if (cardId == -1L) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().toggleBookmark(cardId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -416,7 +417,7 @@ class LibraryCardDetailFragment : Fragment() {
 
     private fun deleteCard() {
         if (cardId == -1L) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().deleteCard(cardId)
@@ -453,12 +454,10 @@ class LibraryCardDetailFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
         _binding = null
     }
 }

@@ -8,14 +8,16 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
+import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypNoticeDetailBinding
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class MypNoticeDetailFragment : Fragment() {
+class MypNoticeDetailFragment : BaseDetailFragment() {
     private var _binding: FragmentMypNoticeDetailBinding? = null
     private val binding get() = _binding!!
 
@@ -51,14 +53,14 @@ class MypNoticeDetailFragment : Fragment() {
     }
 
     private fun fetchNoticeDetail(id: Int) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show() // ★ API 호출 전 로딩 시작
             try {
                 val response = RetrofitClient.api().getNoticeDetail(id)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val detail = response.body()!!.result
-                    binding.mypNoticeDetailDateTv.text = formatDate(detail.createdAt)
+                    binding.mypNoticeDetailDateTv.text = DateUtils.formatDate(detail.createdAt)
                     binding.mypNoticeContentTv.text = detail.content
                 } else {
                     Log.e("NoticeDetail", "상세 조회 실패: ${response.code()}")
@@ -71,25 +73,12 @@ class MypNoticeDetailFragment : Fragment() {
         }
     }
 
-    private fun formatDate(dateString: String): String {
-        return try {
-            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-            val formatter = SimpleDateFormat("yyyy. MM. dd. HH:mm", Locale.getDefault())
-            val date = parser.parse(dateString)
-            formatter.format(date ?: return dateString)
-        } catch (e: Exception) {
-            dateString
-        }
-    }
-
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }

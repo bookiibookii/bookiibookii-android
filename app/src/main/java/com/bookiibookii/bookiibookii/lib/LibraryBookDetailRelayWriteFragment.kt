@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
@@ -32,7 +32,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class LibraryBookDetailRelayWriteFragment : Fragment() {
+class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
 
     private var _binding: FragmentLibBookDetailRelayWriteBinding? = null
     private val binding get() = _binding!!
@@ -96,7 +96,7 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
 
     private fun fetchGroupDetail() {
         if (groupId == -1) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getGroupDetail(groupId)
@@ -257,7 +257,7 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
 
         loadingDialog.show()
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().postRelayReview(userBookId, request)
 
@@ -302,12 +302,10 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }

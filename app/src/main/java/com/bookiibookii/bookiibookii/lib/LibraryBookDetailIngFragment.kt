@@ -9,24 +9,25 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
+import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailIngBinding
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
 
-class LibraryBookDetailIngFragment : Fragment() {
+class LibraryBookDetailIngFragment : BaseDetailFragment() {
 
     private var _binding: FragmentLibBookDetailIngBinding? = null
     private val binding get() = _binding!!
@@ -41,10 +42,12 @@ class LibraryBookDetailIngFragment : Fragment() {
     private var hostName = ""
     private var hostProfileUrl = ""
     private var startDate = ""
-    private var endDate = "" // ★ 추가됨
+    private var endDate = ""
 
     private lateinit var cardAdapter: LibraryReviewAdapter
     private var originalList: List<CardItem> = emptyList()
+
+    private val cardViewModel: LibraryCardViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +76,7 @@ class LibraryBookDetailIngFragment : Fragment() {
         initView()
         initRecyclerView()
         initListeners()
+        setupObservers()
         loadInitialData()
     }
 
@@ -81,10 +85,8 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.libDetailBookAuthorTv.text = bookAuthor
         binding.libDetailTitleTv.text = bookTitle
 
-        // ★ [수정됨] 날짜 UTC -> KST 변환 적용
-        val formattedStart = formatDate(startDate)
-        val formattedEnd = formatDate(endDate)
-
+        val formattedStart = DateUtils.formatDate(startDate)
+        val formattedEnd = DateUtils.formatDate(endDate)
         binding.libDetailDateTv.text = if (formattedEnd.isNotEmpty()) "$formattedStart ~ $formattedEnd" else "$formattedStart ~"
 
         binding.libDetailBookTitleTv.isSelected = true
@@ -104,37 +106,42 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.layoutEmpty.visibility = View.GONE
     }
 
-    // ★ [추가] 날짜 변환 함수
-    private fun formatDate(dateString: String): String {
-        if (dateString.isEmpty()) return ""
-        return try {
-            // 1. 서버 UTC 시간 파싱
-            val format = if (dateString.contains(".")) "yyyy-MM-dd'T'HH:mm:ss.SSS" else "yyyy-MM-dd'T'HH:mm:ss"
-            val parser = SimpleDateFormat(format, Locale.getDefault())
-            parser.timeZone = TimeZone.getTimeZone("UTC")
-            val date = parser.parse(dateString) ?: return dateString
+    private fun loadInitialData() {
+        if (groupId == -1) return
 
-            // 2. 한국 시간 포맷으로 변환
-            val formatter = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
-            formatter.timeZone = TimeZone.getDefault()
-            formatter.format(date)
-        } catch (e: Exception) {
-            dateString // 변환 실패 시 원본 사용
+        // 카드 리스트는 뷰모델에 요청
+        cardViewModel.fetchGroupCards(groupId)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                fetchProgress()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
-    private fun loadInitialData() {
-        if (groupId == -1) return
-        lifecycleScope.launch {
-            loadingDialog.show()
-            try {
-                fetchProgress()
-                fetchCardList()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
+    private fun setupObservers() {
+        cardViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                if (!loadingDialog.isShowing) loadingDialog.show()
+            } else {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
+        }
+
+        cardViewModel.cardList.observe(viewLifecycleOwner) { cards ->
+            cardAdapter.submitList(cards)
+            binding.libDetailTotalTv.text = "${cards.size}개"
+
+            if (cards.isNotEmpty()) {
+                binding.groupDataExist.visibility = View.VISIBLE
+                binding.layoutEmpty.visibility = View.GONE
+            } else {
+                binding.groupDataExist.visibility = View.GONE
+                binding.layoutEmpty.visibility = View.VISIBLE
+            }
+            binding.libReviewAddBtn.visibility = View.VISIBLE
         }
     }
 
@@ -262,7 +269,7 @@ class LibraryBookDetailIngFragment : Fragment() {
     }
 
     private fun toggleBookmark(card: CardItem) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().toggleBookmark(card.cardId.toLong())
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -343,11 +350,7 @@ class LibraryBookDetailIngFragment : Fragment() {
 
     private fun sortCards(isLately: Boolean) {
         // 1. 리스트 정렬
-        if (isLately) {
-            cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
-        } else {
-            cardAdapter.submitList(originalList.sortedBy { it.page })
-        }
+        cardViewModel.sortCards(isLately)
 
         // 2. 글자 색상 변경 로직
         val context = requireContext()
@@ -372,7 +375,7 @@ class LibraryBookDetailIngFragment : Fragment() {
         // [로그 1] 요청 시작
         Log.d("CompleteReading", "완독 요청 시작 - GroupID: $groupId")
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             if (!isAdded) return@launch
             loadingDialog.show()
             try {
@@ -426,7 +429,7 @@ class LibraryBookDetailIngFragment : Fragment() {
 
     private fun deleteGroup() {
         if (userBookId == -1) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
@@ -443,17 +446,11 @@ class LibraryBookDetailIngFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        hideBottomNavigation(true)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        hideBottomNavigation(false)
         _binding = null
     }
 
-    private fun hideBottomNavigation(shouldHide: Boolean) {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
-    }
 }

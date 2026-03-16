@@ -23,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupSummary
@@ -30,7 +31,7 @@ import com.bookiibookii.bookiibookii.data.model.ReportRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentMypReportWriteBinding
 import kotlinx.coroutines.launch
 
-class MypReportWriteFragment : Fragment() {
+class MypReportWriteFragment : BaseDetailFragment() {
     private var _binding: FragmentMypReportWriteBinding? = null
     private val binding get() = _binding!!
 
@@ -118,7 +119,7 @@ class MypReportWriteFragment : Fragment() {
 
     // --- 그룹 드롭다운 로직 ---
     private fun fetchMyGroupsAndShowPopup() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getMyGroups()
@@ -180,7 +181,7 @@ class MypReportWriteFragment : Fragment() {
 
     // --- 멤버 드롭다운 로직 ---
     private fun fetchGroupMembersAndShowPopup(groupId: Int) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getGroupMembers(groupId)
@@ -401,7 +402,7 @@ class MypReportWriteFragment : Fragment() {
         val groupId = selectedGroupId ?: return
         val targetId = selectedTargetId ?: return
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val safeContext = context ?: return@launch
@@ -443,12 +444,10 @@ class MypReportWriteFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLEG
         _binding = null
     }
 }

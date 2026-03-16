@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
@@ -28,10 +29,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
-class LibraryAddCardFragment : Fragment() {
+class LibraryAddCardFragment : BaseDetailFragment() {
 
     private var _binding: FragmentLibAddCardBinding? = null
     private val binding get() = _binding!!
@@ -154,7 +156,7 @@ class LibraryAddCardFragment : Fragment() {
 
         binding.libAddBtn.isEnabled = false
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 // [수정 모드]
@@ -192,29 +194,32 @@ class LibraryAddCardFragment : Fragment() {
 
                 // 3. S3 이미지 업로드
                 val mimeType = requireContext().contentResolver.getType(selectedPhotoUri!!) ?: "image/jpeg"
+
+                val tempFile = File(requireContext().cacheDir, "upload_temp_${System.currentTimeMillis()}.jpg")
                 val inputStream = requireContext().contentResolver.openInputStream(selectedPhotoUri!!)
-                val imageBytes = inputStream?.readBytes()
+                val outputStream = java.io.FileOutputStream(tempFile)
+
+                inputStream?.copyTo(outputStream)
                 inputStream?.close()
+                outputStream.close()
 
-                if (imageBytes != null) {
-                    val cleanClient = okhttp3.OkHttpClient()
-                    val requestBody = imageBytes.toRequestBody(mimeType.toMediaTypeOrNull())
+                val requestBody = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
 
-                    val request = okhttp3.Request.Builder()
-                        .url(uploadUrl)
-                        .put(requestBody)
-                        .build()
+                val cleanClient = okhttp3.OkHttpClient()
+                val request = okhttp3.Request.Builder()
+                    .url(uploadUrl)
+                    .put(requestBody)
+                    .build()
 
-                    val response = withContext(Dispatchers.IO) { cleanClient.newCall(request).execute() }
+                val response = withContext(Dispatchers.IO) { cleanClient.newCall(request).execute() }
 
-                    if (!response.isSuccessful) {
-                        activity?.runOnUiThread {
-                            Toast.makeText(context, "이미지 서버 업로드 실패", Toast.LENGTH_SHORT).show()
-                            binding.libAddBtn.isEnabled = true
-                        }
-                        return@launch
+                if (tempFile.exists()) tempFile.delete()
+
+                if (!response.isSuccessful) {
+                    activity?.runOnUiThread {
+                        Toast.makeText(context, "이미지 서버 업로드 실패", Toast.LENGTH_SHORT).show()
+                        binding.libAddBtn.isEnabled = true
                     }
-                } else {
                     return@launch
                 }
 
@@ -308,17 +313,11 @@ class LibraryAddCardFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        hideBottomNavigation(true)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        hideBottomNavigation(false)
         _binding = null
     }
 
-    private fun hideBottomNavigation(shouldHide: Boolean) {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
-    }
 }

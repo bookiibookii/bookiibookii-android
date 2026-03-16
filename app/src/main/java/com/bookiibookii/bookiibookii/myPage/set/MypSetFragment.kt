@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypSetBinding
@@ -28,7 +29,7 @@ import com.bookiibookii.bookiibookii.myPage.setting.MypServiceFragment
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import kotlinx.coroutines.launch
 
-class MypSetFragment : Fragment() {
+class MypSetFragment : BaseDetailFragment() {
 
     private var _binding: FragmentMypSetBinding? = null
     private val binding get() = _binding!!
@@ -157,7 +158,7 @@ class MypSetFragment : Fragment() {
     }
 
     private fun performWithdraw() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().withdraw()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -193,7 +194,7 @@ class MypSetFragment : Fragment() {
     }
 
     private fun performLogout() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().logout()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -223,7 +224,6 @@ class MypSetFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {

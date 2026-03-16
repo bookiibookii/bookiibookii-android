@@ -6,9 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.databinding.FragmentMypServiceBinding
 
-class MypServiceFragment : Fragment() {
+class MypServiceFragment : BaseDetailFragment() {
     private var _binding: FragmentMypServiceBinding? = null
     private val binding get() = _binding!!
 
@@ -37,7 +38,6 @@ class MypServiceFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {

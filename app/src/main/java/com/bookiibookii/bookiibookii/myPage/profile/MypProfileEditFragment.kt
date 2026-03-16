@@ -27,6 +27,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentMypProfileEditBinding
@@ -37,7 +38,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
-class MypProfileEditFragment : Fragment() {
+class MypProfileEditFragment : BaseDetailFragment() {
 
     private var _binding: FragmentMypProfileEditBinding? = null
     private val binding get() = _binding!!
@@ -98,7 +99,7 @@ class MypProfileEditFragment : Fragment() {
             }
         }
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.eventFlow.collect { event ->
                 if (::loadingDialog.isInitialized && loadingDialog.isShowing) {
                     loadingDialog.dismiss()
@@ -384,7 +385,6 @@ class MypProfileEditFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {

@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.MypRelayReview
@@ -17,7 +18,7 @@ import com.bookiibookii.bookiibookii.databinding.FragmentMypMyReviewsBinding
 import com.bookiibookii.bookiibookii.myPage.review.MypMyReviewAdapter
 import kotlinx.coroutines.launch
 
-class MypMyReviewFragment : Fragment() {
+class MypMyReviewFragment : BaseDetailFragment() {
 
     private var _binding: FragmentMypMyReviewsBinding? = null
     private val binding get() = _binding!!
@@ -50,7 +51,7 @@ class MypMyReviewFragment : Fragment() {
     }
 
     private fun fetchReviewData() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show() // ★ API 호출 전 로딩 시작
             try {
                 val response = RetrofitClient.api().getRelayReviews()
@@ -102,12 +103,10 @@ class MypMyReviewFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         _binding = null
     }
 }
