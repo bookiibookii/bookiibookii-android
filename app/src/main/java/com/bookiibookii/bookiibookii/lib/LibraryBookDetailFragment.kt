@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -28,10 +27,18 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
 
-class LibraryBookDetailFragment : BaseDetailFragment() {
+// ✅ 상속 타입을 BaseDetailFragment<FragmentLibBookDetailBinding>으로 정확히 지정합니다.
+class LibraryBookDetailFragment : BaseDetailFragment<FragmentLibBookDetailBinding>() {
 
-    private var _binding: FragmentLibBookDetailBinding? = null
-    private val binding get() = _binding!!
+    // ❌ 에러의 주범이었던 _binding, binding 변수 선언을 삭제했습니다. (부모 클래스의 변수를 그대로 씁니다)
+
+    // ✅ BaseFragment가 강제하는 바인딩 초기화 함수만 넘겨주면 됩니다.
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibBookDetailBinding {
+        return FragmentLibBookDetailBinding.inflate(inflater, container, false)
+    }
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -69,10 +76,7 @@ class LibraryBookDetailFragment : BaseDetailFragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibBookDetailBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+    // ❌ onCreateView는 삭제했습니다. 부모(BaseFragment)가 알아서 처리합니다.
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -91,7 +95,8 @@ class LibraryBookDetailFragment : BaseDetailFragment() {
         myPageViewModel.profileData.observe(viewLifecycleOwner) { profile ->
             if (profile != null) {
                 myNickname = profile.nickname
-                if (_binding != null) binding.libDetailReviewName1Tv.text = myNickname
+                // _binding 대신 binding을 안전하게 호출하는 방식으로 수정
+                binding.libDetailReviewName1Tv.text = myNickname
             }
         }
         if (myPageViewModel.profileData.value == null) {
@@ -119,8 +124,6 @@ class LibraryBookDetailFragment : BaseDetailFragment() {
 
         binding.libDetailDateTv.text = if (formattedEnd.isNotEmpty()) "$ ~ $formattedEnd" else "$formattedStart ~"
 
-        // 별점만 유무에 따라 띄웁니다.
-        // 별점만 유무에 따라 띄웁니다.
         if (rating > 0.0) {
             binding.libDetailRateList.visibility = View.VISIBLE
             setRatingStars(rating)
@@ -171,7 +174,6 @@ class LibraryBookDetailFragment : BaseDetailFragment() {
                 binding.groupReviewSection.visibility = View.GONE
                 binding.libReviewAddBtn.visibility = View.GONE
 
-                // 기존과 동일하게 호스트/게스트에 따른 빈 화면 처리
                 val isMyTurn = (cardViewModel.groupCardResult.value?.currentBookOwner?.nickname == myNickname)
                 if (isMyTurn) {
                     binding.bookDetailNoCardHost.visibility = View.VISIBLE
@@ -186,11 +188,9 @@ class LibraryBookDetailFragment : BaseDetailFragment() {
         cardViewModel.groupCardResult.observe(viewLifecycleOwner) { result ->
             if (result == null) return@observe
 
-            // 내 후기 바인딩
             binding.libDetailReviewName1Tv.text = myNickname
             binding.libDetailReviewText1Tv.text = result.myComment ?: "\"아직 한줄 평을 남기지 않았어요.\""
 
-            // 상대방 후기 바인딩
             val partnerItem = result.togetherComments?.find { it.nickname != myNickname }
             val partnerName = partnerItem?.nickname ?: if (myNickname != hostName) hostName else "상대방"
             binding.libDetailReviewName2Tv.text = partnerName
@@ -198,9 +198,8 @@ class LibraryBookDetailFragment : BaseDetailFragment() {
         }
     }
 
-    // 4. 정렬 로직 수정
     private fun sortCards(isLately: Boolean) {
-        cardViewModel.sortCards(isLately) // 뷰모델에 정렬 위임
+        cardViewModel.sortCards(isLately)
 
         val activeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.pre_main)
         val inactiveColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.grey_500)
@@ -261,7 +260,7 @@ class LibraryBookDetailFragment : BaseDetailFragment() {
                 onDetailClick = {
                     val intent = Intent(requireContext(), GroupDetailActivity::class.java)
                     intent.putExtra("GROUP_ID", groupId.toLong())
-                    intent.putExtra("GROUP_TYPE", "RELAY") // 이어읽기 완료이므로 RELAY
+                    intent.putExtra("GROUP_TYPE", "RELAY")
                     startActivity(intent)
                 },
                 onDeleteClick = {
@@ -312,12 +311,5 @@ class LibraryBookDetailFragment : BaseDetailFragment() {
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
+    // ❌ onResume, onDestroyView도 부모에서 모두 안전하게 관리하므로 여기서는 과감히 지웠습니다.
 }

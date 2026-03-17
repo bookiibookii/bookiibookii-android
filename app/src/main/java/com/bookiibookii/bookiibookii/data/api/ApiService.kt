@@ -33,6 +33,7 @@ import com.bookiibookii.bookiibookii.data.model.NoticeListResponse
 import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
 import com.bookiibookii.bookiibookii.data.model.NotificationListResultDto
 import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
+import com.bookiibookii.bookiibookii.data.model.OtherProfileResponse
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.data.model.PostCommentResponse
 import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
@@ -59,6 +60,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -107,8 +109,9 @@ interface ApiService: TrkApi {
     @POST("api/report")
     suspend fun postReport(@Body request: ReportRequest): Response<ReportCreateResponse>
 
-    @POST("/api/auth/refresh")
+    @POST("api/auth/refresh")
     suspend fun postRefresh(
+        @Header("Authorization") authorization: String,
         @Body request: TokenRefreshRequest
     ): Response<TokenRefreshResponse>
 
@@ -261,7 +264,7 @@ interface ApiService: TrkApi {
     @GET("/api/profiles/{nickname}")
     suspend fun getUserProfile(
         @Path("nickname") nickname: String
-    ): Response<LoginActivity.ProfileResponse> // ProfileResponse는 MypageResult를 감싸는 형태여야 함
+    ): Response<OtherProfileResponse>
 
     @GET("/api/groups/me/trackers")
     suspend fun getMyTrackers(): Response<TrackerResponse>

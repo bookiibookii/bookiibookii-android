@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:fillViewport="true"
-    android:fitsSystemWindows="true"
     android:background="@color/ui_bg">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -107,7 +106,7 @@
                     android:gravity="center_vertical">
 
                     <TextView
-                        android:text="획득한 후기"
+                        android:text="받은 후기"
                         android:textAppearance="@style/medium16"
                         android:textColor="@color/grey_900"
                         android:layout_width="wrap_content"

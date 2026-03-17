@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.common.SearchHistoryManager
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpSearchBinding
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity
@@ -25,9 +26,12 @@ import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.group.main.GroupAdapter
 import com.google.android.material.chip.Chip
 
-class GrpSearchActivity : AppCompatActivity() {
+class GrpSearchActivity : BaseActivity<ActivityGrpSearchBinding>(){
 
-    private lateinit var binding: ActivityGrpSearchBinding
+    override fun getViewBinding(): ActivityGrpSearchBinding {
+        return ActivityGrpSearchBinding.inflate(layoutInflater)
+    }
+
     private val viewModel: GrpSearchViewModel by viewModels()
 
     private lateinit var groupAdapter: GroupAdapter
@@ -49,8 +53,8 @@ class GrpSearchActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityGrpSearchBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+//        binding = ActivityGrpSearchBinding.inflate(layoutInflater)
+//        setContentView(binding.root)
 
         // 매니저 초기화
         historyManager = SearchHistoryManager(this)

@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="@color/ui_bg">
 
     <androidx.constraintlayout.widget.Guideline
@@ -46,7 +45,6 @@
             android:id="@+id/myp_question_back_iv"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="16dp"
             android:src="@drawable/ic_back"
             app:layout_constraintStart_toStartOf="@id/guideline_start_inner"
             app:layout_constraintTop_toTopOf="parent"

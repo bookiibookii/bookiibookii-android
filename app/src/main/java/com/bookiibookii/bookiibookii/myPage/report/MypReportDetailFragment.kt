@@ -5,22 +5,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.databinding.FragmentMypReportDetailBinding
 
-class MypReportDetailFragment : BaseDetailFragment() {
+class MypReportDetailFragment : BaseDetailFragment<FragmentMypReportDetailBinding>() {
 
-    private var _binding: FragmentMypReportDetailBinding? = null
-    private val binding get() = _binding!!
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentMypReportDetailBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentMypReportDetailBinding {
+        return FragmentMypReportDetailBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -77,14 +72,5 @@ class MypReportDetailFragment : BaseDetailFragment() {
         selectedRb.setBackgroundResource(R.drawable.bg_round_20dp_orange_stroke)
         selectedRb.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check_orange, 0, 0, 0)
         selectedRb.setTextColor(ContextCompat.getColor(requireContext(), R.color.pre_main))
-    }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }

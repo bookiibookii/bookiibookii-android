@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    android:fitsSystemWindows="true"
+
     android:background="@color/ui_bg">
 
     <androidx.constraintlayout.widget.Guideline
@@ -137,12 +137,15 @@
                 <EditText
                     android:id="@+id/myp_report_group_et"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:background="@drawable/bg_input_round_20dp_white"
-                    android:hint="신고할 그룹을 선택해주세요"
+                    android:text="[noshel] 참을 수 없는 존재의 가벼움"
                     android:textAppearance="@style/regular15"
-                    android:textColor="@color/grey_400"
-                    android:paddingStart="20dp"/>
+                    android:textColor="@color/grey_900"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="14dp"
+                    android:gravity="center_vertical" />
 
                 <ImageView
                     android:id="@+id/myp_report_group_plus_iv"
@@ -191,8 +194,8 @@
                 android:layout_marginBottom="12dp"
                 android:layout_marginTop="24dp"
                 android:text="신고 유형 *"
-                android:textColor="#333333"
-                android:textStyle="bold" />
+                android:textAppearance="@style/medium16"
+                android:textColor="@color/grey_900" />
 
             <RadioGroup
                 android:id="@+id/myp_report_type_rg"

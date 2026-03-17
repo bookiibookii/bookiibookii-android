@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.myPage.Notice
+package com.bookiibookii.bookiibookii.myPage.notice
 
 import android.content.SharedPreferences
 import android.view.LayoutInflater

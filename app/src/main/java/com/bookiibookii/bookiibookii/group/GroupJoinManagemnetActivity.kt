@@ -11,16 +11,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.GroupTagMapper
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpJoinManagementBinding
 import kotlinx.coroutines.launch
 
-class GroupJoinManagementActivity : AppCompatActivity() {
+class GroupJoinManagementActivity : BaseActivity<ActivityGrpJoinManagementBinding>() {
 
-    private lateinit var binding: ActivityGrpJoinManagementBinding
+    override fun getViewBinding(): ActivityGrpJoinManagementBinding {
+        return ActivityGrpJoinManagementBinding.inflate(layoutInflater)
+    }
     private lateinit var groupJoinAdapter: GroupJoinAdapter
 
     private var currentGroupId: Long = 0L
@@ -30,10 +34,9 @@ class GroupJoinManagementActivity : AppCompatActivity() {
     // ★ 로컬 리스트 관리를 위한 멤버 변수
     private val applicationList = mutableListOf<GroupJoinData>()
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityGrpJoinManagementBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
         currentGroupId = intent.getLongExtra("GROUP_ID", 0L)
         intent.getStringExtra("BOOK_TITLE")?.let { currentBookTitle = it }
@@ -181,17 +184,4 @@ class GroupJoinManagementActivity : AppCompatActivity() {
         ).show()
     }
 
-    private fun showCustomToast(message: String, isSuccess: Boolean) {
-        val layout = LayoutInflater.from(this).inflate(R.layout.toast_custom, null)
-        layout.findViewById<TextView>(R.id.toast_message_tv).text = message
-        val iconRes = if (isSuccess) R.drawable.ic_check else R.drawable.ic_info
-        layout.findViewById<ImageView>(R.id.toast_icon_iv).setImageResource(iconRes)
-
-        with(Toast(applicationContext)) {
-            setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
-            duration = Toast.LENGTH_SHORT
-            view = layout
-            show()
-        }
-    }
 }

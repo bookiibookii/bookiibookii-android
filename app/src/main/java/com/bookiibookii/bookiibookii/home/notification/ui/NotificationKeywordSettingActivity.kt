@@ -20,8 +20,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.KeywordSort
+import com.bookiibookii.bookiibookii.databinding.ActivityNotificationKeywordSettingBinding
 import com.bookiibookii.bookiibookii.home.notification.adapter.KeywordAdapter
 import com.bookiibookii.bookiibookii.home.notification.data.KeywordRepository
 import com.bookiibookii.bookiibookii.home.notification.vm.KeywordViewModel
@@ -30,8 +32,11 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 
-class NotificationKeywordSettingActivity : AppCompatActivity() {
+class NotificationKeywordSettingActivity : BaseActivity<ActivityNotificationKeywordSettingBinding>() {
 
+    override fun getViewBinding(): ActivityNotificationKeywordSettingBinding {
+        return ActivityNotificationKeywordSettingBinding.inflate(layoutInflater)
+    }
     private lateinit var toolbar: MaterialToolbar
 
     private lateinit var etKeyword: EditText
@@ -66,7 +71,7 @@ class NotificationKeywordSettingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_notification_keyword_setting)
+       // setContentView(R.layout.activity_notification_keyword_setting)
 
         bindViews()
         bindToolbar()
@@ -261,7 +266,7 @@ class NotificationKeywordSettingActivity : AppCompatActivity() {
 
     private fun renderSortUi(isLatest: Boolean) {
         if (isLatest) {
-            tvSortLatest.setTextColor(getColor(R.color.grey_700))
+            tvSortLatest.setTextColor(getColor(R.color.pre_main))
             tvSortLatest.setTypeface(null, Typeface.BOLD)
 
             tvSortAbc.setTextColor(getColor(R.color.grey_500))
@@ -270,7 +275,7 @@ class NotificationKeywordSettingActivity : AppCompatActivity() {
             tvSortLatest.setTextColor(getColor(R.color.grey_500))
             tvSortLatest.setTypeface(null, Typeface.NORMAL)
 
-            tvSortAbc.setTextColor(getColor(R.color.grey_700))
+            tvSortAbc.setTextColor(getColor(R.color.pre_main))
             tvSortAbc.setTypeface(null, Typeface.BOLD)
         }
     }

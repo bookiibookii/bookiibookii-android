@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -13,19 +12,16 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookmarkBinding
 import kotlinx.coroutines.launch
 
-class LibraryBookmarkFragment : BaseDetailFragment() {
+class LibraryBookmarkFragment : BaseDetailFragment<FragmentLibBookmarkBinding>() {
 
-    private var _binding: FragmentLibBookmarkBinding? = null
-    private val binding get() = _binding!!
-
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+    private lateinit var loadingDialog: LoadingDialog
 
     private val myPageViewModel: MyPageViewModel by activityViewModels()
     private var myNickname = ""
@@ -35,17 +31,16 @@ class LibraryBookmarkFragment : BaseDetailFragment() {
 
     private val cardViewModel: LibraryCardViewModel by viewModels()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentLibBookmarkBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibBookmarkBinding {
+        return FragmentLibBookmarkBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
         setupMyProfileData()
         initRecyclerView()
@@ -106,7 +101,7 @@ class LibraryBookmarkFragment : BaseDetailFragment() {
 
     private fun fetchBookmarks() {
         viewLifecycleOwner.lifecycleScope.launch {
-            loadingDialog.show() // ★ 로딩 시작
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getBookmarkedCards()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -118,7 +113,7 @@ class LibraryBookmarkFragment : BaseDetailFragment() {
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 로딩 끝
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
@@ -152,9 +147,4 @@ class LibraryBookmarkFragment : BaseDetailFragment() {
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }

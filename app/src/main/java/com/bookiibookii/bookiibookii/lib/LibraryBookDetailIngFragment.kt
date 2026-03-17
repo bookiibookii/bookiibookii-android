@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -27,10 +26,7 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
 
-class LibraryBookDetailIngFragment : BaseDetailFragment() {
-
-    private var _binding: FragmentLibBookDetailIngBinding? = null
-    private val binding get() = _binding!!
+class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIngBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -60,13 +56,15 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
             hostName = it.getString("hostName", "") ?: ""
             hostProfileUrl = it.getString("hostProfileUrl", "") ?: ""
             startDate = it.getString("startDate", "") ?: ""
-            endDate = it.getString("endDate", "") ?: "" // ★ 추가됨
+            endDate = it.getString("endDate", "") ?: ""
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibBookDetailIngBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibBookDetailIngBinding {
+        return FragmentLibBookDetailIngBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -109,7 +107,6 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
     private fun loadInitialData() {
         if (groupId == -1) return
 
-        // 카드 리스트는 뷰모델에 요청
         cardViewModel.fetchGroupCards(groupId)
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -146,42 +143,35 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
     }
 
     private suspend fun fetchProgress() {
-        // [로그 1] 조회 시작
         Log.d("FetchProgress", "========== 진행률 조회 시작 (GroupID: $groupId) ==========")
-
         val response = RetrofitClient.api().getMyTrackers()
-
-        // [로그 2] API 응답 확인
         Log.d("FetchProgress", "Response Code: ${response.code()}")
 
         if (response.isSuccessful && response.body()?.isSuccess == true) {
             val trackerList = response.body()?.result ?: emptyList()
             Log.d("FetchProgress", "받아온 전체 트래커 개수: ${trackerList.size}")
 
-            // 내 그룹 ID와 일치하는 트래커 찾기
             val myTracker = trackerList.find { it.groupId == this@LibraryBookDetailIngFragment.groupId }
 
             if (myTracker != null) {
                 Log.d("FetchProgress", ">> 내 트래커 찾음!")
-
                 val detail = myTracker.togetherDetail
                 if (detail != null) {
                     val myRate = detail.myReadingRate
                     val groupRate = detail.groupReadingRate
 
-                    // [로그 3] 실제 진행률 값 확인
                     Log.d("FetchProgress", "   - 내 진행률: $myRate%")
                     Log.d("FetchProgress", "   - 그룹 평균: $groupRate%")
 
                     updateProgressBar(myRate, groupRate)
 
                     if (myRate >= 100) {
-                        Log.d("FetchProgress", "   -> 100% 달성! 버튼 상태 변경 (리뷰 작성 활성화)")
+                        Log.d("FetchProgress", "   -> 100% 달성! 버튼 상태 변경")
                         binding.libWriteDoneBtn.visibility = View.GONE
                         binding.libWriteReviewBtn.visibility = View.VISIBLE
                         binding.libReviewAddBtn.visibility = View.GONE
                     } else {
-                        Log.d("FetchProgress", "   -> 아직 100% 미만 (독서 종료 버튼 유지)")
+                        Log.d("FetchProgress", "   -> 아직 100% 미만")
                     }
                 } else {
                     Log.e("FetchProgress", "!! togetherDetail 데이터가 null입니다.")
@@ -194,6 +184,7 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
             Log.e("FetchProgress", "API 요청 실패: $msg")
         }
     }
+
     private suspend fun fetchCardList() {
         val response = RetrofitClient.api().getGroupCards(groupId)
         if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -224,20 +215,16 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
         constraintSet.clone(constraintLayout)
         constraintSet.setGuidelinePercent(R.id.guideline_my_progress, myProgress / 100f)
         constraintSet.setGuidelinePercent(R.id.guideline_group_progress, groupProgress / 100f)
-        constraintSet.applyTo (constraintLayout)
+        constraintSet.applyTo(constraintLayout)
 
-        // ★ [핵심] 더 짧은 막대의 Z축 값을 높여서 맨 위로 가져오기
         if (myProgress > groupProgress) {
-            // 주황색이 더 길면 -> 검정색(그룹)이 가려지지 않게 맨 위로
             binding.barGroup.translationZ = 1f
             binding.barMine.translationZ = 0f
         } else {
-            // 검정색이 더 길거나 같으면 -> 주황색(나)을 맨 위로
             binding.barMine.translationZ = 1f
             binding.barGroup.translationZ = 0f
         }
 
-        // 꼬리표 역할을 하는 점(Dot)들이 막대에 가려지지 않도록 최상단으로 보장
         binding.myProgressDot.translationZ = 2f
         binding.groupAvgDot.translationZ = 2f
     }
@@ -294,7 +281,7 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
                 onDetailClick = {
                     val intent = Intent(requireContext(), GroupDetailActivity::class.java)
                     intent.putExtra("GROUP_ID", groupId.toLong())
-                    intent.putExtra("GROUP_TYPE", "TOGETHER") // 함께읽기 진행중이므로 TOGETHER
+                    intent.putExtra("GROUP_TYPE", "TOGETHER")
                     startActivity(intent)
                 },
                 onDeleteClick = {
@@ -315,7 +302,6 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
             ).show()
         }
 
-        // ★ [핵심] 호스트 이름, 프로필, 날짜 모두 Bundle로 묶어서 넘겨줍니다.
         binding.libWriteReviewBtn.setOnClickListener {
             val fragment = LibraryWriteReviewFragment().apply {
                 arguments = Bundle().apply {
@@ -349,10 +335,8 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
     }
 
     private fun sortCards(isLately: Boolean) {
-        // 1. 리스트 정렬
         cardViewModel.sortCards(isLately)
 
-        // 2. 글자 색상 변경 로직
         val context = requireContext()
         val activeColor = androidx.core.content.ContextCompat.getColor(context, R.color.pre_main)
         val inactiveColor = androidx.core.content.ContextCompat.getColor(context, R.color.grey_500)
@@ -372,7 +356,6 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
             return
         }
 
-        // [로그 1] 요청 시작
         Log.d("CompleteReading", "완독 요청 시작 - GroupID: $groupId")
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -381,7 +364,6 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
             try {
                 val response = RetrofitClient.api().completeReading(groupId)
 
-                // [로그 2] 응답 코드 및 바디 확인
                 Log.d("CompleteReading", "Response Code: ${response.code()}")
                 Log.d("CompleteReading", "Response Body: ${response.body()}")
 
@@ -397,7 +379,6 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
 
                     loadInitialData()
                 } else {
-                    // [로그 3] 실패 원인 상세 분석
                     val errorBody = response.errorBody()?.string()
                     val msg = response.body()?.message ?: "서버 메시지 없음"
 
@@ -407,7 +388,6 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
                     Toast.makeText(context, "완독 처리에 실패했습니다: $msg", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // [로그 4] 예외 발생 (네트워크 등)
                 Log.e("CompleteReading", "Exception 발생", e)
                 Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             } finally {
@@ -415,6 +395,7 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
             }
         }
     }
+
     private fun showDeleteConfirmDialog() {
         CommonDialog(
             context = requireContext(),
@@ -443,14 +424,4 @@ class LibraryBookDetailIngFragment : BaseDetailFragment() {
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
 }

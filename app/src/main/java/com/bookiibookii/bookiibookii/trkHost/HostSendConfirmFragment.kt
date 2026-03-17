@@ -4,11 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentHostSendConfirmBinding
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.flow.collectLatest
@@ -50,22 +52,48 @@ class HostSendConfirmFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnConfirm.isEnabled = false
-        binding.btnConfirm.setTextColor(requireContext().getColor(com.bookiibookii.bookiibookii.R.color.grey_600))
-        binding.btnConfirm.backgroundTintList =
-            androidx.core.content.ContextCompat.getColorStateList(requireContext(), com.bookiibookii.bookiibookii.R.color.grey_100)
-
         var imageReady = false
         var checked = false
+
+        fun updateCheckUi() {
+            val bgRes = if (checked) {
+                R.drawable.bg_round_4dp_main_pale
+            } else {
+                R.drawable.bg_round_4dp_gray200
+            }
+            binding.cbCheck.setBackgroundResource(bgRes)
+
+            if (checked) {
+                binding.ivCheck.imageTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.pre_main)
+            } else {
+                binding.ivCheck.imageTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.white)
+            }
+        }
 
         fun updateButton() {
             val enabled = imageReady && checked
             binding.btnConfirm.isEnabled = enabled
             binding.btnConfirm.alpha = if (enabled) 1f else 0.55f
+
+            if (enabled) {
+                binding.btnConfirm.setTextColor(requireContext().getColor(R.color.grey_100))
+                binding.btnConfirm.backgroundTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.grey_900)
+            } else {
+                binding.btnConfirm.setTextColor(requireContext().getColor(R.color.grey_600))
+                binding.btnConfirm.backgroundTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.grey_100)
+            }
         }
 
-        binding.cbCheck.setOnCheckedChangeListener { _, isChecked ->
-            checked = isChecked
+        updateCheckUi()
+        updateButton()
+
+        binding.cbCheck.setOnClickListener {
+            checked = !checked
+            updateCheckUi()
             updateButton()
         }
 
@@ -76,12 +104,14 @@ class HostSendConfirmFragment : DialogFragment() {
                 vm.receivedImageState.collectLatest { state ->
                     when (state) {
                         UiState.Idle -> Unit
+
                         UiState.Loading -> {
                             binding.tvImageHint.visibility = View.VISIBLE
                             binding.tvImageHint.text = "사진을 불러오는 중…"
                             imageReady = false
                             updateButton()
                         }
+
                         is UiState.Success -> {
                             val url = state.data.presignedGetUrl
                             android.util.Log.d("IMG_UI", "received presignedGetUrl=$url")
@@ -95,6 +125,7 @@ class HostSendConfirmFragment : DialogFragment() {
                             imageReady = true
                             updateButton()
                         }
+
                         is UiState.Error -> {
                             android.util.Log.d("IMG_UI", "received image error=${state.message}")
                             binding.tvImageHint.visibility = View.VISIBLE
@@ -119,7 +150,6 @@ class HostSendConfirmFragment : DialogFragment() {
             dismissAllowingStateLoss()
         }
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -35,12 +34,8 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
 
-class LibrarySearchFragment : BaseDetailFragment() {
+class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
 
-    private var _binding: FragmentLibSearchBinding? = null
-    private val binding get() = _binding!!
-
-    // 내 닉네임을 가져오기 위한 뷰모델 추가 (LibBook 생성 시 isMine 판별용)
     private val myPageViewModel: MyPageViewModel by activityViewModels()
     private val cardViewModel: LibraryCardViewModel by viewModels()
 
@@ -64,9 +59,11 @@ class LibrarySearchFragment : BaseDetailFragment() {
         source = arguments?.getString("SOURCE", "LIBRARY") ?: "LIBRARY"
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibSearchBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibSearchBinding {
+        return FragmentLibSearchBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -88,7 +85,6 @@ class LibrarySearchFragment : BaseDetailFragment() {
         cardViewModel.cardList.observe(viewLifecycleOwner) { cards ->
             allBookmarks = cards
 
-            // 만약 검색어가 이미 입력되어 있다면 즉시 필터링 반영
             val query = binding.searchInputEt.text.toString().trim()
             if (query.isNotEmpty() && source == "BOOKMARK") {
                 filterList(query)
@@ -106,7 +102,6 @@ class LibrarySearchFragment : BaseDetailFragment() {
                     if (response.isSuccessful && response.body()?.isSuccess == true) {
                         val resultList = response.body()?.result ?: emptyList()
 
-                        // 서재 화면과 동일하게 MATCHED, COMPLETED 만 필터링
                         val filteredList = resultList.filter {
                             it.groupStatus == "MATCHED" || it.groupStatus == "COMPLETED"
                         }
@@ -145,7 +140,6 @@ class LibrarySearchFragment : BaseDetailFragment() {
         }
     }
 
-    // ★ [수정됨] 어댑터 초기화 및 리스너 세팅 개선
     private fun initRecyclerView() {
         recentSearchAdapter = RecentSearchAdapter(recentSearches,
             onDelete = { term ->
@@ -162,7 +156,6 @@ class LibrarySearchFragment : BaseDetailFragment() {
             hideKeyboard()
             val targetFragment: Fragment
 
-            // 서재 목록과 동일한 이동 로직 적용
             if (clickedBook.groupType == "TOGETHER") {
                 if (clickedBook.readStatus == ReadStatus.DONE) {
                     targetFragment = LibraryBookDetailTogetherFragment()
@@ -173,7 +166,7 @@ class LibrarySearchFragment : BaseDetailFragment() {
                 if (clickedBook.readStatus == ReadStatus.DONE) {
                     targetFragment = LibraryBookDetailFragment()
                 } else {
-                    targetFragment = LibraryFragment() // 진행중 트래커 화면 (클래스명 확인 필요)
+                    targetFragment = LibraryFragment()
                 }
             }
 
@@ -197,7 +190,7 @@ class LibrarySearchFragment : BaseDetailFragment() {
                 .commit()
         }
 
-        // 북마크 어댑터 초기화 코드는 생략 (구현체에 맞게 적용)
+        // bookmarkAdapter 초기화는 기존 코드에 구현체가 없어 생략했습니다. 필요시 추가해주세요.
     }
 
     private fun initListeners() {
@@ -212,7 +205,6 @@ class LibrarySearchFragment : BaseDetailFragment() {
                 if (query.isEmpty()) {
                     updateSearchState(isSearching = false)
                 } else {
-                    // ★ 검색어가 있을 때 즉시 필터링 후 상태 변경
                     filterList(query)
                     updateSearchState(isSearching = true)
                 }
@@ -235,7 +227,6 @@ class LibrarySearchFragment : BaseDetailFragment() {
         }
     }
 
-    // ★ [수정됨] 대소문자 무시(ignoreCase = true) 옵션 확실하게 적용
     private fun filterList(query: String) {
         if (source == "LIBRARY") {
             val filtered = allMyBooks.filter {
@@ -250,12 +241,11 @@ class LibrarySearchFragment : BaseDetailFragment() {
                         it.memo.contains(query, ignoreCase = true) ||
                         it.creatorName.contains(query, ignoreCase = true)
             }
-            bookmarkAdapter.submitList(filtered)
+            // bookmarkAdapter.submitList(filtered) // bookmarkAdapter 구현시 활성화
             binding.libSearchCountTv.text = "${filtered.size} 개"
         }
     }
 
-    // ★ [수정됨] 레이아웃 매니저를 매번 재생성하지 않도록 개선
     private fun updateSearchState(isSearching: Boolean) {
         if (isSearching) {
             binding.libSearchCountTv.visibility = View.VISIBLE
@@ -265,7 +255,7 @@ class LibrarySearchFragment : BaseDetailFragment() {
                 binding.libSearchResultRv.adapter = libraryAdapter
                 binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 3)
             } else {
-                binding.libSearchResultRv.adapter = bookmarkAdapter
+                // binding.libSearchResultRv.adapter = bookmarkAdapter // bookmarkAdapter 구현시 활성화
                 binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 2)
             }
         } else {
@@ -312,8 +302,6 @@ class LibrarySearchFragment : BaseDetailFragment() {
         imm.hideSoftInputFromWindow(binding.searchInputEt.windowToken, 0)
     }
 
-    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
     inner class RecentSearchAdapter(
         private val items: List<String>,
         private val onDelete: (String) -> Unit,
@@ -338,14 +326,5 @@ class LibrarySearchFragment : BaseDetailFragment() {
         }
 
         override fun getItemCount() = items.size
-    }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }

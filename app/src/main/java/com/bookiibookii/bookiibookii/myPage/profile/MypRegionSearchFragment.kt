@@ -5,25 +5,23 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.Data.City
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.databinding.FragmentMypRegionSearchBinding
 
-class MypRegionSearchFragment : BaseDetailFragment() {
-    private var _binding: FragmentMypRegionSearchBinding? = null
-    private val binding get() = _binding!!
+class MypRegionSearchFragment : BaseDetailFragment<FragmentMypRegionSearchBinding>() {
 
     private var currentCity = ""
     private var currentDistrict = ""
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentMypRegionSearchBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentMypRegionSearchBinding {
+        return FragmentMypRegionSearchBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -49,16 +47,13 @@ class MypRegionSearchFragment : BaseDetailFragment() {
             City("제주", listOf("제주시", "서귀포시"))
         )
 
-        // 오른쪽 어댑터 (구/군)
         val rightAdapter = MypDistrictAdapter { selectedDistrict ->
             currentDistrict = selectedDistrict
-            // 선택 시 UI 효과(배경색 등)는 어댑터 내부에서 처리 필요
         }
 
-        // 왼쪽 어댑터 (시/도)
         val leftAdapter = MypCityAdapter(mockData) { city ->
             currentCity = city.name
-            currentDistrict = "" // 시가 바뀌면 구 초기화
+            currentDistrict = ""
             rightAdapter.submitList(city.districts)
         }
 
@@ -68,7 +63,6 @@ class MypRegionSearchFragment : BaseDetailFragment() {
         binding.rvRightDistrict.layoutManager = GridLayoutManager(requireContext(), 3)
         binding.rvRightDistrict.adapter = rightAdapter
 
-        // 초기값
         if (mockData.isNotEmpty()) {
             currentCity = mockData[0].name
             rightAdapter.submitList(mockData[0].districts)
@@ -76,25 +70,12 @@ class MypRegionSearchFragment : BaseDetailFragment() {
 
         binding.mypSearchCloseIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
-        // [완료 버튼] 선택 결과 반환
         binding.mypSearchSearchBtn.setOnClickListener {
             if(currentDistrict.isNotEmpty()) {
                 val result = "$currentCity $currentDistrict"
-                // 결과 전달
                 setFragmentResult("requestKeyRegion", bundleOf("regionResult" to result))
                 requireActivity().supportFragmentManager.popBackStack()
-            } else {
-                // 구/군을 선택하지 않았을 때 처리
             }
         }
     }
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
 }

@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
@@ -30,13 +29,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
-class LibraryAddCardFragment : BaseDetailFragment() {
-
-    private var _binding: FragmentLibAddCardBinding? = null
-    private val binding get() = _binding!!
+// 1. 제네릭 타입 명시
+class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -83,9 +79,12 @@ class LibraryAddCardFragment : BaseDetailFragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibAddCardBinding.inflate(inflater, container, false)
-        return binding.root
+    // 2. BaseFragment에서 요구하는 바인딩 인플레이트 함수 구현
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibAddCardBinding {
+        return FragmentLibAddCardBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -96,14 +95,10 @@ class LibraryAddCardFragment : BaseDetailFragment() {
         initListeners()
         setupFragmentResultListener()
 
-        // ★ [수정됨] 키보드(IME) 높이를 무시하도록 변경
+        // ★ 키보드(IME) 높이를 무시하도록 변경
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBarHeight = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-
-            // 기존 코드: val bottomPadding = if (imeHeight > 0) imeHeight else systemBarHeight
-            // 수정 코드: 키보드가 올라오더라도 패딩을 늘리지 않고, 시스템 바 높이만 유지합니다.
             v.setPadding(0, 0, 0, systemBarHeight)
-
             insets
         }
     }
@@ -310,14 +305,4 @@ class LibraryAddCardFragment : BaseDetailFragment() {
         val file = File(dir, "card_${System.currentTimeMillis()}.jpg")
         return FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
     }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
 }

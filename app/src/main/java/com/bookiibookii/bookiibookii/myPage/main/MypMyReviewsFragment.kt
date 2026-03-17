@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii
+package com.bookiibookii.bookiibookii.myPage.main
 
 import android.os.Bundle
 import android.util.Log
@@ -6,36 +6,32 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.MypRelayReview
 import com.bookiibookii.bookiibookii.databinding.FragmentMypMyReviewsBinding
-import com.bookiibookii.bookiibookii.myPage.review.MypMyReviewAdapter
 import kotlinx.coroutines.launch
 
-class MypMyReviewFragment : BaseDetailFragment() {
+class MypMyReviewFragment : BaseDetailFragment<FragmentMypMyReviewsBinding>() {
 
-    private var _binding: FragmentMypMyReviewsBinding? = null
-    private val binding get() = _binding!!
-
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
-
+    private lateinit var loadingDialog: LoadingDialog
     private lateinit var reviewAdapter: MypMyReviewAdapter
     private var reviewList: List<MypRelayReview> = listOf()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentMypMyReviewsBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentMypMyReviewsBinding {
+        return FragmentMypMyReviewsBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
         initRecyclerView()
         initListeners()
@@ -51,8 +47,9 @@ class MypMyReviewFragment : BaseDetailFragment() {
     }
 
     private fun fetchReviewData() {
+        // ★ 코루틴 안전장치 적용 (viewLifecycleOwner)
         viewLifecycleOwner.lifecycleScope.launch {
-            loadingDialog.show() // ★ API 호출 전 로딩 시작
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getRelayReviews()
 
@@ -62,7 +59,7 @@ class MypMyReviewFragment : BaseDetailFragment() {
                         reviewList = result.reviews
 
                         binding.mypReviewCountTv.text = "${reviewList.size} 개"
-                        sortReviews(true)
+                        sortReviews(true) // 기본: 최신순 정렬
                     }
                 } else {
                     Log.e("ReviewFragment", "API Error: ${response.code()}")
@@ -70,27 +67,31 @@ class MypMyReviewFragment : BaseDetailFragment() {
             } catch (e: Exception) {
                 Log.e("ReviewFragment", "Network Error", e)
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
 
     private fun initListeners() {
         binding.mypReviewBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
-        binding.mypReviewRateTv.setOnClickListener { sortReviews(true) }
-        binding.mypReviewTimeTv.setOnClickListener { sortReviews(false) }
+        binding.mypReviewRateTv.setOnClickListener { sortReviews(true) } // 최신순
+        binding.mypReviewTimeTv.setOnClickListener { sortReviews(false) } // 과거순
     }
 
     private fun sortReviews(isNewest: Boolean) {
+        if (reviewList.isEmpty()) return
+
+        // ★ 정렬 기준 문자열을 안전하게 처리 (null 대비)
         val sortedList = if (isNewest) {
-            reviewList.sortedByDescending { it.finishedDate }
+            reviewList.sortedByDescending { it.finishedDate ?: "" }
         } else {
-            reviewList.sortedBy { it.finishedDate }
+            reviewList.sortedBy { it.finishedDate ?: "" }
         }
         reviewAdapter.submitList(sortedList)
 
-        val activeColor = ContextCompat.getColor(requireContext(), R.color.pre_main)
-        val inactiveColor = ContextCompat.getColor(requireContext(), R.color.grey_500)
+        // 탭 UI 컬러 변경
+        val activeColor = ContextCompat.getColor(requireContext(), R.color.grey_900)
+        val inactiveColor = ContextCompat.getColor(requireContext(), R.color.grey_400)
 
         if (isNewest) {
             binding.mypReviewRateTv.setTextColor(activeColor)
@@ -99,14 +100,5 @@ class MypMyReviewFragment : BaseDetailFragment() {
             binding.mypReviewRateTv.setTextColor(inactiveColor)
             binding.mypReviewTimeTv.setTextColor(activeColor)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }

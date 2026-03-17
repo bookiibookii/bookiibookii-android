@@ -1,27 +1,21 @@
-package com.bookiibookii.bookiibookii.myPage.Notice
+package com.bookiibookii.bookiibookii.myPage.notice
 
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypNoticeDetailBinding
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
 
-class MypNoticeDetailFragment : BaseDetailFragment() {
-    private var _binding: FragmentMypNoticeDetailBinding? = null
-    private val binding get() = _binding!!
+class MypNoticeDetailFragment : BaseDetailFragment<FragmentMypNoticeDetailBinding>() {
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
+    private lateinit var loadingDialog: LoadingDialog
     private var noticeId: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,17 +25,16 @@ class MypNoticeDetailFragment : BaseDetailFragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentMypNoticeDetailBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentMypNoticeDetailBinding {
+        return FragmentMypNoticeDetailBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
         binding.mypNoticeBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
@@ -54,7 +47,7 @@ class MypNoticeDetailFragment : BaseDetailFragment() {
 
     private fun fetchNoticeDetail(id: Int) {
         viewLifecycleOwner.lifecycleScope.launch {
-            loadingDialog.show() // ★ API 호출 전 로딩 시작
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getNoticeDetail(id)
 
@@ -68,17 +61,8 @@ class MypNoticeDetailFragment : BaseDetailFragment() {
             } catch (e: Exception) {
                 Log.e("NoticeDetail", "네트워크 오류", e)
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }

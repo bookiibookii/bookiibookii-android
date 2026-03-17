@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -31,10 +30,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
-
-    private var _binding: FragmentLibBookDetailTogetherBinding? = null
-    private val binding get() = _binding!!
+class LibraryBookDetailTogetherFragment : BaseDetailFragment<FragmentLibBookDetailTogetherBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -76,9 +72,11 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibBookDetailTogetherBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibBookDetailTogetherBinding {
+        return FragmentLibBookDetailTogetherBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -94,7 +92,6 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
     }
 
     private fun setupObservers() {
-        // 로딩 다이얼로그 처리
         cardViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             if (isLoading) {
                 if (!loadingDialog.isShowing) loadingDialog.show()
@@ -103,7 +100,6 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
             }
         }
 
-        // 완성된 카드 리스트 수신 시 어댑터에 넘김
         cardViewModel.cardList.observe(viewLifecycleOwner) { cards ->
             cardAdapter.submitList(cards)
             binding.libDetailTotalTv.text = "${cards.size}개"
@@ -117,14 +113,12 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
             }
         }
 
-        // 에러 메시지 처리
         cardViewModel.errorMessage.observe(viewLifecycleOwner) { msg ->
             if (msg != null) {
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
         }
 
-        // 전체 그룹 결과 (내 코멘트, 파트너 코멘트 등 UI 업데이트용)
         cardViewModel.groupCardResult.observe(viewLifecycleOwner) { result ->
             if (result != null) {
                 currentGroupResult = result
@@ -138,7 +132,7 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
         myPageViewModel.profileData.observe(viewLifecycleOwner) { profile ->
             if (profile != null) {
                 myNickname = profile.nickname
-                if (_binding != null) {
+                if (view != null) {
                     binding.libDetailReviewName1Tv.text = myNickname
                     updateReviewUI()
                 }
@@ -163,11 +157,10 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
         Glide.with(this).load(hostProfileUrl).placeholder(R.drawable.bg_circle_gray500)
             .error(R.drawable.img_profile_default).transform(CenterCrop(), RoundedCorners(dpToPx(8))).into(binding.libDetailProfileIv)
 
-        // ★ [핵심] 날짜는 별점 유무와 상관없이 무조건 반영합니다.
         val formattedStart = formatDate(startDate)
         val formattedEnd = formatDate(endDate)
         binding.libDetailDateTv.text = if (formattedEnd.isNotEmpty()) "$formattedStart ~ $formattedEnd" else "$formattedStart ~"
-        // 별점 세팅
+
         if (rating > 0.0) {
             binding.libDetailRateList.visibility = View.VISIBLE
             setRatingStars(rating)
@@ -277,12 +270,11 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
         }
 
         binding.libDetailMoreIv.setOnClickListener {
-            // ★ 바텀시트 생성 시 상세페이지 이동 로직 추가
             LibraryGroupDeleteBottomSheet(
                 onDetailClick = {
                     val intent = Intent(requireContext(), GroupDetailActivity::class.java)
-                    intent.putExtra("GROUP_ID", groupId.toLong()) // groupId를 Long으로 변환
-                    intent.putExtra("GROUP_TYPE", "TOGETHER")     // 타입은 TOGETHER
+                    intent.putExtra("GROUP_ID", groupId.toLong())
+                    intent.putExtra("GROUP_TYPE", "TOGETHER")
                     startActivity(intent)
                 },
                 onDeleteClick = {
@@ -306,14 +298,12 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
     }
 
     private fun sortCards(isLately: Boolean) {
-        // 1. 리스트 정렬
         if (isLately) {
             cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
         } else {
             cardAdapter.submitList(originalList.sortedBy { it.page })
         }
 
-        // 2. 글자 색상 변경 로직
         val context = requireContext()
         val activeColor = androidx.core.content.ContextCompat.getColor(context, R.color.pre_main)
         val inactiveColor = androidx.core.content.ContextCompat.getColor(context, R.color.grey_500)
@@ -355,13 +345,4 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment() {
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }

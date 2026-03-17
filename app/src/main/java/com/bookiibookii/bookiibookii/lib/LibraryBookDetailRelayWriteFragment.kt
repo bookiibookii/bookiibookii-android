@@ -12,9 +12,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback // 백버튼 콜백
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
@@ -32,10 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
-
-    private var _binding: FragmentLibBookDetailRelayWriteBinding? = null
-    private val binding get() = _binding!!
+class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDetailRelayWriteBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -46,7 +42,6 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
     private var partnerRating = 0.0
     private val selectedTags = mutableSetOf<TextView>()
 
-    // ★ [핵심] 전송 완료 여부 체크 변수
     private var isReviewSubmitted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,9 +52,11 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibBookDetailRelayWriteBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibBookDetailRelayWriteBinding {
+        return FragmentLibBookDetailRelayWriteBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -68,25 +65,23 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
 
         updateButtonState()
         initListener()
-        handleSystemBackPressed() // 시스템 백버튼 처리
+        handleSystemBackPressed()
         fetchGroupDetail()
     }
 
-    // ★ 시스템 백버튼(제스처/하단바) 눌렀을 때 로직
     private fun handleSystemBackPressed() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (isReviewSubmitted) {
-                    goToLibrary() // 전송 완료 상태면 서재로
+                    goToLibrary()
                 } else {
                     isEnabled = false
-                    requireActivity().onBackPressed() // 아니면 그냥 뒤로가기
+                    requireActivity().onBackPressed()
                 }
             }
         })
     }
 
-    // ★ 서재로 이동하며 스택 정리하는 함수
     private fun goToLibrary() {
         parentFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         parentFragmentManager.beginTransaction()
@@ -149,7 +144,6 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
     }
 
     private fun initListener() {
-        // ★ 뒤로가기 버튼(상단 아이콘) 클릭 시 로직
         binding.libDetailBackIv.setOnClickListener {
             if (isReviewSubmitted) {
                 goToLibrary()
@@ -174,7 +168,7 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
         var currentContainerRating = 0.0
         stars.forEachIndexed { index, starView ->
             starView.setOnClickListener {
-                if (isReviewSubmitted) return@setOnClickListener // 전송 후 수정 방지
+                if (isReviewSubmitted) return@setOnClickListener
 
                 val targetHalf = index + 0.5
                 val targetFull = index + 1.0
@@ -212,7 +206,7 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
     }
 
     private fun toggleTag(textView: TextView) {
-        if (isReviewSubmitted) return // 전송 후 수정 방지
+        if (isReviewSubmitted) return
 
         if (selectedTags.contains(textView)) {
             selectedTags.remove(textView)
@@ -266,13 +260,8 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "리뷰 작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-
-                    // ★ [수정] 복잡한 이동 로직 제거 -> 단순히 뒤로가기
-                    // 서재 화면이 onResume 등에서 데이터를 다시 불러오도록 설계되어 있다면 목록이 갱신됩니다.
-                    // 만약 갱신이 필요하다면 setFragmentResult를 사용합니다.
                     requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
                     requireActivity().supportFragmentManager.popBackStack()
-
                 } else {
                     val msg = response.body()?.message ?: "등록 실패"
                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -284,6 +273,7 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
             }
         }
     }
+
     private fun mapUiTextToBadgeCode(text: String): String {
         return when (text) {
             "친절하고 매너가 좋아요" -> "KINDNESS"
@@ -299,13 +289,4 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment() {
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }

@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.myPage
+package com.bookiibookii.bookiibookii.myPage.main
 
 import android.content.res.ColorStateList
 import android.os.Bundle
@@ -14,10 +14,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bookiibookii.bookiibookii.MypMyReviewFragment
+import androidx.recyclerview.widget.GridLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.MypReview
 import com.bookiibookii.bookiibookii.data.model.MypageResult
@@ -32,16 +32,11 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
-import android.graphics.drawable.Drawable
-import androidx.recyclerview.widget.GridLayoutManager
-import com.bookiibookii.bookiibookii.common.BaseDetailFragment
-import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.target.Target
 
-class MypageFragment : BaseDetailFragment() {
+// ✅ Base가 아닌 기본 Fragment()를 상속받습니다.
+class MypageFragment : Fragment() {
 
+    // ✅ 일반 Fragment에서 ViewBinding을 사용하는 정석적인 패턴
     private var _binding: FragmentMypBinding? = null
     private val binding get() = _binding!!
 
@@ -49,23 +44,27 @@ class MypageFragment : BaseDetailFragment() {
     private var _profileBinding: LayoutMypProfileCardBinding? = null
     private val profileBinding get() = _profileBinding!!
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
-
+    private lateinit var loadingDialog: LoadingDialog
     private val viewModel: MyPageViewModel by activityViewModels()
     private var isGroupExpanded = true
 
+    // ✅ Fragment()를 상속받았으므로 반드시 onCreateView를 통해 화면을 그려야 합니다.
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMypBinding.inflate(inflater, container, false)
-        _profileBinding = LayoutMypProfileCardBinding.bind(binding.layoutProfile.root)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
+
+        // include 레이아웃 바인딩 초기화
+        _profileBinding = LayoutMypProfileCardBinding.bind(binding.layoutProfile.root)
+
+        loadingDialog = LoadingDialog(requireContext())
 
         setupRecyclerViews()
         initNavigation()
@@ -94,9 +93,7 @@ class MypageFragment : BaseDetailFragment() {
     }
 
     private fun setupRecyclerViews() {
-        // ★ [수정됨] 세로 스크롤, 가로 2열 그리드로 변경
         binding.mypReviewsRv.layoutManager = GridLayoutManager(context, 2)
-
         binding.mypGroupsRv.layoutManager = LinearLayoutManager(context)
         binding.mypGroupsRv.isNestedScrollingEnabled = false
         binding.rvBooks.layoutManager = LinearLayoutManager(context)
@@ -112,15 +109,13 @@ class MypageFragment : BaseDetailFragment() {
             "FAST_SHIPPING" -> "책을 빠르게 보내줬어요"
             "FUNNY" -> "코멘트가 재미있어요"
             "CLEAN_CONDITION" -> "책을 깨끗하고 깔끔하게 읽어요"
-
-            // 기존 방어 코드 (위 목록에 없는 예전 데이터가 올 경우를 대비)
             "MEMO" -> "메모환영"
             "POSTIT" -> "포스트잇"
             "CLEAN" -> "깔끔"
             "SERIOUS" -> "진지함"
             "LIGHT_FUN" -> "재미있게"
             "INSIGHT" -> "인사이트"
-            else -> englishText // 매핑되는 단어가 없으면 원래 영어 그대로 출력
+            else -> englishText
         }
     }
 
@@ -145,9 +140,7 @@ class MypageFragment : BaseDetailFragment() {
             mypTagsLayout.removeAllViews()
             data.topTags.forEach { tagText ->
                 val textView = TextView(root.context).apply {
-                    // ★ [핵심] translateBadge 함수를 사용해서 한글로 변환 후 적용
                     text = "#${translateBadge(tagText)}"
-
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                     setTextColor(ContextCompat.getColor(context, R.color.ui_main_sub))
                     setBackgroundResource(R.drawable.bg_round_8dp_gray300)
@@ -166,23 +159,19 @@ class MypageFragment : BaseDetailFragment() {
             }
         }
 
-        // ★ [핵심] 획득한 후기(뱃지) 리스트도 한글로 변환
         val badgeList = data.userBadges?.map {
             MypReview(content = translateBadge(it.userBadge), count = it.count)
         } ?: emptyList()
         binding.mypReviewsRv.adapter = MypReviewAdapter(badgeList)
-
         binding.mypGroupsRv.adapter = MypGroupAdapter(data.groups ?: emptyList())
         binding.rvBooks.adapter = MypLateBookAdapter(data.books ?: emptyList())
     }
 
     private fun fetchMypageData() {
         viewLifecycleOwner.lifecycleScope.launch {
-            loadingDialog.show() // API 호출 전 로딩 시작
-
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getMypage()
-
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result
                     if (result != null) {
@@ -194,7 +183,6 @@ class MypageFragment : BaseDetailFragment() {
             } catch (e: Exception) {
                 Log.e("Mypage", "Network Error", e)
             } finally {
-                // ★ Glide 로딩 여부와 상관없이 통신이 끝나면 무조건 로딩창 해제! (무한 로딩 해결)
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
@@ -228,8 +216,8 @@ class MypageFragment : BaseDetailFragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        // ✅ 일반 Fragment이므로 두 바인딩을 모두 직접 메모리에서 해제해 주어야 합니다.
         _profileBinding = null
+        _binding = null
     }
-
 }
