@@ -278,7 +278,7 @@ class TrackerAdapter(
             return when (key) {
                 "ECON_BIZ" -> "경제/경영"
                 "SCI_IT" -> "과학/IT"
-                "NOVEL_GENRE" -> "(소설)"
+                "NOVEL_GENRE" -> "소설"
                 "POEM_ESSAY" -> "시/에세이"
                 "HOME_HOBBY" -> "가정/취미"
                 "ART_CULTURE" -> "예술/문화"
