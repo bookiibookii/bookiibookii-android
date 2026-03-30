@@ -3,11 +3,9 @@ package com.bookiibookii.bookiibookii
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -29,7 +27,7 @@ import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
 import com.bookiibookii.bookiibookii.trkHost.HostActivity
-import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
+import com.bookiibookii.bookiibookii.trkHost.TrkMainFragment
 import kotlinx.coroutines.launch
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
@@ -44,9 +42,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         val at = prefs.getString("access_token", null)
-
-        // TODO: 추후 로그 삭제
-        Log.d("ONB_FLOW", "MainActivity started")
 
 //        enableEdgeToEdge()
 //        setContentView(R.layout.activity_main)
@@ -283,7 +278,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         findViewById<View>(R.id.itemTracker).setOnClickListener {
-            selectTab(NavTab.TRACKER, TrkHostMainFragment())
+            selectTab(NavTab.TRACKER, TrkMainFragment())
         }
 
         findViewById<View>(R.id.itemLibrary).setOnClickListener {

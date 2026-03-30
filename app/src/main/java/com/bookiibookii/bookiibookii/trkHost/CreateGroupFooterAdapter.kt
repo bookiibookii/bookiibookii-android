@@ -9,10 +9,11 @@ import com.bookiibookii.bookiibookii.R
 import com.google.android.material.button.MaterialButton
 
 class CreateGroupFooterAdapter(
-    private val mode: FooterMode,
+    mode: FooterMode,
     private val onActionClick: () -> Unit
 ) : RecyclerView.Adapter<CreateGroupFooterAdapter.VH>() {
 
+    private var mode: FooterMode = mode
     private var showEmptyText: Boolean = true
 
     fun setShowEmptyText(show: Boolean) {
@@ -20,21 +21,25 @@ class CreateGroupFooterAdapter(
         notifyItemChanged(0)
     }
 
+    fun updateMode(newMode: FooterMode) {
+        mode = newMode
+        notifyItemChanged(0)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_trk_create_group_footer, parent, false)
-        return VH(view, mode, onActionClick)
+        return VH(view, onActionClick)
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bind(showEmptyText)
+        holder.bind(showEmptyText, mode)
     }
 
     override fun getItemCount(): Int = 1
 
     class VH(
         itemView: View,
-        private val mode: FooterMode,
         onActionClick: () -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
 
@@ -48,7 +53,7 @@ class CreateGroupFooterAdapter(
             btnAction.setOnClickListener { onActionClick() }
         }
 
-        fun bind(showEmptyText: Boolean) {
+        fun bind(showEmptyText: Boolean, mode: FooterMode) {
             card.visibility = View.VISIBLE
             tvTitle.visibility = View.VISIBLE
             btnAction.visibility = View.VISIBLE
