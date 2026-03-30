@@ -5,11 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@android:color/white"
-    android:padding="24dp">
+    android:background="@android:color/white">
 
     <View
         android:id="@+id/view_handle"
+        android:layout_marginTop="20dp"
         android:layout_width="40dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
@@ -19,7 +19,8 @@
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="24dp"
         android:text="게스트가 기간 연장을 신청했어요"
         android:textColor="@color/grey_900"
         android:textSize="20sp"
@@ -30,6 +31,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
         app:cardBackgroundColor="@color/grey_100"
         app:cardCornerRadius="12dp"
         app:cardElevation="0dp"
@@ -40,7 +43,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -50,7 +53,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="기존 예정 종료일   "
+                    android:minWidth="130dp"
+                    android:text="기존 예정 종료일"
                     android:textColor="@color/grey_900"
                     android:textSize="14sp"
                     android:fontFamily="@font/pretendard_regular"
@@ -76,7 +80,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="연장 후 예정 종료일   "
+                    android:minWidth="130dp"
+                    android:text="연장 후 예정 종료일"
                     android:textColor="@color/grey_900"
                     android:textSize="14sp"
                     android:fontFamily="@font/pretendard_regular"
@@ -101,13 +106,15 @@
         android:id="@+id/btn_confirm"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
         android:text="확인"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/grey_100"
         android:backgroundTint="@color/grey_900"
-        app:cornerRadius="16dp"
+        app:cornerRadius="20dp"
         android:fontFamily="@font/pretendard_medium" />
 
 </LinearLayout>

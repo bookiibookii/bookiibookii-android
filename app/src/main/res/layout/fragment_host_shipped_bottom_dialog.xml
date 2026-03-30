@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         app:cardBackgroundColor="@color/grey_100"
-        app:cardCornerRadius="14dp"
+        app:cardCornerRadius="12dp"
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
         app:strokeColor="@color/grey_200">
@@ -94,7 +94,7 @@
         android:textColor="@color/grey_900"
         android:textSize="15sp"
         android:fontFamily="@font/pretendard_medium"
-        app:cornerRadius="16dp"
+        app:cornerRadius="20dp"
         app:backgroundTint="@android:color/white"
         app:strokeWidth="1dp"
         app:strokeColor="@color/grey_200" />
@@ -109,6 +109,6 @@
         android:textSize="15sp"
         android:fontFamily="@font/pretendard_medium"
         android:backgroundTint="@color/grey_900"
-        app:cornerRadius="16dp" />
+        app:cornerRadius="20dp" />
 
 </LinearLayout>
