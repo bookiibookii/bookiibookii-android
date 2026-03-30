@@ -39,14 +39,13 @@ class TrkMainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         trackerAdapter = TrackerAdapter { item ->
-            val tab = vm.currentTab.value
             when (item.exchangeType) {
                 ExchangeType.DELIVERY -> {
-                    val actClass = if (tab == TrackerTab.MY_GROUP) HostActivity::class.java else GuestActivity::class.java
+                    val actClass = if (item.role == ExchangeRole.HOST) HostActivity::class.java else GuestActivity::class.java
                     startActivity(Intent(requireContext(), actClass).apply { putExtra("group_id", item.groupId) })
                 }
                 ExchangeType.DIRECT -> {
-                    val actClass = if (tab == TrackerTab.MY_GROUP) DirectHostActivity::class.java else DirectGuestActivity::class.java
+                    val actClass = if (item.role == ExchangeRole.HOST) DirectHostActivity::class.java else DirectGuestActivity::class.java
                     startActivity(Intent(requireContext(), actClass).apply { putExtra("group_id", item.groupId) })
                 }
                 ExchangeType.NONE -> {

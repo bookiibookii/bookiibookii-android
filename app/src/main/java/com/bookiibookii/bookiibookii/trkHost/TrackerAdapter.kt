@@ -33,10 +33,22 @@ class TrackerAdapter(
         return when (viewType) {
             VIEW_TYPE_NONE -> {
                 val binding = ItemTrackerNoneBinding.inflate(inflater, parent, false)
+                if (parent.parent is androidx.viewpager2.widget.ViewPager2) {
+                    binding.root.layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                }
                 NoneViewHolder(binding)
             }
             else -> {
                 val binding = ItemTrkBinding.inflate(inflater, parent, false)
+                if (parent.parent is androidx.viewpager2.widget.ViewPager2) {
+                    binding.root.layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                }
                 ExchangeViewHolder(binding)
             }
         }

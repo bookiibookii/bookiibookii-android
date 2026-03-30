@@ -16,7 +16,7 @@ import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.main.GroupFragment
-import com.bookiibookii.bookiibookii.home.ExchangeRole
+import com.bookiibookii.bookiibookii.trkHost.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.home.OtherProfileFragment
 import com.bookiibookii.bookiibookii.lib.LibraryAddCardFragment
