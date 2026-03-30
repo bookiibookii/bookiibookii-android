@@ -6,58 +6,29 @@
     android:layout_height="match_parent"
     android:background="@color/ui_bg">
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_start"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.06" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_end"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.94" />
-
-    <!-- 상단 배경 영역 -->
     <LinearLayout
         android:id="@+id/lib_top_layout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintHeight_percent="0.11"
+        android:layout_height="68dp"
         android:orientation="vertical"
         android:background="@color/white"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- 내부 콘텐츠 정렬용 ConstraintLayout -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-
-            <!-- 🔹 내부 전용 가이드라인 (중요) -->
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/guideline_start_inner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.06" />
-
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/guideline_end_inner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.94" />
 
             <TextView
                 android:id="@+id/lib_title_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
                 android:text="내 서재"
                 android:textAppearance="@style/medium24"
                 android:textColor="@color/grey_900"
-                app:layout_constraintStart_toStartOf="@id/guideline_start_inner"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
@@ -75,28 +46,30 @@
                 android:id="@+id/lib_book_iv"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:layout_marginEnd="24dp"
                 android:src="@drawable/ic_book"
-                app:layout_constraintEnd_toEndOf="@id/guideline_end_inner"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 
-    <!-- 이하 기존 코드 그대로 -->
     <LinearLayout
         android:id="@+id/lib_btns_ll"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="48dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginTop="16dp"
         app:layout_constraintTop_toBottomOf="@id/lib_top_layout"
-        app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintEnd_toEndOf="@id/guideline_end">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/lib_ing_btn"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:elevation="0dp"
             android:text="진행 중"
@@ -108,7 +81,7 @@
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/lib_ed_btn"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginStart="12dp"
             android:elevation="0dp"
@@ -123,10 +96,11 @@
         android:id="@+id/lib_grid_iv"
         android:layout_width="24dp"
         android:layout_height="24dp"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
         android:src="@drawable/ic_grid"
         app:layout_constraintTop_toBottomOf="@id/lib_btns_ll"
-        app:layout_constraintStart_toStartOf="@id/guideline_start" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/lib_total_tv"
@@ -138,25 +112,28 @@
         android:textAppearance="@style/regular14"
         app:layout_constraintStart_toEndOf="@id/lib_grid_iv"
         app:layout_constraintTop_toTopOf="@id/lib_grid_iv"
-        app:layout_constraintBottom_toBottomOf="@id/lib_grid_iv"/>
+        app:layout_constraintBottom_toBottomOf="@id/lib_grid_iv" />
 
     <ImageView
         android:id="@+id/lib_sort_iv"
         android:layout_width="24dp"
         android:layout_height="24dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginTop="16dp"
         android:src="@drawable/ic_sort"
         app:layout_constraintTop_toBottomOf="@id/lib_btns_ll"
-        app:layout_constraintEnd_toEndOf="@id/guideline_end" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/lib_book_list_rv"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginTop="12dp"
-        app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/lib_sort_iv"
         app:layout_constraintBottom_toBottomOf="parent" />
 
@@ -176,10 +153,12 @@
         layout="@layout/item_trk_create_group_footer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginTop="16dp"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/lib_btns_ll"
-        app:layout_constraintStart_toStartOf="@id/guideline_start"
-        app:layout_constraintEnd_toEndOf="@id/guideline_end" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
