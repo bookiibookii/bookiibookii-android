@@ -218,7 +218,7 @@
                 android:id="@+id/lib_write_title_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="괴테는 모든 것을 말했다"
+                android:text="괴테는 모든 것을 말했다에 대한 한줄평을 남겨주세요!"
                 android:textAppearance="@style/medium16"
                 android:textColor="@color/grey_900"/>
 
@@ -262,7 +262,9 @@
                 android:id="@+id/lib_write_review_et"
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
-                android:background="@drawable/bg_input_round_20dp_white"
+                android:background="@drawable/bg_round_20dp_gray200"
+                android:backgroundTint="@color/grey_100"
+
                 android:gravity="top"
                 android:hint="책에 대한 솔직한 후기를 남겨주세요."
                 android:padding="20dp"

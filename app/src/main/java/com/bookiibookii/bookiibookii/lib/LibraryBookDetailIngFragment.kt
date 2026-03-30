@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -17,6 +16,7 @@ import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
@@ -83,9 +83,8 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
         binding.libDetailBookAuthorTv.text = bookAuthor
         binding.libDetailTitleTv.text = bookTitle
 
-        val formattedStart = DateUtils.formatDate(startDate)
-        val formattedEnd = DateUtils.formatDate(endDate)
-        binding.libDetailDateTv.text = if (formattedEnd.isNotEmpty()) "$formattedStart ~ $formattedEnd" else "$formattedStart ~"
+        val formattedStart = if (startDate.isNullOrBlank() || startDate.startsWith("0000")) "0000. 00. 00." else DateUtils.formatDate(startDate)
+        binding.libDetailDateTv.text = "$formattedStart ~"
 
         binding.libDetailBookTitleTv.isSelected = true
         binding.libDetailBookAuthorTv.isSelected = true
@@ -106,15 +105,9 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
 
     private fun loadInitialData() {
         if (groupId == -1) return
-
         cardViewModel.fetchGroupCards(groupId)
-
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                fetchProgress()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            try { fetchProgress() } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
@@ -143,66 +136,25 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
     }
 
     private suspend fun fetchProgress() {
-        Log.d("FetchProgress", "========== 진행률 조회 시작 (GroupID: $groupId) ==========")
         val response = RetrofitClient.api().getMyTrackers()
-        Log.d("FetchProgress", "Response Code: ${response.code()}")
-
         if (response.isSuccessful && response.body()?.isSuccess == true) {
             val trackerList = response.body()?.result ?: emptyList()
-            Log.d("FetchProgress", "받아온 전체 트래커 개수: ${trackerList.size}")
-
             val myTracker = trackerList.find { it.groupId == this@LibraryBookDetailIngFragment.groupId }
 
             if (myTracker != null) {
-                Log.d("FetchProgress", ">> 내 트래커 찾음!")
                 val detail = myTracker.togetherDetail
                 if (detail != null) {
                     val myRate = detail.myReadingRate
                     val groupRate = detail.groupReadingRate
-
-                    Log.d("FetchProgress", "   - 내 진행률: $myRate%")
-                    Log.d("FetchProgress", "   - 그룹 평균: $groupRate%")
-
                     updateProgressBar(myRate, groupRate)
 
                     if (myRate >= 100) {
-                        Log.d("FetchProgress", "   -> 100% 달성! 버튼 상태 변경")
                         binding.libWriteDoneBtn.visibility = View.GONE
                         binding.libWriteReviewBtn.visibility = View.VISIBLE
                         binding.libReviewAddBtn.visibility = View.GONE
-                    } else {
-                        Log.d("FetchProgress", "   -> 아직 100% 미만")
                     }
-                } else {
-                    Log.e("FetchProgress", "!! togetherDetail 데이터가 null입니다.")
                 }
-            } else {
-                Log.e("FetchProgress", "!! 현재 그룹ID($groupId)와 일치하는 트래커를 목록에서 찾을 수 없습니다.")
             }
-        } else {
-            val msg = response.body()?.message ?: "메시지 없음"
-            Log.e("FetchProgress", "API 요청 실패: $msg")
-        }
-    }
-
-    private suspend fun fetchCardList() {
-        val response = RetrofitClient.api().getGroupCards(groupId)
-        if (response.isSuccessful && response.body()?.isSuccess == true) {
-            val result = response.body()?.result
-            val apiCards = result?.cards ?: emptyList()
-
-            originalList = apiCards
-            cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
-            binding.libDetailTotalTv.text = "${apiCards.size}개"
-
-            if (apiCards.isNotEmpty()) {
-                binding.groupDataExist.visibility = View.VISIBLE
-                binding.layoutEmpty.visibility = View.GONE
-            } else {
-                binding.groupDataExist.visibility = View.GONE
-                binding.layoutEmpty.visibility = View.VISIBLE
-            }
-            binding.libReviewAddBtn.visibility = View.VISIBLE
         }
     }
 
@@ -245,7 +197,8 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
                         .addToBackStack(null)
                         .commit()
                 } catch (e: Exception) {
-                    Toast.makeText(context, "상세 화면으로 이동할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    // ★ 커스텀 토스트 적용
+                    requireContext().showCustomToast("상세 화면으로 이동할 수 없습니다.", false)
                 }
             },
             onBookmarkClick = { card, _ -> toggleBookmark(card) }
@@ -284,9 +237,7 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
                     intent.putExtra("GROUP_TYPE", "TOGETHER")
                     startActivity(intent)
                 },
-                onDeleteClick = {
-                    showDeleteConfirmDialog()
-                }
+                onDeleteClick = { showDeleteConfirmDialog() }
             ).show(requireActivity().supportFragmentManager, "GroupDeleteSheet")
         }
 
@@ -351,45 +302,26 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
     }
 
     private fun requestCompleteReading() {
-        if (groupId == -1) {
-            Toast.makeText(context, "그룹 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        Log.d("CompleteReading", "완독 요청 시작 - GroupID: $groupId")
+        if (groupId == -1) return
 
         viewLifecycleOwner.lifecycleScope.launch {
             if (!isAdded) return@launch
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().completeReading(groupId)
-
-                Log.d("CompleteReading", "Response Code: ${response.code()}")
-                Log.d("CompleteReading", "Response Body: ${response.body()}")
-
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Log.d("CompleteReading", "완독 처리 성공!")
-                    Toast.makeText(context, "완독 처리가 완료되었습니다.", Toast.LENGTH_SHORT).show()
-
+                    requireContext().showCustomToast("완독 처리가 완료되었습니다.", true) // ★ 커스텀 토스트
                     binding.libWriteDoneBtn.visibility = View.GONE
                     binding.libWriteReviewBtn.visibility = View.VISIBLE
                     binding.libReviewAddBtn.visibility = View.GONE
-
                     requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
-
                     loadInitialData()
                 } else {
-                    val errorBody = response.errorBody()?.string()
                     val msg = response.body()?.message ?: "서버 메시지 없음"
-
-                    Log.e("CompleteReading", "완독 처리 실패 - 메시지: $msg")
-                    Log.e("CompleteReading", "Error Body: $errorBody")
-
-                    Toast.makeText(context, "완독 처리에 실패했습니다: $msg", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast(msg, false) // ★ 커스텀 토스트
                 }
             } catch (e: Exception) {
-                Log.e("CompleteReading", "Exception 발생", e)
-                Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("오류가 발생했습니다.", false) // ★ 커스텀 토스트
             } finally {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
@@ -415,8 +347,10 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(context, "그룹이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("그룹이 삭제되었습니다.", true) // ★ 커스텀 토스트
                     requireActivity().supportFragmentManager.popBackStack()
+                } else {
+                    requireContext().showCustomToast("삭제 실패", false) // ★ 커스텀 토스트 (혹시 몰라 추가)
                 }
             } catch (e: Exception) { e.printStackTrace() }
             finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }

@@ -11,7 +11,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -19,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypSetBinding
 import com.bookiibookii.bookiibookii.myPage.notice.MypNoticeFragment
@@ -37,9 +37,9 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
         if (isGranted) {
             sharedPreferences.edit().putBoolean("push_enabled", true).apply()
             binding.mypSetPushIv.isChecked = true
-            Toast.makeText(requireContext(), "알림이 설정되었습니다.", Toast.LENGTH_SHORT).show()
+            requireContext().showCustomToast("알림이 설정되었습니다.", true)
         } else {
-            Toast.makeText(requireContext(), "알림 권한이 거부되었습니다. 기기 설정에서 허용해주세요.", Toast.LENGTH_SHORT).show()
+            requireContext().showCustomToast("알림 권한이 거부되었습니다. 기기 설정에서 허용해주세요.", false)
             sharedPreferences.edit().putBoolean("push_enabled", false).apply()
 
             binding.mypSetPushIv.setOnCheckedChangeListener(null)
@@ -116,17 +116,17 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                         sharedPreferences.edit().putBoolean("push_enabled", true).apply()
-                        Toast.makeText(requireContext(), "알림이 설정되었습니다.", Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast("알림이 설정되었습니다.", true)
                     } else {
                         requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                 } else {
                     sharedPreferences.edit().putBoolean("push_enabled", true).apply()
-                    Toast.makeText(requireContext(), "알림이 설정되었습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("알림이 설정되었습니다.", true)
                 }
             } else {
                 sharedPreferences.edit().putBoolean("push_enabled", false).apply()
-                Toast.makeText(requireContext(), "알림이 해제되었습니다.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("알림이 해제되었습니다.", true)
             }
         }
     }
@@ -140,11 +140,11 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
                     clearLocalDataAndMoveToLogin()
                 } else {
                     Log.e("Setting", "탈퇴 실패: ${response.code()}")
-                    Toast.makeText(context, "탈퇴 처리에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("탈퇴 처리에 실패했습니다.", false)
                 }
             } catch (e: Exception) {
                 Log.e("Setting", "탈퇴 통신 오류", e)
-                Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("네트워크 오류가 발생했습니다.", false)
             }
         }
     }
@@ -175,12 +175,12 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
                     handleLogoutSuccess()
                 } else {
                     Log.e("Logout", "실패: ${response.code()} ${response.message()}")
-                    Toast.makeText(requireContext(), "로그아웃 실패했습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("로그아웃 실패했습니다.", false)
                     handleLogoutSuccess()
                 }
             } catch (e: Exception) {
                 Log.e("Logout", "네트워크 오류", e)
-                Toast.makeText(requireContext(), "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("네트워크 오류가 발생했습니다.", false)
             }
         }
     }
@@ -193,6 +193,6 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
 
-        Toast.makeText(requireContext(), "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
+        requireContext().showCustomToast("로그아웃 되었습니다.", true)
     }
 }

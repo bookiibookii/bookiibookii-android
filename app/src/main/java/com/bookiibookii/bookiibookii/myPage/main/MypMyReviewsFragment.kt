@@ -47,7 +47,6 @@ class MypMyReviewFragment : BaseDetailFragment<FragmentMypMyReviewsBinding>() {
     }
 
     private fun fetchReviewData() {
-        // ★ 코루틴 안전장치 적용 (viewLifecycleOwner)
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
@@ -57,6 +56,16 @@ class MypMyReviewFragment : BaseDetailFragment<FragmentMypMyReviewsBinding>() {
                     val result = response.body()?.result
                     if (result != null) {
                         reviewList = result.reviews
+
+                        // ★ 추가된 날짜 추적 로그 ★
+                        Log.d("DateCheckLog", "========== [마이페이지 후기 원본 데이터 확인] ==========")
+                        reviewList.forEachIndexed { index, review ->
+                            Log.d("DateCheckLog", "[$index] 책 제목: ${review.bookTitle}")
+                            Log.d("DateCheckLog", "   👉 원본 시작일(startDate): ${review.startDate}")
+                            Log.d("DateCheckLog", "   👉 원본 종료일(finishedDate): ${review.finishedDate}")
+                            Log.d("DateCheckLog", "   👉 원본 작성일(partnerBookReviewDate): ${review.partnerBookReviewDate}")
+                        }
+                        Log.d("DateCheckLog", "=====================================================")
 
                         binding.mypReviewCountTv.text = "${reviewList.size} 개"
                         sortReviews(true) // 기본: 최신순 정렬
@@ -81,12 +90,14 @@ class MypMyReviewFragment : BaseDetailFragment<FragmentMypMyReviewsBinding>() {
     private fun sortReviews(isNewest: Boolean) {
         if (reviewList.isEmpty()) return
 
-        // ★ 정렬 기준 문자열을 안전하게 처리 (null 대비)
+        // finishedDate 대신 '실제 리뷰 작성일(partnerBookReviewDate)' 기준으로 정렬
         val sortedList = if (isNewest) {
-            reviewList.sortedByDescending { it.finishedDate ?: "" }
+            reviewList.sortedByDescending { it.partnerBookReviewDate ?: it.finishedDate ?: "" }
         } else {
-            reviewList.sortedBy { it.finishedDate ?: "" }
+            reviewList.sortedBy { it.partnerBookReviewDate ?: it.finishedDate ?: "" }
         }
+
+        // 정렬된 새 리스트를 어댑터에 갱신
         reviewAdapter.submitList(sortedList)
 
         // 탭 UI 컬러 변경

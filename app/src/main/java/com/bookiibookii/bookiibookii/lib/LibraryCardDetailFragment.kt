@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +17,7 @@ import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibCardBinding
@@ -78,7 +78,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
             initListeners()
             loadInitialData()
         } catch (e: Exception) {
-            Toast.makeText(context, "화면을 불러오는 중 문제가 발생했습니다.", Toast.LENGTH_SHORT).show()
+            requireContext().showCustomToast("화면을 불러오는 중 문제가 발생했습니다.", false)
         }
     }
 
@@ -220,7 +220,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
         binding.includeChatBottom.btnSend.setOnClickListener {
             val content = binding.includeChatBottom.etInput.text.toString()
             if (content.isNotBlank()) postComment(content)
-            else Toast.makeText(context, "내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
+            else requireContext().showCustomToast("내용을 입력해주세요.", false)
         }
     }
 
@@ -350,7 +350,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
                     hideKeyboard()
                     fetchComments()
                 } else {
-                    Toast.makeText(context, "댓글 작성 실패", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("댓글 작성 실패", false)
                 }
             } catch (e: Exception) { e.printStackTrace() }
             finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
@@ -391,7 +391,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
             try {
                 val response = RetrofitClient.api().deleteCard(cardId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(context, "카드가 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("카드가 삭제되었습니다.", true)
                     requireActivity().supportFragmentManager.popBackStack()
                 } else {
                     var errorMessage = "삭제 실패"
@@ -403,10 +403,10 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
                             if (serverMessage.isNotEmpty()) errorMessage = serverMessage
                         } catch (e: Exception) {}
                     }
-                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast(errorMessage, false)
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("오류가 발생했습니다.", false)
             } finally {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
             }

@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -17,6 +16,8 @@ import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.data.model.GroupCardResult
@@ -26,9 +27,6 @@ import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
 
 class LibraryBookDetailTogetherFragment : BaseDetailFragment<FragmentLibBookDetailTogetherBinding>() {
 
@@ -44,7 +42,7 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment<FragmentLibBookDeta
     private var hostName = ""
     private var hostProfileUrl = ""
     private var myNickname = "나"
-    private var startDate = "2025. 12. 18.~"
+    private var startDate = ""
     private var endDate = ""
     private var rating: Double = 0.0
 
@@ -115,7 +113,7 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment<FragmentLibBookDeta
 
         cardViewModel.errorMessage.observe(viewLifecycleOwner) { msg ->
             if (msg != null) {
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast(msg, false)
             }
         }
 
@@ -157,9 +155,9 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment<FragmentLibBookDeta
         Glide.with(this).load(hostProfileUrl).placeholder(R.drawable.bg_circle_gray500)
             .error(R.drawable.img_profile_default).transform(CenterCrop(), RoundedCorners(dpToPx(8))).into(binding.libDetailProfileIv)
 
-        val formattedStart = formatDate(startDate)
-        val formattedEnd = formatDate(endDate)
-        binding.libDetailDateTv.text = if (formattedEnd.isNotEmpty()) "$formattedStart ~ $formattedEnd" else "$formattedStart ~"
+        val formattedStart = if (startDate.isNullOrBlank() || startDate.startsWith("0000")) "0000. 00. 00." else DateUtils.formatDate(startDate)
+        val formattedEnd = if (endDate.isNullOrBlank() || endDate.startsWith("0000")) "0000. 00. 00." else DateUtils.formatDate(endDate)
+        binding.libDetailDateTv.text = "$formattedStart ~ $formattedEnd"
 
         if (rating > 0.0) {
             binding.libDetailRateList.visibility = View.VISIBLE
@@ -176,22 +174,6 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment<FragmentLibBookDeta
 
         binding.groupDataExist.visibility = View.GONE
         binding.layoutEmpty.visibility = View.GONE
-    }
-
-    private fun formatDate(dateString: String): String {
-        if (dateString.isEmpty()) return ""
-        return try {
-            val format = if (dateString.contains(".")) "yyyy-MM-dd'T'HH:mm:ss.SSS" else "yyyy-MM-dd'T'HH:mm:ss"
-            val parser = SimpleDateFormat(format, Locale.getDefault())
-            parser.timeZone = TimeZone.getTimeZone("UTC")
-            val date = parser.parse(dateString) ?: return dateString
-
-            val formatter = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
-            formatter.timeZone = TimeZone.getDefault()
-            formatter.format(date)
-        } catch (e: Exception) {
-            dateString
-        }
     }
 
     private fun setRatingStars(score: Double) {
@@ -336,10 +318,15 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment<FragmentLibBookDeta
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(context, "그룹이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("그룹이 삭제되었습니다.", true)
                     parentFragmentManager.popBackStack()
+                } else {
+                    requireContext().showCustomToast("삭제 실패", false)
                 }
-            } catch (e: Exception) { e.printStackTrace() }
+            } catch (e: Exception) {
+                requireContext().showCustomToast("오류가 발생했습니다.", false)
+                e.printStackTrace()
+            }
             finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
         }
     }

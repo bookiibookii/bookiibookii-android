@@ -3,12 +3,15 @@ package com.bookiibookii.bookiibookii.lib
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.TextWatcher
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.Toast
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
@@ -17,6 +20,8 @@ import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.ReviewRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailWrtieReviewBinding
@@ -103,7 +108,7 @@ class LibraryWriteReviewFragment : BaseDetailFragment<FragmentLibBookDetailWrtie
 
     private fun initView() {
         binding.libDetailBookTitleTv.text = bookTitle
-        binding.libWriteTitleTv.text = bookTitle
+        setSpannableColor(binding.libWriteTitleTv, "${bookTitle}에 대한 한줄평을 남겨주세요!", bookTitle)
         binding.libDetailBookAuthorTv.text = bookAuthor
         Glide.with(this).load(bookCover).into(binding.libDetailImageIv)
 
@@ -113,7 +118,23 @@ class LibraryWriteReviewFragment : BaseDetailFragment<FragmentLibBookDetailWrtie
             .error(R.drawable.img_profile_default)
             .circleCrop().into(binding.libDetailProfileIv)
 
-        binding.libDetailDateTv.text = if (endDate.isNotEmpty()) "$startDate ~ $endDate" else "$startDate ~"
+        val formattedStart = if (startDate.isNullOrBlank() || startDate.startsWith("0000")) "0000. 00. 00." else DateUtils.formatDate(startDate)
+        binding.libDetailDateTv.text = "$formattedStart ~"
+    }
+
+    private fun setSpannableColor(textView: TextView, fullText: String, targetWord: String) {
+        val spannable = SpannableString(fullText)
+        val startIndex = fullText.indexOf(targetWord)
+        if (startIndex != -1) {
+            val endIndex = startIndex + targetWord.length
+            spannable.setSpan(
+                ForegroundColorSpan(ContextCompat.getColor(requireContext(), R.color.pre_main)),
+                startIndex,
+                endIndex,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+        textView.text = spannable
     }
 
     private fun postReview() {
@@ -130,7 +151,7 @@ class LibraryWriteReviewFragment : BaseDetailFragment<FragmentLibBookDetailWrtie
                 if (!isAdded || activity == null) return@launch
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(context, "리뷰가 등록되었습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("리뷰가 등록되었습니다.", true)
                     isReviewSubmitted = true
 
                     requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
@@ -157,10 +178,12 @@ class LibraryWriteReviewFragment : BaseDetailFragment<FragmentLibBookDetailWrtie
                         .commit()
 
                 } else {
-                    Toast.makeText(context, "리뷰 등록 실패: ${response.message()}", Toast.LENGTH_SHORT).show()
+                    val msg = response.body()?.message ?: "등록 실패"
+                    requireContext().showCustomToast("리뷰 등록 실패: $msg", false)
                 }
             } catch (e: Exception) {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
+                requireContext().showCustomToast("네트워크 오류가 발생했습니다.", false)
                 e.printStackTrace()
             }
         }
