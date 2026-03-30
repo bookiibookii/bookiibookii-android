@@ -116,7 +116,6 @@ class TrackerAdapter(
             bindStepProfiles(hostProfileUrl, guestProfileUrl, idx)
         }
 
-        // xml cardView 크기 달라지면 여기도 수정해야함
         private fun trackPercentForStep(index: Int): Float {
             val trackWidth = 332f
             val edgeInset = 20f

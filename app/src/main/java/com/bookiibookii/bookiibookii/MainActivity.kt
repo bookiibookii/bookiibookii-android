@@ -27,7 +27,7 @@ import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.MypageFragment
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
 import com.bookiibookii.bookiibookii.trkHost.HostActivity
-import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
+import com.bookiibookii.bookiibookii.trkHost.TrkMainFragment
 import kotlinx.coroutines.launch
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
@@ -278,7 +278,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         findViewById<View>(R.id.itemTracker).setOnClickListener {
-            selectTab(NavTab.TRACKER, TrkHostMainFragment())
+            selectTab(NavTab.TRACKER, TrkMainFragment())
         }
 
         findViewById<View>(R.id.itemLibrary).setOnClickListener {
