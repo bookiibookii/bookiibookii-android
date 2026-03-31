@@ -342,6 +342,7 @@
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/lib_write_done_btn"
+                android:stateListAnimator="@null"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
                 android:layout_marginTop="16dp"

@@ -89,13 +89,13 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:paddingVertical="8dp"
-                android:paddingHorizontal="12dp"
+                android:paddingVertical="12dp" android:paddingHorizontal="12dp"
                 android:gravity="center">
                 <TextView
                     android:layout_width="wrap_content"
@@ -111,13 +111,19 @@
                     android:textAppearance="@style/medium24"
                     android:textColor="@color/pre_main" />
             </LinearLayout>
-            <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#DDDDDD"/>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginVertical="12dp"
+                android:background="#DDDDDD"/>
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:paddingVertical="8dp"
+                android:paddingVertical="12dp"
                 android:paddingHorizontal="12dp"
                 android:gravity="center">
                 <TextView
@@ -134,13 +140,19 @@
                     android:textAppearance="@style/medium24"
                     android:textColor="@color/pre_main" />
             </LinearLayout>
-            <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#DDDDDD"/>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginVertical="12dp"
+                android:background="#DDDDDD"/>
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:paddingVertical="8dp"
+                android:paddingVertical="12dp"
                 android:paddingHorizontal="12dp"
                 android:gravity="center">
                 <TextView
@@ -157,6 +169,5 @@
                     android:textAppearance="@style/medium24"
                     android:textColor="@color/pre_main" />
             </LinearLayout>
-        </LinearLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

@@ -82,7 +82,6 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
             }
         }
 
-        // ★ 장르 한글 번역 함수 추가
         private fun translateGenre(englishGenre: String): String {
             return when (englishGenre.uppercase()) {
                 "ECON_BIZ" -> "경제/경영"
@@ -99,7 +98,6 @@ class MypGroupAdapter(private val items: List<MypageGroup>) :
             }
         }
 
-        // ★ 태그 한글 번역 함수
         private fun translateBadge(englishText: String): String {
             return when (englishText.uppercase()) {
                 "MEMO" -> "메모환영"

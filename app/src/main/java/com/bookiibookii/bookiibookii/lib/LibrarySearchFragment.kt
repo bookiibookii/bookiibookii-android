@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,15 +12,18 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.data.model.LibBook
 import com.bookiibookii.bookiibookii.data.model.ReadStatus
+import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibSearchBinding
 import com.bookiibookii.bookiibookii.databinding.ItemLibSearchLatelyBinding
 import com.google.android.flexbox.FlexDirection
@@ -32,13 +34,10 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
 
-class LibrarySearchFragment : Fragment() {
+class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
 
-    private var _binding: FragmentLibSearchBinding? = null
-    private val binding get() = _binding!!
-
-    // 내 닉네임을 가져오기 위한 뷰모델 추가 (LibBook 생성 시 isMine 판별용)
     private val myPageViewModel: MyPageViewModel by activityViewModels()
+    private val cardViewModel: LibraryCardViewModel by viewModels()
 
     private var source: String = "LIBRARY"
 
@@ -60,9 +59,11 @@ class LibrarySearchFragment : Fragment() {
         source = arguments?.getString("SOURCE", "LIBRARY") ?: "LIBRARY"
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibSearchBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibSearchBinding {
+        return FragmentLibSearchBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -72,6 +73,7 @@ class LibrarySearchFragment : Fragment() {
 
         initRecyclerView()
         initRecentSearch()
+        setupObservers()
         initData()
         initListeners()
 
@@ -79,9 +81,19 @@ class LibrarySearchFragment : Fragment() {
         updateSearchState(isSearching = false)
     }
 
-    // ★ [수정됨] 뷰모델이 아닌 API에서 직접 데이터를 확실하게 당겨옵니다.
+    private fun setupObservers() {
+        cardViewModel.cardList.observe(viewLifecycleOwner) { cards ->
+            allBookmarks = cards
+
+            val query = binding.searchInputEt.text.toString().trim()
+            if (query.isNotEmpty() && source == "BOOKMARK") {
+                filterList(query)
+            }
+        }
+    }
+
     private fun initData() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 if (source == "LIBRARY") {
                     val response = RetrofitClient.api().getLibraryBooks()
@@ -90,7 +102,6 @@ class LibrarySearchFragment : Fragment() {
                     if (response.isSuccessful && response.body()?.isSuccess == true) {
                         val resultList = response.body()?.result ?: emptyList()
 
-                        // 서재 화면과 동일하게 MATCHED, COMPLETED 만 필터링
                         val filteredList = resultList.filter {
                             it.groupStatus == "MATCHED" || it.groupStatus == "COMPLETED"
                         }
@@ -121,10 +132,7 @@ class LibrarySearchFragment : Fragment() {
                         }
                     }
                 } else {
-                    val response = RetrofitClient.api().getBookmarkedCards()
-                    if (response.isSuccessful && response.body()?.isSuccess == true) {
-                        allBookmarks = response.body()?.result ?: emptyList()
-                    }
+                    cardViewModel.fetchBookmarkedCards()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -132,7 +140,6 @@ class LibrarySearchFragment : Fragment() {
         }
     }
 
-    // ★ [수정됨] 어댑터 초기화 및 리스너 세팅 개선
     private fun initRecyclerView() {
         recentSearchAdapter = RecentSearchAdapter(recentSearches,
             onDelete = { term ->
@@ -149,7 +156,6 @@ class LibrarySearchFragment : Fragment() {
             hideKeyboard()
             val targetFragment: Fragment
 
-            // 서재 목록과 동일한 이동 로직 적용
             if (clickedBook.groupType == "TOGETHER") {
                 if (clickedBook.readStatus == ReadStatus.DONE) {
                     targetFragment = LibraryBookDetailTogetherFragment()
@@ -160,7 +166,7 @@ class LibrarySearchFragment : Fragment() {
                 if (clickedBook.readStatus == ReadStatus.DONE) {
                     targetFragment = LibraryBookDetailFragment()
                 } else {
-                    targetFragment = LibraryFragment() // 진행중 트래커 화면 (클래스명 확인 필요)
+                    targetFragment = LibraryFragment()
                 }
             }
 
@@ -184,7 +190,23 @@ class LibrarySearchFragment : Fragment() {
                 .commit()
         }
 
-        // 북마크 어댑터 초기화 코드는 생략 (구현체에 맞게 적용)
+        // ★ 주석 처리되어 있던 북마크 어댑터 초기화 및 클릭 이벤트 추가!
+        bookmarkAdapter = LibraryBookmarkAdapter { clickedCard ->
+            hideKeyboard()
+            val myNickname = myPageViewModel.confirmedNickname ?: myPageViewModel.profileData.value?.nickname ?: ""
+            val isMyCard = (clickedCard.creatorName == myNickname)
+            val detailFragment = LibraryCardDetailFragment().apply {
+                arguments = Bundle().apply {
+                    putLong("cardId", clickedCard.cardId.toLong())
+                    putBoolean("isMine", isMyCard)
+                    putString("writerName", clickedCard.creatorName)
+                }
+            }
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, detailFragment)
+                .addToBackStack(null)
+                .commit()
+        }
     }
 
     private fun initListeners() {
@@ -199,7 +221,6 @@ class LibrarySearchFragment : Fragment() {
                 if (query.isEmpty()) {
                     updateSearchState(isSearching = false)
                 } else {
-                    // ★ 검색어가 있을 때 즉시 필터링 후 상태 변경
                     filterList(query)
                     updateSearchState(isSearching = true)
                 }
@@ -222,7 +243,6 @@ class LibrarySearchFragment : Fragment() {
         }
     }
 
-    // ★ [수정됨] 대소문자 무시(ignoreCase = true) 옵션 확실하게 적용
     private fun filterList(query: String) {
         if (source == "LIBRARY") {
             val filtered = allMyBooks.filter {
@@ -232,17 +252,17 @@ class LibrarySearchFragment : Fragment() {
             libraryAdapter.submitList(filtered)
             binding.libSearchCountTv.text = "${filtered.size} 권"
         } else {
+            // ★ 값이 null일 때 contains()를 실행하면 튕기는 현상 방지! (?. 연산자와 == true 활용)
             val filtered = allBookmarks.filter {
-                it.bookTitle.contains(query, ignoreCase = true) ||
-                        it.memo.contains(query, ignoreCase = true) ||
-                        it.creatorName.contains(query, ignoreCase = true)
+                (it.bookTitle?.contains(query, ignoreCase = true) == true) ||
+                        (it.memo?.contains(query, ignoreCase = true) == true) ||
+                        (it.creatorName?.contains(query, ignoreCase = true) == true)
             }
-            bookmarkAdapter.submitList(filtered)
+            bookmarkAdapter.submitList(filtered) // ★ 주석 해제
             binding.libSearchCountTv.text = "${filtered.size} 개"
         }
     }
 
-    // ★ [수정됨] 레이아웃 매니저를 매번 재생성하지 않도록 개선
     private fun updateSearchState(isSearching: Boolean) {
         if (isSearching) {
             binding.libSearchCountTv.visibility = View.VISIBLE
@@ -252,7 +272,7 @@ class LibrarySearchFragment : Fragment() {
                 binding.libSearchResultRv.adapter = libraryAdapter
                 binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 3)
             } else {
-                binding.libSearchResultRv.adapter = bookmarkAdapter
+                binding.libSearchResultRv.adapter = bookmarkAdapter // ★ 주석 해제
                 binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 2)
             }
         } else {
@@ -299,8 +319,6 @@ class LibrarySearchFragment : Fragment() {
         imm.hideSoftInputFromWindow(binding.searchInputEt.windowToken, 0)
     }
 
-    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
     inner class RecentSearchAdapter(
         private val items: List<String>,
         private val onDelete: (String) -> Unit,
@@ -325,16 +343,5 @@ class LibrarySearchFragment : Fragment() {
         }
 
         override fun getItemCount() = items.size
-    }
-
-    override fun onResume() {
-        super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-        _binding = null
     }
 }

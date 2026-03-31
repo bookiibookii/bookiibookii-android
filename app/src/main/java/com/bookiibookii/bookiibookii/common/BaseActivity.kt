@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.common // 프로젝트 패키지명에 맞게 수정하세요!
+package com.bookiibookii.bookiibookii.common
 
 import android.os.Bundle
 import android.view.View

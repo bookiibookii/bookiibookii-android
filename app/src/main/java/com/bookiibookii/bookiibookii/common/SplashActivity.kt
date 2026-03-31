@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.common
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
@@ -17,22 +18,33 @@ import kotlinx.coroutines.launch
 import kotlin.jvm.java
 
 @SuppressLint("CustomSplashScreen")
-class SplashActivity : AppCompatActivity() {
+class SplashActivity : BaseActivity<ActivitySplashBinding>() {
 
-    private lateinit var binding: ActivitySplashBinding
+    override fun getViewBinding(): ActivitySplashBinding {
+        return ActivitySplashBinding.inflate(layoutInflater)
+    }
+
+
+    override fun setupWindowInsets(view: View) {
+        // 아무것도 안함 → 완전 풀스크린, 필요없다면 제거 필요
+    }
+
+   // private lateinit var binding: ActivitySplashBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        binding = ActivitySplashBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+//        binding = ActivitySplashBinding.inflate(layoutInflater)
+//        setContentView(binding.root)
 
         lifecycleScope.launch {
             delay(2000L)
             routeNext()
         }
     }
+
+
 
     private fun routeNext() {
         val hasToken = TokenManager.hasAccessToken(this)
@@ -58,4 +70,5 @@ class SplashActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+
 }

@@ -1,9 +1,11 @@
 package com.bookiibookii.bookiibookii.lib
 
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryViewModel
 import com.bookiibookii.bookiibookii.data.viewModel.SortType
@@ -31,6 +33,10 @@ class LibrarySortBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        viewModel.sortType.observe(viewLifecycleOwner) { currentSort ->
+            updateSelectionUI(currentSort)
+        }
+
         // 각 정렬 구현
         binding.libDialogCriteriaTitleTv.setOnClickListener {
             viewModel.setSortType(SortType.TITLE)
@@ -51,6 +57,24 @@ class LibrarySortBottomSheet : BottomSheetDialogFragment() {
         binding.libDialogCriteriaOldestReadTv.setOnClickListener {
             viewModel.setSortType(SortType.OLD)
             dismiss()
+        }
+    }
+
+    private fun updateSelectionUI(currentSort: SortType) {
+        val textViews = mapOf(
+            SortType.TITLE to binding.libDialogCriteriaTitleTv,
+            SortType.RATING_HIGH to binding.libDialogCriteriaHighRateTv,
+            SortType.RATING_LOW to binding.libDialogCriteriaLowRateTv,
+            SortType.RECENT to binding.libDialogCriteriaLatelyReadTv,
+            SortType.OLD to binding.libDialogCriteriaOldestReadTv
+        )
+
+        textViews.forEach { (type, textView) ->
+            if (type == currentSort) {
+                textView.setTypeface(null, Typeface.BOLD)
+            } else {
+                textView.setTypeface(null, Typeface.NORMAL)
+            }
         }
     }
 

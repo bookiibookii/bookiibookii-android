@@ -89,7 +89,9 @@ data class CardItem(
     val createdAt: String,
     val bookTitle: String,
     val isBookmarked: Boolean,
-    val creatorName: String
+    val creatorName: String,
+    val profileImageUrl: String? = null,
+    val commentCount: Int = 0
 )
 
 data class CardImage(

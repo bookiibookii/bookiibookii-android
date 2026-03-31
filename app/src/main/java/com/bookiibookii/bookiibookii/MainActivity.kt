@@ -24,18 +24,20 @@ import com.bookiibookii.bookiibookii.lib.LibraryBookDetailFragment
 import com.bookiibookii.bookiibookii.lib.LibraryBookDetailIngFragment
 import com.bookiibookii.bookiibookii.lib.LibraryBookDetailRelayWriteFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
-import com.bookiibookii.bookiibookii.myPage.MypageFragment
+import com.bookiibookii.bookiibookii.myPage.main.MypageFragment
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
 import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrkMainFragment
 import kotlinx.coroutines.launch
+
+private enum class NavTab { HOME, GROUP, TRACKER, LIBRARY, MY }
+
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun getViewBinding(): ActivityMainBinding {
         return ActivityMainBinding.inflate(layoutInflater)
     }
-    private enum class NavTab { HOME, GROUP, TRACKER, LIBRARY, MY }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +53,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 //            insets
 //        }
 
-      //  setContentView(R.layout.activity_main)
+        //  setContentView(R.layout.activity_main)
 
 
         // 최초 진입 시 홈 Fragment

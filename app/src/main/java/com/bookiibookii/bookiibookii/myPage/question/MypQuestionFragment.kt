@@ -5,31 +5,30 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypQuestionBinding
 import kotlinx.coroutines.launch
 
-class MypQuestionFragment : Fragment() {
-    private var _binding: FragmentMypQuestionBinding? = null
-    private val binding get() = _binding!!
+class MypQuestionFragment : BaseDetailFragment<FragmentMypQuestionBinding>() {
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
-
+    private lateinit var loadingDialog: LoadingDialog
     private val adapter = MypQuestionAdapter()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentMypQuestionBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentMypQuestionBinding {
+        return FragmentMypQuestionBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
+        loadingDialog = LoadingDialog(requireContext())
 
         binding.mypQuestionBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
@@ -47,8 +46,8 @@ class MypQuestionFragment : Fragment() {
     }
 
     private fun fetchInquiryList() {
-        lifecycleScope.launch {
-            loadingDialog.show() // ★ API 호출 전 로딩 시작
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getInquiryList()
 
@@ -71,7 +70,7 @@ class MypQuestionFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e("Inquiry", "네트워크 오류", e)
             } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss() // ★ 무조건 로딩 끝내기
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
@@ -79,12 +78,5 @@ class MypQuestionFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         fetchInquiryList()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
-        _binding = null
     }
 }
