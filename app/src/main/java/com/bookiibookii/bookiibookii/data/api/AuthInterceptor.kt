@@ -34,151 +34,167 @@ class AuthInterceptor(private val context: Context) : Interceptor {
     @Volatile private var lastRefreshOutcome: RefreshOutcome? = null
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val originalRequest = chain.request()
-
-        //TODO: 추후 로그 삭제 예정
-        val originalUrl = originalRequest.url.toString()
-        val originalMethod = originalRequest.method
-        Log.d("AUTH_INT", "[ENTER] $originalMethod $originalUrl")
-
-        val appContext = context.applicationContext
-        val prefs = appContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-
-        val accessToken = prefs.getString("access_token", null)
-
-        //TODO: 추후 로그 삭제 예정
-        Log.d(
-            "AUTH_INT",
-            "[TOKEN] accessToken=${accessToken?.take(10)}... isNullOrEmpty=${accessToken.isNullOrEmpty()}"
-        )
-
-        val authedRequest = if (accessToken.isNullOrEmpty()) {
-            originalRequest
-        } else {
-            originalRequest.newBuilder()
-                .header("Authorization", "Bearer $accessToken")
-                .build()
-        }
-
-        val response = try {
-            chain.proceed(authedRequest)
+        try {
+            return chain.proceed(chain.request())
         } catch (e: IOException) {
-            routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
-            throw e
-        }
+            // ★ 추가할 핵심 코드: 코루틴 취소로 인한 소켓 닫힘이나 Canceled 예외는 무시하고 그대로 던짐
+            if (e.message?.contains("Canceled", ignoreCase = true) == true ||
+                e is java.net.SocketException ||
+                e is java.io.InterruptedIOException
+            ) {
+                throw e
+            }
+            val originalRequest = chain.request()
 
-        //TODO: 추후 로그 삭제 예정
-        Log.d("AUTH_INT", "[RESP] code=${response.code} ${authedRequest.method} ${authedRequest.url}")
+            //TODO: 추후 로그 삭제 예정
+            val originalUrl = originalRequest.url.toString()
+            val originalMethod = originalRequest.method
+            Log.d("AUTH_INT", "[ENTER] $originalMethod $originalUrl")
 
-        val url = authedRequest.url.toString()
-        val method = authedRequest.method
+            val appContext = context.applicationContext
+            val prefs = appContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 
-        if (response.isSuccessful) {
-            Log.i("API_SUCCESS", "✅ [${response.code}] $method $url")
-            return response
-        } else {
-            Log.e("API_FAILURE", "❌ [${response.code}] $method $url")
-        }
+            val accessToken = prefs.getString("access_token", null)
 
-        val code = response.code
+            //TODO: 추후 로그 삭제 예정
+            Log.d(
+                "AUTH_INT",
+                "[TOKEN] accessToken=${accessToken?.take(10)}... isNullOrEmpty=${accessToken.isNullOrEmpty()}"
+            )
+
+            val authedRequest = if (accessToken.isNullOrEmpty()) {
+                originalRequest
+            } else {
+                originalRequest.newBuilder()
+                    .header("Authorization", "Bearer $accessToken")
+                    .build()
+            }
+
+            val response = try {
+                chain.proceed(authedRequest)
+            } catch (e: IOException) {
+                routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
+                throw e
+            }
+
+            //TODO: 추후 로그 삭제 예정
+            Log.d(
+                "AUTH_INT",
+                "[RESP] code=${response.code} ${authedRequest.method} ${authedRequest.url}"
+            )
+
+            val url = authedRequest.url.toString()
+            val method = authedRequest.method
+
+            if (response.isSuccessful) {
+                Log.i("API_SUCCESS", "✅ [${response.code}] $method $url")
+                return response
+            } else {
+                Log.e("API_FAILURE", "❌ [${response.code}] $method $url")
+            }
+
+            val code = response.code
 
 // 401이 아니면 그대로 반환 (+ 5xx면 ComError 라우팅)
 // 단, 서버가 "인증 문제"를 400으로 줄 수 있으니 400은 예외 처리
-        if (code != 401) {
-            if (code == 400) {
-                val err = peekErrorBody(response)
-                Log.d("AUTH_INT", "[400_ERR] $err")
+            if (code != 401) {
+                if (code == 400) {
+                    val err = peekErrorBody(response)
+                    Log.d("AUTH_INT", "[400_ERR] $err")
 
-                if (isAuthFailure400(err)) {
-                    // 인증 토큰이 깨졌거나(형식 오류), AccessToken이 없다는 서버 판단이면 즉시 로그아웃
-                    response.close()
-                    routeLogout(appContext)
-                    throw IOException("Auth failed with 400")
-                }
-            }
-
-            if (code >= 500) {
-                routeComError(appContext, ComErrorActivity.TYPE_SYSTEM_ERROR)
-            }
-
-            return response
-        }
-
-        //TODO: 추후 로그 삭제 예정
-        Log.w("AUTH_INT", "[401] detected at ${authedRequest.method} ${authedRequest.url}")
-
-        // ✅ refresh 자신이 401이면 루프 방지 (경로 비교로 정확히)
-        val path = authedRequest.url.encodedPath
-        if (path == "/api/auth/refresh") {
-            Log.e("AUTH_INT", "[401] refresh endpoint got 401 -> routeLogout")
-            response.close()
-            routeLogout(appContext)
-            throw IOException("Unauthorized on refresh endpoint")
-        }
-
-        val refreshToken = prefs.getString("refresh_token", null)
-
-        //TODO: 추후 로그 삭제 예정
-        Log.d(
-            "AUTH_INT",
-            "[RT] refreshToken=${refreshToken?.take(10)}... isNullOrEmpty=${refreshToken.isNullOrEmpty()}"
-        )
-
-        if (refreshToken.isNullOrEmpty()) {
-            response.close()
-            routeLogout(appContext)
-            throw IOException("Missing refresh token")
-        }
-
-        // ✅ 401 원본 응답은 반드시 닫기
-        response.close()
-
-        val outcome: RefreshOutcome = waitOrRefreshToken(prefs, refreshToken)
-
-        return when (outcome) {
-            RefreshOutcome.SUCCESS -> {
-                val newAccessToken = prefs.getString("access_token", null)
-
-                val retryRequest = if (newAccessToken.isNullOrEmpty()) {
-                    originalRequest
-                } else {
-                    originalRequest.newBuilder()
-                        .header("Authorization", "Bearer $newAccessToken")
-                        .build()
+                    if (isAuthFailure400(err)) {
+                        // 인증 토큰이 깨졌거나(형식 오류), AccessToken이 없다는 서버 판단이면 즉시 로그아웃
+                        response.close()
+                        routeLogout(appContext)
+                        throw IOException("Auth failed with 400")
+                    }
                 }
 
-                //TODO: 추후 로그 삭제 예정
-                Log.d(
-                    "AUTH_INT",
-                    "[RETRY] with accessToken=${newAccessToken?.take(10)}... url=${retryRequest.url}"
-                )
-
-                try {
-                    val retryRes = chain.proceed(retryRequest)
-                    Log.d("AUTH_INT", "[RETRY_RESP] code=${retryRes.code} ${retryRequest.method} ${retryRequest.url}")
-                    retryRes
-                } catch (e: IOException) {
-                    routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
-                    throw e
+                if (code >= 500) {
+                    routeComError(appContext, ComErrorActivity.TYPE_SYSTEM_ERROR)
                 }
+
+                return response
             }
 
-            RefreshOutcome.INVALID_TOKEN -> {
+            //TODO: 추후 로그 삭제 예정
+            Log.w("AUTH_INT", "[401] detected at ${authedRequest.method} ${authedRequest.url}")
+
+            // ✅ refresh 자신이 401이면 루프 방지 (경로 비교로 정확히)
+            val path = authedRequest.url.encodedPath
+            if (path == "/api/auth/refresh") {
+                Log.e("AUTH_INT", "[401] refresh endpoint got 401 -> routeLogout")
+                response.close()
                 routeLogout(appContext)
-                throw IOException("Invalid refresh token (refresh 400/401)")
+                throw IOException("Unauthorized on refresh endpoint")
             }
 
-            RefreshOutcome.NETWORK_ERROR -> {
-                routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
-                throw IOException("Network error during token refresh")
+            val refreshToken = prefs.getString("refresh_token", null)
+
+            //TODO: 추후 로그 삭제 예정
+            Log.d(
+                "AUTH_INT",
+                "[RT] refreshToken=${refreshToken?.take(10)}... isNullOrEmpty=${refreshToken.isNullOrEmpty()}"
+            )
+
+            if (refreshToken.isNullOrEmpty()) {
+                response.close()
+                routeLogout(appContext)
+                throw IOException("Missing refresh token")
             }
 
-            RefreshOutcome.SYSTEM_ERROR -> {
-                routeComError(appContext, ComErrorActivity.TYPE_SYSTEM_ERROR)
-                throw IOException("System error during token refresh")
+            // ✅ 401 원본 응답은 반드시 닫기
+            response.close()
+
+            val outcome: RefreshOutcome = waitOrRefreshToken(prefs, refreshToken)
+
+            return when (outcome) {
+                RefreshOutcome.SUCCESS -> {
+                    val newAccessToken = prefs.getString("access_token", null)
+
+                    val retryRequest = if (newAccessToken.isNullOrEmpty()) {
+                        originalRequest
+                    } else {
+                        originalRequest.newBuilder()
+                            .header("Authorization", "Bearer $newAccessToken")
+                            .build()
+                    }
+
+                    //TODO: 추후 로그 삭제 예정
+                    Log.d(
+                        "AUTH_INT",
+                        "[RETRY] with accessToken=${newAccessToken?.take(10)}... url=${retryRequest.url}"
+                    )
+
+                    try {
+                        val retryRes = chain.proceed(retryRequest)
+                        Log.d(
+                            "AUTH_INT",
+                            "[RETRY_RESP] code=${retryRes.code} ${retryRequest.method} ${retryRequest.url}"
+                        )
+                        retryRes
+                    } catch (e: IOException) {
+                        routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
+                        throw e
+                    }
+                }
+
+                RefreshOutcome.INVALID_TOKEN -> {
+                    routeLogout(appContext)
+                    throw IOException("Invalid refresh token (refresh 400/401)")
+                }
+
+                RefreshOutcome.NETWORK_ERROR -> {
+                    routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
+                    throw IOException("Network error during token refresh")
+                }
+
+                RefreshOutcome.SYSTEM_ERROR -> {
+                    routeComError(appContext, ComErrorActivity.TYPE_SYSTEM_ERROR)
+                    throw IOException("System error during token refresh")
+                }
             }
-        }
-    }
+        }}
 
     private fun waitOrRefreshToken(
         prefs: SharedPreferences,

@@ -14,10 +14,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
@@ -28,13 +28,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
-class LibraryAddCardFragment : Fragment() {
-
-    private var _binding: FragmentLibAddCardBinding? = null
-    private val binding get() = _binding!!
+// 1. 제네릭 타입 명시
+class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -81,9 +79,12 @@ class LibraryAddCardFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibAddCardBinding.inflate(inflater, container, false)
-        return binding.root
+    // 2. BaseFragment에서 요구하는 바인딩 인플레이트 함수 구현
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibAddCardBinding {
+        return FragmentLibAddCardBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -94,14 +95,10 @@ class LibraryAddCardFragment : Fragment() {
         initListeners()
         setupFragmentResultListener()
 
-        // ★ [수정됨] 키보드(IME) 높이를 무시하도록 변경
+        // ★ 키보드(IME) 높이를 무시하도록 변경
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBarHeight = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-
-            // 기존 코드: val bottomPadding = if (imeHeight > 0) imeHeight else systemBarHeight
-            // 수정 코드: 키보드가 올라오더라도 패딩을 늘리지 않고, 시스템 바 높이만 유지합니다.
             v.setPadding(0, 0, 0, systemBarHeight)
-
             insets
         }
     }
@@ -154,7 +151,7 @@ class LibraryAddCardFragment : Fragment() {
 
         binding.libAddBtn.isEnabled = false
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 // [수정 모드]
@@ -192,29 +189,32 @@ class LibraryAddCardFragment : Fragment() {
 
                 // 3. S3 이미지 업로드
                 val mimeType = requireContext().contentResolver.getType(selectedPhotoUri!!) ?: "image/jpeg"
+
+                val tempFile = File(requireContext().cacheDir, "upload_temp_${System.currentTimeMillis()}.jpg")
                 val inputStream = requireContext().contentResolver.openInputStream(selectedPhotoUri!!)
-                val imageBytes = inputStream?.readBytes()
+                val outputStream = java.io.FileOutputStream(tempFile)
+
+                inputStream?.copyTo(outputStream)
                 inputStream?.close()
+                outputStream.close()
 
-                if (imageBytes != null) {
-                    val cleanClient = okhttp3.OkHttpClient()
-                    val requestBody = imageBytes.toRequestBody(mimeType.toMediaTypeOrNull())
+                val requestBody = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
 
-                    val request = okhttp3.Request.Builder()
-                        .url(uploadUrl)
-                        .put(requestBody)
-                        .build()
+                val cleanClient = okhttp3.OkHttpClient()
+                val request = okhttp3.Request.Builder()
+                    .url(uploadUrl)
+                    .put(requestBody)
+                    .build()
 
-                    val response = withContext(Dispatchers.IO) { cleanClient.newCall(request).execute() }
+                val response = withContext(Dispatchers.IO) { cleanClient.newCall(request).execute() }
 
-                    if (!response.isSuccessful) {
-                        activity?.runOnUiThread {
-                            Toast.makeText(context, "이미지 서버 업로드 실패", Toast.LENGTH_SHORT).show()
-                            binding.libAddBtn.isEnabled = true
-                        }
-                        return@launch
+                if (tempFile.exists()) tempFile.delete()
+
+                if (!response.isSuccessful) {
+                    activity?.runOnUiThread {
+                        Toast.makeText(context, "이미지 서버 업로드 실패", Toast.LENGTH_SHORT).show()
+                        binding.libAddBtn.isEnabled = true
                     }
-                } else {
                     return@launch
                 }
 
@@ -304,21 +304,5 @@ class LibraryAddCardFragment : Fragment() {
         val dir = File(requireContext().cacheDir, "camera").apply { mkdirs() }
         val file = File(dir, "card_${System.currentTimeMillis()}.jpg")
         return FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        hideBottomNavigation(true)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        hideBottomNavigation(false)
-        _binding = null
-    }
-
-    private fun hideBottomNavigation(shouldHide: Boolean) {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
     }
 }

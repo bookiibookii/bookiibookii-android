@@ -82,7 +82,7 @@ class LibraryShareFragment : DialogFragment() {
 
         loadingDialog.show()
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().getCardDetail(cardId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -273,7 +273,7 @@ class LibraryShareFragment : DialogFragment() {
 
         Toast.makeText(context, "이미지를 준비 중입니다...", Toast.LENGTH_SHORT).show()
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
                 // 1. 공통: 캐시 폴더 정리 및 준비
                 val imagesFolder = File(requireContext().cacheDir, "images")
@@ -418,7 +418,7 @@ class LibraryShareFragment : DialogFragment() {
 
         Toast.makeText(context, "링크를 생성하고 있습니다. 잠시만 기다려주세요...", Toast.LENGTH_SHORT).show()
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val baos = ByteArrayOutputStream()
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)

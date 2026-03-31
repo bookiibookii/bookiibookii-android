@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.util
+package com.bookiibookii.bookiibookii.myPage.report
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

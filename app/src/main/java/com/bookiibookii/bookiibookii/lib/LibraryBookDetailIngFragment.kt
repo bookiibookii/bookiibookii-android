@@ -8,28 +8,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
+import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailIngBinding
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
 
-class LibraryBookDetailIngFragment : Fragment() {
-
-    private var _binding: FragmentLibBookDetailIngBinding? = null
-    private val binding get() = _binding!!
+class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIngBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -41,10 +38,12 @@ class LibraryBookDetailIngFragment : Fragment() {
     private var hostName = ""
     private var hostProfileUrl = ""
     private var startDate = ""
-    private var endDate = "" // ★ 추가됨
+    private var endDate = ""
 
     private lateinit var cardAdapter: LibraryReviewAdapter
     private var originalList: List<CardItem> = emptyList()
+
+    private val cardViewModel: LibraryCardViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,13 +56,15 @@ class LibraryBookDetailIngFragment : Fragment() {
             hostName = it.getString("hostName", "") ?: ""
             hostProfileUrl = it.getString("hostProfileUrl", "") ?: ""
             startDate = it.getString("startDate", "") ?: ""
-            endDate = it.getString("endDate", "") ?: "" // ★ 추가됨
+            endDate = it.getString("endDate", "") ?: ""
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibBookDetailIngBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibBookDetailIngBinding {
+        return FragmentLibBookDetailIngBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -73,6 +74,7 @@ class LibraryBookDetailIngFragment : Fragment() {
         initView()
         initRecyclerView()
         initListeners()
+        setupObservers()
         loadInitialData()
     }
 
@@ -81,10 +83,8 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.libDetailBookAuthorTv.text = bookAuthor
         binding.libDetailTitleTv.text = bookTitle
 
-        // ★ [수정됨] 날짜 UTC -> KST 변환 적용
-        val formattedStart = formatDate(startDate)
-        val formattedEnd = formatDate(endDate)
-
+        val formattedStart = DateUtils.formatDate(startDate)
+        val formattedEnd = DateUtils.formatDate(endDate)
         binding.libDetailDateTv.text = if (formattedEnd.isNotEmpty()) "$formattedStart ~ $formattedEnd" else "$formattedStart ~"
 
         binding.libDetailBookTitleTv.isSelected = true
@@ -104,77 +104,74 @@ class LibraryBookDetailIngFragment : Fragment() {
         binding.layoutEmpty.visibility = View.GONE
     }
 
-    // ★ [추가] 날짜 변환 함수
-    private fun formatDate(dateString: String): String {
-        if (dateString.isEmpty()) return ""
-        return try {
-            // 1. 서버 UTC 시간 파싱
-            val format = if (dateString.contains(".")) "yyyy-MM-dd'T'HH:mm:ss.SSS" else "yyyy-MM-dd'T'HH:mm:ss"
-            val parser = SimpleDateFormat(format, Locale.getDefault())
-            parser.timeZone = TimeZone.getTimeZone("UTC")
-            val date = parser.parse(dateString) ?: return dateString
-
-            // 2. 한국 시간 포맷으로 변환
-            val formatter = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
-            formatter.timeZone = TimeZone.getDefault()
-            formatter.format(date)
-        } catch (e: Exception) {
-            dateString // 변환 실패 시 원본 사용
-        }
-    }
-
     private fun loadInitialData() {
         if (groupId == -1) return
-        lifecycleScope.launch {
-            loadingDialog.show()
+
+        cardViewModel.fetchGroupCards(groupId)
+
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 fetchProgress()
-                fetchCardList()
             } catch (e: Exception) {
                 e.printStackTrace()
-            } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
 
+    private fun setupObservers() {
+        cardViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                if (!loadingDialog.isShowing) loadingDialog.show()
+            } else {
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
+            }
+        }
+
+        cardViewModel.cardList.observe(viewLifecycleOwner) { cards ->
+            cardAdapter.submitList(cards)
+            binding.libDetailTotalTv.text = "${cards.size}개"
+
+            if (cards.isNotEmpty()) {
+                binding.groupDataExist.visibility = View.VISIBLE
+                binding.layoutEmpty.visibility = View.GONE
+            } else {
+                binding.groupDataExist.visibility = View.GONE
+                binding.layoutEmpty.visibility = View.VISIBLE
+            }
+            binding.libReviewAddBtn.visibility = View.VISIBLE
+        }
+    }
+
     private suspend fun fetchProgress() {
-        // [로그 1] 조회 시작
         Log.d("FetchProgress", "========== 진행률 조회 시작 (GroupID: $groupId) ==========")
-
         val response = RetrofitClient.api().getMyTrackers()
-
-        // [로그 2] API 응답 확인
         Log.d("FetchProgress", "Response Code: ${response.code()}")
 
         if (response.isSuccessful && response.body()?.isSuccess == true) {
             val trackerList = response.body()?.result ?: emptyList()
             Log.d("FetchProgress", "받아온 전체 트래커 개수: ${trackerList.size}")
 
-            // 내 그룹 ID와 일치하는 트래커 찾기
             val myTracker = trackerList.find { it.groupId == this@LibraryBookDetailIngFragment.groupId }
 
             if (myTracker != null) {
                 Log.d("FetchProgress", ">> 내 트래커 찾음!")
-
                 val detail = myTracker.togetherDetail
                 if (detail != null) {
                     val myRate = detail.myReadingRate
                     val groupRate = detail.groupReadingRate
 
-                    // [로그 3] 실제 진행률 값 확인
                     Log.d("FetchProgress", "   - 내 진행률: $myRate%")
                     Log.d("FetchProgress", "   - 그룹 평균: $groupRate%")
 
                     updateProgressBar(myRate, groupRate)
 
                     if (myRate >= 100) {
-                        Log.d("FetchProgress", "   -> 100% 달성! 버튼 상태 변경 (리뷰 작성 활성화)")
+                        Log.d("FetchProgress", "   -> 100% 달성! 버튼 상태 변경")
                         binding.libWriteDoneBtn.visibility = View.GONE
                         binding.libWriteReviewBtn.visibility = View.VISIBLE
                         binding.libReviewAddBtn.visibility = View.GONE
                     } else {
-                        Log.d("FetchProgress", "   -> 아직 100% 미만 (독서 종료 버튼 유지)")
+                        Log.d("FetchProgress", "   -> 아직 100% 미만")
                     }
                 } else {
                     Log.e("FetchProgress", "!! togetherDetail 데이터가 null입니다.")
@@ -187,6 +184,7 @@ class LibraryBookDetailIngFragment : Fragment() {
             Log.e("FetchProgress", "API 요청 실패: $msg")
         }
     }
+
     private suspend fun fetchCardList() {
         val response = RetrofitClient.api().getGroupCards(groupId)
         if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -217,20 +215,16 @@ class LibraryBookDetailIngFragment : Fragment() {
         constraintSet.clone(constraintLayout)
         constraintSet.setGuidelinePercent(R.id.guideline_my_progress, myProgress / 100f)
         constraintSet.setGuidelinePercent(R.id.guideline_group_progress, groupProgress / 100f)
-        constraintSet.applyTo (constraintLayout)
+        constraintSet.applyTo(constraintLayout)
 
-        // ★ [핵심] 더 짧은 막대의 Z축 값을 높여서 맨 위로 가져오기
         if (myProgress > groupProgress) {
-            // 주황색이 더 길면 -> 검정색(그룹)이 가려지지 않게 맨 위로
             binding.barGroup.translationZ = 1f
             binding.barMine.translationZ = 0f
         } else {
-            // 검정색이 더 길거나 같으면 -> 주황색(나)을 맨 위로
             binding.barMine.translationZ = 1f
             binding.barGroup.translationZ = 0f
         }
 
-        // 꼬리표 역할을 하는 점(Dot)들이 막대에 가려지지 않도록 최상단으로 보장
         binding.myProgressDot.translationZ = 2f
         binding.groupAvgDot.translationZ = 2f
     }
@@ -262,7 +256,7 @@ class LibraryBookDetailIngFragment : Fragment() {
     }
 
     private fun toggleBookmark(card: CardItem) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().toggleBookmark(card.cardId.toLong())
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -287,7 +281,7 @@ class LibraryBookDetailIngFragment : Fragment() {
                 onDetailClick = {
                     val intent = Intent(requireContext(), GroupDetailActivity::class.java)
                     intent.putExtra("GROUP_ID", groupId.toLong())
-                    intent.putExtra("GROUP_TYPE", "TOGETHER") // 함께읽기 진행중이므로 TOGETHER
+                    intent.putExtra("GROUP_TYPE", "TOGETHER")
                     startActivity(intent)
                 },
                 onDeleteClick = {
@@ -308,7 +302,6 @@ class LibraryBookDetailIngFragment : Fragment() {
             ).show()
         }
 
-        // ★ [핵심] 호스트 이름, 프로필, 날짜 모두 Bundle로 묶어서 넘겨줍니다.
         binding.libWriteReviewBtn.setOnClickListener {
             val fragment = LibraryWriteReviewFragment().apply {
                 arguments = Bundle().apply {
@@ -342,14 +335,8 @@ class LibraryBookDetailIngFragment : Fragment() {
     }
 
     private fun sortCards(isLately: Boolean) {
-        // 1. 리스트 정렬
-        if (isLately) {
-            cardAdapter.submitList(originalList.sortedByDescending { it.createdAt })
-        } else {
-            cardAdapter.submitList(originalList.sortedBy { it.page })
-        }
+        cardViewModel.sortCards(isLately)
 
-        // 2. 글자 색상 변경 로직
         val context = requireContext()
         val activeColor = androidx.core.content.ContextCompat.getColor(context, R.color.pre_main)
         val inactiveColor = androidx.core.content.ContextCompat.getColor(context, R.color.grey_500)
@@ -369,16 +356,14 @@ class LibraryBookDetailIngFragment : Fragment() {
             return
         }
 
-        // [로그 1] 요청 시작
         Log.d("CompleteReading", "완독 요청 시작 - GroupID: $groupId")
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             if (!isAdded) return@launch
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().completeReading(groupId)
 
-                // [로그 2] 응답 코드 및 바디 확인
                 Log.d("CompleteReading", "Response Code: ${response.code()}")
                 Log.d("CompleteReading", "Response Body: ${response.body()}")
 
@@ -394,7 +379,6 @@ class LibraryBookDetailIngFragment : Fragment() {
 
                     loadInitialData()
                 } else {
-                    // [로그 3] 실패 원인 상세 분석
                     val errorBody = response.errorBody()?.string()
                     val msg = response.body()?.message ?: "서버 메시지 없음"
 
@@ -404,7 +388,6 @@ class LibraryBookDetailIngFragment : Fragment() {
                     Toast.makeText(context, "완독 처리에 실패했습니다: $msg", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // [로그 4] 예외 발생 (네트워크 등)
                 Log.e("CompleteReading", "Exception 발생", e)
                 Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             } finally {
@@ -412,6 +395,7 @@ class LibraryBookDetailIngFragment : Fragment() {
             }
         }
     }
+
     private fun showDeleteConfirmDialog() {
         CommonDialog(
             context = requireContext(),
@@ -426,7 +410,7 @@ class LibraryBookDetailIngFragment : Fragment() {
 
     private fun deleteGroup() {
         if (userBookId == -1) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
@@ -440,20 +424,4 @@ class LibraryBookDetailIngFragment : Fragment() {
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    override fun onResume() {
-        super.onResume()
-        hideBottomNavigation(true)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        hideBottomNavigation(false)
-        _binding = null
-    }
-
-    private fun hideBottomNavigation(shouldHide: Boolean) {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
-    }
 }

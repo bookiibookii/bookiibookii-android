@@ -1,8 +1,6 @@
 package com.bookiibookii.bookiibookii.myPage.profile
 
-import android.app.AlertDialog
 import android.app.Dialog
-import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -13,21 +11,19 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
-import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentMypProfileEditBinding
 import com.bumptech.glide.Glide
@@ -37,10 +33,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
-class MypProfileEditFragment : Fragment() {
-
-    private var _binding: FragmentMypProfileEditBinding? = null
-    private val binding get() = _binding!!
+class MypProfileEditFragment : BaseDetailFragment<FragmentMypProfileEditBinding>() {
 
     private val viewModel: MyPageViewModel by activityViewModels()
     private lateinit var loadingDialog: LoadingDialog
@@ -48,9 +41,11 @@ class MypProfileEditFragment : Fragment() {
     private var selectedImageFile: File? = null
     private var cameraUri: Uri? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentMypProfileEditBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentMypProfileEditBinding {
+        return FragmentMypProfileEditBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -65,17 +60,35 @@ class MypProfileEditFragment : Fragment() {
         observeViewModel()
         initListeners()
         initResultListener()
+        setupKeyboardAutoScroll()
+    }
+
+    private fun setupKeyboardAutoScroll() {
+        val editTexts = listOf(
+            binding.mypEditNickEt, binding.mypEditNameEt, binding.mypEditNumEt,
+            binding.mypEditPostEt, binding.mypEditAddressEt, binding.mypEditAddressDetailEt,
+            binding.mypEditChangeInfoEt, binding.mypEditHopeAddressEt
+        )
+        editTexts.forEach { et ->
+            val scrollAction = {
+                et.postDelayed({
+                    et.requestRectangleOnScreen(
+                        android.graphics.Rect(0, et.height, et.width, et.height), true
+                    )
+                }, 300)
+            }
+            et.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) scrollAction() }
+            et.setOnClickListener { scrollAction() }
+        }
     }
 
     private fun initUI() {
-        // 초기 버튼 색상 및 상태 설정 (비활성화 색상)
         updateNicknameButtonState(false)
         updateEditButtonState(false)
     }
 
     private fun observeViewModel() {
         viewModel.profileData.observe(viewLifecycleOwner) { data ->
-            // 처음 로드될 때만 EditText에 채워넣음
             if (binding.mypEditNickEt.text.isEmpty()) {
                 binding.mypEditNickEt.setText(data.nickname)
                 binding.mypEditNameEt.setText(data.receiverName ?: "")
@@ -94,23 +107,33 @@ class MypProfileEditFragment : Fragment() {
                     .transform(CenterCrop(), RoundedCorners(dpToPx(45)))
                     .into(binding.mypEditProfileIv)
 
-                validateAllFields() // 데이터가 채워진 후 버튼 상태 업데이트
+                validateAllFields()
             }
         }
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.eventFlow.collect { event ->
                 if (::loadingDialog.isInitialized && loadingDialog.isShowing) {
                     loadingDialog.dismiss()
                 }
 
                 when(event) {
-                    is MyPageViewModel.Event.ShowToast ->
-                        Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                    is MyPageViewModel.Event.NavigateBack ->
+                    is MyPageViewModel.Event.ShowToast -> {
+                        // ★ 프로필 업데이트 성공/실패 여부에 따라 아이콘 변경 (Event 객체의 메시지 내용으로 임시 판별하거나,
+                        // ViewModel의 Event 구조에 isSuccess 플래그를 추가하는 것이 더 정확합니다.
+                        // 여기서는 일반적인 Toast 노출용으로 false(info 아이콘)를 기본 적용했습니다.)
+                        val isSuccessMsg = event.message.contains("성공", true) || event.message.contains("완료", true)
+                        requireContext().showCustomToast(event.message, isSuccessMsg)
+                    }
+                    is MyPageViewModel.Event.NavigateBack -> {
+                        // 성공 후 뒤로가기 전 커스텀 토스트 띄우기
+                        requireContext().showCustomToast("프로필 수정이 완료되었습니다.", true)
                         requireActivity().supportFragmentManager.popBackStack()
+                    }
                     is MyPageViewModel.Event.NicknameCheckResult -> {
-                        Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                        // 닉네임 중복 확인 결과 (사용 가능 = 성공, 불가능 = 실패 아이콘)
+                        val isAvailable = event.message.contains("사용 가능", true)
+                        requireContext().showCustomToast(event.message, isAvailable)
                     }
                 }
             }
@@ -129,18 +152,14 @@ class MypProfileEditFragment : Fragment() {
                 if (isFormatting) return
                 isFormatting = true
 
-                // 1. 숫자만 남기기
                 val digits = s.toString().replace(Regex("\\D"), "")
                 val formatted = StringBuilder()
 
-                // 2. 길이에 따라 하이픈 위치 조정 (10자리 or 11자리 대응)
                 if (digits.length == 10) {
-                    // 예: 010-123-4567
                     formatted.append(digits.substring(0, 3)).append("-")
                     formatted.append(digits.substring(3, 6)).append("-")
                     formatted.append(digits.substring(6))
                 } else if (digits.length > 3) {
-                    // 예: 010-1234-5678 (입력 중 포함)
                     formatted.append(digits.substring(0, 3)).append("-")
                     if (digits.length > 7) {
                         formatted.append(digits.substring(3, 7)).append("-")
@@ -152,10 +171,8 @@ class MypProfileEditFragment : Fragment() {
                     formatted.append(digits)
                 }
 
-                // 3. 텍스트가 변경되었을 때만 갱신 (무한루프 방지)
                 if (s.toString() != formatted.toString()) {
                     binding.mypEditNumEt.setText(formatted.toString())
-                    // 커서를 항상 텍스트 맨 끝으로 이동
                     binding.mypEditNumEt.setSelection(formatted.length)
                 }
 
@@ -163,7 +180,6 @@ class MypProfileEditFragment : Fragment() {
             }
         })
 
-        // 모든 입력 필드 변화를 감지하기 위한 공통 와처
         val commonWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -172,7 +188,6 @@ class MypProfileEditFragment : Fragment() {
             }
         }
 
-        // 닉네임 입력 감지 (중복확인 버튼 상태 제어 포함)
         binding.mypEditNickEt.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun afterTextChanged(s: Editable?) { validateAllFields() }
@@ -180,7 +195,6 @@ class MypProfileEditFragment : Fragment() {
                 val currentInput = s.toString()
                 val originalNick = viewModel.profileData.value?.nickname ?: ""
 
-                // 닉네임이 기존과 다를 때만 중복확인 버튼 활성화
                 if (currentInput != originalNick && currentInput.isNotBlank()) {
                     updateNicknameButtonState(true)
                     if (currentInput != viewModel.confirmedNickname) {
@@ -192,7 +206,6 @@ class MypProfileEditFragment : Fragment() {
             }
         })
 
-        // 다른 모든 필드에도 와처 등록
         binding.mypEditNameEt.addTextChangedListener(commonWatcher)
         binding.mypEditNumEt.addTextChangedListener(commonWatcher)
         binding.mypEditPostEt.addTextChangedListener(commonWatcher)
@@ -201,7 +214,6 @@ class MypProfileEditFragment : Fragment() {
         binding.mypEditChangeInfoEt.addTextChangedListener(commonWatcher)
         binding.mypEditHopeAddressEt.addTextChangedListener(commonWatcher)
 
-        // 닉네임 중복 확인 클릭
         binding.mypEditNickCheckEt.setOnClickListener {
             val nickname = binding.mypEditNickEt.text.toString()
             if (nickname.isBlank()) return@setOnClickListener
@@ -225,10 +237,10 @@ class MypProfileEditFragment : Fragment() {
                 .commit()
         }
 
-        // 수정하기 버튼 클릭
         binding.mypEditEditBtn.setOnClickListener {
             if (!isAllFieldsFilled()) {
-                Toast.makeText(context, "모든 필드를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                // ★ 커스텀 토스트 (경고)
+                requireContext().showCustomToast("모든 필드를 입력해주세요.", false)
                 return@setOnClickListener
             }
 
@@ -237,13 +249,15 @@ class MypProfileEditFragment : Fragment() {
             val isChecked = viewModel.isNicknameChecked.value ?: false
 
             if (currentNick != originNick && !isChecked) {
-                Toast.makeText(context, "닉네임 중복 확인을 해주세요.", Toast.LENGTH_SHORT).show()
+                // ★ 커스텀 토스트 (경고)
+                requireContext().showCustomToast("닉네임 중복 확인을 해주세요.", false)
                 return@setOnClickListener
             }
 
             val phone = binding.mypEditNumEt.text.toString()
             if (!phone.matches(Regex("^\\d{3}-\\d{3,4}-\\d{4}$"))) {
-                Toast.makeText(context, "전화번호 형식이 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
+                // ★ 커스텀 토스트 (경고)
+                requireContext().showCustomToast("전화번호 형식이 올바르지 않습니다.", false)
                 return@setOnClickListener
             }
 
@@ -309,19 +323,13 @@ class MypProfileEditFragment : Fragment() {
     }
 
     private fun showImagePickerOption() {
-        // 1. AlertDialog 대신 일반 Dialog 객체를 생성합니다.
         val dialog = Dialog(requireContext())
         dialog.setContentView(R.layout.fragment_host_photo_selection_dialog)
         dialog.setCancelable(true)
-
-        // 2. 다이얼로그 기본 배경을 투명하게 날려줍니다. (커스텀 둥근 모서리 적용을 위해)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        // 3. show()를 먼저 호출한 뒤에 사이즈를 WRAP_CONTENT로 꽉 맞게 세팅합니다.
         dialog.show()
         dialog.window?.setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 
-        // 4. 클릭 리스너 연결 (dialogView 대신 dialog 안에서 바로 findViewById로 찾습니다)
         dialog.findViewById<ConstraintLayout>(R.id.layout_pick_photo).setOnClickListener {
             dialog.dismiss()
             pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -381,14 +389,4 @@ class MypProfileEditFragment : Fragment() {
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    override fun onResume() {
-        super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }

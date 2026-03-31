@@ -4,7 +4,6 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,21 +11,18 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.ReviewRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailWrtieReviewBinding
 import kotlinx.coroutines.launch
 
-class LibraryWriteReviewFragment : Fragment() {
-
-    private var _binding: FragmentLibBookDetailWrtieReviewBinding? = null
-    private val binding get() = _binding!!
+class LibraryWriteReviewFragment : BaseDetailFragment<FragmentLibBookDetailWrtieReviewBinding>() {
 
     private var userBookId: Int = -1
     private var groupId: Int = -1
@@ -41,7 +37,6 @@ class LibraryWriteReviewFragment : Fragment() {
     private lateinit var loadingDialog: LoadingDialog
     private var currentRating : Double = 0.0
 
-    // ★ [핵심] 전송 완료 여부 체크 변수
     private var isReviewSubmitted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,9 +54,11 @@ class LibraryWriteReviewFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibBookDetailWrtieReviewBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibBookDetailWrtieReviewBinding {
+        return FragmentLibBookDetailWrtieReviewBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -71,9 +68,8 @@ class LibraryWriteReviewFragment : Fragment() {
         initView()
         initStarRating()
         initInputListener()
-        handleSystemBackPressed() // 시스템 백버튼 처리
+        handleSystemBackPressed()
 
-        // ★ 뒤로가기 버튼 리스너
         binding.libDetailBackIv.setOnClickListener {
             if (isReviewSubmitted) {
                 goToLibrary()
@@ -125,7 +121,7 @@ class LibraryWriteReviewFragment : Fragment() {
         val comment = binding.libWriteReviewEt.text.toString()
         val rating = currentRating
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val request = ReviewRequest(rating, comment)
                 val response = RetrofitClient.api().postBookReview(userBookId, request)
@@ -135,14 +131,10 @@ class LibraryWriteReviewFragment : Fragment() {
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Toast.makeText(context, "리뷰가 등록되었습니다.", Toast.LENGTH_SHORT).show()
-
-                    // 전송 완료 상태 업데이트
                     isReviewSubmitted = true
 
-                    // 라이브러리 목록 새로고침 신호
                     requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
 
-                    // 투게더 화면으로 넘어갈 데이터 세팅
                     val togetherFragment = LibraryBookDetailTogetherFragment().apply {
                         arguments = Bundle().apply {
                             putInt("userBookId", userBookId)
@@ -158,14 +150,8 @@ class LibraryWriteReviewFragment : Fragment() {
                         }
                     }
 
-                    // ★ [핵심 수정 부분] 꼬임 방지를 위한 안전한 화면 전환 로직
                     val fm = requireActivity().supportFragmentManager
-
-                    // 1. 현재 화면(리뷰 작성)을 '즉시' 스택에서 제거합니다.
                     fm.popBackStackImmediate()
-
-                    // 2. 밑에 깔려있던 '아이엔지 화면'을 '투게더 화면'으로 교체합니다.
-                    // (addToBackStack을 쓰지 않으면 투게더 화면에서 뒤로가기 시 자연스럽게 메인 라이브러리로 돌아갑니다)
                     fm.beginTransaction()
                         .replace(R.id.fragmentContainer, togetherFragment)
                         .commit()
@@ -191,7 +177,7 @@ class LibraryWriteReviewFragment : Fragment() {
 
         stars.forEachIndexed { index, imageView ->
             imageView.setOnClickListener {
-                if (isReviewSubmitted) return@setOnClickListener // 전송 후 수정 금지
+                if (isReviewSubmitted) return@setOnClickListener
 
                 val targetHalf = index + 0.5
                 val targetFull = index + 1.0
@@ -224,7 +210,6 @@ class LibraryWriteReviewFragment : Fragment() {
     }
 
     private fun checkValidation() {
-        // 이미 제출했다면 무조건 비활성화
         if (isReviewSubmitted) {
             binding.libReviewAddBtn.isEnabled = false
             binding.libReviewAddBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.grey_200))
@@ -243,21 +228,5 @@ class LibraryWriteReviewFragment : Fragment() {
 
         binding.libReviewAddBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), colorBg))
         binding.libReviewAddBtn.setTextColor(ContextCompat.getColor(requireContext(), colorText))
-    }
-
-    override fun onResume() {
-        super.onResume()
-        hideBottomNavigation(true)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        hideBottomNavigation(false)
-        _binding = null
-    }
-
-    private fun hideBottomNavigation(shouldHide: Boolean) {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (shouldHide) View.GONE else View.VISIBLE
     }
 }
