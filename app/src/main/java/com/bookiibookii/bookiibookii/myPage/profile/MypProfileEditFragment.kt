@@ -60,27 +60,17 @@ class MypProfileEditFragment : BaseDetailFragment<FragmentMypProfileEditBinding>
         observeViewModel()
         initListeners()
         initResultListener()
-        setupKeyboardAutoScroll()
-    }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val imeVisible = insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())
+            val imeHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
+            val navBarHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars()).bottom
 
-    private fun setupKeyboardAutoScroll() {
-        val editTexts = listOf(
-            binding.mypEditNickEt, binding.mypEditNameEt, binding.mypEditNumEt,
-            binding.mypEditPostEt, binding.mypEditAddressEt, binding.mypEditAddressDetailEt,
-            binding.mypEditChangeInfoEt, binding.mypEditHopeAddressEt
-        )
-        editTexts.forEach { et ->
-            val scrollAction = {
-                et.postDelayed({
-                    et.requestRectangleOnScreen(
-                        android.graphics.Rect(0, et.height, et.width, et.height), true
-                    )
-                }, 300)
-            }
-            et.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) scrollAction() }
-            et.setOnClickListener { scrollAction() }
+            // 키보드가 올라오면 키보드 높이만큼, 안 보이면 기본 하단바 높이만큼 프래그먼트의 밑바닥을 위로 밀어 올립니다.
+            v.setPadding(0, 0, 0, if (imeVisible) imeHeight else navBarHeight)
+            insets
         }
     }
+
 
     private fun initUI() {
         updateNicknameButtonState(false)

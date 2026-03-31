@@ -12,15 +12,11 @@ enum class SortType {
 
 class LibraryViewModel : ViewModel() {
 
-    // 1. 원본 데이터 (서버에서 받아온 순수 리스트)
     private val _originalList = MutableLiveData<List<LibBook>>(emptyList())
 
-    // 2. 현재 정렬 기준
     private val _sortType = MutableLiveData<SortType>(SortType.TITLE)
     val sortType: LiveData<SortType> get() = _sortType
 
-    // 3. UI에 보여줄 최종 리스트 (정렬이 적용된 결과)
-    // MediatorLiveData를 사용하면 _originalList나 _sortType이 바뀔 때마다 자동으로 동작합니다.
     val bookList = MediatorLiveData<List<LibBook>>().apply {
         addSource(_originalList) { updateSortedList() }
         addSource(_sortType) { updateSortedList() }

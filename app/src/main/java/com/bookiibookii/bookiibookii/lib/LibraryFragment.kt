@@ -22,15 +22,12 @@ import com.bookiibookii.bookiibookii.data.viewModel.LibraryViewModel
 import com.bookiibookii.bookiibookii.data.viewModel.SortType
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBinding
 import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
-import com.bookiibookii.bookiibookii.trkDirectGuest.DirectGuestActivity
-import com.bookiibookii.bookiibookii.trkDirectHost.DirectHostActivity
-import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
-import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.google.android.flexbox.AlignItems
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
+import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.launch
 
 class LibraryFragment : Fragment() {
@@ -68,23 +65,19 @@ class LibraryFragment : Fragment() {
             fetchBooks()
         }
     }
-    // ★ 새로 추가되는 함수
+
     private fun setupProfileAndFetchBooks() {
-        // 프로필 정보가 서버에서 도착하면 실행됨
         myPageViewModel.profileData.observe(viewLifecycleOwner) { profile ->
             if (profile != null) {
                 if (allMyBooks.isEmpty()) {
-                    // 책 목록이 없으면 새로 불러오기
                     fetchBooks()
                 } else {
-                    // 책 목록이 이미 있으면 내 닉네임과 비교해서 isMine 상태만 업데이트 후 색상 새로고침
                     allMyBooks.forEach { it.isMine = (it.hostName == profile.nickname) }
                     libraryAdapter.notifyDataSetChanged()
                 }
             }
         }
 
-        // 프로필 데이터가 아직 비어있다면 API 요청, 이미 있다면 바로 책 불러오기
         if (myPageViewModel.profileData.value == null) {
             myPageViewModel.fetchMypageData()
         } else {
@@ -162,22 +155,28 @@ class LibraryFragment : Fragment() {
         updateButtonStyles(status)
 
         if (filteredList.isEmpty()) {
-            // ★ [수정] XML의 include ID(layoutEmptyGroup)를 통해 접근
             binding.layoutEmptyGroup.root.visibility = View.VISIBLE
             binding.libBookListRv.visibility = View.GONE
             binding.libGridIv.visibility = View.GONE
             binding.libTotalTv.visibility = View.GONE
             binding.libSortIv.visibility = View.GONE
 
+            if (binding.layoutEmptyGroup.root is MaterialCardView) {
+                (binding.layoutEmptyGroup.root as MaterialCardView).cardElevation = 0f
+            } else {
+                binding.layoutEmptyGroup.root.elevation = 0f
+            }
+
             if (status == ReadStatus.READING) {
                 binding.layoutEmptyGroup.tvEmptyTitle.text = "아직 진행 중인 독서가 없어요 \uD83D\uDE2D"
                 binding.layoutEmptyGroup.tvEmptyDesc.text = "읽고 싶은 책을 골라 그룹을 만들어볼까요?"
                 binding.layoutEmptyGroup.btnCreateGroup.visibility = View.VISIBLE
+                binding.layoutEmptyGroup.root.setPadding(0, dpToPx(32), 0, dpToPx(24))
             } else {
                 binding.layoutEmptyGroup.tvEmptyTitle.text = "완료한 독서가 없어요 \uD83D\uDE2D"
                 binding.layoutEmptyGroup.tvEmptyDesc.text = "진행 중인 독서를 완료하고 기록을 남겨보세요!"
-                // 완료 탭에서는 그룹 만들기 버튼을 가리려면 GONE, 보이게 두려면 VISIBLE로 설정하세요
                 binding.layoutEmptyGroup.btnCreateGroup.visibility = View.GONE
+                binding.layoutEmptyGroup.root.setPadding(0, dpToPx(56), 0, dpToPx(56))
             }
         } else {
             binding.layoutEmptyGroup.root.visibility = View.GONE
@@ -192,106 +191,38 @@ class LibraryFragment : Fragment() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
             Log.d("LibraryClick", "클릭: ${clickedBook.title}, Type: ${clickedBook.groupType}, Status: ${clickedBook.readStatus}, Reviewed: ${clickedBook.isReviewed}")
 
-            // 1. 함께 읽기 (TOGETHER) 처리
-            if (clickedBook.groupType == "TOGETHER") {
-                val targetFragment: Fragment = if (clickedBook.readStatus == ReadStatus.DONE || clickedBook.isReviewed) {
+            // ★ 명확한 4가지 상황별 분기 처리
+            val targetFragment: Fragment = if (clickedBook.groupType == "TOGETHER") {
+                if (clickedBook.readStatus == ReadStatus.DONE || clickedBook.isReviewed) {
+                    // 1. 함께읽기 + 종료 (완독/리뷰작성완료)
                     LibraryBookDetailTogetherFragment()
                 } else {
+                    // 2. 함께읽기 + 진행중
                     LibraryBookDetailIngFragment()
                 }
-
-                navigateToFragment(targetFragment, clickedBook)
-                return@LibraryBookAdapter
-            }
-
-            // 2. 이어 읽기 (RELAY) 처리
-            if (clickedBook.readStatus == ReadStatus.DONE) {
-                navigateToFragment(LibraryBookDetailFragment(), clickedBook)
             } else {
-                checkTradeTypeAndNavigate(clickedBook)
+                if (clickedBook.readStatus == ReadStatus.DONE || clickedBook.isReviewed) {
+                    // 3. 이어읽기 + 종료 (완독/리뷰작성완료)
+                    LibraryBookDetailFragment()
+                } else {
+                    // 4. 이어읽기 + 진행중 (기존 트래커 대신 여기로 통합)
+                    LibraryBookDetailFragment()
+                }
             }
+
+            navigateToFragment(targetFragment, clickedBook)
+
         }
 
         binding.libBookListRv.layoutManager = GridLayoutManager(context, 3)
         binding.libBookListRv.adapter = libraryAdapter
         setCoverModeLayout()
     }
-
+    /*
     private fun checkTradeTypeAndNavigate(book: LibBook) {
-        Log.d("TrackerCheck", "========== 네비게이션 로직 시작 ==========")
-        Log.d("TrackerCheck", "Target GroupID: ${book.groupId}, isMine(Host여부): ${book.isMine}")
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            loadingDialog.show()
-            try {
-                val response = RetrofitClient.api().getMyTrackers()
-
-                Log.d("TrackerCheck", "API Response Code: ${response.code()}")
-
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val trackerList = response.body()?.result ?: emptyList()
-
-                    Log.d("TrackerCheck", "받아온 트래커 개수: ${trackerList.size}")
-                    Log.d("TrackerCheck", "목록 내 ID들: ${trackerList.map { it.groupId }}")
-
-                    val targetTracker = trackerList.find { it.groupId == book.groupId }
-
-                    if (targetTracker != null) {
-                        val tradeType = targetTracker.tradeType
-                        val isHost = book.isMine
-
-                        Log.d("TrackerCheck", ">> 매칭된 트래커 발견!")
-                        Log.d("TrackerCheck", "   - tradeType: '$tradeType'")
-                        Log.d("TrackerCheck", "   - isHost: $isHost")
-
-                        val targetActivityClass = when {
-                            isHost && tradeType == "DELIVERY" -> {
-                                Log.d("TrackerCheck", "결정: HostActivity (택배/호스트)")
-                                HostActivity::class.java
-                            }
-                            !isHost && tradeType == "DELIVERY" -> {
-                                Log.d("TrackerCheck", "결정: GuestActivity (택배/게스트)")
-                                GuestActivity::class.java
-                            }
-                            isHost && tradeType == "DIRECT" -> {
-                                Log.d("TrackerCheck", "결정: DirectHostActivity (직거래/호스트)")
-                                DirectHostActivity::class.java
-                            }
-                            !isHost && tradeType == "DIRECT" -> {
-                                Log.d("TrackerCheck", "결정: DirectGuestActivity (직거래/게스트)")
-                                DirectGuestActivity::class.java
-                            }
-                            else -> {
-                                Log.e("TrackerCheck", "결정 실패: 조건에 맞는 케이스 없음 (Else 분기)")
-                                null
-                            }
-                        }
-
-                        if (targetActivityClass != null) {
-                            val intent = Intent(requireActivity(), targetActivityClass)
-                            intent.putExtra("group_id", book.groupId.toLong())
-                            startActivity(intent)
-                            Log.d("TrackerCheck", "StartActivity 실행 완료")
-                        } else {
-                            Toast.makeText(context, "이동할 수 없는 상태입니다 (조건 불일치).", Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        Log.e("TrackerCheck", "!! 해당 GroupID(${book.groupId})를 가진 트래커를 리스트에서 찾지 못함")
-                        Toast.makeText(context, "트래커 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    Log.e("TrackerCheck", "API 실패 메시지: ${response.body()?.message}")
-                    Toast.makeText(context, "정보 조회 실패", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Log.e("TrackerCheck", "Exception 발생: ${e.message}")
-                e.printStackTrace()
-                Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
-            } finally {
-                if (loadingDialog.isShowing) loadingDialog.dismiss()
-            }
-        }
+        // ... 기존 트래커 액티비티 이동 로직 주석 처리됨 ...
     }
+    */
 
     private fun navigateToFragment(targetFragment: Fragment, book: LibBook) {
         val bundle = Bundle().apply {
@@ -342,7 +273,6 @@ class LibraryFragment : Fragment() {
             }
         }
 
-        // ★ [수정] 포함된 레이아웃의 그룹 생성 버튼 클릭 리스너 연결
         binding.layoutEmptyGroup.btnCreateGroup.setOnClickListener {
             val intent = Intent(requireContext(), GroupGenerationActivity::class.java)
             startActivity(intent)

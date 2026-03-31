@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
@@ -19,6 +18,8 @@ import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.data.model.RelayReviewRequest
@@ -27,9 +28,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDetailRelayWriteBinding>() {
 
@@ -115,22 +113,15 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDe
         binding.libDetailProfileTv.text = data.hostNickname
         binding.libDetailBookTitleTv.text = data.bookTitle
         binding.libDetailBookAuthorTv.text = data.author
-        binding.libDetailDateTv.text = formatDateRange(data.startDate)
+
+        val formattedStart = if (data.startDate.isNullOrBlank() || data.startDate.startsWith("0000")) "0000. 00. 00." else DateUtils.formatDate(data.startDate)
+        binding.libDetailDateTv.text = "$formattedStart ~"
 
         setSpannableColor(binding.libWriteTitleTv, "${data.bookTitle}에 대한 평가를 남겨주세요!", data.bookTitle)
 
         val partner = data.participantSlots?.find { !it.isMe }
         val partnerName = partner?.nickname ?: "상대방"
         setSpannableColor(binding.libWritePartnerTv, "$partnerName 님에 대한 평가를 남겨주세요!", partnerName)
-    }
-
-    private fun formatDateRange(serverDateStr: String): String {
-        return try {
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val outputFormat = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
-            val startDate = inputFormat.parse(serverDateStr) ?: Date()
-            "${outputFormat.format(startDate)} ~ ${outputFormat.format(Date())}"
-        } catch (e: Exception) { "$serverDateStr ~" }
     }
 
     private fun setSpannableColor(textView: TextView, fullText: String, targetWord: String) {
@@ -154,6 +145,7 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDe
 
         setupStarRating(binding.libDetailRateList, isBookRating = true)
         setupStarRating(binding.libPartnerRateList, isBookRating = false)
+
         setupTagSelection()
 
         binding.libReviewAddBtn.setOnClickListener { submitReview() }
@@ -191,16 +183,12 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDe
     }
 
     private fun setupTagSelection() {
-        val container = binding.libWritePartnerReviewContainer
+        val container = binding.tagContainer
+
         for (i in 0 until container.childCount) {
             val child = container.getChildAt(i)
-            if (child is LinearLayout && child.orientation == LinearLayout.HORIZONTAL && child.id != R.id.lib_partner_rate_list) {
-                for (j in 0 until child.childCount) {
-                    val tagView = child.getChildAt(j)
-                    if (tagView is TextView) {
-                        tagView.setOnClickListener { toggleTag(tagView) }
-                    }
-                }
+            if (child is TextView) {
+                child.setOnClickListener { toggleTag(child) }
             }
         }
     }
@@ -259,17 +247,20 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDe
                 if (!isAdded || activity == null) return@launch
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(context, "리뷰 작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+                    // ★ 커스텀 토스트 적용
+                    requireContext().showCustomToast("리뷰 작성이 완료되었습니다.", true)
                     requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
                     requireActivity().supportFragmentManager.popBackStack()
                 } else {
                     val msg = response.body()?.message ?: "등록 실패"
-                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    // ★ 커스텀 토스트 적용
+                    requireContext().showCustomToast(msg, false)
                 }
             } catch (e: Exception) {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
                 e.printStackTrace()
-                Toast.makeText(context, "네트워크 오류", Toast.LENGTH_SHORT).show()
+                // ★ 커스텀 토스트 적용
+                requireContext().showCustomToast("네트워크 오류가 발생했습니다.", false)
             }
         }
     }

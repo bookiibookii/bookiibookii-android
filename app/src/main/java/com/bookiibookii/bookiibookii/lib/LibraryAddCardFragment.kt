@@ -8,7 +8,6 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -19,6 +18,7 @@ import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
 import com.bookiibookii.bookiibookii.data.model.UpdateCardRequest
@@ -31,32 +31,26 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
-// 1. 제네릭 타입 명시
 class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
-    // 데이터 변수
     private var isEditMode = false
     private var userBookId: Int = -1
     private var cardId: Long = -1L
 
-    // 수정 모드용 기존 데이터
     private var originalPage: Int = 0
     private var originalMemo: String = ""
     private var originalImageUrl: String? = null
 
-    // 이미지 관련
     private var cameraImageUri: Uri? = null
     private var selectedPhotoUri: Uri? = null
 
-    // 갤러리 런처
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri?.let { showPreview(it) }
         }
 
-    // 카메라 런처
     private val takePicLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
             if (success) {
@@ -79,7 +73,6 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
         }
     }
 
-    // 2. BaseFragment에서 요구하는 바인딩 인플레이트 함수 구현
     override fun getFragmentBinding(
         inflater: LayoutInflater,
         container: ViewGroup?
@@ -95,10 +88,17 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
         initListeners()
         setupFragmentResultListener()
 
-        // ★ 키보드(IME) 높이를 무시하도록 변경
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-            val systemBarHeight = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            v.setPadding(0, 0, 0, systemBarHeight)
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+            val systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            val bottomPadding = if (insets.isVisible(WindowInsetsCompat.Type.ime())) {
+                imeInsets.bottom
+            } else {
+                systemBarsInsets.bottom
+            }
+
+            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, bottomPadding)
             insets
         }
     }
@@ -140,6 +140,16 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
         }
         binding.libAddPageEt.addTextChangedListener(textWatcher)
 
+        binding.libAddMemoEt.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                binding.libAddMemoEt.postDelayed({
+                    binding.libAddMemoEt.requestRectangleOnScreen(
+                        android.graphics.Rect(0, 0, binding.libAddMemoEt.width, binding.libAddMemoEt.height), true
+                    )
+                }, 300)
+            }
+        }
+
         binding.libAddBtn.setOnClickListener {
             saveCard()
         }
@@ -154,31 +164,29 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                // [수정 모드]
                 if (isEditMode) {
                     val request = UpdateCardRequest(pageInput, memoInput, null)
                     val response = RetrofitClient.api().updateCard(cardId, request)
 
                     if (response.isSuccessful && response.body()?.isSuccess == true) {
+                        requireContext().showCustomToast("카드가 수정되었습니다.", true)
                         requireActivity().supportFragmentManager.popBackStack()
                     } else {
-                        Toast.makeText(context, "수정 실패", Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast("수정 실패", false)
                         binding.libAddBtn.isEnabled = true
                     }
                     return@launch
                 }
 
-                // [생성 모드]
                 if (selectedPhotoUri == null) {
-                    Toast.makeText(context, "이미지를 선택해주세요.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("이미지를 선택해주세요.", false)
                     binding.libAddBtn.isEnabled = true
                     return@launch
                 }
 
-                // 2. Presigned URL 발급
                 val presignedRes = RetrofitClient.api().postPresignedUrl(userBookId)
                 if (!presignedRes.isSuccessful || presignedRes.body()?.isSuccess != true) {
-                    Toast.makeText(context, "이미지 업로드 주소 발급 실패", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("이미지 업로드 주소 발급 실패", false)
                     binding.libAddBtn.isEnabled = true
                     return@launch
                 }
@@ -187,7 +195,6 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
                 val s3Key = result.s3Key
                 val uploadUrl = result.presignedPutUrl
 
-                // 3. S3 이미지 업로드
                 val mimeType = requireContext().contentResolver.getType(selectedPhotoUri!!) ?: "image/jpeg"
 
                 val tempFile = File(requireContext().cacheDir, "upload_temp_${System.currentTimeMillis()}.jpg")
@@ -212,26 +219,25 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
 
                 if (!response.isSuccessful) {
                     activity?.runOnUiThread {
-                        Toast.makeText(context, "이미지 서버 업로드 실패", Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast("이미지 서버 업로드 실패", false)
                         binding.libAddBtn.isEnabled = true
                     }
                     return@launch
                 }
 
-                // 4. 최종 카드 생성 요청
                 val createRequest = CreateCardRequest(s3Key, pageInput, memoInput)
                 val createRes = RetrofitClient.api().createCard(userBookId, createRequest)
 
                 if (createRes.isSuccessful && createRes.body()?.isSuccess == true) {
-                    Toast.makeText(context, "카드가 등록되었습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("카드가 등록되었습니다.", true)
                     parentFragmentManager.popBackStack()
                 } else {
-                    Toast.makeText(context, "카드 등록 실패", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("카드 등록 실패", false)
                     binding.libAddBtn.isEnabled = true
                 }
 
             } catch (e: Exception) {
-                Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("오류가 발생했습니다.", false)
                 binding.libAddBtn.isEnabled = true
             } finally {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()

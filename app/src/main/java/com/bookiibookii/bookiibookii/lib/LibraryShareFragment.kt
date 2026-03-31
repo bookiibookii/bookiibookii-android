@@ -17,12 +17,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentLibShareBinding
 import com.bookiibookii.bookiibookii.lib.imgModel.ImgBBRetrofitClient
@@ -47,7 +47,6 @@ class LibraryShareFragment : DialogFragment() {
     private var bookTitle: String = ""
     private var isTypeA = true
 
-    // ★ 로딩 다이얼로그와 이미지 로드 상태 카운터
     private lateinit var loadingDialog: LoadingDialog
     private var loadedImageCount = 0
 
@@ -98,7 +97,7 @@ class LibraryShareFragment : DialogFragment() {
                         if (loadingDialog.isShowing) loadingDialog.dismiss()
                     }
                 } else {
-                    Toast.makeText(context, "정보를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("정보를 불러오지 못했습니다.", false)
                     if (loadingDialog.isShowing) loadingDialog.dismiss()
                 }
             } catch (e: Exception) {
@@ -215,9 +214,6 @@ class LibraryShareFragment : DialogFragment() {
         }
     }
 
-    // =========================================================================
-    // ★ 뷰 캡처 (라운드 + 그림자)
-    // =========================================================================
     private fun captureCardBitmap(view: View): Bitmap? {
         if (view.width == 0 || view.height == 0) return null
 
@@ -260,29 +256,23 @@ class LibraryShareFragment : DialogFragment() {
         return bitmap
     }
 
-    // =========================================================================
-    // 인스타, 카톡, X 공유 (배경 패턴 로직 추가됨)
-    // =========================================================================
     private fun processAndShareImage(isInstagram: Boolean, targetPackage: String?) {
         val targetView = if (isTypeA) binding.typeACard else binding.typeBCard
 
         val cardBitmap = captureCardBitmap(targetView) ?: run {
-            Toast.makeText(context, "화면을 불러오는 중입니다. 잠시 후 시도해주세요.", Toast.LENGTH_SHORT).show()
+            requireContext().showCustomToast("화면을 불러오는 중입니다. 잠시 후 시도해주세요.", false)
             return
         }
 
-        Toast.makeText(context, "이미지를 준비 중입니다...", Toast.LENGTH_SHORT).show()
+        requireContext().showCustomToast("이미지를 준비 중입니다...", true)
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // 1. 공통: 캐시 폴더 정리 및 준비
                 val imagesFolder = File(requireContext().cacheDir, "images")
                 if (!imagesFolder.exists()) imagesFolder.mkdirs()
 
-                // 기존 임시 파일들 삭제 (용량 관리)
                 imagesFolder.listFiles()?.forEach { it.delete() }
 
-                // 2. 카드 이미지(스티커용) 저장
                 val stickerFile = File(imagesFolder, "sticker_${System.currentTimeMillis()}.png")
                 val stickerStream = FileOutputStream(stickerFile)
                 cardBitmap.compress(Bitmap.CompressFormat.PNG, 100, stickerStream)
@@ -295,11 +285,9 @@ class LibraryShareFragment : DialogFragment() {
                     stickerFile
                 )
 
-                // 3. 인스타그램일 경우 배경 이미지(패턴) 준비
                 var backgroundUri: Uri? = null
                 if (isInstagram) {
                     try {
-
                         val bgBitmap = BitmapFactory.decodeResource(resources, R.drawable.ic_background)
 
                         if (bgBitmap != null) {
@@ -317,13 +305,11 @@ class LibraryShareFragment : DialogFragment() {
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        // 배경 로드 실패 시 null로 유지 (단색 배경 처리됨)
                     }
                 }
 
                 withContext(Dispatchers.Main) {
                     if (isInstagram) {
-                        // ★ 수정된 함수 호출 (배경 URI 포함)
                         launchInstagramStoryIntent(stickerUri, backgroundUri)
                     } else {
                         launchGenericImageShareIntent(stickerUri, targetPackage)
@@ -332,7 +318,7 @@ class LibraryShareFragment : DialogFragment() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "이미지 저장에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("이미지 저장에 실패했습니다.", false)
                 }
             }
         }
@@ -342,32 +328,23 @@ class LibraryShareFragment : DialogFragment() {
         val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
             setPackage("com.instagram.android")
 
-            // 1. 배경 이미지 설정 (Data)
             if (backgroundUri != null) {
                 setDataAndType(backgroundUri, "image/*")
             } else {
                 type = "image/*"
             }
 
-            // 2. 카드 이미지 설정 (Sticker Extra)
             putExtra("interactive_asset_uri", stickerUri)
-
-            // 페이스북/인스타에서 요구하는 앱 ID (선택사항이나 권장)
             putExtra("source_application", requireContext().packageName)
-
-            // 3. ★ [핵심 해결책] 권한 부여 플래그
             flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         }
 
-        // 4. ★ [핵심 해결책] ClipData를 이용해 스티커 URI 권한 강제 주입
-        // 안드로이드 10 이상에서는 Extras에 들어간 URI 권한이 제대로 전달되지 않을 수 있어 ClipData를 사용해야 함
         val clipData = ClipData.newRawUri("Sticker", stickerUri)
         if (backgroundUri != null) {
             clipData.addItem(ClipData.Item(backgroundUri))
         }
         intent.clipData = clipData
 
-        // 5. 구형 버전을 위한 명시적 권한 부여 (보험용)
         val resInfoList = requireContext().packageManager.queryIntentActivities(intent, 0)
         for (resolveInfo in resInfoList) {
             val packageName = resolveInfo.activityInfo.packageName
@@ -388,9 +365,10 @@ class LibraryShareFragment : DialogFragment() {
         try {
             startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(context, "인스타그램 앱을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+            requireContext().showCustomToast("인스타그램 앱을 찾을 수 없습니다.", false)
         }
     }
+
     private fun launchGenericImageShareIntent(uri: Uri, packageName: String?) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "image/*"
@@ -405,18 +383,15 @@ class LibraryShareFragment : DialogFragment() {
         }
     }
 
-    // =========================================================================
-    // ImgBB 업로드 후 링크 복사
-    // =========================================================================
     private fun uploadToImgBBAndCopyLink() {
         val targetView = if (isTypeA) binding.typeACard else binding.typeBCard
 
         val bitmap = captureCardBitmap(targetView) ?: run {
-            Toast.makeText(context, "화면을 불러오는 중입니다. 잠시 후 시도해주세요.", Toast.LENGTH_SHORT).show()
+            requireContext().showCustomToast("화면을 불러오는 중입니다. 잠시 후 시도해주세요.", false)
             return
         }
 
-        Toast.makeText(context, "링크를 생성하고 있습니다. 잠시만 기다려주세요...", Toast.LENGTH_SHORT).show()
+        requireContext().showCustomToast("링크를 생성하고 있습니다. 잠시만 기다려주세요...", true)
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -432,16 +407,16 @@ class LibraryShareFragment : DialogFragment() {
                     if (response.isSuccessful && response.body()?.success == true) {
                         val imgbbLink = response.body()?.data?.url ?: ""
                         copyToClipboard(imgbbLink)
-                        Toast.makeText(context, "링크가 복사되었습니다.", Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast("링크가 복사되었습니다.", true)
                     } else {
-                        Toast.makeText(context, "링크 생성에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast("링크 생성에 실패했습니다.", false)
                         Log.e("ImgBBError", "Code: ${response.code()}, Message: ${response.message()}")
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("오류가 발생했습니다.", false)
                 }
             }
         }

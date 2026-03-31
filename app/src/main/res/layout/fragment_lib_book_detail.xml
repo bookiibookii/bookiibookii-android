@@ -432,6 +432,10 @@
         android:textColor="@color/white"
         android:enabled="true"
         android:background="@drawable/bg_round_20dp_gray900"
+
+        android:elevation="0dp"
+        android:stateListAnimator="@null"
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

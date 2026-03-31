@@ -16,7 +16,6 @@ import android.view.ViewGroup
 import android.widget.PopupWindow
 import android.widget.RadioButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupSummary
 import com.bookiibookii.bookiibookii.data.model.ReportRequest
@@ -65,21 +65,15 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
         initListeners()
         initReportTypeRadioGroup()
         initValidation()
-        setupKeyboardAutoScroll() // ★ 자동 스크롤 적용
-    }
 
-    // ★ 텍스트 박스 터치 시 키보드 위로 스크롤을 끌어올리는 함수
-    private fun setupKeyboardAutoScroll() {
-        // 신고 그룹과 멤버 선택창은 키보드가 안 올라오므로, 신고 내용(Content)에만 적용
-        val scrollAction = {
-            binding.mypReportContentEt.postDelayed({
-                binding.mypReportContentEt.requestRectangleOnScreen(
-                    android.graphics.Rect(0, binding.mypReportContentEt.height, binding.mypReportContentEt.width, binding.mypReportContentEt.height), true
-                )
-            }, 300)
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val imeVisible = insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())
+            val imeHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
+            val navBarHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars()).bottom
+
+            v.setPadding(0, 0, 0, if (imeVisible) imeHeight else navBarHeight)
+            insets
         }
-        binding.mypReportContentEt.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) scrollAction() }
-        binding.mypReportContentEt.setOnClickListener { scrollAction() }
     }
 
     private fun initListeners() {
@@ -93,7 +87,7 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
 
         val memberClickListener = View.OnClickListener {
             if (selectedGroupId == null) {
-                Toast.makeText(context, "먼저 신고할 그룹을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("먼저 신고할 그룹을 선택해주세요.", false)
             } else {
                 fetchGroupMembersAndShowPopup(selectedGroupId!!)
             }
@@ -105,19 +99,19 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
             val safeContext = context ?: return@setOnClickListener
 
             if (selectedGroupId == null) {
-                Toast.makeText(safeContext, "신고 그룹을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                safeContext.showCustomToast("신고 그룹을 선택해주세요.", false)
                 return@setOnClickListener
             }
             if (selectedTargetId == null) {
-                Toast.makeText(safeContext, "신고 대상을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                safeContext.showCustomToast("신고 대상을 선택해주세요.", false)
                 return@setOnClickListener
             }
             if (binding.mypReportTypeRg.checkedRadioButtonId == -1) {
-                Toast.makeText(safeContext, "신고 유형을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                safeContext.showCustomToast("신고 유형을 선택해주세요.", false)
                 return@setOnClickListener
             }
             if (binding.mypReportContentEt.text.toString().trim().isEmpty()) {
-                Toast.makeText(safeContext, "신고 내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                safeContext.showCustomToast("신고 내용을 입력해주세요.", false)
                 return@setOnClickListener
             }
 
@@ -172,7 +166,7 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
                         checkValidation()
                     }
                 } else {
-                    Toast.makeText(safeContext, "그룹 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    safeContext.showCustomToast("그룹 목록을 불러오지 못했습니다.", false)
                 }
             } catch (e: Exception) {
                 Log.e("ReportWrite", "그룹 조회 에러", e)
@@ -225,7 +219,7 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
                         }
                     }
                 } else {
-                    Toast.makeText(safeContext, "멤버 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    safeContext.showCustomToast("멤버 목록을 불러오지 못했습니다.", false)
                 }
             } catch (e: Exception) {
                 Log.e("ReportWrite", "멤버 조회 에러", e)
@@ -403,13 +397,15 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
                 val response = RetrofitClient.api().postReport(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(safeContext, "신고가 정상적으로 접수되었습니다.", Toast.LENGTH_SHORT).show()
+                    safeContext.showCustomToast("신고가 정상적으로 접수되었습니다.", true)
                     requireActivity().supportFragmentManager.popBackStack()
                 } else {
-                    Toast.makeText(safeContext, "전송 실패: ${response.body()?.message}", Toast.LENGTH_SHORT).show()
+                    val msg = response.body()?.message ?: "서버 메시지 없음"
+                    safeContext.showCustomToast("전송 실패: $msg", false)
                 }
             } catch (e: Exception) {
                 Log.e("ReportWrite", "API 오류", e)
+                requireContext().showCustomToast("네트워크 오류가 발생했습니다.", false)
             } finally {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
             }

@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.GridLayoutManager
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.LoadingDialog
@@ -23,24 +22,22 @@ import com.bookiibookii.bookiibookii.data.model.MypReview
 import com.bookiibookii.bookiibookii.data.model.MypageResult
 import com.bookiibookii.bookiibookii.databinding.FragmentMypBinding
 import com.bookiibookii.bookiibookii.databinding.LayoutMypProfileCardBinding
-import com.bookiibookii.bookiibookii.myPage.main.MypGroupAdapter
-import com.bookiibookii.bookiibookii.myPage.main.MypLateBookAdapter
-import com.bookiibookii.bookiibookii.myPage.main.MypReviewAdapter
 import com.bookiibookii.bookiibookii.myPage.profile.MypProfileEditFragment
 import com.bookiibookii.bookiibookii.myPage.set.MypSetFragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import kotlinx.coroutines.launch
 
-// ✅ Base가 아닌 기본 Fragment()를 상속받습니다.
 class MypageFragment : Fragment() {
 
-    // ✅ 일반 Fragment에서 ViewBinding을 사용하는 정석적인 패턴
     private var _binding: FragmentMypBinding? = null
     private val binding get() = _binding!!
 
-    // 프로필 카드 바인딩 (include 레이아웃)
     private var _profileBinding: LayoutMypProfileCardBinding? = null
     private val profileBinding get() = _profileBinding!!
 
@@ -48,7 +45,6 @@ class MypageFragment : Fragment() {
     private val viewModel: MyPageViewModel by activityViewModels()
     private var isGroupExpanded = true
 
-    // ✅ Fragment()를 상속받았으므로 반드시 onCreateView를 통해 화면을 그려야 합니다.
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -93,7 +89,12 @@ class MypageFragment : Fragment() {
     }
 
     private fun setupRecyclerViews() {
-        binding.mypReviewsRv.layoutManager = GridLayoutManager(context, 2)
+        binding.mypReviewsRv.layoutManager = FlexboxLayoutManager(context).apply {
+            flexWrap = FlexWrap.WRAP // 공간이 모자라면 다음 줄로 넘김
+            flexDirection = FlexDirection.ROW // 가로 방향으로 배치
+            justifyContent = JustifyContent.FLEX_START // 왼쪽 정렬
+        }
+
         binding.mypGroupsRv.layoutManager = LinearLayoutManager(context)
         binding.mypGroupsRv.isNestedScrollingEnabled = false
         binding.rvBooks.layoutManager = LinearLayoutManager(context)
@@ -109,6 +110,7 @@ class MypageFragment : Fragment() {
             "FAST_SHIPPING" -> "책을 빠르게 보내줬어요"
             "FUNNY" -> "코멘트가 재미있어요"
             "CLEAN_CONDITION" -> "책을 깨끗하고 깔끔하게 읽어요"
+            "PUNCTUAL" -> "약속을 잘 지켜요"
             "MEMO" -> "메모환영"
             "POSTIT" -> "포스트잇"
             "CLEAN" -> "깔끔"

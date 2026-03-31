@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -17,6 +16,7 @@ import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CardItem
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
@@ -27,12 +27,8 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
 
-// ✅ 상속 타입을 BaseDetailFragment<FragmentLibBookDetailBinding>으로 정확히 지정합니다.
 class LibraryBookDetailFragment : BaseDetailFragment<FragmentLibBookDetailBinding>() {
 
-    // ❌ 에러의 주범이었던 _binding, binding 변수 선언을 삭제했습니다. (부모 클래스의 변수를 그대로 씁니다)
-
-    // ✅ BaseFragment가 강제하는 바인딩 초기화 함수만 넘겨주면 됩니다.
     override fun getFragmentBinding(
         inflater: LayoutInflater,
         container: ViewGroup?
@@ -41,7 +37,6 @@ class LibraryBookDetailFragment : BaseDetailFragment<FragmentLibBookDetailBindin
     }
 
     private lateinit var loadingDialog: LoadingDialog
-
     private val myPageViewModel: MyPageViewModel by activityViewModels()
 
     private var groupId: Int = -1
@@ -76,8 +71,6 @@ class LibraryBookDetailFragment : BaseDetailFragment<FragmentLibBookDetailBindin
         }
     }
 
-    // ❌ onCreateView는 삭제했습니다. 부모(BaseFragment)가 알아서 처리합니다.
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         loadingDialog = LoadingDialog(requireContext())
@@ -95,7 +88,6 @@ class LibraryBookDetailFragment : BaseDetailFragment<FragmentLibBookDetailBindin
         myPageViewModel.profileData.observe(viewLifecycleOwner) { profile ->
             if (profile != null) {
                 myNickname = profile.nickname
-                // _binding 대신 binding을 안전하게 호출하는 방식으로 수정
                 binding.libDetailReviewName1Tv.text = myNickname
             }
         }
@@ -119,10 +111,9 @@ class LibraryBookDetailFragment : BaseDetailFragment<FragmentLibBookDetailBindin
 
         binding.libDetailProfileTv.text = hostName
 
-        val formattedStart = DateUtils.formatDate(startDate)
-        val formattedEnd = DateUtils.formatDate(endDate)
-
-        binding.libDetailDateTv.text = if (formattedEnd.isNotEmpty()) "$ ~ $formattedEnd" else "$formattedStart ~"
+        val formattedStart = if (startDate.isNullOrBlank() || startDate.startsWith("0000")) "0000. 00. 00." else DateUtils.formatDate(startDate)
+        val formattedEnd = if (endDate.isNullOrBlank() || endDate.startsWith("0000")) "0000. 00. 00." else DateUtils.formatDate(endDate)
+        binding.libDetailDateTv.text = "$formattedStart ~ $formattedEnd"
 
         if (rating > 0.0) {
             binding.libDetailRateList.visibility = View.VISIBLE
@@ -299,17 +290,19 @@ class LibraryBookDetailFragment : BaseDetailFragment<FragmentLibBookDetailBindin
             try {
                 val response = RetrofitClient.api().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(context, "그룹이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("그룹이 삭제되었습니다.", true)
                     requireActivity().supportFragmentManager.popBackStack()
                 } else {
-                    Toast.makeText(context, "삭제 실패", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("삭제 실패", false)
                 }
-            } catch (e: Exception) { e.printStackTrace() }
-            finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                requireContext().showCustomToast("오류가 발생했습니다.", false)
+            } finally {
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
+            }
         }
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    // ❌ onResume, onDestroyView도 부모에서 모두 안전하게 관리하므로 여기서는 과감히 지웠습니다.
 }

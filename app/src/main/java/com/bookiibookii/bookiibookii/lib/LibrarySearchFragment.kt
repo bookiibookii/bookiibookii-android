@@ -190,7 +190,23 @@ class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
                 .commit()
         }
 
-        // bookmarkAdapter 초기화는 기존 코드에 구현체가 없어 생략했습니다. 필요시 추가해주세요.
+        // ★ 주석 처리되어 있던 북마크 어댑터 초기화 및 클릭 이벤트 추가!
+        bookmarkAdapter = LibraryBookmarkAdapter { clickedCard ->
+            hideKeyboard()
+            val myNickname = myPageViewModel.confirmedNickname ?: myPageViewModel.profileData.value?.nickname ?: ""
+            val isMyCard = (clickedCard.creatorName == myNickname)
+            val detailFragment = LibraryCardDetailFragment().apply {
+                arguments = Bundle().apply {
+                    putLong("cardId", clickedCard.cardId.toLong())
+                    putBoolean("isMine", isMyCard)
+                    putString("writerName", clickedCard.creatorName)
+                }
+            }
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, detailFragment)
+                .addToBackStack(null)
+                .commit()
+        }
     }
 
     private fun initListeners() {
@@ -236,12 +252,13 @@ class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
             libraryAdapter.submitList(filtered)
             binding.libSearchCountTv.text = "${filtered.size} 권"
         } else {
+            // ★ 값이 null일 때 contains()를 실행하면 튕기는 현상 방지! (?. 연산자와 == true 활용)
             val filtered = allBookmarks.filter {
-                it.bookTitle.contains(query, ignoreCase = true) ||
-                        it.memo.contains(query, ignoreCase = true) ||
-                        it.creatorName.contains(query, ignoreCase = true)
+                (it.bookTitle?.contains(query, ignoreCase = true) == true) ||
+                        (it.memo?.contains(query, ignoreCase = true) == true) ||
+                        (it.creatorName?.contains(query, ignoreCase = true) == true)
             }
-            // bookmarkAdapter.submitList(filtered) // bookmarkAdapter 구현시 활성화
+            bookmarkAdapter.submitList(filtered) // ★ 주석 해제
             binding.libSearchCountTv.text = "${filtered.size} 개"
         }
     }
@@ -255,7 +272,7 @@ class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
                 binding.libSearchResultRv.adapter = libraryAdapter
                 binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 3)
             } else {
-                // binding.libSearchResultRv.adapter = bookmarkAdapter // bookmarkAdapter 구현시 활성화
+                binding.libSearchResultRv.adapter = bookmarkAdapter // ★ 주석 해제
                 binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 2)
             }
         } else {
