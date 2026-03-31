@@ -6,6 +6,8 @@ enum class ExchangeType {
     NONE
 }
 
+enum class ExchangeRole { HOST, GUEST }
+
 data class TrackerData(
     val id: Long,
     val groupId: Long,
@@ -14,6 +16,7 @@ data class TrackerData(
     val bookCategory: String?,
     val coverImageUrl: String?,
     val exchangeType: ExchangeType,
+    val role: ExchangeRole,
 
     val withUserName: String?,
     val stepDates: List<String?>,
