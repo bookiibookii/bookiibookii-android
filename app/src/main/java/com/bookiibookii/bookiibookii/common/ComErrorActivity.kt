@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.common
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -9,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.google.android.material.button.MaterialButton
@@ -111,8 +111,13 @@ class ComErrorActivity : AppCompatActivity() {
         btnBottom.setOnClickListener {
             AuthInterceptor.unlockRouting()
             when (type) {
-                TYPE_NO_PERMISSION, TYPE_GROUP_DELETED -> setResult(RESULT_GO_MAIN)
-                else -> setResult(Activity.RESULT_CANCELED)
+                TYPE_NO_PERMISSION, TYPE_GROUP_DELETED -> {
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                }
+                else -> setResult(RESULT_CANCELED)
             }
             finish()
         }
@@ -143,7 +148,6 @@ class ComErrorActivity : AppCompatActivity() {
 
         // 결과 코드
         const val RESULT_RETRY = 1001
-        const val RESULT_GO_MAIN = 1002
 
         fun newIntent(context: Context, type: Int): Intent {
             return Intent(context, ComErrorActivity::class.java).apply {
