@@ -107,18 +107,13 @@ class ComErrorActivity : AppCompatActivity() {
             finish()
         }
 
-        // 하단 버튼: 이전으로(10/11) or 메인으로(12/13)
+        // 하단 버튼: 이전으로(10/11) or 메인으로(12/13) - 모두 메인 화면으로 이동
         btnBottom.setOnClickListener {
             AuthInterceptor.unlockRouting()
-            when (type) {
-                TYPE_NO_PERMISSION, TYPE_GROUP_DELETED -> {
-                    val intent = Intent(this, MainActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    }
-                    startActivity(intent)
-                }
-                else -> setResult(RESULT_CANCELED)
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
+            startActivity(intent)
             finish()
         }
     }
