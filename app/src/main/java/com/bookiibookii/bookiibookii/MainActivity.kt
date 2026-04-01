@@ -16,7 +16,6 @@ import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.main.GroupFragment
-import com.bookiibookii.bookiibookii.trkHost.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.home.OtherProfileFragment
 import com.bookiibookii.bookiibookii.lib.LibraryAddCardFragment
@@ -26,6 +25,7 @@ import com.bookiibookii.bookiibookii.lib.LibraryBookDetailRelayWriteFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
 import com.bookiibookii.bookiibookii.myPage.main.MypageFragment
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
+import com.bookiibookii.bookiibookii.trkHost.ExchangeRole
 import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrkMainFragment
 import kotlinx.coroutines.launch
@@ -105,6 +105,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
             "OPEN_MYP_REPORT" -> {
                 moveToMypReportFragment()
+            }
+
+            "OPEN_GROUP" -> {
+                moveToGroupTab()
+                intent.removeExtra("NAV_ACTION")
             }
         }
     }
