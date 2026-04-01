@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     android:background="@color/ui_bg">
 
     <androidx.constraintlayout.widget.Guideline
@@ -124,15 +123,26 @@
                     app:layout_constraintStart_toEndOf="@id/myp_set_bell_iv"
                     app:layout_constraintTop_toBottomOf="@id/myp_set_push_tv" />
 
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/myp_set_push_iv"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:thumbTint="@color/white"
-                    app:trackTint="@color/selector_switch_track"
+                <FrameLayout
+                    android:id="@+id/myp_set_push_toggle_container"
+                    android:layout_width="44dp"
+                    android:layout_height="24dp"
+                    android:background="@drawable/bg_round_20dp_gray200"
+                    android:backgroundTint="@color/grey_400"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"/>
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <View
+                        android:id="@+id/myp_set_push_thumb"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center_vertical|start"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/circle"
+                        android:backgroundTint="@color/white"/>
+                </FrameLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -294,8 +304,6 @@
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintTop_toTopOf="parent"/>
                 </androidx.constraintlayout.widget.ConstraintLayout>
-
-
 
             </LinearLayout>
 
