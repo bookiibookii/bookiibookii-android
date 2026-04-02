@@ -6,7 +6,9 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.bookiibookii.bookiibookii.R
 import com.google.android.material.button.MaterialButton
@@ -52,6 +54,9 @@ class LoginIntroAnimActivity : AppCompatActivity() {
     private var pendingDesc: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        enableEdgeToEdge() // Edge-to-Edge 적용
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_intro_anim)
 
@@ -125,8 +130,20 @@ class LoginIntroAnimActivity : AppCompatActivity() {
         })
 
         // 1) 로고(중앙) → 위로 이동
+//        logo.post {
+//            val targetY = -(logo.top - dpToPx(50f))
+//            logo.animate()
+//                .translationY(targetY)
+//                .setDuration(LOGO_UP_MS)
+//                .start()
+//        }
+        // 1) 로고 위로이동 후 자동계산해서 상태바랑 패딩 진행
         logo.post {
-            val targetY = -(logo.top - dpToPx(50f))
+            val statusBarHeight = getStatusBarHeight().toFloat()
+            val margin = dpToPx(36f)
+
+            val targetY = -(logo.top - (statusBarHeight + margin))
+
             logo.animate()
                 .translationY(targetY)
                 .setDuration(LOGO_UP_MS)
@@ -173,6 +190,15 @@ class LoginIntroAnimActivity : AppCompatActivity() {
             // 카드 등장 이후에 슬라이드 시작 (첫 카드는 오래 보여주기)
             startAutoSlide(pager, intervalMs = SLIDE_INTERVAL_MS, firstDelayMs = FIRST_SLIDE_DELAY_MS)
         }, descUpStart + DESC_UP_MS)
+    }
+
+    private fun getStatusBarHeight(): Int {
+        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resourceId > 0) {
+            resources.getDimensionPixelSize(resourceId)
+        } else {
+            0
+        }
     }
 
     private fun startAutoSlide(pager: ViewPager2, intervalMs: Long, firstDelayMs: Long) {
@@ -222,8 +248,8 @@ class LoginIntroAnimActivity : AppCompatActivity() {
 
         startActivity(Intent(this, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                Intent.FLAG_ACTIVITY_NEW_TASK or
-                Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()
     }
