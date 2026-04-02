@@ -190,7 +190,6 @@ class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
                 .commit()
         }
 
-        // ★ 주석 처리되어 있던 북마크 어댑터 초기화 및 클릭 이벤트 추가!
         bookmarkAdapter = LibraryBookmarkAdapter { clickedCard ->
             hideKeyboard()
             val myNickname = myPageViewModel.confirmedNickname ?: myPageViewModel.profileData.value?.nickname ?: ""
@@ -246,24 +245,34 @@ class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
     private fun filterList(query: String) {
         if (source == "LIBRARY") {
             val filtered = allMyBooks.filter {
-                it.title.contains(query, ignoreCase = true) ||
-                        it.author.contains(query, ignoreCase = true)
+                (it.title?.contains(query, ignoreCase = true) == true) ||
+                        (it.author?.contains(query, ignoreCase = true) == true) ||
+                        (it.hostName?.contains(query, ignoreCase = true) == true)
             }
             libraryAdapter.submitList(filtered)
             binding.libSearchCountTv.text = "${filtered.size} 권"
         } else {
-            // ★ 값이 null일 때 contains()를 실행하면 튕기는 현상 방지! (?. 연산자와 == true 활용)
             val filtered = allBookmarks.filter {
                 (it.bookTitle?.contains(query, ignoreCase = true) == true) ||
                         (it.memo?.contains(query, ignoreCase = true) == true) ||
                         (it.creatorName?.contains(query, ignoreCase = true) == true)
             }
-            bookmarkAdapter.submitList(filtered) // ★ 주석 해제
+            bookmarkAdapter.submitList(filtered)
             binding.libSearchCountTv.text = "${filtered.size} 개"
         }
     }
 
+    private fun removeAllItemDecorations() {
+        while (binding.libSearchResultRv.itemDecorationCount > 0) {
+            binding.libSearchResultRv.removeItemDecorationAt(0)
+        }
+    }
+
+    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+
     private fun updateSearchState(isSearching: Boolean) {
+        removeAllItemDecorations()
+
         if (isSearching) {
             binding.libSearchCountTv.visibility = View.VISIBLE
             binding.libSearchResultRv.visibility = View.VISIBLE
@@ -271,9 +280,14 @@ class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
             if (source == "LIBRARY") {
                 binding.libSearchResultRv.adapter = libraryAdapter
                 binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 3)
+                // ★ 서재(LibraryFragment)와 완벽하게 동일한 여백(간격 12dp, 상하 36dp) 추가
+                binding.libSearchResultRv.addItemDecoration(LibDetailGridDecoration(3, dpToPx(12), dpToPx(36), false))
+                binding.libSearchResultRv.setPadding(0, 0, 0, dpToPx(80)) // 스크롤 여유
             } else {
-                binding.libSearchResultRv.adapter = bookmarkAdapter // ★ 주석 해제
+                binding.libSearchResultRv.adapter = bookmarkAdapter
                 binding.libSearchResultRv.layoutManager = GridLayoutManager(context, 2)
+                binding.libSearchResultRv.addItemDecoration(LibDetailGridDecoration(2, dpToPx(12), dpToPx(24), false))
+                binding.libSearchResultRv.setPadding(0, 0, 0, dpToPx(80))
             }
         } else {
             binding.libSearchCountTv.visibility = View.GONE
@@ -283,6 +297,7 @@ class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
                 justifyContent = JustifyContent.FLEX_START
             }
             binding.libSearchResultRv.adapter = recentSearchAdapter
+            binding.libSearchResultRv.setPadding(0, 0, 0, 0)
         }
     }
 

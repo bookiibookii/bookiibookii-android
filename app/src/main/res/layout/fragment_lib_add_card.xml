@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-
-android:background="@color/ui_bg">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ui_bg">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_start"
@@ -75,71 +74,66 @@ android:background="@color/ui_bg">
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        android:layout_marginBottom="12dp"
         app:layout_constraintTop_toBottomOf="@id/lib_top_layout"
         app:layout_constraintBottom_toTopOf="@id/lib_add_btn"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintEnd_toEndOf="@id/guideline_end">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="20dp">
+            android:orientation="vertical"
+            android:paddingBottom="40dp"> <com.google.android.material.card.MaterialCardView
+            android:id="@+id/lib_add_card_cv"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="@color/grey_200">
 
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/lib_add_card_cv"
-                android:layout_width="0dp"
-                android:layout_height="200dp"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0dp"
-                app:cardBackgroundColor="@color/grey_200"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
-                <FrameLayout
+                <LinearLayout
+                    android:id="@+id/lib_add_card_guide_ll"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <LinearLayout
-                        android:id="@+id/lib_add_card_guide_ll"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:orientation="vertical">
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_upload" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="사진 업로드"
-                            android:textAppearance="@style/regular14"
-                            android:textColor="@color/grey_800" />
-                    </LinearLayout>
-
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
                     <ImageView
-                        android:id="@+id/lib_add_card_preview_iv"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:visibility="gone" />
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_upload" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="사진 업로드"
+                        android:textAppearance="@style/regular14"
+                        android:textColor="@color/grey_800" />
+                </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/lib_add_card_edit_iv"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/ic_edit"
-                        android:layout_gravity="top|end"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginEnd="16dp"
-                        android:visibility="gone" />
-                </FrameLayout>
-            </com.google.android.material.card.MaterialCardView>
+                <ImageView
+                    android:id="@+id/lib_add_card_preview_iv"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/lib_add_card_edit_iv"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_edit"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:visibility="gone" />
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:id="@+id/lib_add_page_tv"
@@ -148,22 +142,17 @@ android:background="@color/ui_bg">
                 android:text="페이지"
                 android:textAppearance="@style/regular16"
                 android:textColor="@color/grey_900"
-                android:layout_marginTop="12dp"
-                app:layout_constraintTop_toBottomOf="@id/lib_add_card_cv"
-                app:layout_constraintStart_toStartOf="parent" />
+                android:layout_marginTop="20dp" />
 
             <EditText
                 android:id="@+id/lib_add_page_et"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="44dp"
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_input_round_20dp_white"
                 android:paddingHorizontal="12dp"
                 android:inputType="number"
-                android:textColor="@color/grey_900"
-                app:layout_constraintTop_toBottomOf="@id/lib_add_page_tv"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                android:textColor="@color/grey_900" />
 
             <TextView
                 android:id="@+id/lib_add_memo_tv"
@@ -172,30 +161,24 @@ android:background="@color/ui_bg">
                 android:text="메모"
                 android:textAppearance="@style/regular16"
                 android:textColor="@color/grey_900"
-                android:layout_marginTop="12dp"
-                app:layout_constraintTop_toBottomOf="@id/lib_add_page_et"
-                app:layout_constraintStart_toStartOf="parent" />
+                android:layout_marginTop="20dp" />
 
             <EditText
                 android:id="@+id/lib_add_memo_et"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="44dp"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="12dp"
                 android:background="@drawable/bg_input_round_20dp_white"
                 android:paddingHorizontal="12dp"
-                android:paddingVertical="10dp"
+                android:paddingVertical="12dp"
                 android:textColor="@color/grey_900"
                 android:inputType="textMultiLine"
-                android:scrollbars="vertical"
-                android:gravity="top|start"
-                app:layout_constraintTop_toBottomOf="@id/lib_add_memo_tv"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                android:scrollbars="none"
+                android:gravity="top|start" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
     <androidx.appcompat.widget.AppCompatButton

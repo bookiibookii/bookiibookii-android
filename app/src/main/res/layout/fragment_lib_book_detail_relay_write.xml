@@ -204,7 +204,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_round_20dp_white"
-                android:gravity="center_horizontal"
                 android:orientation="vertical"
                 android:padding="20dp"
                 app:layout_constraintEnd_toEndOf="@id/guideline_end"
@@ -213,7 +212,7 @@
 
                 <TextView
                     android:id="@+id/lib_write_title_tv"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="괴테는 모든 것을 말했다에 대한 평가를 남겨주세요!"
                     android:gravity="center"
@@ -279,7 +278,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_round_20dp_white"
-                android:gravity="center_horizontal"
                 android:orientation="vertical"
                 android:padding="20dp"
                 app:layout_constraintEnd_toEndOf="@id/guideline_end"
@@ -288,7 +286,7 @@
 
                 <TextView
                     android:id="@+id/lib_write_partner_tv"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="noshel 님에 대한 평가를 남겨주세요!"
@@ -343,7 +341,7 @@
                     app:alignContent="flex_start"
                     app:alignItems="flex_start"
                     app:flexWrap="wrap"
-                    app:justifyContent="center">
+                    app:justifyContent="flex_start">
 
                     <TextView
                         android:id="@+id/tag_1"

@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -167,17 +166,38 @@ class LibraryFragment : Fragment() {
                 binding.layoutEmptyGroup.root.elevation = 0f
             }
 
+            // 외부 마진 찌꺼기 제거
+            val layoutParams = binding.layoutEmptyGroup.root.layoutParams as ViewGroup.MarginLayoutParams
+            layoutParams.bottomMargin = 0
+            binding.layoutEmptyGroup.root.layoutParams = layoutParams
+
+            // ★ 텍스트뷰(설명글)의 레이아웃 파라미터를 가져옵니다.
+            val descParams = binding.layoutEmptyGroup.tvEmptyDesc.layoutParams as ViewGroup.MarginLayoutParams
+
             if (status == ReadStatus.READING) {
                 binding.layoutEmptyGroup.tvEmptyTitle.text = "아직 진행 중인 독서가 없어요 \uD83D\uDE2D"
                 binding.layoutEmptyGroup.tvEmptyDesc.text = "읽고 싶은 책을 골라 그룹을 만들어볼까요?"
                 binding.layoutEmptyGroup.btnCreateGroup.visibility = View.VISIBLE
+
+                // 진행 중 탭: 버튼이 있으므로 텍스트 하단 마진을 초기화합니다.
+                descParams.bottomMargin = 0
+                binding.layoutEmptyGroup.tvEmptyDesc.layoutParams = descParams
+
                 binding.layoutEmptyGroup.root.setPadding(0, dpToPx(32), 0, dpToPx(24))
             } else {
                 binding.layoutEmptyGroup.tvEmptyTitle.text = "완료한 독서가 없어요 \uD83D\uDE2D"
                 binding.layoutEmptyGroup.tvEmptyDesc.text = "진행 중인 독서를 완료하고 기록을 남겨보세요!"
                 binding.layoutEmptyGroup.btnCreateGroup.visibility = View.GONE
-                binding.layoutEmptyGroup.root.setPadding(0, dpToPx(56), 0, dpToPx(56))
+
+                // ★ 완료 탭: 버튼이 GONE으로 날아가면서 제약(Constraint)이 무너지는 것을 방어!
+                // 설명 텍스트 자체의 하단에 마진을 주어 빈 공간을 강제로 만들어냅니다.
+                descParams.bottomMargin = dpToPx(24)
+                binding.layoutEmptyGroup.tvEmptyDesc.layoutParams = descParams
+
+                // 루트 레이아웃에는 상/하단 동일한 기본 패딩을 줍니다.
+                binding.layoutEmptyGroup.root.setPadding(0, dpToPx(40), 0, dpToPx(24))
             }
+
         } else {
             binding.layoutEmptyGroup.root.visibility = View.GONE
             binding.libBookListRv.visibility = View.VISIBLE
@@ -191,21 +211,16 @@ class LibraryFragment : Fragment() {
         libraryAdapter = LibraryBookAdapter(emptyList()) { clickedBook ->
             Log.d("LibraryClick", "클릭: ${clickedBook.title}, Type: ${clickedBook.groupType}, Status: ${clickedBook.readStatus}, Reviewed: ${clickedBook.isReviewed}")
 
-            // ★ 명확한 4가지 상황별 분기 처리
             val targetFragment: Fragment = if (clickedBook.groupType == "TOGETHER") {
                 if (clickedBook.readStatus == ReadStatus.DONE || clickedBook.isReviewed) {
-                    // 1. 함께읽기 + 종료 (완독/리뷰작성완료)
                     LibraryBookDetailTogetherFragment()
                 } else {
-                    // 2. 함께읽기 + 진행중
                     LibraryBookDetailIngFragment()
                 }
             } else {
                 if (clickedBook.readStatus == ReadStatus.DONE || clickedBook.isReviewed) {
-                    // 3. 이어읽기 + 종료 (완독/리뷰작성완료)
                     LibraryBookDetailFragment()
                 } else {
-                    // 4. 이어읽기 + 진행중 (기존 트래커 대신 여기로 통합)
                     LibraryBookDetailFragment()
                 }
             }
@@ -218,11 +233,6 @@ class LibraryFragment : Fragment() {
         binding.libBookListRv.adapter = libraryAdapter
         setCoverModeLayout()
     }
-    /*
-    private fun checkTradeTypeAndNavigate(book: LibBook) {
-        // ... 기존 트래커 액티비티 이동 로직 주석 처리됨 ...
-    }
-    */
 
     private fun navigateToFragment(targetFragment: Fragment, book: LibBook) {
         val bundle = Bundle().apply {
