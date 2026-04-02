@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.common
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -9,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.google.android.material.button.MaterialButton
@@ -103,17 +103,22 @@ class ComErrorActivity : AppCompatActivity() {
         btnTop.setOnClickListener {
             AuthInterceptor.unlockRouting()
             ComRetryBus.emitRetry()
-            setResult(RESULT_RETRY)
+            if (isTaskRoot) {
+                // 백스택에 돌아갈 화면이 없으면 메인으로 이동
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                })
+            }
             finish()
         }
 
-        // 하단 버튼: 이전으로(10/11) or 메인으로(12/13)
+        // 하단 버튼: 이전으로(10/11) or 메인으로(12/13) - 모두 메인 화면으로 이동
         btnBottom.setOnClickListener {
             AuthInterceptor.unlockRouting()
-            when (type) {
-                TYPE_NO_PERMISSION, TYPE_GROUP_DELETED -> setResult(RESULT_GO_MAIN)
-                else -> setResult(Activity.RESULT_CANCELED)
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
+            startActivity(intent)
             finish()
         }
     }
@@ -143,7 +148,6 @@ class ComErrorActivity : AppCompatActivity() {
 
         // 결과 코드
         const val RESULT_RETRY = 1001
-        const val RESULT_GO_MAIN = 1002
 
         fun newIntent(context: Context, type: Int): Intent {
             return Intent(context, ComErrorActivity::class.java).apply {
