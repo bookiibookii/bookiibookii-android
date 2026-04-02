@@ -98,27 +98,23 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
 
         val originalBottomPadding = binding.inputAreaContainer.paddingBottom
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
-
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
             val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
 
-            // 상태바 대응
-            binding.root.setPadding(
+            // 🔥 핵심 수정: 키보드가 올라오면 최상위 root 뷰의 하단에 키보드 높이만큼 패딩을 줘서 전체를 위로 밀어올림
+            val bottomPadding = if (imeVisible) imeInsets.bottom else systemBars.bottom
+
+            view.setPadding(
                 systemBars.left,
                 systemBars.top,
                 systemBars.right,
-                0
+                bottomPadding
             )
 
-            // 🔥 기존 padding + ime 높이
-            binding.inputAreaContainer.setPadding(
-                binding.inputAreaContainer.paddingLeft,
-                binding.inputAreaContainer.paddingTop,
-                binding.inputAreaContainer.paddingRight,
-                originalBottomPadding + imeInsets.bottom
-            )
+            // 입력창 컨테이너 패딩 조절은 제거 (root를 올렸으므로 불필요)
+            // binding.inputAreaContainer.setPadding(...) <- 이 부분 삭제
 
             bottomSheetBehavior.state =
                 if (imeVisible) BottomSheetBehavior.STATE_EXPANDED
@@ -126,13 +122,6 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
 
             insets
         }
-
-
-
-
-
-
-
 
         currentGroupType = intent.getStringExtra("GROUP_TYPE")
         currentGroupId = intent.getLongExtra("GROUP_ID", -1L)
@@ -335,6 +324,7 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
                 handleButtonStatus(data)
                 val myNick = userViewModel.profileData.value?.nickname
                 updateMemberAdapter(data.participantSlots, data.hostProfileImageUrl, myNick)
+                commentAdapter.setIsCurrentUserHost(data.isHost)
             }
         }
 
