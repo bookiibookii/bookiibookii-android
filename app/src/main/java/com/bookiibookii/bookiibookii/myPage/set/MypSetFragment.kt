@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.myPage.set
 
 import android.Manifest
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -8,9 +9,11 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -18,7 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
-import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypSetBinding
 import com.bookiibookii.bookiibookii.myPage.notice.MypNoticeFragment
@@ -30,21 +33,17 @@ import kotlinx.coroutines.launch
 class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
 
     private lateinit var sharedPreferences: SharedPreferences
+    private var isPushEnabled = false // 현재 토글 상태
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            sharedPreferences.edit().putBoolean("push_enabled", true).apply()
-            binding.mypSetPushIv.isChecked = true
+            setPushState(true, true)
             requireContext().showCustomToast("알림이 설정되었습니다.", true)
         } else {
             requireContext().showCustomToast("알림 권한이 거부되었습니다. 기기 설정에서 허용해주세요.", false)
-            sharedPreferences.edit().putBoolean("push_enabled", false).apply()
-
-            binding.mypSetPushIv.setOnCheckedChangeListener(null)
-            binding.mypSetPushIv.isChecked = false
-            setPushToggleListener()
+            setPushState(false, true)
         }
     }
 
@@ -104,31 +103,69 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
             true
         }
 
-        binding.mypSetPushIv.setOnCheckedChangeListener(null)
-        binding.mypSetPushIv.isChecked = isPushSavedEnabled && hasOsPermission
+        // 초기 상태 설정 (애니메이션 없이)
+        isPushEnabled = isPushSavedEnabled && hasOsPermission
+        setPushState(isPushEnabled, false)
 
-        setPushToggleListener()
-    }
-
-    private fun setPushToggleListener() {
-        binding.mypSetPushIv.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
+        // 토글 클릭 이벤트
+        binding.mypSetPushToggleContainer.setOnClickListener {
+            if (!isPushEnabled) {
+                // 끄기 -> 켜기
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                        sharedPreferences.edit().putBoolean("push_enabled", true).apply()
+                        setPushState(true, true)
                         requireContext().showCustomToast("알림이 설정되었습니다.", true)
                     } else {
                         requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                 } else {
-                    sharedPreferences.edit().putBoolean("push_enabled", true).apply()
+                    setPushState(true, true)
                     requireContext().showCustomToast("알림이 설정되었습니다.", true)
                 }
             } else {
-                sharedPreferences.edit().putBoolean("push_enabled", false).apply()
+                // 켜기 -> 끄기
+                setPushState(false, true)
                 requireContext().showCustomToast("알림이 해제되었습니다.", true)
             }
         }
+    }
+
+    private fun setPushState(enabled: Boolean, animate: Boolean) {
+        isPushEnabled = enabled
+        sharedPreferences.edit().putBoolean("push_enabled", enabled).apply()
+
+        val container = binding.mypSetPushToggleContainer
+        val thumb = binding.mypSetPushThumb
+
+        // 배경색 변경
+        val bgColor = if (enabled) R.color.pre_main else R.color.grey_400
+        container.backgroundTintList = ContextCompat.getColorStateList(requireContext(), bgColor)
+
+        val startMargin = dpToPx(2) // 왼쪽 여백 (꺼졌을 때 위치)
+
+        val endMargin = dpToPx(22)
+
+        val targetMargin = if (enabled) endMargin else startMargin
+
+        val layoutParams = thumb.layoutParams as FrameLayout.LayoutParams
+
+        if (animate) {
+            val animator = android.animation.ValueAnimator.ofInt(layoutParams.marginStart, targetMargin)
+            animator.duration = 200
+            animator.addUpdateListener { animation ->
+                val margin = animation.animatedValue as Int
+                layoutParams.marginStart = margin
+                thumb.layoutParams = layoutParams
+            }
+            animator.start()
+        } else {
+            layoutParams.marginStart = targetMargin
+            thumb.layoutParams = layoutParams
+        }
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
 
     private fun performWithdraw() {

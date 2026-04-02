@@ -193,7 +193,8 @@
             <EditText
                 android:id="@+id/myp_edit_address_et"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
                 android:background="@drawable/bg_input_round_20dp_white"
                 android:hint="주소"
                 android:textAppearance="@style/regular15"
