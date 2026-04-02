@@ -84,10 +84,10 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
         binding.mypSetQuitTv.setOnClickListener {
             CommonDialog(
                 context = requireContext(),
-                title = "회원탈퇴",
+                title = "회원 탈퇴",
                 subtitle = "",
-                content = "회원탈퇴 시 되돌릴 수 없습니다.\n그래도 하시겠습니까?",
-                confirmBtnText = "회원탈퇴",
+                content = "회원 탈퇴 시 되돌릴 수 없습니다.\n그래도 하시겠습니까?",
+                confirmBtnText = "회원 탈퇴",
                 confirmBtnColor = R.color.ui_point_red,
                 onConfirmClick = { performWithdraw() }
             ).show()

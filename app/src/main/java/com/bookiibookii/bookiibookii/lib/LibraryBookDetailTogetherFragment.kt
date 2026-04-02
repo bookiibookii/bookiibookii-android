@@ -304,7 +304,7 @@ class LibraryBookDetailTogetherFragment : BaseDetailFragment<FragmentLibBookDeta
             context = requireContext(),
             title = "서재 내 그룹 삭제",
             subtitle = bookTitle,
-            content = "그룹을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없고, 내 서재에서만 삭제됩니다.",
+            content = "그룹을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없고, 내 서재에서만 삭제됩니다.",
             confirmBtnText = "삭제",
             confirmBtnColor = R.color.ui_point_red,
             onConfirmClick = { deleteGroup() }

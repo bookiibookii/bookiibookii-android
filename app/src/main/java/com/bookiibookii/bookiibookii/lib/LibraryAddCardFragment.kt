@@ -18,7 +18,7 @@ import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
-import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 import
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
 import com.bookiibookii.bookiibookii.data.model.UpdateCardRequest
@@ -88,6 +88,7 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
         initListeners()
         setupFragmentResultListener()
 
+        // ★ 키보드가 올라올 때, 하단 레이아웃을 밀어올리고 스크롤이 끝까지 가능하게 해주는 로직
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
             val systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -116,6 +117,7 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
                 binding.libAddCardEditIv.visibility = View.VISIBLE
                 Glide.with(this).load(originalImageUrl).into(binding.libAddCardPreviewIv)
 
+                // ★ 사진을 선택하면 높이를 늘려서 잘 보이게 함 (스크롤 가능해짐)
                 val params = binding.libAddCardCv.layoutParams
                 params.height = dpToPx(400)
                 binding.libAddCardCv.layoutParams = params
@@ -140,6 +142,7 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
         }
         binding.libAddPageEt.addTextChangedListener(textWatcher)
 
+        // 메모 입력창 포커스 시, 살짝 스크롤해줘서 키보드에 가려지지 않게 도와줌
         binding.libAddMemoEt.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 binding.libAddMemoEt.postDelayed({
@@ -279,6 +282,7 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
             .centerCrop()
             .into(binding.libAddCardPreviewIv)
 
+        // ★ 사진 선택 후 레이아웃 크기를 키워줍니다
         val params = binding.libAddCardCv.layoutParams
         params.height = dpToPx(400)
         binding.libAddCardCv.layoutParams = params

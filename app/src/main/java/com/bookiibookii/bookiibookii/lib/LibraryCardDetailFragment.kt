@@ -375,9 +375,9 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
     private fun showDeleteDialog() {
         CommonDialog(
             context = requireContext(),
-            title = "카드 삭제",
+            title = "독서카드 삭제",
             subtitle = "",
-            content = "정말로 이 카드를 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.",
+            content = "독서 카드를 삭제할까요? 이 작업은 되돌릴 수 없고, 내 서재에서만 삭제됩니다.",
             confirmBtnText = "삭제",
             confirmBtnColor = R.color.ui_point_red,
             onConfirmClick = { deleteCard() }

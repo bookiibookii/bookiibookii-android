@@ -417,6 +417,7 @@
             android:text="독서카드 추가하기"
             android:textAppearance="@style/regular15"
             android:textColor="@color/pre_main"
+            android:stateListAnimator="@null"
             android:enabled="true"
             android:background="@drawable/bg_round_20dp_gray900"
             android:backgroundTint="@color/pre_main_pale"
@@ -432,10 +433,8 @@
         android:textColor="@color/white"
         android:enabled="true"
         android:background="@drawable/bg_round_20dp_gray900"
-
-        android:elevation="0dp"
         android:stateListAnimator="@null"
-
+        android:elevation="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
