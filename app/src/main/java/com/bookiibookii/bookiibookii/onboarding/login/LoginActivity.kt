@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
+import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.util.Log
@@ -27,6 +28,7 @@ import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.LoginRequest
 import com.bookiibookii.bookiibookii.data.model.MypageResult
+import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroAnimActivity
 import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -365,6 +367,10 @@ class LoginActivity : AppCompatActivity() {
                     rawResId = R.raw.terms_service
                 )
             }
+            override fun updateDrawState(ds: TextPaint) {
+                ds.color = Color.WHITE
+                ds.isUnderlineText = true
+            }
         }, termsStart, termsEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         spannable.setSpan(object : ClickableSpan() {
@@ -373,6 +379,10 @@ class LoginActivity : AppCompatActivity() {
                     title = "개인정보 처리방침",
                     rawResId = R.raw.terms_privacy
                 )
+            }
+            override fun updateDrawState(ds: TextPaint) {
+                ds.color = Color.WHITE
+                ds.isUnderlineText = true
             }
         }, privacyStart, privacyEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 

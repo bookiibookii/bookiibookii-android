@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.onboarding.login
+package com.bookiibookii.bookiibookii.onboarding.Intro
 
 import android.view.LayoutInflater
 import android.view.View

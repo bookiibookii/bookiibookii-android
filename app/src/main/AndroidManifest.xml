@@ -34,7 +34,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".onboarding.login.LoginIntroAnimActivity"
+            android:name=".onboarding.Intro.LoginIntroAnimActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

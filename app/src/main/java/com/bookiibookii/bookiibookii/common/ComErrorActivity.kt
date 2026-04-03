@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.common
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -9,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.google.android.material.button.MaterialButton
@@ -99,23 +99,29 @@ class ComErrorActivity : AppCompatActivity() {
     }
 
     private fun bindActions(type: Int) {
-        // 다시 시도 (10/11에서만 노출)
+        // 다시 시도 (10/11에서만 노출): 이전 화면으로 돌아가며 재시도 신호 전달
         btnTop.setOnClickListener {
             AuthInterceptor.unlockRouting()
             ComRetryBus.emitRetry()
-            setResult(RESULT_RETRY)
             finish()
         }
 
-        // 하단 버튼: 이전으로(10/11) or 메인으로(12/13)
+        // 하단 버튼: 이전으로(10/11) → 뒤로, 메인으로(12/13) → 홈
         btnBottom.setOnClickListener {
             AuthInterceptor.unlockRouting()
             when (type) {
-                TYPE_NO_PERMISSION, TYPE_GROUP_DELETED -> setResult(RESULT_GO_MAIN)
-                else -> setResult(Activity.RESULT_CANCELED)
+                TYPE_NO_PERMISSION, TYPE_GROUP_DELETED -> goToMain()
+                else -> finish()
             }
-            finish()
         }
+    }
+
+    private fun goToMain() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish()
     }
 
     private fun applyActiveLook(button: MaterialButton) {
@@ -140,10 +146,6 @@ class ComErrorActivity : AppCompatActivity() {
         const val TYPE_NETWORK_ERROR = 11     // COM-011 (네트워크 오류)
         const val TYPE_NO_PERMISSION = 12     // COM-012 (접근 권한 없음)
         const val TYPE_GROUP_DELETED = 13     // COM-012 변형 (그룹 삭제 안내)
-
-        // 결과 코드
-        const val RESULT_RETRY = 1001
-        const val RESULT_GO_MAIN = 1002
 
         fun newIntent(context: Context, type: Int): Intent {
             return Intent(context, ComErrorActivity::class.java).apply {

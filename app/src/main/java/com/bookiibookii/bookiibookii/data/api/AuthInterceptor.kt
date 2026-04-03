@@ -296,7 +296,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         if (!isRouting.compareAndSet(false, true)) return
 
         val intent = ComErrorActivity.newIntent(context, type).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
 
         android.os.Handler(android.os.Looper.getMainLooper()).post {
