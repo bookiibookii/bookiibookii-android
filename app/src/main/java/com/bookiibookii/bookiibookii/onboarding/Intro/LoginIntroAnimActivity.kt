@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.onboarding.login
+package com.bookiibookii.bookiibookii.onboarding.Intro
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,10 +8,12 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowCompat
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.google.android.material.button.MaterialButton
+import kotlin.math.abs
 
 class LoginIntroAnimActivity : AppCompatActivity() {
 
@@ -279,14 +281,14 @@ class LoginIntroAnimActivity : AppCompatActivity() {
         pager.clipChildren = false
         pager.offscreenPageLimit = 3
 
-        (pager.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView)?.overScrollMode =
+        (pager.getChildAt(0) as? RecyclerView)?.overScrollMode =
             View.OVER_SCROLL_NEVER
 
         val sidePadding = dpToPx(40f).toInt()
         pager.setPadding(sidePadding, 0, sidePadding, 0)
 
         pager.setPageTransformer { page, position ->
-            val absPos = kotlin.math.abs(position)
+            val absPos = abs(position)
 
             val scale = 0.94f + (1f - absPos) * 0.06f
             page.scaleX = scale

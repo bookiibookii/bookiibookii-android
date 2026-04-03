@@ -15,5 +15,8 @@ data class ProfileResult(
     val topTags: List<String>,
     val completeBook: Int,
     val readingGroup: Int,
-    val togetherGroup: Int
+    val togetherGroup: Int,
+    val userBadges: List<UserBadge>,
+    val groups: List<MypageGroup>,
+    val books: List<MypageBook>
 )

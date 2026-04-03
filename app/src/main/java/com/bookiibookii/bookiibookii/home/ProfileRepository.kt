@@ -24,7 +24,10 @@ class ProfileRepository {
             topTags = r.topTags.orEmpty(),
             completeBook = r.completeBook,
             readingGroup = r.readingGroup,
-            togetherGroup = r.togetherGroup
+            togetherGroup = r.togetherGroup,
+            userBadges = r.userBadges.orEmpty(),
+            groups = r.groups.orEmpty(),
+            books = r.books.orEmpty()
         )
     }
 }
