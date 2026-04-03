@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 카드 1: 교환독서 진행 카드 (안심할 수 있는 비대면 교환독서) -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="340dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/white">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp">
+
+            <!-- 책 표지 -->
+            <FrameLayout
+                android:id="@+id/frame_cover"
+                android:layout_width="56dp"
+                android:layout_height="72dp"
+                android:background="@drawable/bg_round_10dp_gray300"
+                android:clipToOutline="true"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/img_intro_book_cover" />
+            </FrameLayout>
+
+            <!-- 제목 -->
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="참을 수 없는 존재의 가벼움"
+                android:textAppearance="@style/medium16"
+                android:textColor="@color/grey_900"
+                android:maxLines="2"
+                android:ellipsize="end"
+                app:layout_constraintStart_toEndOf="@id/frame_cover"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/frame_cover" />
+
+            <!-- 저자 + 장르 -->
+            <TextView
+                android:id="@+id/tv_author"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="4dp"
+                android:text="밀란 쿤데라 (소설)"
+                android:textAppearance="@style/regular12"
+                android:textColor="@color/grey_500"
+                app:layout_constraintStart_toEndOf="@id/frame_cover"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_title" />
+
+            <!-- with noshel -->
+            <LinearLayout
+                android:id="@+id/ll_with"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                app:layout_constraintStart_toEndOf="@id/frame_cover"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_author">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="with noshel"
+                    android:textAppearance="@style/medium12"
+                    android:textColor="@color/grey_500" />
+            </LinearLayout>
+
+            <!-- 구분선 -->
+            <View
+                android:id="@+id/divider"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="14dp"
+                android:background="@color/grey_100"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/frame_cover" />
+
+            <!-- 트래커 컨테이너 -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/tracker"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                app:layout_constraintTop_toBottomOf="@id/divider"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/g1"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.07" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/g2"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.37" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/g3"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.66" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/g4"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.93" />
+
+                <!-- 프로필 이미지 (트래커 상단) -->
+                <ImageView
+                    android:id="@+id/iv_profile"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/img_intro_profile_noshel"
+                    android:scaleType="centerCrop"
+                    android:clipToOutline="true"
+                    app:layout_constraintStart_toStartOf="@id/g1"
+                    app:layout_constraintEnd_toEndOf="@id/g1"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- 단계 라벨 -->
+                <TextView
+                    android:id="@+id/label1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="읽는 중"
+                    android:textAppearance="@style/medium11"
+                    android:textColor="@color/pre_main"
+                    android:layout_marginTop="8dp"
+                    app:layout_constraintStart_toStartOf="@id/g1"
+                    app:layout_constraintEnd_toEndOf="@id/g1"
+                    app:layout_constraintTop_toBottomOf="@id/iv_profile" />
+
+                <TextView
+                    android:id="@+id/label2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="배송 중"
+                    android:textAppearance="@style/regular11"
+                    android:textColor="@color/grey_400"
+                    app:layout_constraintStart_toStartOf="@id/g2"
+                    app:layout_constraintEnd_toEndOf="@id/g2"
+                    app:layout_constraintTop_toTopOf="@id/label1" />
+
+                <TextView
+                    android:id="@+id/label3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="게스트 읽는 중"
+                    android:textAppearance="@style/regular11"
+                    android:textColor="@color/grey_400"
+                    app:layout_constraintStart_toStartOf="@id/g3"
+                    app:layout_constraintEnd_toEndOf="@id/g3"
+                    app:layout_constraintTop_toTopOf="@id/label1" />
+
+                <TextView
+                    android:id="@+id/label4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="회수 중"
+                    android:textAppearance="@style/regular11"
+                    android:textColor="@color/grey_400"
+                    app:layout_constraintStart_toStartOf="@id/g4"
+                    app:layout_constraintEnd_toEndOf="@id/g4"
+                    app:layout_constraintTop_toTopOf="@id/label1" />
+
+                <!-- 트랙 바 (회색) -->
+                <View
+                    android:id="@+id/track"
+                    android:layout_width="0dp"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_progress_track"
+                    app:layout_constraintTop_toBottomOf="@id/label1"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <!-- 진행 바 (주황) -->
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/bg_progress_thumb"
+                    app:layout_constraintTop_toTopOf="@id/track"
+                    app:layout_constraintBottom_toBottomOf="@id/track"
+                    app:layout_constraintStart_toStartOf="@id/track"
+                    app:layout_constraintEnd_toEndOf="@id/g1" />
+
+                <!-- 도트 4개 -->
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_circle_grey100"
+                    app:layout_constraintTop_toTopOf="@id/track"
+                    app:layout_constraintBottom_toBottomOf="@id/track"
+                    app:layout_constraintStart_toStartOf="@id/g1"
+                    app:layout_constraintEnd_toEndOf="@id/g1" />
+
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_circle_grey100"
+                    app:layout_constraintTop_toTopOf="@id/track"
+                    app:layout_constraintBottom_toBottomOf="@id/track"
+                    app:layout_constraintStart_toStartOf="@id/g2"
+                    app:layout_constraintEnd_toEndOf="@id/g2" />
+
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_circle_grey100"
+                    app:layout_constraintTop_toTopOf="@id/track"
+                    app:layout_constraintBottom_toBottomOf="@id/track"
+                    app:layout_constraintStart_toStartOf="@id/g3"
+                    app:layout_constraintEnd_toEndOf="@id/g3" />
+
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_circle_grey100"
+                    app:layout_constraintTop_toTopOf="@id/track"
+                    app:layout_constraintBottom_toBottomOf="@id/track"
+                    app:layout_constraintStart_toStartOf="@id/g4"
+                    app:layout_constraintEnd_toEndOf="@id/g4" />
+
+                <!-- 날짜 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12. 16."
+                    android:textAppearance="@style/regular11"
+                    android:textColor="@color/grey_900"
+                    android:layout_marginTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@id/track"
+                    app:layout_constraintStart_toStartOf="@id/g1"
+                    app:layout_constraintEnd_toEndOf="@id/g1" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+
+</FrameLayout>

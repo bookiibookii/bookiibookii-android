@@ -3,29 +3,26 @@ package com.bookiibookii.bookiibookii.onboarding.Intro
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 
-class IntroPagerAdapter(
-    private val items: List<Int>
-) : RecyclerView.Adapter<IntroPagerAdapter.VH>() {
+class IntroPagerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_intro_image, parent, false)
-        return VH(view)
+    override fun getItemViewType(position: Int) = position
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val layoutRes = when (viewType) {
+            0 -> R.layout.item_intro_card_1
+            1 -> R.layout.item_intro_card_2
+            else -> R.layout.item_intro_card_3
+        }
+        val view = LayoutInflater.from(parent.context).inflate(layoutRes, parent, false)
+        return object : RecyclerView.ViewHolder(view) {}
     }
 
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.iv.setImageResource(items[position])
-        // ✅ ViewPager2에서는 itemView 폭을 바꾸면 크래시남. (Pages must fill the whole ViewPager2)
-        // 캐러셀 효과는 item 레이아웃 내부에서 이미지 크기를 줄여서 구현해야 함.
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        // 정적 mock 데이터이므로 별도 바인딩 불필요
     }
 
-    override fun getItemCount(): Int = items.size
-
-    class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val iv: ImageView = itemView.findViewById(R.id.iv_item)
-    }
+    override fun getItemCount() = 3
 }

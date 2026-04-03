@@ -39,12 +39,6 @@ class LoginIntroAnimActivity : AppCompatActivity() {
     // 마지막 페이지 도착 후 버튼 노출 딜레이
     private val START_BTN_DELAY_MS = 350L
 
-    private val cardPages = listOf(
-        R.drawable.img_anim_01,
-        R.drawable.img_anim_02,
-        R.drawable.img_anim_03
-    )
-
     private val descByPage = listOf(
         "우리들의 비밀스런 북클럽\n부키부키",
         "안심할 수 있는 비대면 교환독서 \n",
@@ -77,7 +71,7 @@ class LoginIntroAnimActivity : AppCompatActivity() {
         btnStart.setOnClickListener { navigateToLogin() }
 
         // 카드 세팅
-        pager.adapter = IntroPagerAdapter(cardPages)
+        pager.adapter = IntroPagerAdapter()
         pager.isUserInputEnabled = false
         pager.alpha = 0f
         setupCarouselPager(pager)
@@ -106,7 +100,7 @@ class LoginIntroAnimActivity : AppCompatActivity() {
                     pendingDesc = newText
                 }
 
-                if (position != cardPages.lastIndex) {
+                if (position != 2) {
                     hideStartButton(btnStart)
                 } else {
                     scheduleShowStartButton(btnStart)
@@ -123,7 +117,7 @@ class LoginIntroAnimActivity : AppCompatActivity() {
                 }
 
                 // 마지막 페이지면 버튼도 IDLE 이후 + 딜레이 후 노출
-                if (pager.currentItem == cardPages.lastIndex) {
+                if (pager.currentItem == 2) {
                     scheduleShowStartButton(btnStart)
                 } else {
                     hideStartButton(btnStart)
@@ -209,7 +203,7 @@ class LoginIntroAnimActivity : AppCompatActivity() {
         autoSlideRunnable = object : Runnable {
             override fun run() {
                 val next = pager.currentItem + 1
-                if (next <= cardPages.lastIndex) {
+                if (next <= 2) {
                     pager.setCurrentItem(next, true)
                     pager.postDelayed(this, intervalMs)
                 }
