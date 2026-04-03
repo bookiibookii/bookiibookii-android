@@ -3,11 +3,9 @@ package com.bookiibookii.bookiibookii
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -18,7 +16,6 @@ import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.main.GroupFragment
-import com.bookiibookii.bookiibookii.home.ExchangeRole
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.home.OtherProfileFragment
 import com.bookiibookii.bookiibookii.lib.LibraryAddCardFragment
@@ -26,27 +23,27 @@ import com.bookiibookii.bookiibookii.lib.LibraryBookDetailFragment
 import com.bookiibookii.bookiibookii.lib.LibraryBookDetailIngFragment
 import com.bookiibookii.bookiibookii.lib.LibraryBookDetailRelayWriteFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
-import com.bookiibookii.bookiibookii.myPage.MypageFragment
+import com.bookiibookii.bookiibookii.myPage.main.MypageFragment
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
+import com.bookiibookii.bookiibookii.trkHost.ExchangeRole
 import com.bookiibookii.bookiibookii.trkHost.HostActivity
-import com.bookiibookii.bookiibookii.trkHost.TrkHostMainFragment
+import com.bookiibookii.bookiibookii.trkHost.TrkMainFragment
 import kotlinx.coroutines.launch
+
+private enum class NavTab { HOME, GROUP, TRACKER, LIBRARY, MY }
+
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun getViewBinding(): ActivityMainBinding {
         return ActivityMainBinding.inflate(layoutInflater)
     }
-    private enum class NavTab { HOME, GROUP, TRACKER, LIBRARY, MY }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         val at = prefs.getString("access_token", null)
-
-        // TODO: 추후 로그 삭제
-        Log.d("ONB_FLOW", "MainActivity started")
 
 //        enableEdgeToEdge()
 //        setContentView(R.layout.activity_main)
@@ -56,7 +53,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 //            insets
 //        }
 
-      //  setContentView(R.layout.activity_main)
+        //  setContentView(R.layout.activity_main)
 
 
         // 최초 진입 시 홈 Fragment
@@ -108,6 +105,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
             "OPEN_MYP_REPORT" -> {
                 moveToMypReportFragment()
+            }
+
+            "OPEN_GROUP" -> {
+                moveToGroupTab()
+                intent.removeExtra("NAV_ACTION")
             }
         }
     }
@@ -283,7 +285,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         findViewById<View>(R.id.itemTracker).setOnClickListener {
-            selectTab(NavTab.TRACKER, TrkHostMainFragment())
+            selectTab(NavTab.TRACKER, TrkMainFragment())
         }
 
         findViewById<View>(R.id.itemLibrary).setOnClickListener {

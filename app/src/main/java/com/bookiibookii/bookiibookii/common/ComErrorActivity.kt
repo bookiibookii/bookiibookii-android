@@ -103,6 +103,12 @@ class ComErrorActivity : AppCompatActivity() {
         btnTop.setOnClickListener {
             AuthInterceptor.unlockRouting()
             ComRetryBus.emitRetry()
+            if (isTaskRoot) {
+                // 백스택에 돌아갈 화면이 없으면 메인으로 이동
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                })
+            }
             finish()
         }
 

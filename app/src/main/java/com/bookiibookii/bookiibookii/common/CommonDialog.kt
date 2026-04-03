@@ -1,11 +1,11 @@
 package com.bookiibookii.bookiibookii.common
 
-
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.View
 import android.view.Window
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
@@ -42,9 +42,16 @@ class CommonDialog(
         with(binding) {
             // 텍스트 세팅
             dialogTitleTv.text = title
-            dialogSubtitleTv.text = subtitle
             dialogContentTv.text = content
             dialogConfirmBtn.text = confirmBtnText
+
+            // ★ 서브타이틀이 비어있으면 공간 자체를 없앰 (View.GONE)
+            if (subtitle.isBlank()) {
+                dialogSubtitleTv.visibility = View.GONE
+            } else {
+                dialogSubtitleTv.visibility = View.VISIBLE
+                dialogSubtitleTv.text = subtitle
+            }
 
             // 버튼 색상 변경
             dialogConfirmBtn.backgroundTintList =

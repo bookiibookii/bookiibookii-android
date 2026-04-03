@@ -45,6 +45,6 @@
         android:textSize="15sp"
         android:fontFamily="@font/pretendard_medium"
         android:backgroundTint="@color/grey_900"
-        app:cornerRadius="16dp" />
+        app:cornerRadius="20dp" />
 
 </LinearLayout>

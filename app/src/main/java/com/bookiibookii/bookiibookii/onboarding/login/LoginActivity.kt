@@ -13,9 +13,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.Group
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -45,8 +48,22 @@ class LoginActivity : AppCompatActivity() {
     private var isNavigating = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge() // 이거 추가했음 -> BaseActivity 사용하기에는 findViewById 사용되서 어려움 ..
         super.onCreate(savedInstanceState)
 
+        //상하좌우 패딩주기
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            v.setPadding(
+                systemBars.left,
+                0,
+                systemBars.right,
+                systemBars.bottom
+            )
+
+            insets
+        }
         // 공통 에러/로그아웃 라우팅 잠금 해제
         AuthInterceptor.unlockRouting()
 

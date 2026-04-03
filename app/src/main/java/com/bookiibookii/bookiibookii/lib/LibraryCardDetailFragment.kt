@@ -2,15 +2,10 @@ package com.bookiibookii.bookiibookii.lib
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,8 +14,10 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibCardBinding
@@ -30,22 +27,19 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-class LibraryCardDetailFragment : Fragment() {
-
-    private var _binding: FragmentLibCardBinding? = null
-    private val binding get() = _binding!!
+class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
     private val myPageViewModel: MyPageViewModel by activityViewModels()
-    private var myNickname: String = "" // 내 닉네임
+    private var myNickname: String = ""
 
     private var cardId: Long = -1L
-    private var isMine: Boolean = false // 최종적으로 판단된 '내 카드 여부'
+    private var isMine: Boolean = false
 
     private var writerName: String = ""
     private var writerProfileUrl: String? = null
-    private var cardCreatorName: String? = null // ★ API에서 받아온 카드 작성자 닉네임 저장용
+    private var cardCreatorName: String? = null
 
     private var currentMemo: String = ""
     private var currentPage: Int = 0
@@ -60,22 +54,22 @@ class LibraryCardDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
         arguments?.let {
             cardId = it.getLong("cardId", -1L)
-            // 이전 화면의 isMine은 무시합니다. (여기서는 카드 작성자 여부가 중요하므로)
             writerName = it.getString("writerName", "Unknown") ?: ""
             writerProfileUrl = it.getString("writerProfileUrl", null)
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibCardBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibCardBinding {
+        return FragmentLibCardBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         loadingDialog = LoadingDialog(requireContext())
 
-        // 1. 내 닉네임 관찰 및 데이터 요청
         initMyData()
 
         try {
@@ -84,31 +78,26 @@ class LibraryCardDetailFragment : Fragment() {
             initListeners()
             loadInitialData()
         } catch (e: Exception) {
-            Toast.makeText(context, "화면을 불러오는 중 문제가 발생했습니다.", Toast.LENGTH_SHORT).show()
+            requireContext().showCustomToast("화면을 불러오는 중 문제가 발생했습니다.", false)
         }
     }
 
     private fun initMyData() {
-        // 이미 로드된 닉네임이 있으면 가져옴
         myNickname = myPageViewModel.confirmedNickname ?: ""
 
-        // 닉네임이 나중에 로드될 경우를 대비해 관찰
         myPageViewModel.profileData.observe(viewLifecycleOwner) { profile ->
             if (profile != null) {
                 myNickname = profile.nickname
-                // ★ 내 정보가 늦게 도착해도 소유권 확인 재실행
                 checkOwnership()
             }
         }
 
-        // 데이터가 없으면 서버에 요청
         if (myPageViewModel.profileData.value == null) {
             myPageViewModel.fetchMypageData()
         }
     }
 
     private fun initView() {
-        // 일단 숨겨두고 checkOwnership()에서 결정
         binding.libCardEditIv.visibility = View.GONE
         binding.libCardTrashIv.visibility = View.GONE
 
@@ -122,9 +111,7 @@ class LibraryCardDetailFragment : Fragment() {
         }
     }
 
-    // ★ [핵심] 내 닉네임과 카드 작성자를 비교하여 버튼 노출 결정
     private fun checkOwnership() {
-        // 둘 다 정보가 있어야 비교 가능
         if (myNickname.isNotEmpty() && !cardCreatorName.isNullOrEmpty()) {
             isMine = (myNickname == cardCreatorName)
 
@@ -139,7 +126,6 @@ class LibraryCardDetailFragment : Fragment() {
     }
 
     private fun loadProfileImage(url: String?) {
-        if (_binding == null) return
         Glide.with(requireContext())
             .load(url)
             .placeholder(R.drawable.bg_round_10dp_gray300)
@@ -152,7 +138,6 @@ class LibraryCardDetailFragment : Fragment() {
         val bottomSheet = binding.bottomSheetContainer
         val displayMetrics = resources.displayMetrics
 
-        // 1. 원하시는 대로 기본 높이를 화면의 45%로 설정 (0.45)
         val baseHeight = (displayMetrics.heightPixels * 0.45).toInt()
 
         val layoutParams = bottomSheet.layoutParams
@@ -163,13 +148,10 @@ class LibraryCardDetailFragment : Fragment() {
         bottomSheetBehavior.apply {
             peekHeight = dpToPx(80)
             state = BottomSheetBehavior.STATE_COLLAPSED
-
-            // 중간에 멈추는(절반만 펴지는) 현상을 없애고 한 번에 펴지게 만듦
             isFitToContents = true
             isHideable = false
         }
 
-        // 2. 키보드 대응: 높이와 패딩을 동시에 조절하는 마법의 로직
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val imeVisible = insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())
             val imeHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
@@ -177,27 +159,19 @@ class LibraryCardDetailFragment : Fragment() {
             val params = bottomSheet.layoutParams
 
             if (imeVisible) {
-                // [키보드가 켜질 때]
-                // 기존 45% 높이 + 키보드 높이만큼 바텀시트 몸집을 훅 늘려줍니다.
                 params.height = baseHeight + imeHeight
-                // 늘어난 크기 하단에 키보드 높이만큼 투명한 패딩을 줘서, 입력창을 위로 싹 밀어올립니다.
                 bottomSheet.setPadding(0, 0, 0, imeHeight)
 
-                // 키보드가 올라오면 바텀시트도 무조건 열림 상태로!
                 if (bottomSheetBehavior.state != BottomSheetBehavior.STATE_EXPANDED) {
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                 }
             } else {
-                // [키보드가 꺼질 때]
-                // 다시 원래의 45% 높이와 기본 패딩(0)으로 얌전하게 복구합니다.
                 params.height = baseHeight
                 bottomSheet.setPadding(0, 0, 0, 0)
             }
 
-            // 변경된 레이아웃 크기 즉시 반영
             bottomSheet.layoutParams = params
             bottomSheet.requestLayout()
-
             insets
         }
     }
@@ -246,7 +220,7 @@ class LibraryCardDetailFragment : Fragment() {
         binding.includeChatBottom.btnSend.setOnClickListener {
             val content = binding.includeChatBottom.etInput.text.toString()
             if (content.isNotBlank()) postComment(content)
-            else Toast.makeText(context, "내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
+            else requireContext().showCustomToast("내용을 입력해주세요.", false)
         }
     }
 
@@ -260,7 +234,7 @@ class LibraryCardDetailFragment : Fragment() {
 
     private fun loadInitialData() {
         if (cardId == -1L) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 fetchCardDetail()
@@ -283,10 +257,7 @@ class LibraryCardDetailFragment : Fragment() {
             currentImageUrl = result.cardImage?.presignedGetUrl
             currentBookTitle = result.bookTitle
 
-            // ★ 카드 작성자 이름 저장
             cardCreatorName = result.creatorName
-
-            // ★ 카드 정보가 도착했으니 소유권 확인 실행
             checkOwnership()
 
             isBookmarked = result.isBookmarked ?: false
@@ -300,9 +271,8 @@ class LibraryCardDetailFragment : Fragment() {
 
                 val apiWriterName = result.creatorName ?: writerName
                 libCardProfileTv.text = apiWriterName
-                writerName = apiWriterName
+                this@LibraryCardDetailFragment.writerName = apiWriterName
 
-                // 프로필 이미지 로드
                 try {
                     val profileResponse = RetrofitClient.api().getUserProfile(apiWriterName)
                     if (profileResponse.isSuccessful && profileResponse.body()?.isSuccess == true) {
@@ -370,7 +340,7 @@ class LibraryCardDetailFragment : Fragment() {
 
     private fun postComment(content: String) {
         if (cardId == -1L) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val request = PostCommentRequest(content)
@@ -380,7 +350,7 @@ class LibraryCardDetailFragment : Fragment() {
                     hideKeyboard()
                     fetchComments()
                 } else {
-                    Toast.makeText(context, "댓글 작성 실패", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("댓글 작성 실패", false)
                 }
             } catch (e: Exception) { e.printStackTrace() }
             finally { if (loadingDialog.isShowing) loadingDialog.dismiss() }
@@ -389,7 +359,7 @@ class LibraryCardDetailFragment : Fragment() {
 
     private fun toggleBookmark() {
         if (cardId == -1L) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().toggleBookmark(cardId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -405,9 +375,9 @@ class LibraryCardDetailFragment : Fragment() {
     private fun showDeleteDialog() {
         CommonDialog(
             context = requireContext(),
-            title = "카드 삭제",
+            title = "독서카드 삭제",
             subtitle = "",
-            content = "정말로 이 카드를 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.",
+            content = "독서 카드를 삭제할까요? 이 작업은 되돌릴 수 없고, 내 서재에서만 삭제됩니다.",
             confirmBtnText = "삭제",
             confirmBtnColor = R.color.ui_point_red,
             onConfirmClick = { deleteCard() }
@@ -416,12 +386,12 @@ class LibraryCardDetailFragment : Fragment() {
 
     private fun deleteCard() {
         if (cardId == -1L) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().deleteCard(cardId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(context, "카드가 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("카드가 삭제되었습니다.", true)
                     requireActivity().supportFragmentManager.popBackStack()
                 } else {
                     var errorMessage = "삭제 실패"
@@ -433,10 +403,10 @@ class LibraryCardDetailFragment : Fragment() {
                             if (serverMessage.isNotEmpty()) errorMessage = serverMessage
                         } catch (e: Exception) {}
                     }
-                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast(errorMessage, false)
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("오류가 발생했습니다.", false)
             } finally {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
@@ -450,15 +420,4 @@ class LibraryCardDetailFragment : Fragment() {
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    override fun onResume() {
-        super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-        _binding = null
-    }
 }

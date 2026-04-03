@@ -30,7 +30,6 @@ import com.bookiibookii.bookiibookii.databinding.FragmentGrpBinding
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.group.search.GrpSearchActivity
-import com.bookiibookii.bookiibookii.myPage.MypageFragment
 import com.bookiibookii.bookiibookii.myPage.profile.MypProfileEditFragment
 import com.bookiibookii.bookiibookii.myPage.set.MypSetFragment
 import com.google.android.material.chip.Chip

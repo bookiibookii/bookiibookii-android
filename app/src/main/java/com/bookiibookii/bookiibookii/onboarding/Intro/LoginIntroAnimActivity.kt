@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
@@ -18,6 +19,7 @@ class LoginIntroAnimActivity : AppCompatActivity() {
 
     private var autoSlideRunnable: Runnable? = null
     private var showStartBtnRunnable: Runnable? = null
+    private var hasNavigatedToLogin = false
 
     // 문구 최종 위치(위로 올릴 정도)
     private val DESC_UP_DP = 180f
@@ -54,6 +56,9 @@ class LoginIntroAnimActivity : AppCompatActivity() {
     private var pendingDesc: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        enableEdgeToEdge() // Edge-to-Edge 적용
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_intro_anim)
 
@@ -69,14 +74,7 @@ class LoginIntroAnimActivity : AppCompatActivity() {
 
         // 시작하기 버튼: 기본 숨김
         btnStart.visibility = View.GONE
-        btnStart.setOnClickListener {
-            startActivity(Intent(this, LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
-            finish()
-        }
+        btnStart.setOnClickListener { navigateToLogin() }
 
         // 카드 세팅
         pager.adapter = IntroPagerAdapter(cardPages)
@@ -109,9 +107,9 @@ class LoginIntroAnimActivity : AppCompatActivity() {
                 }
 
                 if (position != cardPages.lastIndex) {
-                    showStartBtnRunnable?.let { btnStart.removeCallbacks(it) }
-                    btnStart.visibility = View.GONE
-                    btnStart.animate().cancel()
+                    hideStartButton(btnStart)
+                } else {
+                    scheduleShowStartButton(btnStart)
                 }
             }
 
@@ -126,31 +124,28 @@ class LoginIntroAnimActivity : AppCompatActivity() {
 
                 // 마지막 페이지면 버튼도 IDLE 이후 + 딜레이 후 노출
                 if (pager.currentItem == cardPages.lastIndex) {
-                    showStartBtnRunnable?.let { btnStart.removeCallbacks(it) }
-                    btnStart.visibility = View.GONE
-                    btnStart.animate().cancel()
-
-                    showStartBtnRunnable = Runnable {
-                        btnStart.alpha = 0f
-                        btnStart.translationY = dpToPx(8f)
-                        btnStart.visibility = View.VISIBLE
-                        btnStart.animate()
-                            .alpha(1f)
-                            .translationY(0f)
-                            .setDuration(250L)
-                            .start()
-                    }
-
-                    btnStart.postDelayed(showStartBtnRunnable!!, START_BTN_DELAY_MS)
+                    scheduleShowStartButton(btnStart)
                 } else {
-                    btnStart.visibility = View.GONE
+                    hideStartButton(btnStart)
                 }
             }
         })
 
         // 1) 로고(중앙) → 위로 이동
+//        logo.post {
+//            val targetY = -(logo.top - dpToPx(50f))
+//            logo.animate()
+//                .translationY(targetY)
+//                .setDuration(LOGO_UP_MS)
+//                .start()
+//        }
+        // 1) 로고 위로이동 후 자동계산해서 상태바랑 패딩 진행
         logo.post {
-            val targetY = -(logo.top - dpToPx(50f))
+            val statusBarHeight = getStatusBarHeight().toFloat()
+            val margin = dpToPx(36f)
+
+            val targetY = -(logo.top - (statusBarHeight + margin))
+
             logo.animate()
                 .translationY(targetY)
                 .setDuration(LOGO_UP_MS)
@@ -199,6 +194,15 @@ class LoginIntroAnimActivity : AppCompatActivity() {
         }, descUpStart + DESC_UP_MS)
     }
 
+    private fun getStatusBarHeight(): Int {
+        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resourceId > 0) {
+            resources.getDimensionPixelSize(resourceId)
+        } else {
+            0
+        }
+    }
+
     private fun startAutoSlide(pager: ViewPager2, intervalMs: Long, firstDelayMs: Long) {
         autoSlideRunnable?.let { pager.removeCallbacks(it) }
 
@@ -213,6 +217,43 @@ class LoginIntroAnimActivity : AppCompatActivity() {
         }
 
         pager.postDelayed(autoSlideRunnable!!, firstDelayMs)
+    }
+
+    private fun scheduleShowStartButton(btnStart: MaterialButton) {
+        showStartBtnRunnable?.let { btnStart.removeCallbacks(it) }
+        btnStart.animate().cancel()
+        btnStart.visibility = View.GONE
+
+        showStartBtnRunnable = Runnable {
+            btnStart.alpha = 0f
+            btnStart.translationY = dpToPx(8f)
+            btnStart.visibility = View.VISIBLE
+            btnStart.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(250L)
+                .start()
+        }
+
+        btnStart.postDelayed(showStartBtnRunnable!!, START_BTN_DELAY_MS)
+    }
+
+    private fun hideStartButton(btnStart: MaterialButton) {
+        showStartBtnRunnable?.let { btnStart.removeCallbacks(it) }
+        btnStart.animate().cancel()
+        btnStart.visibility = View.GONE
+    }
+
+    private fun navigateToLogin() {
+        if (hasNavigatedToLogin) return
+        hasNavigatedToLogin = true
+
+        startActivity(Intent(this, LoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
+        finish()
     }
 
     // 문구 변경: 위치는 유지하고 페이드만

@@ -5,21 +5,21 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.OnBackPressedCallback // 백버튼 콜백
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.data.model.RelayReviewRequest
@@ -28,14 +28,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
-class LibraryBookDetailRelayWriteFragment : Fragment() {
-
-    private var _binding: FragmentLibBookDetailRelayWriteBinding? = null
-    private val binding get() = _binding!!
+class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDetailRelayWriteBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -46,7 +40,6 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
     private var partnerRating = 0.0
     private val selectedTags = mutableSetOf<TextView>()
 
-    // ★ [핵심] 전송 완료 여부 체크 변수
     private var isReviewSubmitted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,9 +50,11 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLibBookDetailRelayWriteBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentLibBookDetailRelayWriteBinding {
+        return FragmentLibBookDetailRelayWriteBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -68,25 +63,23 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
 
         updateButtonState()
         initListener()
-        handleSystemBackPressed() // 시스템 백버튼 처리
+        handleSystemBackPressed()
         fetchGroupDetail()
     }
 
-    // ★ 시스템 백버튼(제스처/하단바) 눌렀을 때 로직
     private fun handleSystemBackPressed() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (isReviewSubmitted) {
-                    goToLibrary() // 전송 완료 상태면 서재로
+                    goToLibrary()
                 } else {
                     isEnabled = false
-                    requireActivity().onBackPressed() // 아니면 그냥 뒤로가기
+                    requireActivity().onBackPressed()
                 }
             }
         })
     }
 
-    // ★ 서재로 이동하며 스택 정리하는 함수
     private fun goToLibrary() {
         parentFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         parentFragmentManager.beginTransaction()
@@ -96,7 +89,7 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
 
     private fun fetchGroupDetail() {
         if (groupId == -1) return
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getGroupDetail(groupId)
@@ -120,22 +113,15 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
         binding.libDetailProfileTv.text = data.hostNickname
         binding.libDetailBookTitleTv.text = data.bookTitle
         binding.libDetailBookAuthorTv.text = data.author
-        binding.libDetailDateTv.text = formatDateRange(data.startDate)
+
+        val formattedStart = if (data.startDate.isNullOrBlank() || data.startDate.startsWith("0000")) "0000. 00. 00." else DateUtils.formatDate(data.startDate)
+        binding.libDetailDateTv.text = "$formattedStart ~"
 
         setSpannableColor(binding.libWriteTitleTv, "${data.bookTitle}에 대한 평가를 남겨주세요!", data.bookTitle)
 
         val partner = data.participantSlots?.find { !it.isMe }
         val partnerName = partner?.nickname ?: "상대방"
         setSpannableColor(binding.libWritePartnerTv, "$partnerName 님에 대한 평가를 남겨주세요!", partnerName)
-    }
-
-    private fun formatDateRange(serverDateStr: String): String {
-        return try {
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val outputFormat = SimpleDateFormat("yyyy. MM. dd.", Locale.getDefault())
-            val startDate = inputFormat.parse(serverDateStr) ?: Date()
-            "${outputFormat.format(startDate)} ~ ${outputFormat.format(Date())}"
-        } catch (e: Exception) { "$serverDateStr ~" }
     }
 
     private fun setSpannableColor(textView: TextView, fullText: String, targetWord: String) {
@@ -149,7 +135,6 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
     }
 
     private fun initListener() {
-        // ★ 뒤로가기 버튼(상단 아이콘) 클릭 시 로직
         binding.libDetailBackIv.setOnClickListener {
             if (isReviewSubmitted) {
                 goToLibrary()
@@ -160,6 +145,7 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
 
         setupStarRating(binding.libDetailRateList, isBookRating = true)
         setupStarRating(binding.libPartnerRateList, isBookRating = false)
+
         setupTagSelection()
 
         binding.libReviewAddBtn.setOnClickListener { submitReview() }
@@ -174,7 +160,7 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
         var currentContainerRating = 0.0
         stars.forEachIndexed { index, starView ->
             starView.setOnClickListener {
-                if (isReviewSubmitted) return@setOnClickListener // 전송 후 수정 방지
+                if (isReviewSubmitted) return@setOnClickListener
 
                 val targetHalf = index + 0.5
                 val targetFull = index + 1.0
@@ -197,22 +183,18 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
     }
 
     private fun setupTagSelection() {
-        val container = binding.libWritePartnerReviewContainer
+        val container = binding.tagContainer
+
         for (i in 0 until container.childCount) {
             val child = container.getChildAt(i)
-            if (child is LinearLayout && child.orientation == LinearLayout.HORIZONTAL && child.id != R.id.lib_partner_rate_list) {
-                for (j in 0 until child.childCount) {
-                    val tagView = child.getChildAt(j)
-                    if (tagView is TextView) {
-                        tagView.setOnClickListener { toggleTag(tagView) }
-                    }
-                }
+            if (child is TextView) {
+                child.setOnClickListener { toggleTag(child) }
             }
         }
     }
 
     private fun toggleTag(textView: TextView) {
-        if (isReviewSubmitted) return // 전송 후 수정 방지
+        if (isReviewSubmitted) return
 
         if (selectedTags.contains(textView)) {
             selectedTags.remove(textView)
@@ -257,7 +239,7 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
 
         loadingDialog.show()
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = RetrofitClient.api().postRelayReview(userBookId, request)
 
@@ -265,25 +247,24 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
                 if (!isAdded || activity == null) return@launch
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(context, "리뷰 작성이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-
-                    // ★ [수정] 복잡한 이동 로직 제거 -> 단순히 뒤로가기
-                    // 서재 화면이 onResume 등에서 데이터를 다시 불러오도록 설계되어 있다면 목록이 갱신됩니다.
-                    // 만약 갱신이 필요하다면 setFragmentResult를 사용합니다.
+                    // ★ 커스텀 토스트 적용
+                    requireContext().showCustomToast("리뷰 작성이 완료되었습니다.", true)
                     requireActivity().supportFragmentManager.setFragmentResult("REFRESH_LIBRARY", Bundle())
                     requireActivity().supportFragmentManager.popBackStack()
-
                 } else {
                     val msg = response.body()?.message ?: "등록 실패"
-                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    // ★ 커스텀 토스트 적용
+                    requireContext().showCustomToast(msg, false)
                 }
             } catch (e: Exception) {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
                 e.printStackTrace()
-                Toast.makeText(context, "네트워크 오류", Toast.LENGTH_SHORT).show()
+                // ★ 커스텀 토스트 적용
+                requireContext().showCustomToast("네트워크 오류가 발생했습니다.", false)
             }
         }
     }
+
     private fun mapUiTextToBadgeCode(text: String): String {
         return when (text) {
             "친절하고 매너가 좋아요" -> "KINDNESS"
@@ -299,15 +280,4 @@ class LibraryBookDetailRelayWriteFragment : Fragment() {
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    override fun onResume() {
-        super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
-        _binding = null
-    }
 }

@@ -33,10 +33,22 @@ class TrackerAdapter(
         return when (viewType) {
             VIEW_TYPE_NONE -> {
                 val binding = ItemTrackerNoneBinding.inflate(inflater, parent, false)
+                if (parent.parent is androidx.viewpager2.widget.ViewPager2) {
+                    binding.root.layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                }
                 NoneViewHolder(binding)
             }
             else -> {
                 val binding = ItemTrkBinding.inflate(inflater, parent, false)
+                if (parent.parent is androidx.viewpager2.widget.ViewPager2) {
+                    binding.root.layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                }
                 ExchangeViewHolder(binding)
             }
         }
@@ -59,7 +71,7 @@ class TrackerAdapter(
             binding.tvBookTitle.text = item.bookTitle
             binding.tvBookAuthor.text = item.bookAuthor
             binding.tvWithUser.text = item.withUserName ?: ""
-            binding.tvBookCategory.text = item.bookCategory.orEmpty()
+            binding.tvBookCategory.text = mapCategoryToKo(item.bookCategory)
 
             Glide.with(binding.ivBookCover)
                 .load(item.coverImageUrl)
@@ -95,11 +107,8 @@ class TrackerAdapter(
             guestProfileUrl: String?
         ) {
             val ctx = root.context
-            val activeColor = ContextCompat.getColor(ctx, R.color.grey_900)
             val inactiveColor = ContextCompat.getColor(ctx, R.color.grey_400)
             val accentColor = ContextCompat.getColor(ctx, R.color.pre_main)
-
-            val currentDotColor = ContextCompat.getColor(ctx, R.color.white)
 
             tvDateStep1.text = formatStepDate(stepDates.getOrNull(0))
             tvDateStep2.text = formatStepDate(stepDates.getOrNull(1))
@@ -108,13 +117,7 @@ class TrackerAdapter(
 
             val idx = stepIndex(step)
 
-            val percent = when (idx) {
-                0 -> 0.1f
-                1 -> 1.0f / 3.0f
-                2 -> 2.0f / 3.0f
-                3 -> 0.88f
-                else -> 0.0f
-            }
+            val percent = trackPercentForStep(idx)
             setWidthPercent(viewProgressTrackActive, percent)
 
             tvLabelStep1.setTextColor(if (idx == 0) accentColor else inactiveColor)
@@ -122,12 +125,25 @@ class TrackerAdapter(
             tvLabelStep3.setTextColor(if (idx == 2) accentColor else inactiveColor)
             tvLabelStep4.setTextColor(if (idx == 3) accentColor else inactiveColor)
 
-            setDot(dotStep1, dotColorForStep(0, idx, currentDotColor, currentDotColor, inactiveColor))
-            setDot(dotStep2, dotColorForStep(1, idx, currentDotColor, currentDotColor, inactiveColor))
-            setDot(dotStep3, dotColorForStep(2, idx, currentDotColor, currentDotColor, inactiveColor))
-            setDot(dotStep4, dotColorForStep(3, idx, currentDotColor, currentDotColor, inactiveColor))
-
             bindStepProfiles(hostProfileUrl, guestProfileUrl, idx)
+        }
+
+        private fun trackPercentForStep(index: Int): Float {
+            val trackWidth = 332f
+            val edgeInset = 20f
+            val dotSize = 6f
+
+            val firstCenter = edgeInset + dotSize / 2f
+            val lastCenter = trackWidth - edgeInset - dotSize / 2f
+            val gap = (lastCenter - firstCenter) / 3f
+
+            return when (index) {
+                0 -> 0f
+                1 -> (firstCenter + gap) / trackWidth
+                2 -> (firstCenter + gap * 2f) / trackWidth
+                3 -> lastCenter / trackWidth
+                else -> 0f
+            }.coerceIn(0f, 1f)
         }
 
         private fun stepIndex(status: TrackerStatus): Int = when (status) {
@@ -171,8 +187,8 @@ class TrackerAdapter(
             view.requestLayout()
         }
 
-        private fun setDot(dotView: ImageView, color: Int) {
-            dotView.setColorFilter(color)
+        private fun setDot(dotView: View, color: Int) {
+            dotView.backgroundTintList = android.content.res.ColorStateList.valueOf(color)
         }
 
         private fun formatStepDate(raw: String?): String {
@@ -214,7 +230,7 @@ class TrackerAdapter(
         fun bind(item: TrackerData, onItemClicked: (TrackerData) -> Unit) {
             binding.tvBookTitle.text = item.bookTitle
             binding.tvBookAuthor.text = item.bookAuthor
-            binding.tvBookCategory.text = item.bookCategory.orEmpty()
+            binding.tvBookCategory.text = mapCategoryToKo(item.bookCategory)
             binding.tvWithUser.text = item.withUserName ?: ""
 
             Glide.with(binding.ivBookCover)
@@ -231,13 +247,6 @@ class TrackerAdapter(
 
             val myPercent = (myRate / 100f).coerceIn(0f, 1f)
             val groupPercent = (groupRate / 100f).coerceIn(0f, 1f)
-
-//            binding.viewTrackFill.setBackgroundColor(
-//                ContextCompat.getColor(binding.root.context, R.color.pre_main)
-//            )
-//            binding.viewTrackGroup.setBackgroundColor(
-//                ContextCompat.getColor(binding.root.context, R.color.grey_900)
-//            )
 
             setWidthPercent(binding.viewTrackFill, myPercent)
             setWidthPercent(binding.viewTrackGroup, groupPercent)
@@ -274,6 +283,25 @@ class TrackerAdapter(
     companion object {
         private const val VIEW_TYPE_EXCHANGE = 0
         private const val VIEW_TYPE_NONE = 1
+
+        private fun mapCategoryToKo(raw: String?): String {
+            val key = raw?.trim().orEmpty()
+            return when (key) {
+                "ECON_BIZ" -> "경제/경영"
+                "SCI_IT" -> "과학/IT"
+                "NOVEL_GENRE" -> "소설"
+                "POEM_ESSAY" -> "시/에세이"
+                "HOME_HOBBY" -> "가정/취미"
+                "ART_CULTURE" -> "예술/문화"
+                "HUMAN_HISTORY" -> "인문/역사"
+                "SELF_DEV" -> "자기계발"
+                "POL_SOC" -> "정치/사회"
+                "ETC" -> "기타"
+                else -> {
+                    key
+                }
+            }
+        }
 
         val DIFF = object : DiffUtil.ItemCallback<TrackerData>() {
             override fun areItemsTheSame(old: TrackerData, new: TrackerData): Boolean {

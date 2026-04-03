@@ -5,25 +5,25 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.FragmentMypReportBinding
 import kotlinx.coroutines.launch
 
-class MypReportFragment : Fragment() {
-    private var _binding: FragmentMypReportBinding? = null
-    private val binding get() = _binding!!
+class MypReportFragment : BaseDetailFragment<FragmentMypReportBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
-    private lateinit var adapter: MypReportAdapter // ★ 지연 초기화로 변경
+    private lateinit var adapter: MypReportAdapter
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentMypReportBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentMypReportBinding {
+        return FragmentMypReportBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -39,7 +39,6 @@ class MypReportFragment : Fragment() {
                 .commit()
         }
 
-        // ★ 어댑터에 클릭 리스너 달아주기
         adapter = MypReportAdapter { clickedItem ->
             val detailFragment = MypReportDetailFragment().apply {
                 arguments = Bundle().apply {
@@ -61,7 +60,7 @@ class MypReportFragment : Fragment() {
     }
 
     private fun fetchReportList() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getReportList()
@@ -88,17 +87,5 @@ class MypReportFragment : Fragment() {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        fetchReportList()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
-        _binding = null
     }
 }

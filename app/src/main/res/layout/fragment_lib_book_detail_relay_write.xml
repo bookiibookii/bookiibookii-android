@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/ui_bg"
->
+    android:background="@color/ui_bg">
 
     <LinearLayout
         android:id="@+id/lib_top_layout"
@@ -69,14 +68,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.08" />
+                app:layout_constraintGuide_percent="0.06" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline_end"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.92" />
+                app:layout_constraintGuide_percent="0.94" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/lib_detail_cv"
@@ -205,18 +204,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_round_20dp_white"
-                android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="16dp"
+                android:padding="20dp"
                 app:layout_constraintEnd_toEndOf="@id/guideline_end"
                 app:layout_constraintStart_toStartOf="@id/guideline_start"
                 app:layout_constraintTop_toBottomOf="@id/lib_detail_cv">
 
                 <TextView
                     android:id="@+id/lib_write_title_tv"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="괴테는 모든 것을 말했다에 대한 평가를 남겨주세요!"
+                    android:gravity="center"
                     android:textAppearance="@style/medium16"
                     android:textColor="@color/grey_900" />
 
@@ -266,7 +265,7 @@
                     android:layout_height="120dp"
                     android:layout_marginTop="20dp"
                     android:background="@drawable/bg_input_round_20dp_white"
-                    android:gravity="top"
+                    android:gravity="top|start"
                     android:hint="책에 대한 솔직한 후기를 남겨주세요."
                     android:padding="20dp"
                     android:textAppearance="@style/regular14"
@@ -280,16 +279,16 @@
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_round_20dp_white"
                 android:orientation="vertical"
-                android:padding="16dp"
+                android:padding="20dp"
                 app:layout_constraintEnd_toEndOf="@id/guideline_end"
                 app:layout_constraintStart_toStartOf="@id/guideline_start"
                 app:layout_constraintTop_toBottomOf="@id/lib_write_review_container">
 
                 <TextView
                     android:id="@+id/lib_write_partner_tv"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
+                    android:gravity="center"
                     android:text="noshel 님에 대한 평가를 남겨주세요!"
                     android:textAppearance="@style/medium16"
                     android:textColor="@color/grey_900" />
@@ -302,8 +301,6 @@
                     android:background="@drawable/bg_round_20dp_gray200"
                     android:backgroundTint="@color/grey_100"
                     android:gravity="center"
-                    android:layout_gravity="center"
-
                     android:paddingVertical="12dp">
 
                     <ImageView
@@ -336,18 +333,22 @@
                         android:src="@drawable/ic_star_none" />
                 </LinearLayout>
 
-                <LinearLayout
+                <com.google.android.flexbox.FlexboxLayout
                     android:id="@+id/tag_container"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:orientation="horizontal">
+                    app:alignContent="flex_start"
+                    app:alignItems="flex_start"
+                    app:flexWrap="wrap"
+                    app:justifyContent="flex_start">
 
                     <TextView
-                        android:id="@+id/tag_good"
+                        android:id="@+id/tag_1"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="12dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="8dp"
@@ -356,27 +357,24 @@
                         android:textColor="@color/grey_900" />
 
                     <TextView
-                        android:id="@+id/tag_pretty"
+                        android:id="@+id/tag_2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="8dp"
                         android:text="글씨가 예뻐요"
                         android:textAppearance="@style/regular12"
                         android:textColor="@color/grey_900" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tag_3"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="12dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="8dp"
@@ -385,26 +383,24 @@
                         android:textColor="@color/grey_900" />
 
                     <TextView
+                        android:id="@+id/tag_4"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="8dp"
                         android:text="책에 대한 인사이트가 넘쳐요"
                         android:textAppearance="@style/regular12"
                         android:textColor="@color/grey_900" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tag_5"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="12dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="8dp"
@@ -413,26 +409,24 @@
                         android:textColor="@color/grey_900" />
 
                     <TextView
+                        android:id="@+id/tag_6"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="8dp"
                         android:text="코멘트가 재미있어요"
                         android:textAppearance="@style/regular12"
                         android:textColor="@color/grey_900" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tag_7"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="12dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="8dp"
@@ -441,15 +435,18 @@
                         android:textColor="@color/grey_900" />
 
                     <TextView
+                        android:id="@+id/tag_8"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="8dp"
                         android:text="약속을 잘 지켜요"
                         android:textAppearance="@style/regular12"
                         android:textColor="@color/grey_900" />
-                </LinearLayout>
+                </com.google.android.flexbox.FlexboxLayout>
 
                 <EditText
                     android:id="@+id/lib_write_partner_review_et"
@@ -457,8 +454,7 @@
                     android:layout_height="120dp"
                     android:layout_marginTop="20dp"
                     android:background="@drawable/bg_input_round_20dp_white"
-                    android:gravity="top"
-                    android:layout_gravity="center"
+                    android:gravity="top|start"
                     android:hint="파트너에 대한 따뜻한 후기를 남겨주세요."
                     android:padding="20dp"
                     android:textAppearance="@style/regular14"
@@ -479,6 +475,7 @@
         android:backgroundTint="@color/grey_200"
         android:enabled="true"
         android:text="후기 남기기"
+        android:stateListAnimator="@null"
         android:textAppearance="@style/medium18"
         android:textColor="@color/grey_500"
         app:layout_constraintBottom_toBottomOf="parent"

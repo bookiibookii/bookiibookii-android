@@ -3,28 +3,30 @@ package com.bookiibookii.bookiibookii.lib
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.CardItem // ★ 수정된 모델 사용
-import com.bookiibookii.bookiibookii.databinding.ItemLibDetailBookBinding
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.CardItem
+import com.bookiibookii.bookiibookii.databinding.ItemLibDetailBookBinding
 
 class LibraryBookmarkAdapter(
     private val itemClickListener: (CardItem) -> Unit
-) : RecyclerView.Adapter<LibraryBookmarkAdapter.BookmarkViewHolder>() {
+) : ListAdapter<CardItem, LibraryBookmarkAdapter.BookmarkViewHolder>(DiffCallback) {
 
-    private var items: List<CardItem> = emptyList()
+    companion object {
+        private val DiffCallback = object : DiffUtil.ItemCallback<CardItem>() {
+            override fun areItemsTheSame(oldItem: CardItem, newItem: CardItem): Boolean {
+                return oldItem.cardId == newItem.cardId
+            }
 
-    fun submitList(newItems: List<CardItem>) {
-        this.items = newItems
-        notifyDataSetChanged()
+            override fun areContentsTheSame(oldItem: CardItem, newItem: CardItem): Boolean {
+                return oldItem == newItem
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkViewHolder {
@@ -33,23 +35,17 @@ class LibraryBookmarkAdapter(
     }
 
     override fun onBindViewHolder(holder: BookmarkViewHolder, position: Int) {
-        holder.bind(items[position])
+        holder.bind(getItem(position))
     }
-
-    override fun getItemCount(): Int = items.size
 
     inner class BookmarkViewHolder(private val binding: ItemLibDetailBookBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: CardItem) {
-            // 1. 텍스트 바인딩
             binding.itemReviewTitleTv.text = item.bookTitle
             binding.itemReviewPageTv.text = "${item.page}pg"
-            binding.itemReviewTextTv.text = item.memo // CardItem에서는 content가 아니라 memo
-            binding.itemReviewNameIv.text = item.creatorName // 작성자 이름
+            binding.itemReviewTextTv.text = item.memo
+            binding.itemReviewNameIv.text = item.creatorName
 
-            // 2. 카드 이미지 바인딩
-            // item.cardImage가 null이 아니면 URL 사용
             val imageUrl = item.cardImage?.presignedGetUrl
-
             if (!imageUrl.isNullOrEmpty()) {
                 binding.itemReviewPhotoIv.visibility = View.VISIBLE
                 Glide.with(itemView.context)
@@ -61,39 +57,20 @@ class LibraryBookmarkAdapter(
                 binding.itemReviewPhotoIv.visibility = View.GONE
             }
 
+            // [개선됨] 코루틴 통신 제거 및 CardItem에 포함된 프로필 URL 바로 사용
+            val profileUrl = item.profileImageUrl // TODO: CardItem 모델에 해당 필드 추가 필요
+            Glide.with(itemView.context)
+                .load(profileUrl)
+                .transform(CenterCrop(), RoundedCorners(dpToPx(10)))
+                .placeholder(R.drawable.img_profile_default)
+                .error(R.drawable.img_profile_default)
+                .into(binding.itemReviewProfileIv)
 
-            // 3. 프로필 이미지 (CardItem에 프로필 URL이 없다면 기본 이미지)
-            // 현재 CardItem에는 작성자 이름만 있고 프로필 URL 필드가 안 보임.
-            // 기본 이미지로 처리하거나 추후 필드가 추가되면 수정.
-            binding.itemReviewProfileIv.setImageResource(R.drawable.img_profile_default)
-
-            val launch = CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    // 닉네임으로 프로필 조회
-                    val response = RetrofitClient.api().getUserProfile(item.creatorName)
-                    if (response.isSuccessful && response.body()?.isSuccess == true) {
-                        val userImageKey = response.body()?.result?.profileImageUrl
-
-                        withContext(Dispatchers.Main) {
-                            if (userImageKey != null) {
-                                Glide.with(itemView.context)
-                                    .load(userImageKey)
-                                    .transform(CenterCrop(), RoundedCorners(dpToPx(10)))
-                                    .placeholder(R.drawable.img_profile_default)
-                                    .into(binding.itemReviewProfileIv)
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-
-            // 4. 클릭 리스너
             itemView.setOnClickListener {
                 itemClickListener(item)
             }
         }
+
         private fun dpToPx(dp: Int): Int {
             return (dp * itemView.context.resources.displayMetrics.density).toInt()
         }

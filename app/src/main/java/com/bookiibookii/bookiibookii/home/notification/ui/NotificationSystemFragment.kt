@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.home.notification.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -10,11 +11,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.NotificationCategory
 import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
+import com.bookiibookii.bookiibookii.group.GroupDetailActivity
+import com.bookiibookii.bookiibookii.group.GroupJoinManagementActivity
 import com.bookiibookii.bookiibookii.home.notification.adapter.SystemAdapter
 import com.bookiibookii.bookiibookii.home.notification.data.NotificationRepository
 import com.bookiibookii.bookiibookii.home.notification.model.NotificationItem
@@ -24,6 +28,7 @@ import com.bookiibookii.bookiibookii.home.notification.util.TimeAgoFormatter
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModel
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModelFactory
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class NotificationSystemFragment : Fragment(R.layout.fragment_notification_system) {
 
@@ -96,7 +101,7 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
     private fun NotificationItemDto.toUiItem(): NotificationItem {
         return NotificationItem(
             notification = this,
-            timeText = TimeAgoFormatter.format(createdAt),
+            timeText = TimeAgoFormatter.format(createdAt ?: ""),
             bookTitle = "",
             isUnread = !isRead
         )
@@ -117,8 +122,15 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
 
             // GRP-030 (요청관리)
             NotificationType.GROUP_JOIN_REQUEST -> {
-                // TODO: GRP-030 요청관리 화면으로 이동
-                Toast.makeText(requireContext(), "TODO: GRP-030(요청관리) 이동", Toast.LENGTH_SHORT).show()
+                val groupId = NotificationPayloadParser.getGroupId(dto)
+                if (groupId == null) {
+                    Toast.makeText(requireContext(), "알림 이동에 필요한 정보가 없습니다.", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                val intent = Intent(requireContext(), GroupJoinManagementActivity::class.java).apply {
+                    putExtra("GROUP_ID", groupId)
+                }
+                startActivity(intent)
             }
 
             // GRP-001 (리스트)
@@ -126,8 +138,12 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
             NotificationType.GROUP_MATCH_AUTO_REJECTED,
             NotificationType.GROUP_MATCH_FAILED_BY_EXPIRE,
             NotificationType.GROUP_MATCH_FAILED_BY_CAPACITY -> {
-                // TODO: GRP-001 그룹 리스트 화면으로 이동
-                Toast.makeText(requireContext(), "TODO: GRP-001(그룹 리스트) 이동", Toast.LENGTH_SHORT).show()
+                val intent = Intent(requireContext(), MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra("NAV_ACTION", "OPEN_GROUP")
+                }
+                startActivity(intent)
+                requireActivity().finish()
             }
 
             // 문의하기 or GRP-001
@@ -144,8 +160,10 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
                     return
                 }
 
-                // TODO: GRP-010 그룹 상세 화면으로 이동 (댓글 탭/스크롤은 추후)
-                Toast.makeText(requireContext(), "TODO: GRP-010(그룹 상세) 이동 groupId=$groupId", Toast.LENGTH_SHORT).show()
+                val intent = Intent(requireContext(), GroupDetailActivity::class.java).apply {
+                    putExtra("GROUP_ID", groupId)
+                }
+                startActivity(intent)
             }
 
             // TRK-010 (트래커)
@@ -189,5 +207,36 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
                 Toast.makeText(requireContext(), "지원하지 않는 알림입니다.", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+}
+
+object NotificationPayloadParser {
+
+    fun getGroupId(dto: NotificationItemDto): Long? {
+        val raw = dto.payload ?: return null
+        return runCatching {
+            val obj = JSONObject(raw)
+            when {
+                obj.has("groupId") -> obj.getLong("groupId")
+                obj.has("group_id") -> obj.getLong("group_id")
+                obj.has("targetGroupId") -> obj.getLong("targetGroupId")
+                obj.has("target_group_id") -> obj.getLong("target_group_id")
+                else -> null
+            }
+        }.getOrNull()
+    }
+
+    fun getRole(dto: NotificationItemDto): String? {
+        val raw = dto.payload ?: return null
+        return runCatching {
+            val obj = JSONObject(raw)
+            val role = when {
+                obj.has("role") -> obj.optString("role", null)
+                obj.has("trackerRole") -> obj.optString("trackerRole", null)
+                obj.has("exchangeRole") -> obj.optString("exchangeRole", null)
+                else -> null
+            }
+            role?.takeIf { it.isNotBlank() }?.uppercase()
+        }.getOrNull()
     }
 }

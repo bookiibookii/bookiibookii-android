@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.myPage
+package com.bookiibookii.bookiibookii.myPage.main
 
 import android.content.res.ColorStateList
 import android.os.Bundle
@@ -14,57 +14,53 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bookiibookii.bookiibookii.MypMyReviewFragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
-import com.bookiibookii.bookiibookii.common.LoadingDialog // ★ 로딩 다이얼로그 import
+import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.MypReview
 import com.bookiibookii.bookiibookii.data.model.MypageResult
 import com.bookiibookii.bookiibookii.databinding.FragmentMypBinding
 import com.bookiibookii.bookiibookii.databinding.LayoutMypProfileCardBinding
-import com.bookiibookii.bookiibookii.myPage.main.MypGroupAdapter
-import com.bookiibookii.bookiibookii.myPage.main.MypLateBookAdapter
-import com.bookiibookii.bookiibookii.myPage.main.MypReviewAdapter
 import com.bookiibookii.bookiibookii.myPage.profile.MypProfileEditFragment
 import com.bookiibookii.bookiibookii.myPage.set.MypSetFragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import kotlinx.coroutines.launch
-import android.graphics.drawable.Drawable
-import androidx.recyclerview.widget.GridLayoutManager
-import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.target.Target
 
 class MypageFragment : Fragment() {
 
     private var _binding: FragmentMypBinding? = null
     private val binding get() = _binding!!
 
-    // 프로필 카드 바인딩 (include 레이아웃)
     private var _profileBinding: LayoutMypProfileCardBinding? = null
     private val profileBinding get() = _profileBinding!!
 
-    private lateinit var loadingDialog: LoadingDialog // ★ 로딩 선언
-
+    private lateinit var loadingDialog: LoadingDialog
     private val viewModel: MyPageViewModel by activityViewModels()
     private var isGroupExpanded = true
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMypBinding.inflate(inflater, container, false)
-        _profileBinding = LayoutMypProfileCardBinding.bind(binding.layoutProfile.root)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext()) // ★ 로딩 초기화
+
+        // include 레이아웃 바인딩 초기화
+        _profileBinding = LayoutMypProfileCardBinding.bind(binding.layoutProfile.root)
+
+        loadingDialog = LoadingDialog(requireContext())
 
         setupRecyclerViews()
         initNavigation()
@@ -93,8 +89,11 @@ class MypageFragment : Fragment() {
     }
 
     private fun setupRecyclerViews() {
-        // ★ [수정됨] 세로 스크롤, 가로 2열 그리드로 변경
-        binding.mypReviewsRv.layoutManager = GridLayoutManager(context, 2)
+        binding.mypReviewsRv.layoutManager = FlexboxLayoutManager(context).apply {
+            flexWrap = FlexWrap.WRAP // 공간이 모자라면 다음 줄로 넘김
+            flexDirection = FlexDirection.ROW // 가로 방향으로 배치
+            justifyContent = JustifyContent.FLEX_START // 왼쪽 정렬
+        }
 
         binding.mypGroupsRv.layoutManager = LinearLayoutManager(context)
         binding.mypGroupsRv.isNestedScrollingEnabled = false
@@ -111,15 +110,14 @@ class MypageFragment : Fragment() {
             "FAST_SHIPPING" -> "책을 빠르게 보내줬어요"
             "FUNNY" -> "코멘트가 재미있어요"
             "CLEAN_CONDITION" -> "책을 깨끗하고 깔끔하게 읽어요"
-
-            // 기존 방어 코드 (위 목록에 없는 예전 데이터가 올 경우를 대비)
+            "PUNCTUAL" -> "약속을 잘 지켜요"
             "MEMO" -> "메모환영"
             "POSTIT" -> "포스트잇"
             "CLEAN" -> "깔끔"
             "SERIOUS" -> "진지함"
             "LIGHT_FUN" -> "재미있게"
             "INSIGHT" -> "인사이트"
-            else -> englishText // 매핑되는 단어가 없으면 원래 영어 그대로 출력
+            else -> englishText
         }
     }
 
@@ -133,43 +131,18 @@ class MypageFragment : Fragment() {
 
             val imageUrl = data.profileImageUrl
 
-            // ★ Glide에 Listener를 달아서 이미지 로딩 완료 시점을 캐치합니다.
             Glide.with(root.context)
                 .load(imageUrl)
                 .placeholder(R.drawable.img_profile_default)
                 .error(R.drawable.img_profile_default)
                 .fallback(R.drawable.img_profile_default)
                 .transform(CenterCrop(), RoundedCorners(dpToPx(60)))
-                .listener(object : RequestListener<Drawable> {
-                    override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any?,
-                        target: Target<Drawable>,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        if (loadingDialog.isShowing) loadingDialog.dismiss()
-                        return false
-                    }
-
-                    override fun onResourceReady(
-                        resource: Drawable,
-                        model: Any,
-                        target: Target<Drawable>?,
-                        dataSource: DataSource,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        if (loadingDialog.isShowing) loadingDialog.dismiss()
-                        return false
-                    }
-                })
                 .into(mypProfileIv)
 
             mypTagsLayout.removeAllViews()
             data.topTags.forEach { tagText ->
                 val textView = TextView(root.context).apply {
-                    // ★ [핵심] translateBadge 함수를 사용해서 한글로 변환 후 적용
                     text = "#${translateBadge(tagText)}"
-
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                     setTextColor(ContextCompat.getColor(context, R.color.ui_main_sub))
                     setBackgroundResource(R.drawable.bg_round_8dp_gray300)
@@ -188,31 +161,22 @@ class MypageFragment : Fragment() {
             }
         }
 
-        // ★ [핵심] 획득한 후기(뱃지) 리스트도 한글로 변환
         val badgeList = data.userBadges?.map {
             MypReview(content = translateBadge(it.userBadge), count = it.count)
         } ?: emptyList()
         binding.mypReviewsRv.adapter = MypReviewAdapter(badgeList)
-
         binding.mypGroupsRv.adapter = MypGroupAdapter(data.groups ?: emptyList())
         binding.rvBooks.adapter = MypLateBookAdapter(data.books ?: emptyList())
     }
 
     private fun fetchMypageData() {
-        lifecycleScope.launch {
-            loadingDialog.show() // API 호출 전 로딩 시작
-
-            var isApiSuccess = false
-
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadingDialog.show()
             try {
-                Log.d("MYPAGE_DEBUG", "fetchMypageData 호출 시작")
                 val response = RetrofitClient.api().getMypage()
-                Log.e("MYPAGE_DEBUG", "전체 응답: ${response.body()}")
-
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result
                     if (result != null) {
-                        isApiSuccess = true
                         updateUI(result)
                     }
                 } else {
@@ -221,9 +185,7 @@ class MypageFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e("Mypage", "Network Error", e)
             } finally {
-                if (!isApiSuccess) {
-                    if (loadingDialog.isShowing) loadingDialog.dismiss()
-                }
+                if (loadingDialog.isShowing) loadingDialog.dismiss()
             }
         }
     }
@@ -251,14 +213,13 @@ class MypageFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
         fetchMypageData()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        // ✅ 일반 Fragment이므로 두 바인딩을 모두 직접 메모리에서 해제해 주어야 합니다.
         _profileBinding = null
+        _binding = null
     }
-
 }

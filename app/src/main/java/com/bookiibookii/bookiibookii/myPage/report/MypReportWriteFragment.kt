@@ -16,23 +16,21 @@ import android.view.ViewGroup
 import android.widget.PopupWindow
 import android.widget.RadioButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
+import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupSummary
 import com.bookiibookii.bookiibookii.data.model.ReportRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentMypReportWriteBinding
 import kotlinx.coroutines.launch
 
-class MypReportWriteFragment : Fragment() {
-    private var _binding: FragmentMypReportWriteBinding? = null
-    private val binding get() = _binding!!
+class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -40,25 +38,25 @@ class MypReportWriteFragment : Fragment() {
     private var selectedGroupId: Int? = null
     private var selectedTargetId: Int? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentMypReportWriteBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ): FragmentMypReportWriteBinding {
+        return FragmentMypReportWriteBinding.inflate(inflater, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        //특정 그룹 내 신고하기
         arguments?.getInt("FIXED_ID", -1)?.takeIf { it != -1 }?.let { id ->
             selectedGroupId = id
             binding.mypReportGroupEt.setText(arguments?.getString("FIXED_NAME"))
-            binding.mypReportGroupEt.isEnabled = false // 수정 불가하게 막기
-            binding.mypReportGroupPlusIv.visibility = View.GONE // 버튼 치우기
+            binding.mypReportGroupEt.isEnabled = false
+            binding.mypReportGroupPlusIv.visibility = View.GONE
         }
 
         loadingDialog = LoadingDialog(requireContext())
 
-        // 1. 기본적으로 EditText 입력 불가하게 설정 (클릭만 가능)
         binding.mypReportGroupEt.isFocusable = false
         binding.mypReportGroupEt.isFocusableInTouchMode = false
         binding.mypReportMemberEt.isFocusable = false
@@ -67,23 +65,29 @@ class MypReportWriteFragment : Fragment() {
         initListeners()
         initReportTypeRadioGroup()
         initValidation()
+
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val imeVisible = insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())
+            val imeHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
+            val navBarHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars()).bottom
+
+            v.setPadding(0, 0, 0, if (imeVisible) imeHeight else navBarHeight)
+            insets
+        }
     }
 
     private fun initListeners() {
         binding.mypReportBackIv.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
-        // 그룹 선택
         val groupClickListener = View.OnClickListener {
             fetchMyGroupsAndShowPopup()
         }
         binding.mypReportGroupEt.setOnClickListener(groupClickListener)
         binding.mypReportGroupPlusIv.setOnClickListener(groupClickListener)
 
-        // 멤버 선택
         val memberClickListener = View.OnClickListener {
-            // 5. 그룹 선택 안 된 상태로 멤버 누르면 토스트 메시지
             if (selectedGroupId == null) {
-                Toast.makeText(context, "먼저 신고할 그룹을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("먼저 신고할 그룹을 선택해주세요.", false)
             } else {
                 fetchGroupMembersAndShowPopup(selectedGroupId!!)
             }
@@ -91,24 +95,23 @@ class MypReportWriteFragment : Fragment() {
         binding.mypReportMemberEt.setOnClickListener(memberClickListener)
         binding.mypReportMemberPlusIv.setOnClickListener(memberClickListener)
 
-        // 6. 전송 버튼 (유효성 검사 후 전송)
         binding.mypWriteBtn.setOnClickListener {
             val safeContext = context ?: return@setOnClickListener
 
             if (selectedGroupId == null) {
-                Toast.makeText(safeContext, "신고 그룹을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                safeContext.showCustomToast("신고 그룹을 선택해주세요.", false)
                 return@setOnClickListener
             }
             if (selectedTargetId == null) {
-                Toast.makeText(safeContext, "신고 대상을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                safeContext.showCustomToast("신고 대상을 선택해주세요.", false)
                 return@setOnClickListener
             }
             if (binding.mypReportTypeRg.checkedRadioButtonId == -1) {
-                Toast.makeText(safeContext, "신고 유형을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                safeContext.showCustomToast("신고 유형을 선택해주세요.", false)
                 return@setOnClickListener
             }
             if (binding.mypReportContentEt.text.toString().trim().isEmpty()) {
-                Toast.makeText(safeContext, "신고 내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                safeContext.showCustomToast("신고 내용을 입력해주세요.", false)
                 return@setOnClickListener
             }
 
@@ -116,9 +119,8 @@ class MypReportWriteFragment : Fragment() {
         }
     }
 
-    // --- 그룹 드롭다운 로직 ---
     private fun fetchMyGroupsAndShowPopup() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getMyGroups()
@@ -127,28 +129,26 @@ class MypReportWriteFragment : Fragment() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     myGroups = response.body()?.result ?: emptyList()
 
-                    // 3. 내 그룹 / 참여 그룹 분류 로직
                     val myGroupsList = myGroups.filter { it.isHost }
                     val otherGroupsList = myGroups.filter { !it.isHost }
 
                     val popupItems = mutableListOf<Any>()
                     if (myGroupsList.isNotEmpty()) {
-                        popupItems.add("내 그룹") // 헤더
+                        popupItems.add("내 그룹")
                         popupItems.addAll(myGroupsList)
                     }
                     if (otherGroupsList.isNotEmpty()) {
-                        popupItems.add("참여 그룹") // 헤더
+                        popupItems.add("참여 그룹")
                         popupItems.addAll(otherGroupsList)
                     }
 
-                    // 2. 드롭다운 열릴 때 아이콘 주황색으로 변경
                     binding.mypReportGroupPlusIv.setImageResource(R.drawable.ic_plus_orange)
 
                     showCustomDropdown(
                         anchorView = binding.mypReportGroupEt,
                         items = popupItems,
                         safeContext = safeContext,
-                        dropdownHeight = dpToPx(200), // 3. 높이 200 주고 스크롤
+                        dropdownHeight = dpToPx(200),
                         isGroup = true
                     ) { selectedItem ->
                         val group = selectedItem as GroupSummary
@@ -157,18 +157,16 @@ class MypReportWriteFragment : Fragment() {
                         binding.mypReportGroupEt.setText(displayText)
                         selectedGroupId = group.groupId
 
-                        // 그룹 바뀌면 멤버 초기화
                         binding.mypReportMemberEt.setText("")
                         selectedTargetId = null
                         binding.mypReportMemberPlusIv.setImageResource(R.drawable.ic_plus)
                         binding.mypReportMemberPlusIv.visibility = View.VISIBLE
 
-                        // 2. 선택 완료 시 + 버튼 숨기기
                         binding.mypReportGroupPlusIv.visibility = View.GONE
                         checkValidation()
                     }
                 } else {
-                    Toast.makeText(safeContext, "그룹 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    safeContext.showCustomToast("그룹 목록을 불러오지 못했습니다.", false)
                 }
             } catch (e: Exception) {
                 Log.e("ReportWrite", "그룹 조회 에러", e)
@@ -178,9 +176,8 @@ class MypReportWriteFragment : Fragment() {
         }
     }
 
-    // --- 멤버 드롭다운 로직 ---
     private fun fetchGroupMembersAndShowPopup(groupId: Int) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val response = RetrofitClient.api().getGroupMembers(groupId)
@@ -189,29 +186,24 @@ class MypReportWriteFragment : Fragment() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val members = response.body()?.result ?: emptyList()
 
-                    // 4. 멤버 드롭다운 헤더 추가
                     val selectedGroup = myGroups.find { it.groupId == groupId }
                     val headerText = if (selectedGroup != null) {
                         "[${selectedGroup.groupHostNickname}] ${selectedGroup.groupName}"
                     } else "신고 대상 선택"
 
                     val popupItems = mutableListOf<Any>()
-                    popupItems.add(headerText) // 헤더
+                    popupItems.add(headerText)
                     popupItems.addAll(members)
 
-                    // 2. 오픈 시 주황색 변경
                     binding.mypReportMemberPlusIv.setImageResource(R.drawable.ic_plus_orange)
 
                     showCustomDropdown(
                         anchorView = binding.mypReportMemberEt,
                         items = popupItems,
                         safeContext = safeContext,
-                        dropdownHeight = dpToPx(120), // 4. 높이 120 주고 스크롤
+                        dropdownHeight = dpToPx(120),
                         isGroup = false
                     ) { selectedItem ->
-                        // ※ 주의: API 응답의 실제 모델 이름(MemberSummary)에 맞춰서 캐스팅
-                        // 임시로 Any로 받아 nickname을 추출하도록 작성했습니다.
-                        // member 객체에 nickname, userId 필드가 있다고 가정합니다.
                         try {
                             val member = selectedItem
                             val nickname = member.javaClass.getMethod("getNickname").invoke(member) as String
@@ -220,7 +212,6 @@ class MypReportWriteFragment : Fragment() {
                             binding.mypReportMemberEt.setText(nickname)
                             selectedTargetId = userId
 
-                            // 2. 선택 완료 시 + 버튼 숨기기
                             binding.mypReportMemberPlusIv.visibility = View.GONE
                             checkValidation()
                         } catch (e: Exception) {
@@ -228,7 +219,7 @@ class MypReportWriteFragment : Fragment() {
                         }
                     }
                 } else {
-                    Toast.makeText(safeContext, "멤버 목록을 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    safeContext.showCustomToast("멤버 목록을 불러오지 못했습니다.", false)
                 }
             } catch (e: Exception) {
                 Log.e("ReportWrite", "멤버 조회 에러", e)
@@ -238,7 +229,6 @@ class MypReportWriteFragment : Fragment() {
         }
     }
 
-    // --- 통합 커스텀 드롭다운 띄우기 ---
     private fun showCustomDropdown(
         anchorView: View,
         items: List<Any>,
@@ -260,16 +250,14 @@ class MypReportWriteFragment : Fragment() {
         popupWindow.elevation = 10f
         popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-        // 창이 닫힐 때 + 아이콘 상태 복구 로직
         popupWindow.setOnDismissListener {
             if (isGroup && selectedGroupId == null) {
-                binding.mypReportGroupPlusIv.setImageResource(R.drawable.ic_plus) // 기본 아이콘으로 복구 (XML 확인)
+                binding.mypReportGroupPlusIv.setImageResource(R.drawable.ic_plus)
             } else if (!isGroup && selectedTargetId == null) {
-                binding.mypReportMemberPlusIv.setImageResource(R.drawable.ic_plus) // 기본 아이콘으로 복구
+                binding.mypReportMemberPlusIv.setImageResource(R.drawable.ic_plus)
             }
         }
 
-        // 인라인 커스텀 어댑터 생성 (헤더와 아이템 분리)
         popupView.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             val TYPE_HEADER = 0
             val TYPE_ITEM = 1
@@ -308,10 +296,8 @@ class MypReportWriteFragment : Fragment() {
                 } else {
                     if (isGroup) {
                         val group = item as GroupSummary
-                        // 3. 내 그룹은 책 제목만, 참여 그룹은 [호스트] 책 제목
                         tv.text = if (group.isHost) group.groupName else "[${group.groupHostNickname}] ${group.groupName}"
                     } else {
-                        // 멤버 이름 표시
                         try {
                             tv.text = item.javaClass.getMethod("getNickname").invoke(item) as String
                         } catch (e: Exception) {}
@@ -329,7 +315,6 @@ class MypReportWriteFragment : Fragment() {
         popupWindow.showAsDropDown(anchorView, 0, dpToPx(4))
     }
 
-    // --- 라디오 버튼 스타일 변경 로직 ---
     private fun initReportTypeRadioGroup() {
         val radioGroup = binding.mypReportTypeRg
         val count = radioGroup.childCount
@@ -360,7 +345,6 @@ class MypReportWriteFragment : Fragment() {
         rb.setTextColor(ContextCompat.getColor(safeContext, R.color.grey_900))
     }
 
-    // --- 버튼 시각적 활성화 처리 (실제 기능 제한은 clickListener에서 Toast로 방어) ---
     private fun initValidation() {
         val watcher = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) { checkValidation() }
@@ -384,7 +368,6 @@ class MypReportWriteFragment : Fragment() {
 
     private fun updateButtonVisualState(isValid: Boolean) {
         val safeContext = context ?: return
-        // 주의: 버튼은 항상 활성화 상태여야 빈칸일 때 Toast를 띄울 수 있음.
         if (isValid) {
             binding.mypWriteBtn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(safeContext, R.color.grey_900))
             binding.mypWriteBtn.setTextColor(ContextCompat.getColor(safeContext, R.color.white))
@@ -394,14 +377,13 @@ class MypReportWriteFragment : Fragment() {
         }
     }
 
-    // --- API 전송 로직 ---
     private fun sendReport() {
         val content = binding.mypReportContentEt.text.toString()
         val type = getSelectedReportType() ?: return
         val groupId = selectedGroupId ?: return
         val targetId = selectedTargetId ?: return
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
                 val safeContext = context ?: return@launch
@@ -415,13 +397,15 @@ class MypReportWriteFragment : Fragment() {
                 val response = RetrofitClient.api().postReport(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    Toast.makeText(safeContext, "신고가 정상적으로 접수되었습니다.", Toast.LENGTH_SHORT).show()
+                    safeContext.showCustomToast("신고가 정상적으로 접수되었습니다.", true)
                     requireActivity().supportFragmentManager.popBackStack()
                 } else {
-                    Toast.makeText(safeContext, "전송 실패: ${response.body()?.message}", Toast.LENGTH_SHORT).show()
+                    val msg = response.body()?.message ?: "서버 메시지 없음"
+                    safeContext.showCustomToast("전송 실패: $msg", false)
                 }
             } catch (e: Exception) {
                 Log.e("ReportWrite", "API 오류", e)
+                requireContext().showCustomToast("네트워크 오류가 발생했습니다.", false)
             } finally {
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
             }

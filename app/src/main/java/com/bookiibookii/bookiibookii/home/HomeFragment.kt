@@ -21,6 +21,14 @@ import com.bookiibookii.bookiibookii.databinding.SectionHomeMateBinding
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
 import com.bookiibookii.bookiibookii.home.notification.ui.NotificationActivity
+import com.bookiibookii.bookiibookii.trkDirectGuest.DirectGuestActivity
+import com.bookiibookii.bookiibookii.trkDirectHost.DirectHostActivity
+import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
+import com.bookiibookii.bookiibookii.trkHost.ExchangeRole
+import com.bookiibookii.bookiibookii.trkHost.ExchangeType
+import com.bookiibookii.bookiibookii.trkHost.HostActivity
+import com.bookiibookii.bookiibookii.trkHost.TrackerAdapter
+import com.bookiibookii.bookiibookii.trkHost.toTrackerData
 import kotlinx.coroutines.launch
 import kotlin.jvm.java
 
@@ -38,8 +46,24 @@ class HomeFragment : Fragment() {
 
     private var notiBadge: View? = null
 
-    private val exchangeAdapter = ExchangeProgressAdapter { item ->
-        (activity as? MainActivity)?.moveToTrackerDetail(item.groupId, item.role)
+    private val exchangeAdapter = TrackerAdapter { item ->
+        when (item.exchangeType) {
+            ExchangeType.DELIVERY -> {
+                val actClass = if (item.role == ExchangeRole.HOST) HostActivity::class.java else GuestActivity::class.java
+                startActivity(Intent(requireContext(), actClass).apply { putExtra("group_id", item.groupId) })
+            }
+            ExchangeType.DIRECT -> {
+                val actClass = if (item.role == ExchangeRole.HOST) DirectHostActivity::class.java else DirectGuestActivity::class.java
+                startActivity(Intent(requireContext(), actClass).apply { putExtra("group_id", item.groupId) })
+            }
+            ExchangeType.NONE -> {
+                startActivity(Intent(requireContext(), MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra("NAV_ACTION", "OPEN_LIBRARY_ING")
+                    putExtra("target_group_id", item.groupId)
+                })
+            }
+        }
     }
 
     private val groupAdapter = GroupRecommendAdapter { item ->
@@ -325,10 +349,9 @@ class HomeFragment : Fragment() {
 
                 android.util.Log.d("EXC_API", "guest=${guestList.size} host=${hostList.size}")
 
-                val guestUi = guestList.map { it.toHomeExchangeItem() }
-                val hostUi = hostList.map { it.toHomeExchangeItem() }
+                val guestUi = guestList.map { it.toTrackerData() }
+                val hostUi = hostList.map { it.toTrackerData() }
 
-                // ✅ 최종 리스트를 여기서 확정해서 반환
                 hostUi + guestUi
             }.onSuccess { list ->
                 exchangeTotal = list.size
