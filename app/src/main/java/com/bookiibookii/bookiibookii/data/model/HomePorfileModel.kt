@@ -18,7 +18,10 @@ data class OtherProfileApiResult(
     val completeBook: Int,
 
     @SerializedName("relayGroup")
-    val readingGroup: Int,   // ✅ 앱 내부 네이밍
+    val readingGroup: Int,
 
-    val togetherGroup: Int
+    val togetherGroup: Int,
+    val userBadges: List<UserBadge>?,
+    val groups: List<MypageGroup>?,
+    val books: List<MypageBook>?
 )

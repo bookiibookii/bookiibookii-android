@@ -424,15 +424,4 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-
-    override fun onResume() {
-        super.onResume()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        requireActivity().findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
-        _binding = null
-    }
 }
