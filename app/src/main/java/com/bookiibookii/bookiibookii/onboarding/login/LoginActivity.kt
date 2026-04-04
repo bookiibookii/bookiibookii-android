@@ -327,6 +327,7 @@ class LoginActivity : AppCompatActivity() {
         tv.text = text
         tv.setTextColor(getColor(textRes))
         iv.setImageResource(iconRes)
+        iv.imageTintList = null
         card.setCardBackgroundColor(getColor(bgRes))
 
         root.setOnClickListener { onClick() }
