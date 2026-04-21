@@ -534,7 +534,19 @@
         <item name="cornerSize">20dp</item>
     </style>
 
-    <!-- trkDirect: 공통 Primary 버튼 (채워진 검정) -->
+    <!-- trkDialog: 공통 버튼 -->
+    <style name="Widget.BookiiBookii.DialogButton.Primary" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/grey_200</item>
+        <item name="android:textColor">@color/grey_100</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">16dp</item>
+    </style>
+
+    <!-- trkBottomSheet: 공통 Primary 버튼 (채워진 검정) -->
     <style name="Widget.BookiiBookii.DirectButton.Primary" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/grey_900</item>
         <item name="android:textColor">@color/grey_100</item>
@@ -544,7 +556,7 @@
         <item name="cornerRadius">20dp</item>
     </style>
 
-    <!-- trkDirect: 공통 Secondary 버튼 (아웃라인) -->
+    <!-- trkBottomSheet: 공통 Secondary 버튼 (아웃라인) -->
     <style name="Widget.BookiiBookii.DirectButton.Secondary" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="android:textColor">@color/grey_900</item>
         <item name="android:textSize">15sp</item>
