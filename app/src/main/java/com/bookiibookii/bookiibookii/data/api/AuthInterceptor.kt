@@ -240,7 +240,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                 }
 
                 return@runBlocking when (refreshRes.code()) {
-                    400, 401 -> RefreshOutcome.INVALID_TOKEN
+                    400, 401, 404 -> RefreshOutcome.INVALID_TOKEN
                     else -> RefreshOutcome.SYSTEM_ERROR
                 }
 
