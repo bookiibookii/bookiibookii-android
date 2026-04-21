@@ -99,15 +99,10 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_confirm"
+        style="@style/Widget.BookiiBookii.DirectButton.Primary"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginTop="16dp"
-        android:text="확인"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="@color/grey_100"
-        android:backgroundTint="@color/grey_900"
-        app:cornerRadius="16dp"
-        android:fontFamily="@font/pretendard_medium" />
+        android:text="확인" />
 
 </LinearLayout>

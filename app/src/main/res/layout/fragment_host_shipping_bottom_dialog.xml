@@ -78,8 +78,7 @@
                     android:layout_marginStart="8dp"
                     android:text="홍길동"
                     android:textColor="@color/grey_900"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
@@ -121,15 +120,13 @@
                     android:padding="12dp">
 
                     <TextView
-                        android:id="@+id/tv_address_detail"
+                        android:id="@+id/tv_address"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="12dp"
-                        android:text="[우편번호] 주소 정보가 여기에 표시됩니다."
+                        android:layout_marginEnd="8dp"
+                        android:text="[우편번호] 주소 정보가 여기에 표시됩니다. aaaaaaaaaaa"
                         android:textColor="@color/grey_900"
                         android:textSize="14sp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/btn_copy"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
@@ -137,14 +134,14 @@
                         android:id="@+id/btn_copy"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@color/grey_300"
+                        android:background="@color/grey_200"
                         android:paddingHorizontal="8dp"
                         android:paddingVertical="4dp"
                         android:text="복사"
                         android:textColor="@color/grey_700"
                         android:textSize="12sp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        app:layout_constraintTop_toBottomOf="@id/tv_address"
+                        app:layout_constraintEnd_toEndOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
@@ -156,7 +153,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         app:cardBackgroundColor="@color/ui_point_green.pale"
-        app:cardCornerRadius="16dp"
+        app:cardCornerRadius="10dp"
         app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -180,7 +177,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="개인정보 보호를 위해 배송 완료 후 자동 숨김 처리됩니다."
+                android:text="개인정보 보호를 위해 배송 완료 후 자동으로 숨김\n 처리됩니다."
                 android:textColor="@color/ui_point_green200"
                 android:textSize="13sp" />
         </LinearLayout>
@@ -188,16 +185,16 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_register"
+        style="@style/Widget.BookiiBookii.DirectButton.Primary"
         android:layout_width="0dp"
         android:layout_height="60dp"
-        android:layout_marginTop="24dp"
-        android:backgroundTint="@color/grey_900"
+        android:layout_marginTop="20dp"
         android:text="운송장 등록하기"
-        android:textColor="@color/grey_100"
-        app:cornerRadius="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/card_privacy" />
+        app:layout_constraintTop_toBottomOf="@id/card_privacy"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -43,29 +43,18 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_go_comment"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        style="@style/Widget.BookiiBookii.DirectButton.Secondary"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginTop="20dp"
-        android:text="댓글 바로가기"
-        android:textSize="15sp"
-        android:textColor="@color/grey_900"
-        android:fontFamily="@font/pretendard_regular"
-        android:includeFontPadding="false"
-        app:cornerRadius="16dp"
-        app:strokeColor="@color/grey_200"
-        app:strokeWidth="1dp"/>
+        android:text="댓글 바로가기"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_register_meet"
+        style="@style/Widget.BookiiBookii.DirectButton.Primary"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginTop="12dp"
-        android:text="약속 등록하기"
-        android:textAppearance="@style/semibold14"
-        android:textColor="@color/grey_100"
-        android:includeFontPadding="false"
-        android:backgroundTint="@color/grey_900"
-        app:cornerRadius="16dp"/>
+        android:text="약속 등록하기"/>
 
 </LinearLayout>
