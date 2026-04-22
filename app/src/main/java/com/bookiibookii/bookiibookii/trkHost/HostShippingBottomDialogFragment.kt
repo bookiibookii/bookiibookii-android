@@ -50,13 +50,13 @@ class HostShippingBottomDialogFragment : BottomSheetDialogFragment() {
 
                     binding.tvReceiverName.text = info?.receiverName
                     binding.tvReceiverPhone.text = info?.receiverPhone
-                    binding.tvAddressDetail.text = info?.receiverAddress
+                    binding.tvAddress.text = info?.receiverAddress
                 }
             }
         }
 
         binding.btnCopy.setOnClickListener {
-            val text = binding.tvAddressDetail.text?.toString().orEmpty()
+            val text = binding.tvAddress.text?.toString().orEmpty()
             if (text.isBlank()) return@setOnClickListener
 
             val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
