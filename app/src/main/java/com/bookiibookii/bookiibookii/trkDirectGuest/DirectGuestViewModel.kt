@@ -3,9 +3,9 @@ package com.bookiibookii.bookiibookii.trkDirectGuest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.trkData.dto.MakeMeetingRequest
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerDetailResponseDto
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerMeetingResponseDto
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingRequest
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingResponse
 import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -18,13 +18,13 @@ import kotlinx.coroutines.launch
 class DirectGuestViewModel : ViewModel() {
 
     private val _trackerState =
-        MutableStateFlow<UiState<TrackerDetailResponseDto>>(UiState.Idle)
-    val trackerState: StateFlow<UiState<TrackerDetailResponseDto>> =
+        MutableStateFlow<UiState<TrackerDetailResponse>>(UiState.Idle)
+    val trackerState: StateFlow<UiState<TrackerDetailResponse>> =
         _trackerState.asStateFlow()
 
     private val _meetingState =
-        MutableStateFlow<UiState<TrackerMeetingResponseDto>>(UiState.Idle)
-    val meetingState: StateFlow<UiState<TrackerMeetingResponseDto>> =
+        MutableStateFlow<UiState<TrackerMeetingResponse>>(UiState.Idle)
+    val meetingState: StateFlow<UiState<TrackerMeetingResponse>> =
         _meetingState.asStateFlow()
 
     private val _event = Channel<DirectGuestEvent>(Channel.BUFFERED)
@@ -133,7 +133,7 @@ class DirectGuestViewModel : ViewModel() {
             try {
                 val res = RetrofitClient.api().makeMeeting(
                     groupId = groupId,
-                    request = MakeMeetingRequest(
+                    request = TrackerMeetingRequest(
                         meetingTime = date,
                         meetingPlace = place
                     )

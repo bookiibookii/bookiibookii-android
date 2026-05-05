@@ -1,9 +1,9 @@
 package com.bookiibookii.bookiibookii.trkHost
 
-import com.bookiibookii.bookiibookii.trkData.dto.GuestTrackerListItemDto
-import com.bookiibookii.bookiibookii.trkData.dto.HostTrackerListItemDto
+import com.bookiibookii.bookiibookii.data.model.tracker.GuestTrackerListItem
+import com.bookiibookii.bookiibookii.data.model.tracker.HostTrackerListItem
 
-fun HostTrackerListItemDto.toTrackerData(): TrackerData {
+fun HostTrackerListItem.toTrackerData(): TrackerData {
     val base = buildBase(groupId, bookTitle, author, category, image, tradeType, ExchangeRole.HOST)
     return when (base.exchangeType) {
         ExchangeType.DELIVERY, ExchangeType.DIRECT ->
@@ -15,7 +15,7 @@ fun HostTrackerListItemDto.toTrackerData(): TrackerData {
     }
 }
 
-fun GuestTrackerListItemDto.toTrackerData(): TrackerData {
+fun GuestTrackerListItem.toTrackerData(): TrackerData {
     val base = buildBase(groupId, bookTitle, author, category, image, tradeType, ExchangeRole.GUEST)
     return when (base.exchangeType) {
         ExchangeType.DELIVERY, ExchangeType.DIRECT ->

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- ⭕활성화 상태 -->
-    <item android:state_selected="true" android:drawable="@drawable/bg_round_10dp_pale_stroke_1dp_main" />
-    <!-- ❌ 비활성화 상태 (기본값) -->
-    <item android:drawable="@drawable/bg_round_10dp_pale_stroke_1dp_main105"/>
-</selector>

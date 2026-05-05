@@ -1,7 +1,7 @@
 package com.bookiibookii.bookiibookii.data.api
 
 import android.content.Context
-import com.bookiibookii.bookiibookii.trkData.api.TrkApi
+import com.bookiibookii.bookiibookii.data.api.TrkApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

@@ -3,13 +3,13 @@ package com.bookiibookii.bookiibookii.trkGuest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerCheckImageResponseDto
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerDetailResponseDto
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerReadingStartResponseDto
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerReceiveRequestDto
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerReceiveResponseDto
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerShippingStartRequestDto
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerShippingStartResponseDto
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDeliveryRequest
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDeliveryResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerReadingResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerReceptionImageResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerReceptionRequest
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerReceptionResponse
 import com.bookiibookii.bookiibookii.trkHost.Phase
 import com.bookiibookii.bookiibookii.trkHost.Role
 import com.bookiibookii.bookiibookii.trkHost.StepId
@@ -29,7 +29,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 data class GuestTrackerUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val data: TrackerDetailResponseDto? = null
+    val data: TrackerDetailResponse? = null
 )
 
 class GuestViewModel : ViewModel() {
@@ -46,18 +46,18 @@ class GuestViewModel : ViewModel() {
     val steps: StateFlow<List<TradeStatusItem>> = _steps.asStateFlow()
 
     private val _confirmReceptionState =
-        MutableStateFlow<UiState<TrackerDetailResponseDto>>(UiState.Idle)
-    val confirmReceptionState: StateFlow<UiState<TrackerDetailResponseDto>> =
+        MutableStateFlow<UiState<TrackerDetailResponse>>(UiState.Idle)
+    val confirmReceptionState: StateFlow<UiState<TrackerDetailResponse>> =
         _confirmReceptionState.asStateFlow()
 
     private val _receiveState =
-        MutableStateFlow<UiState<TrackerReceiveResponseDto>>(UiState.Idle)
-    val receiveState: StateFlow<UiState<TrackerReceiveResponseDto>> =
+        MutableStateFlow<UiState<TrackerReceptionResponse>>(UiState.Idle)
+    val receiveState: StateFlow<UiState<TrackerReceptionResponse>> =
         _receiveState.asStateFlow()
 
     private val _readingStartState =
-        MutableStateFlow<UiState<TrackerReadingStartResponseDto>>(UiState.Idle)
-    val readingStartState: StateFlow<UiState<TrackerReadingStartResponseDto>> =
+        MutableStateFlow<UiState<TrackerReadingResponse>>(UiState.Idle)
+    val readingStartState: StateFlow<UiState<TrackerReadingResponse>> =
         _readingStartState.asStateFlow()
 
     private val _extensionState =
@@ -71,13 +71,13 @@ class GuestViewModel : ViewModel() {
         _doneState.asStateFlow()
 
     private val _shippingStartState =
-        MutableStateFlow<UiState<TrackerShippingStartResponseDto>>(UiState.Idle)
-    val shippingStartState: StateFlow<UiState<TrackerShippingStartResponseDto>> =
+        MutableStateFlow<UiState<TrackerDeliveryResponse>>(UiState.Idle)
+    val shippingStartState: StateFlow<UiState<TrackerDeliveryResponse>> =
         _shippingStartState.asStateFlow()
 
     private val _checkImageState =
-        MutableStateFlow<UiState<TrackerCheckImageResponseDto>>(UiState.Idle)
-    val checkImageState: StateFlow<UiState<TrackerCheckImageResponseDto>> =
+        MutableStateFlow<UiState<TrackerReceptionImageResponse>>(UiState.Idle)
+    val checkImageState: StateFlow<UiState<TrackerReceptionImageResponse>> =
         _checkImageState.asStateFlow()
 
     private companion object {
@@ -250,7 +250,7 @@ class GuestViewModel : ViewModel() {
 
                 val body = RetrofitClient.api().patchTrackerReceive(
                     groupId = groupId,
-                    request = TrackerReceiveRequestDto(s3Key)
+                    request = TrackerReceptionRequest(s3Key)
                 )
 
                 if (!body.isSuccess || body.result == null) {
@@ -350,7 +350,7 @@ class GuestViewModel : ViewModel() {
                     return@launch
                 }
 
-                val req = TrackerShippingStartRequestDto(
+                val req = TrackerDeliveryRequest(
                     deliveryCompany = deliveryCompany,
                     trackingNumber = trackingNumber,
                     s3Key = s3Key
