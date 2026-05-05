@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.data.model
+package com.bookiibookii.bookiibookii.data.model.common
 
 data class ApiResponse<T>(
     val isSuccess: Boolean,

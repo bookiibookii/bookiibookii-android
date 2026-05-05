@@ -1,18 +1,18 @@
-package com.bookiibookii.bookiibookii.trkData.dto
+package com.bookiibookii.bookiibookii.data.model.tracker
 
-data class TrackerDoneResponseDto(
+data class TrackerReceptionRequest(
+    val s3Key: String
+)
+
+data class TrackerReceptionResponse(
     val bookTitle: String?,
     val partnerNickname: String?,
     val trackerStatus: String?,
-
     val startDate: String?,
     val endDate: String?,
-
     val extensionCount: Int?,
     val extensionDays: Int?,
-
     val trackerId: Long?,
-
-    val deliveryInfo: TrackerDeliveryInfoDto?,
-    val meetingInfo: TrackerMeetingInfoDto?
+    val deliveryInfo: DeliveryInfo?,
+    val meetingInfo: MeetingInfo?
 )

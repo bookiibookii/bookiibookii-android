@@ -3,9 +3,9 @@ package com.bookiibookii.bookiibookii.trkDirectHost
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.trkData.dto.MakeMeetingRequest
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerDetailResponseDto
-import com.bookiibookii.bookiibookii.trkData.dto.TrackerMeetingResponseDto
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingRequest
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingResponse
 import com.bookiibookii.bookiibookii.trkHost.TradeStatusItem
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -18,8 +18,8 @@ import kotlinx.coroutines.launch
 class DirectHostViewModel : ViewModel() {
 
     private val _trackerState =
-        MutableStateFlow<UiState<TrackerDetailResponseDto>>(UiState.Idle)
-    val trackerState: StateFlow<UiState<TrackerDetailResponseDto>> =
+        MutableStateFlow<UiState<TrackerDetailResponse>>(UiState.Idle)
+    val trackerState: StateFlow<UiState<TrackerDetailResponse>> =
         _trackerState.asStateFlow()
 
     private val _event = Channel<DirectHostEvent>(Channel.BUFFERED)
@@ -29,8 +29,8 @@ class DirectHostViewModel : ViewModel() {
     val extensionApplied: StateFlow<Boolean> = _extensionApplied.asStateFlow()
 
     private val _meetingState =
-        MutableStateFlow<UiState<TrackerMeetingResponseDto>>(UiState.Idle)
-    val meetingState: StateFlow<UiState<TrackerMeetingResponseDto>> =
+        MutableStateFlow<UiState<TrackerMeetingResponse>>(UiState.Idle)
+    val meetingState: StateFlow<UiState<TrackerMeetingResponse>> =
         _meetingState.asStateFlow()
 
     fun markExtensionApplied() { _extensionApplied.value = true }
@@ -127,7 +127,7 @@ class DirectHostViewModel : ViewModel() {
             try {
                 val res = RetrofitClient.api().makeMeeting(
                     groupId = groupId,
-                    request = MakeMeetingRequest(meetingTime = date, meetingPlace = place)
+                    request = TrackerMeetingRequest(meetingTime = date, meetingPlace = place)
                 )
 
                 if (res.isSuccessful) _event.send(DirectHostEvent.MeetingSuccess)

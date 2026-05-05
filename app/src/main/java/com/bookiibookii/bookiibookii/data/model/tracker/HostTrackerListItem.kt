@@ -1,8 +1,8 @@
-package com.bookiibookii.bookiibookii.trkData.dto
+package com.bookiibookii.bookiibookii.data.model.tracker
 
 import com.google.gson.annotations.SerializedName
 
-data class HostTrackerListItemDto(
+data class HostTrackerListItem(
     val groupId: Long,
     val groupType: String,
     val bookTitle: String,
@@ -15,12 +15,11 @@ data class HostTrackerListItemDto(
     val category: String?,
 
     val tradeType: String?,
-    val relayDetail: HostTrackerRelayDetailDto?,
-    val togetherDetail: HostTrackerTogetherDetailDto?
+    val relayDetail: HostTrackerRelayDetail?,
+    val togetherDetail: HostTrackerTogetherDetail?
 )
 
-
-data class HostTrackerRelayDetailDto(
+data class HostTrackerRelayDetail(
     val partnerNickname: String?,
     @SerializedName("hostProfileImageUrl")
     val hostProfileImage: String?,
@@ -30,11 +29,9 @@ data class HostTrackerRelayDetailDto(
     val stepDates: List<String?>?
 )
 
-data class HostTrackerTogetherDetailDto(
+data class HostTrackerTogetherDetail(
     val hostNickname: String?,
     val participantCount: Int?,
     val myReadingRate: Int?,
     val groupReadingRate: Int?
 )
-
-

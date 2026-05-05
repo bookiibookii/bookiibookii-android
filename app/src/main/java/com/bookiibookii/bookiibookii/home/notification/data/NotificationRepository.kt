@@ -3,7 +3,7 @@ package com.bookiibookii.bookiibookii.home.notification.data
 import com.bookiibookii.bookiibookii.data.api.ApiService
 import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
 import com.bookiibookii.bookiibookii.data.model.NotificationListResultDto
-import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
+import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import retrofit2.Response
 
 class NotificationRepository(
