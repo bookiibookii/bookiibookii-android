@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.trkData.api
+package com.bookiibookii.bookiibookii.data.api
 
 import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
 import com.bookiibookii.bookiibookii.trkData.dto.GuestTrackerListItemDto
@@ -94,7 +94,7 @@ interface TrkApi {
     @PATCH("/api/groups/{groupId}/tracker/meetings/completion")
     suspend fun patchMeetingComplete(
         @Path("groupId") groupId: Long
-    ): retrofit2.Response<TrackerDetailDto>
+    ): Response<TrackerDetailDto>
 
     @PATCH("/api/groups/{groupId}/tracker/reception/verification")
     suspend fun patchConfirmReception(

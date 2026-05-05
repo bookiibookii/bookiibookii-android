@@ -54,7 +54,7 @@ import com.bookiibookii.bookiibookii.data.model.UserUpdateResponse
 import com.bookiibookii.bookiibookii.data.model.WithdrawResponse
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import okhttp3.RequestBody
-import com.bookiibookii.bookiibookii.trkData.api.TrkApi
+import com.bookiibookii.bookiibookii.data.api.TrkApi
 import com.bookiibookii.bookiibookii.trkData.dto.ApiResponse
 import retrofit2.Response
 import retrofit2.http.Body

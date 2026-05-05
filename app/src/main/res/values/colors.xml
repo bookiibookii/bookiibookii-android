@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!--Monotone-->
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
 
@@ -13,42 +15,27 @@
     <color name="grey_800">#42413F</color>
     <color name="grey_900">#242322</color>
 
-    <!--0114추가-->
-    <color name="ui_bg">#F6F6F6</color>
-    <color name="ui_main_sub_pale">#D4EDFF</color>
+    <!--Main Color-->
+    <color name="ui_main">#FF7618</color>
+    <color name="ui_main_150">#FFC9A4</color>
+    <color name="ui_main_pale">#FFEADB</color>
+
+    <!--Sub Color-->
     <color name="ui_main_sub">#37AAFF</color>
-    <color name="ui_point_red_105">#FFF3F3</color>
-    <color name="ui_point_red_pale">#FFBBBB</color>
+    <color name="ui_main_sub_150">#9CD5FF</color>
+    <color name="ui_main_sub_pale">#D4EDFF</color>
+
+    <!--Ui Color-->
+    <color name="ui_bg">#F6F6F6</color>
+
     <color name="ui_point_red">#FF4D4D</color>
+    <color name="ui_point_red_pale">#FFBBBB</color>
+    <color name="ui_point_red_150">#FFF3F3</color>
+
+    <color name="ui_point_green200">#3CCF4D</color>
     <color name="ui_point_green.pale">#E7FFEA</color>
     <color name="ui_point_green150">#74D27F</color>
-    <color name="ui_point_green200">#3CCF4D</color>
-    <color name="ui_main_105">#FFC9A4</color>
-    <color name="pre_main">#FF7618</color>
 
-    <!--신규 추가-->
-    <color name="page">#FDFBF7</color>
-    <color name="main">#48B48A</color>
-    <color name="point1">#FFB800</color>
-    <color name="point2">#FF6B6B</color>
-
-    <color name="sub_105">#9CD5FF</color>
     <color name="kakao">#FEE500</color>
 
-    <!--이전 UI 색상 -> 미사용 시 추후 삭제 필요-->
-    <color name="pre_main_pale">#FFEADB</color>
-
-    <color name="pre_sub">#37AAFF</color>
-    <color name="pre_sub_pale">#D4EDFF</color>
-
-    <color name="toggle_bg_selected">#242322</color>
-    <color name="toggle_bg_unselected">#FFFFFF</color>
-
-    <color name="toggle_stroke_selected">#242322</color>
-    <color name="toggle_stroke_unselected">#E2E1DF</color>
-
-    <color name="toggle_text_selected">#FFFFFF</color>
-    <color name="toggle_text_unselected">#242322</color>
-
-    <color name="app_background">#F6F6F6</color>
 </resources>

@@ -37,10 +37,4 @@ data class HostTrackerTogetherDetailDto(
     val groupReadingRate: Int?
 )
 
-data class ApiResponse<T>(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: T?
-)
 
