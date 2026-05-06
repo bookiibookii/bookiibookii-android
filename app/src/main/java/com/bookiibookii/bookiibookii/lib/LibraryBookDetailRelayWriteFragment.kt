@@ -22,7 +22,7 @@ import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
-import com.bookiibookii.bookiibookii.data.model.RelayReviewRequest
+import com.bookiibookii.bookiibookii.data.model.library.RelayReviewRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailRelayWriteBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop

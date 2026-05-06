@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.MypageBook
+import com.bookiibookii.bookiibookii.data.model.mypage.MypageBook
 import com.bookiibookii.bookiibookii.databinding.ItemMypLateBookBinding
 
 class MypLateBookAdapter(private val items: List<MypageBook>) :

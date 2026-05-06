@@ -10,7 +10,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.CardItem
+import com.bookiibookii.bookiibookii.data.model.library.CardItem
 import com.bookiibookii.bookiibookii.databinding.ItemLibDetailReviewBinding
 
 class LibraryReviewAdapter(

@@ -11,8 +11,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.LibBook
-import com.bookiibookii.bookiibookii.data.model.ReadStatus
+import com.bookiibookii.bookiibookii.data.model.library.LibBook
+import com.bookiibookii.bookiibookii.data.model.library.ReadStatus
 import com.bookiibookii.bookiibookii.databinding.ItemLibBookBinding
 import com.bookiibookii.bookiibookii.databinding.ItemLibBookGridBinding
 import com.bumptech.glide.load.resource.bitmap.CenterCrop

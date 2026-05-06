@@ -3,7 +3,7 @@ package com.bookiibookii.bookiibookii.lib
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bookiibookii.bookiibookii.data.model.TogetherComment
+import com.bookiibookii.bookiibookii.data.model.library.TogetherComment
 import com.bookiibookii.bookiibookii.databinding.ItemLibBookDetailReviewBinding
 
 class LibraryCardReviewAdapter : RecyclerView.Adapter<LibraryCardReviewAdapter.ViewHolder>() {

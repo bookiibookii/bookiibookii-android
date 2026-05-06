@@ -12,8 +12,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.MypReview
-import com.bookiibookii.bookiibookii.data.model.ProfileResult
+import com.bookiibookii.bookiibookii.data.model.mypage.Review
+import com.bookiibookii.bookiibookii.data.model.mypage.ProfileResult
 import com.bookiibookii.bookiibookii.databinding.FragmentOtherProfileBinding
 import com.bookiibookii.bookiibookii.myPage.main.MypGroupAdapter
 import com.bookiibookii.bookiibookii.myPage.main.MypLateBookAdapter
@@ -155,7 +155,7 @@ class OtherProfileFragment : Fragment(R.layout.fragment_other_profile) {
 
         // 획득한 후기
         val badgeList = result.userBadges.map {
-            MypReview(content = translateBadge(it.userBadge), count = it.count)
+            Review(content = translateBadge(it.userBadge), count = it.count)
         }
         binding.mypReviewsRv.adapter = MypReviewAdapter(badgeList)
 

@@ -19,7 +19,7 @@ import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.PostCommentRequest
+import com.bookiibookii.bookiibookii.data.model.library.PostCommentRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibCardBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.launch

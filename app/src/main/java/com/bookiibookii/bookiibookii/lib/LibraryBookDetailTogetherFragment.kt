@@ -19,8 +19,8 @@ import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.CardItem
-import com.bookiibookii.bookiibookii.data.model.GroupCardResult
+import com.bookiibookii.bookiibookii.data.model.library.CardItem
+import com.bookiibookii.bookiibookii.data.model.library.GroupCardResult
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailTogetherBinding
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity

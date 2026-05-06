@@ -24,7 +24,7 @@ import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
-import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
+import com.bookiibookii.bookiibookii.data.model.mypage.UserUpdateRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentMypProfileEditBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop

@@ -5,7 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.common.DateUtils
-import com.bookiibookii.bookiibookii.data.model.ReportSummary
+import com.bookiibookii.bookiibookii.data.model.mypage.ReportSummary
 import com.bookiibookii.bookiibookii.databinding.ItemMypReportBinding
 import java.text.SimpleDateFormat
 import java.util.Locale

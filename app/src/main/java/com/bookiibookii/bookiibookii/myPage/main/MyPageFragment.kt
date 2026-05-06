@@ -18,8 +18,8 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.MypReview
-import com.bookiibookii.bookiibookii.data.model.MypageResult
+import com.bookiibookii.bookiibookii.data.model.mypage.Review
+import com.bookiibookii.bookiibookii.data.model.mypage.MypageResult
 import com.bookiibookii.bookiibookii.databinding.FragmentMypBinding
 import com.bookiibookii.bookiibookii.databinding.LayoutMypProfileCardBinding
 import com.bookiibookii.bookiibookii.myPage.profile.MypProfileEditFragment
@@ -162,7 +162,7 @@ class MypageFragment : Fragment() {
         }
 
         val badgeList = data.userBadges?.map {
-            MypReview(content = translateBadge(it.userBadge), count = it.count)
+            Review(content = translateBadge(it.userBadge), count = it.count)
         } ?: emptyList()
         binding.mypReviewsRv.adapter = MypReviewAdapter(badgeList)
         binding.mypGroupsRv.adapter = MypGroupAdapter(data.groups ?: emptyList())

@@ -12,7 +12,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.MypRelayReview
+import com.bookiibookii.bookiibookii.data.model.mypage.RelayReview
 import com.bookiibookii.bookiibookii.databinding.FragmentMypMyReviewsBinding
 import kotlinx.coroutines.launch
 
@@ -20,7 +20,7 @@ class MypMyReviewFragment : BaseDetailFragment<FragmentMypMyReviewsBinding>() {
 
     private lateinit var loadingDialog: LoadingDialog
     private lateinit var reviewAdapter: MypMyReviewAdapter
-    private var reviewList: List<MypRelayReview> = listOf()
+    private var reviewList: List<RelayReview> = listOf()
 
     override fun getFragmentBinding(
         inflater: LayoutInflater,

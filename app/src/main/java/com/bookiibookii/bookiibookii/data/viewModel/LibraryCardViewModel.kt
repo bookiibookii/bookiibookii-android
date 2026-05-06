@@ -5,8 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.CardItem
-import com.bookiibookii.bookiibookii.data.model.GroupCardResult
+import com.bookiibookii.bookiibookii.data.model.library.CardItem
+import com.bookiibookii.bookiibookii.data.model.library.GroupCardResult
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope

@@ -15,8 +15,8 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.LibBook
-import com.bookiibookii.bookiibookii.data.model.ReadStatus
+import com.bookiibookii.bookiibookii.data.model.library.LibBook
+import com.bookiibookii.bookiibookii.data.model.library.ReadStatus
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryViewModel
 import com.bookiibookii.bookiibookii.data.viewModel.SortType
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBinding

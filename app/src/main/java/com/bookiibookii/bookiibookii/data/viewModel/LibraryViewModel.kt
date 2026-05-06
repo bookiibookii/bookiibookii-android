@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.bookiibookii.bookiibookii.data.model.LibBook
+import com.bookiibookii.bookiibookii.data.model.library.LibBook
 
 enum class SortType {
     TITLE, RATING_HIGH, RATING_LOW, RECENT, OLD

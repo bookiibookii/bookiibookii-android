@@ -9,21 +9,21 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.DateUtils
-import com.bookiibookii.bookiibookii.data.model.MypRelayReview
+import com.bookiibookii.bookiibookii.data.model.mypage.RelayReview
 import com.bookiibookii.bookiibookii.databinding.ItemMypMyReviewBinding
 import com.bumptech.glide.Glide
 
-class MypMyReviewAdapter(private var items: List<MypRelayReview>) : RecyclerView.Adapter<MypMyReviewAdapter.ViewHolder>() {
+class MypMyReviewAdapter(private var items: List<RelayReview>) : RecyclerView.Adapter<MypMyReviewAdapter.ViewHolder>() {
 
     private val expandedState = mutableMapOf<Long, Boolean>()
 
-    fun submitList(newItems: List<MypRelayReview>) {
+    fun submitList(newItems: List<RelayReview>) {
         items = newItems
         notifyDataSetChanged()
     }
 
     inner class ViewHolder(val binding: ItemMypMyReviewBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: MypRelayReview) {
+        fun bind(item: RelayReview) {
             val context = binding.root.context
 
             binding.itemMypReviewTitleTv.text = item.partnerNickname
