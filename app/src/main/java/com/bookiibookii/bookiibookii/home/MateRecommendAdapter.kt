@@ -9,16 +9,16 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.RecommendedBookmateDto
+import com.bookiibookii.bookiibookii.data.model.recommendation.RecommendedBookmateItem
 
 class MateRecommendAdapter(
-    private val onClick: (RecommendedBookmateDto) -> Unit
+    private val onClick: (RecommendedBookmateItem) -> Unit
 ) : RecyclerView.Adapter<MateRecommendAdapter.VH>() {
 
-    private var items: List<RecommendedBookmateDto> = emptyList()
+    private var items: List<RecommendedBookmateItem> = emptyList()
 
     @SuppressLint("NotifyDataSetChanged")
-    fun submitList(list: List<RecommendedBookmateDto>) {
+    fun submitList(list: List<RecommendedBookmateItem>) {
         items = list
         notifyDataSetChanged()
     }
@@ -37,7 +37,7 @@ class MateRecommendAdapter(
 
     class VH(
         itemView: View,
-        private val onClick: (RecommendedBookmateDto) -> Unit
+        private val onClick: (RecommendedBookmateItem) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
 
         private val ivProfile: ImageView = itemView.findViewById(R.id.iv_mate_profile)
@@ -58,7 +58,7 @@ class MateRecommendAdapter(
             }
         }
 
-        fun bind(item: RecommendedBookmateDto) {
+        fun bind(item: RecommendedBookmateItem) {
             tvName.text = item.nickname
             tvRecent.text = item.recentBookTitle ?: "최근 완독한 책이 없어요"
 

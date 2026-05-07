@@ -11,8 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
-import com.bookiibookii.bookiibookii.data.model.OnboardingTag
+import com.bookiibookii.bookiibookii.data.model.user.OnboardingRequest
+import com.bookiibookii.bookiibookii.data.model.user.OnboardingTag
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import androidx.core.content.edit

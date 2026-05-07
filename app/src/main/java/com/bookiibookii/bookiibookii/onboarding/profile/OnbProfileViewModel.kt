@@ -8,6 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.api.S3Uploader
+import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
+import com.bookiibookii.bookiibookii.data.model.user.NicknameValidationResult
+import com.bookiibookii.bookiibookii.data.model.user.PresignedUrlResult
 import kotlinx.coroutines.launch
 
 class OnbProfileViewModel : ViewModel() {

@@ -1,9 +1,9 @@
 package com.bookiibookii.bookiibookii.home.notification.model
 
-import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationItem
 
-data class NotificationItem(
-    val notification: NotificationItemDto,
+data class NotificationUiItem(
+    val notification: NotificationItem,
     val timeText: String,
     val bookTitle: String = "",
     val isUnread: Boolean = false

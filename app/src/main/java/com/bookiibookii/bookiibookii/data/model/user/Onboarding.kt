@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.data.model
+package com.bookiibookii.bookiibookii.data.model.user
 
 data class OnboardingRequest(
     val name: String,

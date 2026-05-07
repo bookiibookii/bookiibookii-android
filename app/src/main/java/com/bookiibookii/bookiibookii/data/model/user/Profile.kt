@@ -1,15 +1,11 @@
-package com.bookiibookii.bookiibookii.data.model
+package com.bookiibookii.bookiibookii.data.model.user
 
+import com.bookiibookii.bookiibookii.data.model.mypage.MypageBook
+import com.bookiibookii.bookiibookii.data.model.mypage.MypageGroup
+import com.bookiibookii.bookiibookii.data.model.mypage.UserBadge
 import com.google.gson.annotations.SerializedName
 
-data class OtherProfileResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: OtherProfileApiResult?
-)
-
-data class OtherProfileApiResult(
+data class OtherProfileResult(
     val userId: Int,
     val profileImageUrl: String?,
     val nickname: String,
