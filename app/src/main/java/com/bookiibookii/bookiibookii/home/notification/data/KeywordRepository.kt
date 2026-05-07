@@ -1,20 +1,20 @@
 package com.bookiibookii.bookiibookii.home.notification.data
 
 import com.bookiibookii.bookiibookii.data.api.ApiService
-import com.bookiibookii.bookiibookii.data.model.KeywordCreateRequest
-import com.bookiibookii.bookiibookii.data.model.KeywordCreateResultDto
-import com.bookiibookii.bookiibookii.data.model.KeywordListResultDto
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
+import com.bookiibookii.bookiibookii.data.model.keyword.KeywordCreateRequest
+import com.bookiibookii.bookiibookii.data.model.keyword.KeywordCreateResult
+import com.bookiibookii.bookiibookii.data.model.keyword.KeywordListResult
 import retrofit2.Response
 
 class KeywordRepository(
     private val api: ApiService
 ) {
-    suspend fun fetchKeywords(sort: String): Response<ApiResponse<KeywordListResultDto>> {
+    suspend fun fetchKeywords(sort: String): Response<ApiResponse<KeywordListResult>> {
         return api.getKeywords(sort = sort)
     }
 
-    suspend fun addKeyword(content: String): Response<ApiResponse<KeywordCreateResultDto>> {
+    suspend fun addKeyword(content: String): Response<ApiResponse<KeywordCreateResult>> {
         return api.createKeyword(KeywordCreateRequest(content = content))
     }
 

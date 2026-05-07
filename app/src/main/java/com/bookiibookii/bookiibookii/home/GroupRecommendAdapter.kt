@@ -11,11 +11,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.RecommendedGroupDto
+import com.bookiibookii.bookiibookii.data.model.recommendation.RecommendedGroupItem
 
 class GroupRecommendAdapter(
-    private val onItemClick: ((RecommendedGroupDto) -> Unit)? = null
-) : ListAdapter<RecommendedGroupDto, GroupRecommendAdapter.ViewHolder>(diff) {
+    private val onItemClick: ((RecommendedGroupItem) -> Unit)? = null
+) : ListAdapter<RecommendedGroupItem, GroupRecommendAdapter.ViewHolder>(diff) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -29,13 +29,13 @@ class GroupRecommendAdapter(
 
     class ViewHolder(
         itemView: View,
-        private val onItemClick: ((RecommendedGroupDto) -> Unit)?
+        private val onItemClick: ((RecommendedGroupItem) -> Unit)?
     ) : RecyclerView.ViewHolder(itemView) {
 
         private val ivCover: ImageView = itemView.findViewById(R.id.iv_book_cover)
         private val tvTitle: TextView = itemView.findViewById(R.id.tv_book_title)
 
-        fun bind(item: RecommendedGroupDto) {
+        fun bind(item: RecommendedGroupItem) {
             tvTitle.text = item.bookTitle ?: "제목 없음"
 
             val url = item.bookImageUrl
@@ -60,7 +60,6 @@ class GroupRecommendAdapter(
                     )
                 }
             } else {
-                // url이 없으면 아예 프레임(기본 이미지)만 세팅
                 ivCover.setImageResource(R.drawable.bg_book_cover_frame)
 
                 // TODO: 추후 로그 삭제
@@ -74,13 +73,13 @@ class GroupRecommendAdapter(
     }
 
     companion object {
-        private val diff = object : DiffUtil.ItemCallback<RecommendedGroupDto>() {
-            override fun areItemsTheSame(oldItem: RecommendedGroupDto, newItem: RecommendedGroupDto): Boolean {
+        private val diff = object : DiffUtil.ItemCallback<RecommendedGroupItem>() {
+            override fun areItemsTheSame(oldItem: RecommendedGroupItem, newItem: RecommendedGroupItem): Boolean {
                 return oldItem.groupId == newItem.groupId
             }
 
             @SuppressLint("DiffUtilEquals")
-            override fun areContentsTheSame(oldItem: RecommendedGroupDto, newItem: RecommendedGroupDto): Boolean {
+            override fun areContentsTheSame(oldItem: RecommendedGroupItem, newItem: RecommendedGroupItem): Boolean {
                 return oldItem == newItem
             }
         }

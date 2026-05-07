@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.KeywordSort
+import com.bookiibookii.bookiibookii.data.model.keyword.KeywordSort
 import com.bookiibookii.bookiibookii.databinding.ActivityNotificationKeywordSettingBinding
 import com.bookiibookii.bookiibookii.home.notification.adapter.KeywordAdapter
 import com.bookiibookii.bookiibookii.home.notification.data.KeywordRepository

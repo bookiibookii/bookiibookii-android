@@ -15,20 +15,19 @@ import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.NotificationCategory
-import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationCategory
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationItem
 import com.bookiibookii.bookiibookii.group.GroupDetailActivity
 import com.bookiibookii.bookiibookii.group.GroupJoinManagementActivity
 import com.bookiibookii.bookiibookii.home.notification.adapter.SystemAdapter
 import com.bookiibookii.bookiibookii.home.notification.data.NotificationRepository
-import com.bookiibookii.bookiibookii.home.notification.model.NotificationItem
+import com.bookiibookii.bookiibookii.home.notification.model.NotificationUiItem
 import com.bookiibookii.bookiibookii.home.notification.model.NotificationType
 import com.bookiibookii.bookiibookii.home.notification.util.NotificationPayloadParser
 import com.bookiibookii.bookiibookii.home.notification.util.TimeAgoFormatter
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModel
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModelFactory
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 class NotificationSystemFragment : Fragment(R.layout.fragment_notification_system) {
 
@@ -82,7 +81,6 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
             }
         }
 
-
         // 첫 로딩
         viewModel.loadFirstPage()
 
@@ -90,7 +88,6 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { s ->
-
                     val uiItems = s.items.map { it.toUiItem() }
                     bind(uiItems, rv, empty)
                 }
@@ -98,8 +95,8 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
         }
     }
 
-    private fun NotificationItemDto.toUiItem(): NotificationItem {
-        return NotificationItem(
+    private fun NotificationItem.toUiItem(): NotificationUiItem {
+        return NotificationUiItem(
             notification = this,
             timeText = TimeAgoFormatter.format(createdAt ?: ""),
             bookTitle = "",
@@ -107,14 +104,14 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
         )
     }
 
-    private fun bind(items: List<NotificationItem>, rv: RecyclerView, empty: View) {
+    private fun bind(items: List<NotificationUiItem>, rv: RecyclerView, empty: View) {
         val hasData = items.isNotEmpty()
         rv.visibility = if (hasData) View.VISIBLE else View.GONE
         empty.visibility = if (hasData) View.GONE else View.VISIBLE
         if (hasData) adapter.setItems(items)
     }
 
-    private fun handleNotificationClick(dto: NotificationItemDto) {
+    private fun handleNotificationClick(dto: NotificationItem) {
 
         val type = NotificationType.from(dto.type)
 
@@ -199,7 +196,6 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
 
             NotificationType.KEYWORD_GROUP_CREATED -> {
                 // 시스템 탭에서는 원래 안 들어와야 함 (category=KEYWORD)
-                // 방어 코드만
                 Toast.makeText(requireContext(), "키워드 알림은 키워드 탭에서 확인해주세요.", Toast.LENGTH_SHORT).show()
             }
 
@@ -207,36 +203,5 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
                 Toast.makeText(requireContext(), "지원하지 않는 알림입니다.", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-}
-
-object NotificationPayloadParser {
-
-    fun getGroupId(dto: NotificationItemDto): Long? {
-        val raw = dto.payload ?: return null
-        return runCatching {
-            val obj = JSONObject(raw)
-            when {
-                obj.has("groupId") -> obj.getLong("groupId")
-                obj.has("group_id") -> obj.getLong("group_id")
-                obj.has("targetGroupId") -> obj.getLong("targetGroupId")
-                obj.has("target_group_id") -> obj.getLong("target_group_id")
-                else -> null
-            }
-        }.getOrNull()
-    }
-
-    fun getRole(dto: NotificationItemDto): String? {
-        val raw = dto.payload ?: return null
-        return runCatching {
-            val obj = JSONObject(raw)
-            val role = when {
-                obj.has("role") -> obj.optString("role", null)
-                obj.has("trackerRole") -> obj.optString("trackerRole", null)
-                obj.has("exchangeRole") -> obj.optString("exchangeRole", null)
-                else -> null
-            }
-            role?.takeIf { it.isNotBlank() }?.uppercase()
-        }.getOrNull()
     }
 }

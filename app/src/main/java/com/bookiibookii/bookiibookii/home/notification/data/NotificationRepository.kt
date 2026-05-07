@@ -1,9 +1,9 @@
 package com.bookiibookii.bookiibookii.home.notification.data
 
 import com.bookiibookii.bookiibookii.data.api.ApiService
-import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
-import com.bookiibookii.bookiibookii.data.model.NotificationListResultDto
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationItem
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationListResult
 import retrofit2.Response
 
 class NotificationRepository(
@@ -14,7 +14,7 @@ class NotificationRepository(
         category: String,
         cursor: String?,
         size: Int
-    ): Response<ApiResponse<NotificationListResultDto>> {
+    ): Response<ApiResponse<NotificationListResult>> {
         return api.getNotifications(
             category = category,
             cursor = cursor,
@@ -23,7 +23,7 @@ class NotificationRepository(
     }
 
     // 읽음 처리
-    suspend fun read(notificationId: Long): Response<ApiResponse<NotificationItemDto>> {
+    suspend fun read(notificationId: Long): Response<ApiResponse<NotificationItem>> {
         return api.readNotification(notificationId)
     }
 }

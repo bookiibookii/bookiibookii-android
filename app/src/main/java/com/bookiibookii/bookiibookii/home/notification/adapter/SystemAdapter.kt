@@ -7,15 +7,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.home.notification.model.NotificationItem
+import com.bookiibookii.bookiibookii.home.notification.model.NotificationUiItem
 
 class SystemAdapter(
-    private val onItemClick: ((NotificationItem) -> Unit)? = null
+    private val onItemClick: ((NotificationUiItem) -> Unit)? = null
 ) : RecyclerView.Adapter<SystemAdapter.VH>() {
 
-    private val items = mutableListOf<NotificationItem>()
+    private val items = mutableListOf<NotificationUiItem>()
 
-    fun setItems(newItems: List<NotificationItem>) {
+    fun setItems(newItems: List<NotificationUiItem>) {
         items.clear()
         items.addAll(newItems)
         notifyDataSetChanged()
@@ -52,7 +52,7 @@ class SystemAdapter(
 
         private val dotUnread: View = itemView.findViewById(R.id.view_dot)
 
-        fun bind(item: NotificationItem) {
+        fun bind(item: NotificationUiItem) {
             tvTitle.text = item.title
             tvBody.text = item.body
             tvTime.text = item.timeText

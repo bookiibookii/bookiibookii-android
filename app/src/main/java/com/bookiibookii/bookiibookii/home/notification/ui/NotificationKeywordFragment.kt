@@ -13,11 +13,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.NotificationCategory
-import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationCategory
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationItem
 import com.bookiibookii.bookiibookii.home.notification.adapter.SystemAdapter
 import com.bookiibookii.bookiibookii.home.notification.data.NotificationRepository
-import com.bookiibookii.bookiibookii.home.notification.model.NotificationItem
+import com.bookiibookii.bookiibookii.home.notification.model.NotificationUiItem
 import com.bookiibookii.bookiibookii.home.notification.model.NotificationType
 import com.bookiibookii.bookiibookii.home.notification.util.NotificationPayloadParser
 import com.bookiibookii.bookiibookii.home.notification.util.TimeAgoFormatter
@@ -78,7 +78,6 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { s ->
-
                     val uiItems = s.items.map { it.toUiItem() }
                     bind(uiItems, rv, empty)
                 }
@@ -86,8 +85,8 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) 
         }
     }
 
-    private fun NotificationItemDto.toUiItem(): NotificationItem {
-        return NotificationItem(
+    private fun NotificationItem.toUiItem(): NotificationUiItem {
+        return NotificationUiItem(
             notification = this,
             timeText = TimeAgoFormatter.format(createdAt),
             bookTitle = "",
@@ -95,14 +94,14 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) 
         )
     }
 
-    private fun bind(items: List<NotificationItem>, rv: RecyclerView, empty: View) {
+    private fun bind(items: List<NotificationUiItem>, rv: RecyclerView, empty: View) {
         val hasData = items.isNotEmpty()
         rv.visibility = if (hasData) View.VISIBLE else View.GONE
         empty.visibility = if (hasData) View.GONE else View.VISIBLE
         if (hasData) adapter.setItems(items)
     }
 
-    private fun handleKeywordNotificationClick(dto: NotificationItemDto) {
+    private fun handleKeywordNotificationClick(dto: NotificationItem) {
         val type = NotificationType.from(dto.type)
 
         when (type) {

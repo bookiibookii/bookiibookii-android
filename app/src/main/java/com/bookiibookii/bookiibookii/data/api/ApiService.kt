@@ -1,26 +1,15 @@
 package com.bookiibookii.bookiibookii.data.api
 
 import com.bookiibookii.bookiibookii.data.model.BookSearchResponse
-import com.bookiibookii.bookiibookii.data.model.CommonResponse
 import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
 import com.bookiibookii.bookiibookii.data.model.GroupCreateResponse
 import com.bookiibookii.bookiibookii.data.model.GroupItemDto
 import com.bookiibookii.bookiibookii.data.model.GroupListResponse
-import com.bookiibookii.bookiibookii.data.model.LoginRequest
-import com.bookiibookii.bookiibookii.data.model.LoginResponse
-import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
-import com.bookiibookii.bookiibookii.data.model.NotificationListResultDto
-import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
-import com.bookiibookii.bookiibookii.data.model.RecommendedBookmateDto
-import com.bookiibookii.bookiibookii.data.model.RecommendedGroupDto
-import com.bookiibookii.bookiibookii.data.model.TokenRefreshRequest
-import com.bookiibookii.bookiibookii.data.model.TokenRefreshResponse
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -28,26 +17,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Url
 
-interface ApiService : TrkApi, MypApi, LibApi {
-
-    // 로그인
-    @POST("api/auth/login")
-    suspend fun postLogin(
-        @Body request: LoginRequest
-    ): Response<LoginResponse>
-
-    // 토큰 갱신
-    @POST("api/auth/refresh")
-    suspend fun postRefresh(
-        @Header("Authorization") authorization: String,
-        @Body request: TokenRefreshRequest
-    ): Response<TokenRefreshResponse>
-
-    // 온보딩
-    @POST("/api/onboarding")
-    suspend fun postOnboarding(
-        @Body body: OnboardingRequest
-    ): Response<CommonResponse<String>>
+interface ApiService : TrkApi, MypApi, LibApi, AuthApi, NotiApi, UserApi, RecmApi, KwdApi {
 
     // 도서 검색
     @GET("api/books/search")
@@ -150,46 +120,4 @@ interface ApiService : TrkApi, MypApi, LibApi {
         @Path("groupId") groupId: Int,
         @Path("commentId") commentId: Int
     ): Response<GroupItemDto.CommentDeleteResponse>
-
-    // 알림 목록 조회
-    @GET("api/notifications")
-    suspend fun getNotifications(
-        @Query("category") category: String,
-        @Query("cursor") cursor: String?,
-        @Query("size") size: Int
-    ): Response<com.bookiibookii.bookiibookii.data.model.common.ApiResponse<NotificationListResultDto>>
-
-    // 알림 읽음 처리
-    @PATCH("api/notifications/{notificationId}/read")
-    suspend fun readNotification(
-        @Path("notificationId") notificationId: Long
-    ): Response<com.bookiibookii.bookiibookii.data.model.common.ApiResponse<NotificationItemDto>>
-
-    // 키워드 조회
-    @GET("/api/keywords")
-    suspend fun getKeywords(
-        @Query("sort") sort: String
-    ): Response<com.bookiibookii.bookiibookii.data.model.common.ApiResponse<com.bookiibookii.bookiibookii.data.model.KeywordListResultDto>>
-
-    // 키워드 생성
-    @POST("/api/keywords")
-    suspend fun createKeyword(
-        @Body request: com.bookiibookii.bookiibookii.data.model.KeywordCreateRequest
-    ): Response<com.bookiibookii.bookiibookii.data.model.common.ApiResponse<com.bookiibookii.bookiibookii.data.model.KeywordCreateResultDto>>
-
-    // 키워드 삭제
-    @DELETE("/api/keywords/{keywordId}")
-    suspend fun deleteKeyword(
-        @Path("keywordId") keywordId: Long
-    ): Response<com.bookiibookii.bookiibookii.data.model.common.ApiResponse<String>>
-
-    // 홈 추천 그룹
-    @GET("/api/recommendations/groups")
-    suspend fun getRecommendedGroups(
-        @Query("refresh") refresh: Boolean = false
-    ): Response<CommonResponse<List<RecommendedGroupDto>>>
-
-    // 부키메이트 추천
-    @GET("/api/recommendations/bookmates")
-    suspend fun getRecommendedBookmates(): Response<CommonResponse<List<RecommendedBookmateDto>>>
 }

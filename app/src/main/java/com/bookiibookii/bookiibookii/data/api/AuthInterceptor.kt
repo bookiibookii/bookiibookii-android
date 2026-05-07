@@ -6,7 +6,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
 import com.bookiibookii.bookiibookii.common.ComErrorActivity
-import com.bookiibookii.bookiibookii.data.model.TokenRefreshRequest
+import com.bookiibookii.bookiibookii.data.model.auth.TokenRefreshRequest
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor

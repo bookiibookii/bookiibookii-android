@@ -3,7 +3,7 @@ package com.bookiibookii.bookiibookii.onboarding.login
 import android.content.Context
 import android.util.Base64
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.TokenRefreshRequest
+import com.bookiibookii.bookiibookii.data.model.auth.TokenRefreshRequest
 import org.json.JSONObject
 
 object TokenManager {

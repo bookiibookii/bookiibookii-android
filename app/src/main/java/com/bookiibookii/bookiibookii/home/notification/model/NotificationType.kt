@@ -1,6 +1,6 @@
 package com.bookiibookii.bookiibookii.home.notification.model
 
-import com.bookiibookii.bookiibookii.data.model.NotificationCategory
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationCategory
 
 enum class NotificationType(
     val category: NotificationCategory
