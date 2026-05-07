@@ -1,6 +1,6 @@
 package com.bookiibookii.bookiibookii.data.api
 
-import com.bookiibookii.bookiibookii.data.model.BaseResponse
+import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.library.BookmarkListResponse
 import com.bookiibookii.bookiibookii.data.model.library.BookmarkToggleResponse
 import com.bookiibookii.bookiibookii.data.model.library.CardDetailResponse
@@ -37,7 +37,7 @@ interface LibApi {
     @DELETE("api/library/{userBookId}")
     suspend fun deleteGroup(
         @Path("userBookId") userBookId: Int
-    ): Response<BaseResponse>
+    ): Response<ApiResponse<String>>
 
     // Cards
     @GET("api/cards/detail/{cardId}")
@@ -89,14 +89,14 @@ interface LibApi {
     @DELETE("api/cards/{cardId}")
     suspend fun deleteCard(
         @Path("cardId") cardId: Long
-    ): Response<BaseResponse>
+    ): Response<ApiResponse<String>>
 
     // Reviews
     @POST("api/reviews/together/{userBookId}")
     suspend fun postBookReview(
         @Path("userBookId") userBookId: Int,
         @Body request: ReviewRequest
-    ): Response<BaseResponse>
+    ): Response<ApiResponse<String>>
 
     @GET("/api/reviews/me/relay")
     suspend fun getRelayReviews(): Response<RelayReviewResponse>
@@ -105,13 +105,13 @@ interface LibApi {
     suspend fun postRelayReview(
         @Path("userBookId") userBookId: Int,
         @Body request: RelayReviewRequest
-    ): Response<BaseResponse>
+    ): Response<ApiResponse<String>>
 
     @POST("/api/reviews/relay/{userBookId}/book")
     suspend fun postRelayBookReview(
         @Path("userBookId") userBookId: Int,
         @Body request: RelayBookReviewRequest
-    ): Response<BaseResponse>
+    ): Response<ApiResponse<String>>
 
     // 트래커 / 완독 (라이브러리에서 사용)
     @GET("/api/groups/me/trackers")
