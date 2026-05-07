@@ -6,8 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.MypageResult
-import com.bookiibookii.bookiibookii.data.model.UserUpdateRequest
+import com.bookiibookii.bookiibookii.data.model.mypage.MypageResult
+import com.bookiibookii.bookiibookii.data.model.mypage.UserUpdateRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow

@@ -20,8 +20,8 @@ import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.CreateCardRequest
-import com.bookiibookii.bookiibookii.data.model.UpdateCardRequest
+import com.bookiibookii.bookiibookii.data.model.library.CreateCardRequest
+import com.bookiibookii.bookiibookii.data.model.library.UpdateCardRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibAddCardBinding
 import com.bookiibookii.bookiibookii.trkHost.HostPhotoSelectionDialogFragment
 import kotlinx.coroutines.Dispatchers

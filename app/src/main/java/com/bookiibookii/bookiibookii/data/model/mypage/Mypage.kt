@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.data.model
+package com.bookiibookii.bookiibookii.data.model.mypage
 
 import com.google.gson.annotations.SerializedName
 
@@ -63,4 +63,29 @@ data class MypageBook(
 data class UserBadge(
     val userBadge : String,
     val count : Int
+)
+
+data class Review(
+    val content: String,
+    val count: Int
+)
+
+// 프로필 수정 요청
+data class UserUpdateRequest(
+    val nickname: String,
+    val receiverName: String,
+    val phone: String,
+    val zipCode: String,
+    val address: String,
+    val addressDetail: String,
+    val meetPlace: String,
+    val region: String,
+    val s3Key : String,
+)
+
+data class UserUpdateResponse(
+    val isSuccess: Boolean,
+    val code: String,
+    val message: String,
+    val result: String?
 )

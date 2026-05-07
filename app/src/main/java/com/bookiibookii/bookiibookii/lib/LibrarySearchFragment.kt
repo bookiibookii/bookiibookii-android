@@ -20,9 +20,9 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.bookData.viewModel.MyPageViewModel
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.CardItem
-import com.bookiibookii.bookiibookii.data.model.LibBook
-import com.bookiibookii.bookiibookii.data.model.ReadStatus
+import com.bookiibookii.bookiibookii.data.model.library.CardItem
+import com.bookiibookii.bookiibookii.data.model.library.LibBook
+import com.bookiibookii.bookiibookii.data.model.library.ReadStatus
 import com.bookiibookii.bookiibookii.data.viewModel.LibraryCardViewModel
 import com.bookiibookii.bookiibookii.databinding.FragmentLibSearchBinding
 import com.bookiibookii.bookiibookii.databinding.ItemLibSearchLatelyBinding

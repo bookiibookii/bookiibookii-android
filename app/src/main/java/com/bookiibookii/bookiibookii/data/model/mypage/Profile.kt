@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.data.model
+package com.bookiibookii.bookiibookii.data.model.mypage
 
 data class ProfileResponse(
     val isSuccess: Boolean,

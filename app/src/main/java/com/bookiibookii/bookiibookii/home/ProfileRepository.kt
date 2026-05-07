@@ -2,7 +2,7 @@ package com.bookiibookii.bookiibookii.home
 
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.OtherProfileApiResult
-import com.bookiibookii.bookiibookii.data.model.ProfileResult
+import com.bookiibookii.bookiibookii.data.model.mypage.ProfileResult
 
 class ProfileRepository {
 

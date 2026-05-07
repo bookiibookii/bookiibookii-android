@@ -30,7 +30,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.LoginRequest
-import com.bookiibookii.bookiibookii.data.model.MypageResult
+import com.bookiibookii.bookiibookii.data.model.mypage.MypageResult
 import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroAnimActivity
 import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption

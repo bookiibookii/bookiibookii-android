@@ -9,7 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 임포트
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.InquiryRequest
+import com.bookiibookii.bookiibookii.data.model.mypage.InquiryRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentMypQuestionWriteBinding
 import kotlinx.coroutines.launch
 

@@ -8,7 +8,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.MypageGroup
+import com.bookiibookii.bookiibookii.data.model.mypage.MypageGroup
 import com.bookiibookii.bookiibookii.databinding.ItemMypGroupsBinding
 import com.google.android.flexbox.FlexboxLayout // ★ 추가 임포트
 

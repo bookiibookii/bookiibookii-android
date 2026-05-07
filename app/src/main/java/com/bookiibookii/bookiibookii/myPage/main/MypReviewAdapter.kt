@@ -8,14 +8,14 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.MypReview
+import com.bookiibookii.bookiibookii.data.model.mypage.Review
 import com.bookiibookii.bookiibookii.databinding.ItemMypReviewTagBinding
 
-class MypReviewAdapter(private val items: List<MypReview>) :
+class MypReviewAdapter(private val items: List<Review>) :
     RecyclerView.Adapter<MypReviewAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: ItemMypReviewTagBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: MypReview) {
+        fun bind(item: Review) {
             val countStr = item.count.toString()
             val fullText = "${item.content} $countStr" // 공백 명시적 추가
             val spannable = SpannableString(fullText)

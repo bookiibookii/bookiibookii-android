@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.common.DateUtils
-import com.bookiibookii.bookiibookii.data.model.NoticeSummary
+import com.bookiibookii.bookiibookii.data.model.mypage.NoticeSummary
 import com.bookiibookii.bookiibookii.databinding.ItemMypNoticeBinding
 
 class MypNoticeAdapter(
