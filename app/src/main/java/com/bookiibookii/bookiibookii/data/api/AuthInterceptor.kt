@@ -2,30 +2,36 @@ package com.bookiibookii.bookiibookii.data.api
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.util.Log
-import androidx.core.content.edit
 import com.bookiibookii.bookiibookii.common.ComErrorActivity
 import com.bookiibookii.bookiibookii.data.model.auth.TokenRefreshRequest
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
+import org.json.JSONObject
 import java.io.IOException
-import java.io.InterruptedIOException
-import java.net.SocketException
 import java.net.SocketTimeoutException
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 class AuthInterceptor(private val context: Context) : Interceptor {
 
     private enum class RefreshOutcome { SUCCESS, INVALID_TOKEN, NETWORK_ERROR, SYSTEM_ERROR }
 
     companion object {
-        private val isRouting = AtomicBoolean(false)
+        private const val ROUTE_COOLDOWN_MS = 3_000L
+        private val lastRouteAt = AtomicLong(0L)
 
         fun unlockRouting() {
-            isRouting.set(false)
+            lastRouteAt.set(0L)
+        }
+
+        private fun tryClaimRoute(): Boolean {
+            val now = System.currentTimeMillis()
+            val last = lastRouteAt.get()
+            if (now - last < ROUTE_COOLDOWN_MS) return false
+            return lastRouteAt.compareAndSet(last, now)
         }
     }
 
@@ -44,9 +50,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         Log.d("AUTH_INT", "[ENTER] $originalMethod $originalUrl")
 
         val appContext = context.applicationContext
-        val prefs = appContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-
-        val accessToken = prefs.getString("access_token", null)
+        val accessToken = TokenManager.getAccessToken(appContext)
 
         val authedRequest = if (accessToken.isNullOrEmpty()) {
             originalRequest
@@ -59,18 +63,9 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         val response = try {
             chain.proceed(authedRequest)
         } catch (e: IOException) {
-            // ★ 수정된 핵심 로직: 코루틴 취소로 인한 Exception인지 판단합니다.
-            val isCanceled = e is InterruptedIOException ||
-                    e is SocketException ||
-                    e.message?.contains("Canceled", ignoreCase = true) == true ||
-                    e.message?.contains("Socket closed", ignoreCase = true) == true
-
-            if (isCanceled) {
-                // 사용자가 화면을 닫아서 발생한 정상적인 취소이므로 에러 화면을 띄우지 않고 조용히 throw 합니다.
-                Log.d("AUTH_INT", "[CANCELED] Request was canceled by user/lifecycle: ${e.message}")
+            if (chain.call().isCanceled()) {
                 throw e
             } else {
-                // 진짜 통신 에러일 경우에만 에러 화면을 띄웁니다.
                 routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
                 throw e
             }
@@ -92,17 +87,17 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         val code = response.code
 
         // 401이 아니면 그대로 반환 (+ 5xx면 ComError 라우팅)
-        // 단, 서버가 "인증 문제"를 400으로 줄 수 있으니 400은 예외 처리
+        // 단, 서버가 "인증 문제"를 400/404로 줄 수 있으니 예외 처리
         if (code != 401) {
-            if (code == 400) {
+            if (code == 400 || code == 404) {
                 val err = peekErrorBody(response)
-                Log.d("AUTH_INT", "[400_ERR] $err")
+                Log.d("AUTH_INT", "[${code}_ERR] $err")
 
-                if (isAuthFailure400(err)) {
+                if (isAuthFailure(err)) {
                     // 인증 토큰이 깨졌거나(형식 오류), AccessToken이 없다는 서버 판단이면 즉시 로그아웃
                     response.close()
                     routeLogout(appContext)
-                    throw IOException("Auth failed with 400")
+                    throw IOException("Auth failed with $code")
                 }
             }
 
@@ -130,7 +125,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             throw IOException("Unauthorized on refresh endpoint")
         }
 
-        val refreshToken = prefs.getString("refresh_token", null)
+        val refreshToken = TokenManager.getRefreshToken(appContext)
 
         if (refreshToken.isNullOrEmpty()) {
             response.close()
@@ -141,11 +136,11 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         // 401 원본 응답은 반드시 닫기
         response.close()
 
-        val outcome: RefreshOutcome = waitOrRefreshToken(prefs, refreshToken)
+        val outcome: RefreshOutcome = waitOrRefreshToken(appContext, refreshToken)
 
         return when (outcome) {
             RefreshOutcome.SUCCESS -> {
-                val newAccessToken = prefs.getString("access_token", null)
+                val newAccessToken = TokenManager.getAccessToken(appContext)
 
                 val retryRequest = if (newAccessToken.isNullOrEmpty()) {
                     originalRequest
@@ -160,12 +155,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                     Log.d("AUTH_INT", "[RETRY_RESP] code=${retryRes.code} ${retryRequest.method} ${retryRequest.url}")
                     retryRes
                 } catch (e: IOException) {
-                    // ★ 여기도 마찬가지로 취소 예외 처리 적용
-                    val isCanceled = e is InterruptedIOException ||
-                            e is SocketException ||
-                            e.message?.contains("Canceled", ignoreCase = true) == true ||
-                            e.message?.contains("Socket closed", ignoreCase = true) == true
-                    if (isCanceled) {
+                    if (chain.call().isCanceled()) {
                         throw e
                     } else {
                         routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
@@ -192,7 +182,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
     }
 
     private fun waitOrRefreshToken(
-        prefs: SharedPreferences,
+        context: Context,
         refreshToken: String
     ): RefreshOutcome {
 
@@ -215,7 +205,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             try {
                 Log.d("AUTH_INT", "[REFRESH] call refresh api (noAuth client)")
 
-                val currentAccessToken = prefs.getString("access_token", null)
+                val currentAccessToken = TokenManager.getAccessToken(context)
                 if (currentAccessToken.isNullOrEmpty()) {
                     Log.e("AUTH_INT", "[REFRESH] accessToken is null/empty -> INVALID_TOKEN")
                     return@runBlocking RefreshOutcome.INVALID_TOKEN
@@ -231,11 +221,12 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 
                     Log.d("TOKEN_REFRESH", "새 AccessToken 발급 성공")
 
-                    prefs.edit {
-                        putString("access_token", result.accessToken)
-                        putString("refresh_token", result.refreshToken)
-                        putInt("user_id", result.userId)
-                    }
+                    TokenManager.saveTokens(
+                        context,
+                        result.accessToken,
+                        result.refreshToken,
+                        result.userId
+                    )
                     return@runBlocking RefreshOutcome.SUCCESS
                 }
 
@@ -266,13 +257,12 @@ class AuthInterceptor(private val context: Context) : Interceptor {
     private fun routeLogout(context: Context) {
         Log.e("AUTH_ROUTE", "[LOGOUT] routeLogout called")
 
-        if (!isRouting.compareAndSet(false, true)) {
+        if (!tryClaimRoute()) {
             Log.w("AUTH_ROUTE", "[SKIP] already routing in progress")
             return
         }
 
-        val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        prefs.edit { clear() }
+        TokenManager.clear(context)
 
         val intent = Intent(context, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -286,7 +276,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
     private fun routeComError(context: Context, type: Int) {
         Log.e("AUTH_ROUTE", "[COM_ERROR] type=$type called")
 
-        if (!isRouting.compareAndSet(false, true)) return
+        if (!tryClaimRoute()) return
 
         val intent = ComErrorActivity.newIntent(context, type).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -305,14 +295,14 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         }
     }
 
-    private fun isAuthFailure400(errorBody: String): Boolean {
+    private fun isAuthFailure(errorBody: String): Boolean {
         if (errorBody.isBlank()) return false
 
-        return errorBody.contains("\"code\":\"AUTH", ignoreCase = true) ||
-                errorBody.contains("AUTH", ignoreCase = true) ||
-                errorBody.contains("AccessToken", ignoreCase = true) ||
-                errorBody.contains("access token", ignoreCase = true) ||
-                errorBody.contains("refresh", ignoreCase = true) && errorBody.contains("token", ignoreCase = true) ||
-                errorBody.contains("토큰", ignoreCase = true)
+        return try {
+            val code = JSONObject(errorBody).optString("code", "")
+            code.startsWith("AUTH")
+        } catch (_: Exception) {
+            false
+        }
     }
 }

@@ -8,8 +8,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    // main 도메인 주소
-//    private const val BASE_URL = "https://bookiibookii.gyeonseo.com/"
 
     // dev 도메인 주소
     private const val BASE_URL = "https://bookii.gyeonseo.com/"

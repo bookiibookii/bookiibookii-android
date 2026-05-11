@@ -120,4 +120,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
+
+    // EncryptedSharedPreferences (토큰 암호화 저장)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

@@ -20,15 +20,12 @@ import com.bookiibookii.bookiibookii.common.BaseDetailFragment
 import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.api.S3Uploader
 import com.bookiibookii.bookiibookii.data.model.library.CreateCardRequest
 import com.bookiibookii.bookiibookii.data.model.library.UpdateCardRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibAddCardBinding
 import com.bookiibookii.bookiibookii.trkHost.HostPhotoSelectionDialogFragment
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
 class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
@@ -198,33 +195,15 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
                 val s3Key = result.s3Key
                 val uploadUrl = result.presignedPutUrl
 
-                val mimeType = requireContext().contentResolver.getType(selectedPhotoUri!!) ?: "image/jpeg"
+                val uploadResult = S3Uploader.uploadImage(
+                    requireContext().contentResolver,
+                    selectedPhotoUri!!,
+                    uploadUrl
+                )
 
-                val tempFile = File(requireContext().cacheDir, "upload_temp_${System.currentTimeMillis()}.jpg")
-                val inputStream = requireContext().contentResolver.openInputStream(selectedPhotoUri!!)
-                val outputStream = java.io.FileOutputStream(tempFile)
-
-                inputStream?.copyTo(outputStream)
-                inputStream?.close()
-                outputStream.close()
-
-                val requestBody = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
-
-                val cleanClient = okhttp3.OkHttpClient()
-                val request = okhttp3.Request.Builder()
-                    .url(uploadUrl)
-                    .put(requestBody)
-                    .build()
-
-                val response = withContext(Dispatchers.IO) { cleanClient.newCall(request).execute() }
-
-                if (tempFile.exists()) tempFile.delete()
-
-                if (!response.isSuccessful) {
-                    activity?.runOnUiThread {
-                        requireContext().showCustomToast("이미지 서버 업로드 실패", false)
-                        binding.libAddBtn.isEnabled = true
-                    }
+                if (uploadResult.isFailure) {
+                    requireContext().showCustomToast("이미지 서버 업로드 실패", false)
+                    binding.libAddBtn.isEnabled = true
                     return@launch
                 }
 
