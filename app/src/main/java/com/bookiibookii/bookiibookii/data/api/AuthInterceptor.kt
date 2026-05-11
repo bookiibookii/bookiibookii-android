@@ -11,6 +11,7 @@ import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
+import org.json.JSONObject
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.net.SocketException
@@ -92,17 +93,17 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         val code = response.code
 
         // 401이 아니면 그대로 반환 (+ 5xx면 ComError 라우팅)
-        // 단, 서버가 "인증 문제"를 400으로 줄 수 있으니 400은 예외 처리
+        // 단, 서버가 "인증 문제"를 400/404로 줄 수 있으니 예외 처리
         if (code != 401) {
-            if (code == 400) {
+            if (code == 400 || code == 404) {
                 val err = peekErrorBody(response)
-                Log.d("AUTH_INT", "[400_ERR] $err")
+                Log.d("AUTH_INT", "[${code}_ERR] $err")
 
-                if (isAuthFailure400(err)) {
+                if (isAuthFailure(err)) {
                     // 인증 토큰이 깨졌거나(형식 오류), AccessToken이 없다는 서버 판단이면 즉시 로그아웃
                     response.close()
                     routeLogout(appContext)
-                    throw IOException("Auth failed with 400")
+                    throw IOException("Auth failed with $code")
                 }
             }
 
@@ -305,14 +306,14 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         }
     }
 
-    private fun isAuthFailure400(errorBody: String): Boolean {
+    private fun isAuthFailure(errorBody: String): Boolean {
         if (errorBody.isBlank()) return false
 
-        return errorBody.contains("\"code\":\"AUTH", ignoreCase = true) ||
-                errorBody.contains("AUTH", ignoreCase = true) ||
-                errorBody.contains("AccessToken", ignoreCase = true) ||
-                errorBody.contains("access token", ignoreCase = true) ||
-                errorBody.contains("refresh", ignoreCase = true) && errorBody.contains("token", ignoreCase = true) ||
-                errorBody.contains("토큰", ignoreCase = true)
+        return try {
+            val code = JSONObject(errorBody).optString("code", "")
+            code.startsWith("AUTH")
+        } catch (_: Exception) {
+            false
+        }
     }
 }
