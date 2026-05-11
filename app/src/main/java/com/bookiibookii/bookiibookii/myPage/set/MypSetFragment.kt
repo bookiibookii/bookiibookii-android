@@ -28,6 +28,7 @@ import com.bookiibookii.bookiibookii.myPage.notice.MypNoticeFragment
 import com.bookiibookii.bookiibookii.myPage.question.MypQuestionFragment
 import com.bookiibookii.bookiibookii.myPage.report.MypReportFragment
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import kotlinx.coroutines.launch
 
 class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
@@ -188,8 +189,7 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
 
     private fun clearLocalDataAndMoveToLogin() {
         val context = requireContext()
-        val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        TokenManager.clear(context)
 
         val intent = Intent(context, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -223,8 +223,7 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
     }
 
     private fun handleLogoutSuccess() {
-        val prefs = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        TokenManager.clear(requireContext())
 
         val intent = Intent(requireContext(), LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

@@ -1,22 +1,48 @@
 package com.bookiibookii.bookiibookii.onboarding.login
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Base64
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.auth.TokenRefreshRequest
 import org.json.JSONObject
 
 object TokenManager {
 
-    private const val PREF = "auth_prefs"
+    // 평문 "auth_prefs" → 암호화 저장
+    private const val PREF = "auth_prefs_enc"
     private const val KEY_ACCESS = "access_token"
     private const val KEY_REFRESH = "refresh_token"
     private const val KEY_USER_ID = "user_id"
     private const val KEY_ONBOARDING = "onboarding_done"
 
+    @Volatile private var encryptedPrefs: SharedPreferences? = null
+
+    private fun prefs(context: Context): SharedPreferences {
+        encryptedPrefs?.let { return it }
+        return synchronized(this) {
+            encryptedPrefs ?: run {
+                val appContext = context.applicationContext
+                val masterKey = MasterKey.Builder(appContext)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
+                val created = EncryptedSharedPreferences.create(
+                    appContext,
+                    PREF,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+                encryptedPrefs = created
+                created
+            }
+        }
+    }
+
     fun saveTokens(context: Context, access: String, refresh: String, userId: Int) {
-        val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        prefs.edit().apply {
+        prefs(context).edit().apply {
             putString(KEY_ACCESS, access)
             putString(KEY_REFRESH, refresh)
             putInt(KEY_USER_ID, userId)
@@ -25,8 +51,7 @@ object TokenManager {
     }
 
     fun saveOnboardingDone(context: Context, onboardingDone: Boolean) {
-        val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        prefs.edit().putBoolean(KEY_ONBOARDING, onboardingDone).apply()
+        prefs(context).edit().putBoolean(KEY_ONBOARDING, onboardingDone).apply()
     }
 
     fun hasAccessToken(context: Context): Boolean {
@@ -34,18 +59,15 @@ object TokenManager {
     }
 
     fun isOnboardingDone(context: Context): Boolean {
-        val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        return prefs.getBoolean(KEY_ONBOARDING, false)
+        return prefs(context).getBoolean(KEY_ONBOARDING, false)
     }
 
     fun getAccessToken(context: Context): String? {
-        val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_ACCESS, null)
+        return prefs(context).getString(KEY_ACCESS, null)
     }
 
     fun getRefreshToken(context: Context): String? {
-        val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_REFRESH, null)
+        return prefs(context).getString(KEY_REFRESH, null)
     }
 
     /**
@@ -102,7 +124,6 @@ object TokenManager {
     }
 
     fun clear(context: Context) {
-        val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        prefs(context).edit().clear().apply()
     }
 }
