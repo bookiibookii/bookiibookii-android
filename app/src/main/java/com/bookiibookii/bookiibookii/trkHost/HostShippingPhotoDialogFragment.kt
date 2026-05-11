@@ -50,7 +50,7 @@ class HostShippingPhotoDialogFragment : DialogFragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val body = RetrofitClient.api().getTrackerCheckShippingImage(groupId)
+                val body = RetrofitClient.trkApi().getTrackerCheckShippingImage(groupId)
 
                 if (!body.isSuccess || body.result == null) {
                     binding.tvEmpty.text = body.message ?: "이미지를 불러올 수 없어요."

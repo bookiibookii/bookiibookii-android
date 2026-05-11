@@ -44,7 +44,7 @@ class MypNoticeFragment : BaseDetailFragment<FragmentMypNoticeBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getNoticeList()
+                val response = RetrofitClient.mypApi().getNoticeList()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val noticeList = response.body()?.result
 

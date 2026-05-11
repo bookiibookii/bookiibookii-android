@@ -50,7 +50,7 @@ class MypQuestionWriteFragment : BaseDetailFragment<FragmentMypQuestionWriteBind
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val request = InquiryRequest(title, content)
-                val response = RetrofitClient.api().postInquiry(request)
+                val response = RetrofitClient.mypApi().postInquiry(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     requireContext().showCustomToast("문의가 접수되었습니다.", true)

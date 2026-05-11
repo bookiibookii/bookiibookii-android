@@ -16,7 +16,7 @@ import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.GroupItemDto
+import com.bookiibookii.bookiibookii.data.model.group.GroupAppStatusRequest
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpJoinManagementBinding
 import kotlinx.coroutines.launch
 
@@ -68,7 +68,7 @@ class GroupJoinManagementActivity : BaseActivity<ActivityGrpJoinManagementBindin
     private fun fetchGroupInfo() {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().getGroupDetail(currentGroupId.toInt())
+                val response = RetrofitClient.grpApi().getGroupDetail(currentGroupId.toInt())
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val groupData = response.body()?.result
                     if (groupData != null) {
@@ -85,7 +85,7 @@ class GroupJoinManagementActivity : BaseActivity<ActivityGrpJoinManagementBindin
     private fun fetchApplicationList() {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().getGroupApplications(currentGroupId)
+                val response = RetrofitClient.grpApi().getGroupApplications(currentGroupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
                     val serverList = result?.applicationList ?: emptyList()
@@ -128,8 +128,8 @@ class GroupJoinManagementActivity : BaseActivity<ActivityGrpJoinManagementBindin
     private fun processApplication(applicationId: Int, status: String, nickname: String) {
         lifecycleScope.launch {
             try {
-                val requestBody = GroupItemDto.GroupAppStatusRequest(status)
-                val response = RetrofitClient.api().updateApplicationStatus(applicationId.toLong(), requestBody)
+                val requestBody = GroupAppStatusRequest(status)
+                val response = RetrofitClient.grpApi().updateApplicationStatus(applicationId.toLong(), requestBody)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val msg = if (status == "ACCEPTED") "$nickname 님이 게스트가 되었습니다." else "$nickname 님의 요청을 거절했습니다."

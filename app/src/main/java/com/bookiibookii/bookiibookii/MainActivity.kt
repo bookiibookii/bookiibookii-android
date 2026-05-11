@@ -133,7 +133,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().getLibraryBooks()
+                val response = RetrofitClient.libApi().getLibraryBooks()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = response.body()?.result ?: emptyList()
@@ -177,7 +177,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().getLibraryBooks()
+                val response = RetrofitClient.libApi().getLibraryBooks()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = response.body()?.result ?: emptyList()
@@ -230,7 +230,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().getLibraryBooks()
+                val response = RetrofitClient.libApi().getLibraryBooks()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = response.body()?.result ?: emptyList()

@@ -42,7 +42,7 @@ class GuestTradeFinishBottomDialogFragment : BottomSheetDialogFragment() {
         lifecycleScope.launch {
             try {
                 // 1. 내 라이브러리 목록 조회 API 호출
-                val response = RetrofitClient.api().getLibraryBooks()
+                val response = RetrofitClient.libApi().getLibraryBooks()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = response.body()?.result ?: emptyList()

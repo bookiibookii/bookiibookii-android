@@ -173,7 +173,7 @@ class MypageFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getMypage()
+                val response = RetrofitClient.mypApi().getMypage()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()!!.result
                     if (result != null) {

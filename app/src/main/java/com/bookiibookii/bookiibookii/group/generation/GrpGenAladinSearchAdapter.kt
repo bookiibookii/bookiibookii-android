@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.BookItem
+import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.databinding.ItemSearchBookListBinding
 import com.bumptech.glide.Glide
 

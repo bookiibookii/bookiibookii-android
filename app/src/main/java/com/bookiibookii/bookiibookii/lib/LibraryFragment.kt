@@ -89,7 +89,7 @@ class LibraryFragment : Fragment() {
             loadingDialog.show()
             binding.libBookListRv.visibility = View.INVISIBLE
             try {
-                val response = RetrofitClient.api().getLibraryBooks()
+                val response = RetrofitClient.libApi().getLibraryBooks()
                 Log.d("LibraryAPI", "${response.body()}")
 
                 val myNickname = myPageViewModel.profileData.value?.nickname ?: ""

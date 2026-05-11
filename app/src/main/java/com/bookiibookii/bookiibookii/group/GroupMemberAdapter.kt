@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.GroupItemDto.ParticipantSlot
+import com.bookiibookii.bookiibookii.data.model.group.ParticipantSlot
 import com.bookiibookii.bookiibookii.databinding.ItemGrpMemberBinding // XML 파일명 확인 필요
 import com.bumptech.glide.Glide
 

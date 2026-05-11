@@ -64,7 +64,7 @@ class NotificationKeywordSettingActivity : BaseActivity<ActivityNotificationKeyw
     private var hasShownLengthToast = false
 
     private val viewModel: KeywordViewModel by viewModels {
-        val api = RetrofitClient.api()
+        val api = RetrofitClient.kwdApi()
         val repo = KeywordRepository(api)
         KeywordViewModelFactory(repo)
     }

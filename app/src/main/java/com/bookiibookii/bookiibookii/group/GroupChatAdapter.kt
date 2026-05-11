@@ -14,7 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.GroupItemDto.CommentItem
+import com.bookiibookii.bookiibookii.data.model.group.CommentItem
 import com.bookiibookii.bookiibookii.databinding.ItemGrpChatCardBinding
 import com.bookiibookii.bookiibookii.databinding.ItemGrpChatDeletePopupBinding
 import com.bumptech.glide.Glide

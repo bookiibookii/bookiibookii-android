@@ -171,7 +171,7 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
     private fun performWithdraw() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().withdraw()
+                val response = RetrofitClient.authApi().withdraw()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     Log.d("Setting", "회원 탈퇴 성공")
                     clearLocalDataAndMoveToLogin()
@@ -207,7 +207,7 @@ class MypSetFragment : BaseDetailFragment<FragmentMypSetBinding>() {
     private fun performLogout() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().logout()
+                val response = RetrofitClient.authApi().logout()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     handleLogoutSuccess()
                 } else {

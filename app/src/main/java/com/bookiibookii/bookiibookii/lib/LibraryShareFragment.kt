@@ -83,7 +83,7 @@ class LibraryShareFragment : DialogFragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().getCardDetail(cardId)
+                val response = RetrofitClient.libApi().getCardDetail(cardId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
                     if (result != null) {

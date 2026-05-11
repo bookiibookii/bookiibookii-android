@@ -1,7 +1,6 @@
 package com.bookiibookii.bookiibookii.data.api
 
 import android.content.Context
-import com.bookiibookii.bookiibookii.data.api.TrkApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -15,15 +14,16 @@ object RetrofitClient {
     // dev 도메인 주소
     private const val BASE_URL = "https://bookii.gyeonseo.com/"
 
-    @Volatile private var apiService: ApiService? = null
-    @Volatile private var apiServiceNoAuth: ApiService? = null
-    @Volatile private var trkService: TrkApi? = null
+    private lateinit var authedRetrofit: Retrofit
+    private lateinit var noAuthRetrofit: Retrofit
+
+    @Volatile private var initialized = false
 
     fun init(context: Context) {
-        if (apiService != null && apiServiceNoAuth != null && trkService != null) return
+        if (initialized) return
 
         synchronized(this) {
-            if (apiService != null && apiServiceNoAuth != null && trkService != null) return
+            if (initialized) return
 
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
@@ -36,14 +36,11 @@ object RetrofitClient {
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build()
 
-            val retrofit = Retrofit.Builder()
+            authedRetrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .client(authedClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
-
-            apiService = retrofit.create(ApiService::class.java)
-            trkService = retrofit.create(TrkApi::class.java)
 
             val noAuthClient = OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
@@ -51,22 +48,50 @@ object RetrofitClient {
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build()
 
-            val retrofitNoAuth = Retrofit.Builder()
+            noAuthRetrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .client(noAuthClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
 
-            apiServiceNoAuth = retrofitNoAuth.create(ApiService::class.java)
+            authApi = authedRetrofit.create(AuthApi::class.java)
+            authApiNoAuth = noAuthRetrofit.create(AuthApi::class.java)
+            grpApi = authedRetrofit.create(GrpApi::class.java)
+            trkApi = authedRetrofit.create(TrkApi::class.java)
+            mypApi = authedRetrofit.create(MypApi::class.java)
+            libApi = authedRetrofit.create(LibApi::class.java)
+            notiApi = authedRetrofit.create(NotiApi::class.java)
+            userApi = authedRetrofit.create(UserApi::class.java)
+            recmApi = authedRetrofit.create(RecmApi::class.java)
+            kwdApi = authedRetrofit.create(KwdApi::class.java)
+
+            initialized = true
         }
     }
 
-    fun api(): ApiService =
-        apiService ?: error("RetrofitClient.init(context) 먼저 호출해야 함")
+    private fun check() {
+        if (!initialized) error("RetrofitClient.init(context) 먼저 호출해야 함")
+    }
 
-    fun apiNoAuth(): ApiService =
-        apiServiceNoAuth ?: error("RetrofitClient.init(context) 먼저 호출해야 함")
+    private lateinit var authApi: AuthApi
+    private lateinit var authApiNoAuth: AuthApi
+    private lateinit var grpApi: GrpApi
+    private lateinit var trkApi: TrkApi
+    private lateinit var mypApi: MypApi
+    private lateinit var libApi: LibApi
+    private lateinit var notiApi: NotiApi
+    private lateinit var userApi: UserApi
+    private lateinit var recmApi: RecmApi
+    private lateinit var kwdApi: KwdApi
 
-    fun trkApi(): TrkApi =
-        trkService ?: error("RetrofitClient.init(context) 먼저 호출해야 함")
+    fun authApi(): AuthApi { check(); return authApi }
+    fun authApiNoAuth(): AuthApi { check(); return authApiNoAuth }
+    fun grpApi(): GrpApi { check(); return grpApi }
+    fun trkApi(): TrkApi { check(); return trkApi }
+    fun mypApi(): MypApi { check(); return mypApi }
+    fun libApi(): LibApi { check(); return libApi }
+    fun notiApi(): NotiApi { check(); return notiApi }
+    fun userApi(): UserApi { check(); return userApi }
+    fun recmApi(): RecmApi { check(); return recmApi }
+    fun kwdApi(): KwdApi { check(); return kwdApi }
 }

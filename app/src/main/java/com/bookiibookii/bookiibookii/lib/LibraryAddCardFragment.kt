@@ -169,7 +169,7 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
             try {
                 if (isEditMode) {
                     val request = UpdateCardRequest(pageInput, memoInput, null)
-                    val response = RetrofitClient.api().updateCard(cardId, request)
+                    val response = RetrofitClient.libApi().updateCard(cardId, request)
 
                     if (response.isSuccessful && response.body()?.isSuccess == true) {
                         requireContext().showCustomToast("카드가 수정되었습니다.", true)
@@ -187,7 +187,7 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
                     return@launch
                 }
 
-                val presignedRes = RetrofitClient.api().postPresignedUrl(userBookId)
+                val presignedRes = RetrofitClient.libApi().postPresignedUrl(userBookId)
                 if (!presignedRes.isSuccessful || presignedRes.body()?.isSuccess != true) {
                     requireContext().showCustomToast("이미지 업로드 주소 발급 실패", false)
                     binding.libAddBtn.isEnabled = true
@@ -229,7 +229,7 @@ class LibraryAddCardFragment : BaseDetailFragment<FragmentLibAddCardBinding>() {
                 }
 
                 val createRequest = CreateCardRequest(s3Key, pageInput, memoInput)
-                val createRes = RetrofitClient.api().createCard(userBookId, createRequest)
+                val createRes = RetrofitClient.libApi().createCard(userBookId, createRequest)
 
                 if (createRes.isSuccessful && createRes.body()?.isSuccess == true) {
                     requireContext().showCustomToast("카드가 등록되었습니다.", true)

@@ -35,7 +35,7 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) 
     }
 
     private val viewModel: NotificationViewModel by viewModels {
-        val api = RetrofitClient.api()
+        val api = RetrofitClient.notiApi()
         val repo = NotificationRepository(api)
         NotificationViewModelFactory(repo, NotificationCategory.KEYWORD.name)
     }

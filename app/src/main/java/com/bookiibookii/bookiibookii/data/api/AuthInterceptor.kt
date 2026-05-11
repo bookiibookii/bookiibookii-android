@@ -221,7 +221,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                     return@runBlocking RefreshOutcome.INVALID_TOKEN
                 }
 
-                val refreshRes = RetrofitClient.apiNoAuth().postRefresh(
+                val refreshRes = RetrofitClient.authApiNoAuth().postRefresh(
                     authorization = "Bearer $currentAccessToken",
                     request = TokenRefreshRequest(refreshToken)
                 )

@@ -21,7 +21,7 @@ import com.bookiibookii.bookiibookii.common.LoadingDialog
 import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.common.showCustomToast // ★ 커스텀 토스트 import
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.GroupItemDto
+import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
 import com.bookiibookii.bookiibookii.data.model.library.RelayReviewRequest
 import com.bookiibookii.bookiibookii.databinding.FragmentLibBookDetailRelayWriteBinding
 import com.bumptech.glide.Glide
@@ -92,7 +92,7 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDe
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getGroupDetail(groupId)
+                val response = RetrofitClient.grpApi().getGroupDetail(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     updateUI(response.body()!!.result)
                 }
@@ -101,7 +101,7 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDe
         }
     }
 
-    private fun updateUI(data: GroupItemDto.GroupDetailResult) {
+    private fun updateUI(data: GroupDetailResponse) {
         Glide.with(this).load(data.bookImage)
             .transform(CenterCrop(), RoundedCorners(dpToPx(10)))
             .placeholder(R.drawable.bg_round_20dp_gray200).into(binding.libDetailImageIv)
@@ -241,7 +241,7 @@ class LibraryBookDetailRelayWriteFragment : BaseDetailFragment<FragmentLibBookDe
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().postRelayReview(userBookId, request)
+                val response = RetrofitClient.libApi().postRelayReview(userBookId, request)
 
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
                 if (!isAdded || activity == null) return@launch

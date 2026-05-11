@@ -226,7 +226,7 @@ class LoginActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val request = LoginRequest(socialType = socialType, token = token)
-                val response = RetrofitClient.api().postLogin(request)
+                val response = RetrofitClient.authApiNoAuth().postLogin(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result

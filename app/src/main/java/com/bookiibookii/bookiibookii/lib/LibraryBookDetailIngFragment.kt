@@ -136,7 +136,7 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
     }
 
     private suspend fun fetchProgress() {
-        val response = RetrofitClient.api().getMyTrackers()
+        val response = RetrofitClient.libApi().getMyTrackers()
         if (response.isSuccessful && response.body()?.isSuccess == true) {
             val trackerList = response.body()?.result ?: emptyList()
             val myTracker = trackerList.find { it.groupId == this@LibraryBookDetailIngFragment.groupId }
@@ -211,7 +211,7 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
     private fun toggleBookmark(card: CardItem) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().toggleBookmark(card.cardId.toLong())
+                val response = RetrofitClient.libApi().toggleBookmark(card.cardId.toLong())
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val isBookmarked = response.body()?.result?.bookmarked ?: false
                     val newList = originalList.toMutableList()
@@ -308,7 +308,7 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
             if (!isAdded) return@launch
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().completeReading(groupId)
+                val response = RetrofitClient.libApi().completeReading(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     requireContext().showCustomToast("완독 처리가 완료되었습니다.", true) // ★ 커스텀 토스트
                     binding.libWriteDoneBtn.visibility = View.GONE
@@ -345,7 +345,7 @@ class LibraryBookDetailIngFragment : BaseDetailFragment<FragmentLibBookDetailIng
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().deleteGroup(userBookId)
+                val response = RetrofitClient.libApi().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     requireContext().showCustomToast("그룹이 삭제되었습니다.", true) // ★ 커스텀 토스트
                     requireActivity().supportFragmentManager.popBackStack()

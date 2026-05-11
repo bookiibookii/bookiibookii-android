@@ -226,7 +226,7 @@ class LibraryBookDetailFragment : BaseDetailFragment<FragmentLibBookDetailBindin
     private fun toggleBookmark(card: CardItem) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().toggleBookmark(card.cardId.toLong())
+                val response = RetrofitClient.libApi().toggleBookmark(card.cardId.toLong())
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val isBookmarked = response.body()?.result?.bookmarked ?: false
                     val newList = originalList.toMutableList()
@@ -288,7 +288,7 @@ class LibraryBookDetailFragment : BaseDetailFragment<FragmentLibBookDetailBindin
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().deleteGroup(userBookId)
+                val response = RetrofitClient.libApi().deleteGroup(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     requireContext().showCustomToast("그룹이 삭제되었습니다.", true)
                     requireActivity().supportFragmentManager.popBackStack()

@@ -35,7 +35,7 @@ class GrpSearchViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 // .api() 인지 .api 인지 RetrofitClient 설정에 따라 맞춰주세요
-                val response = RetrofitClient.api().getPopularKeywords()
+                val response = RetrofitClient.grpApi().getPopularKeywords()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val rawResult = response.body()?.result ?: emptyList()
@@ -73,7 +73,7 @@ class GrpSearchViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 // API 호출
-                val response = RetrofitClient.api().searchGroups(
+                val response = RetrofitClient.grpApi().searchGroups(
                     keyword = query,
                     sort = sortType
                 )

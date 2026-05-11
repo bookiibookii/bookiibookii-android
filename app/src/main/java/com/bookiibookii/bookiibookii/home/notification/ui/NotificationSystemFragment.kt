@@ -39,7 +39,7 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
     }
 
     private val viewModel: NotificationViewModel by viewModels {
-        val api = RetrofitClient.api()
+        val api = RetrofitClient.notiApi()
         val repo = NotificationRepository(api)
         NotificationViewModelFactory(
             repo,

@@ -6,7 +6,7 @@ import com.bookiibookii.bookiibookii.data.model.user.OtherProfileResult
 
 class ProfileRepository {
 
-    private val api = RetrofitClient.api()
+    private val api = RetrofitClient.userApi()
 
     suspend fun getUserProfile(nickname: String): ProfileResult? {
         val response = api.getUserProfile(nickname)
