@@ -16,17 +16,25 @@ import java.io.IOException
 import java.io.InterruptedIOException
 import java.net.SocketException
 import java.net.SocketTimeoutException
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 class AuthInterceptor(private val context: Context) : Interceptor {
 
     private enum class RefreshOutcome { SUCCESS, INVALID_TOKEN, NETWORK_ERROR, SYSTEM_ERROR }
 
     companion object {
-        private val isRouting = AtomicBoolean(false)
+        private const val ROUTE_COOLDOWN_MS = 3_000L
+        private val lastRouteAt = AtomicLong(0L)
 
         fun unlockRouting() {
-            isRouting.set(false)
+            lastRouteAt.set(0L)
+        }
+
+        private fun tryClaimRoute(): Boolean {
+            val now = System.currentTimeMillis()
+            val last = lastRouteAt.get()
+            if (now - last < ROUTE_COOLDOWN_MS) return false
+            return lastRouteAt.compareAndSet(last, now)
         }
     }
 
@@ -267,7 +275,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
     private fun routeLogout(context: Context) {
         Log.e("AUTH_ROUTE", "[LOGOUT] routeLogout called")
 
-        if (!isRouting.compareAndSet(false, true)) {
+        if (!tryClaimRoute()) {
             Log.w("AUTH_ROUTE", "[SKIP] already routing in progress")
             return
         }
@@ -287,7 +295,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
     private fun routeComError(context: Context, type: Int) {
         Log.e("AUTH_ROUTE", "[COM_ERROR] type=$type called")
 
-        if (!isRouting.compareAndSet(false, true)) return
+        if (!tryClaimRoute()) return
 
         val intent = ComErrorActivity.newIntent(context, type).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
