@@ -44,7 +44,7 @@ class MyPageViewModel : ViewModel() {
     fun fetchMypageData() {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.api().getMypage()
+                val response = RetrofitClient.mypApi().getMypage()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     response.body()!!.result?.let {
                         _profileData.value = it
@@ -63,7 +63,7 @@ class MyPageViewModel : ViewModel() {
     fun checkNickname(nickname: String) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.api().postNicknameValidation(nickname)
+                val response = RetrofitClient.userApi().postNicknameValidation(nickname)
                 val serverMsg = response.body()?.message ?: "확인 불가"
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -97,7 +97,7 @@ class MyPageViewModel : ViewModel() {
                 var finalRequest = request
 
                 if (imageFile != null) {
-                    val presignedRes = RetrofitClient.api().postPresignedUrl()
+                    val presignedRes = RetrofitClient.userApi().postPresignedUrl()
 
                     if (presignedRes.isSuccessful && presignedRes.body()?.isSuccess == true) {
                         val result = presignedRes.body()?.result
@@ -132,7 +132,7 @@ class MyPageViewModel : ViewModel() {
                     }
                 }
 
-                val updateRes = RetrofitClient.api().updateProfile(finalRequest)
+                val updateRes = RetrofitClient.mypApi().updateProfile(finalRequest)
 
                 if (updateRes.isSuccessful && updateRes.body()?.isSuccess == true) {
                     _eventFlow.emit(Event.ShowToast("프로필이 성공적으로 수정되었습니다.", true))

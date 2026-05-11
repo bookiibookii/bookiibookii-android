@@ -49,7 +49,7 @@ class MypQuestionFragment : BaseDetailFragment<FragmentMypQuestionBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getInquiryList()
+                val response = RetrofitClient.mypApi().getInquiryList()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = response.body()!!.result

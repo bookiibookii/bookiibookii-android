@@ -145,7 +145,7 @@ class LibraryWriteReviewFragment : BaseDetailFragment<FragmentLibBookDetailWrtie
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val request = ReviewRequest(rating, comment)
-                val response = RetrofitClient.api().postBookReview(userBookId, request)
+                val response = RetrofitClient.libApi().postBookReview(userBookId, request)
 
                 if (loadingDialog.isShowing) loadingDialog.dismiss()
                 if (!isAdded || activity == null) return@launch

@@ -103,7 +103,7 @@ class LibraryBookmarkFragment : BaseDetailFragment<FragmentLibBookmarkBinding>()
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getBookmarkedCards()
+                val response = RetrofitClient.libApi().getBookmarkedCards()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val apiList = response.body()?.result ?: emptyList()
                     originalList = apiList

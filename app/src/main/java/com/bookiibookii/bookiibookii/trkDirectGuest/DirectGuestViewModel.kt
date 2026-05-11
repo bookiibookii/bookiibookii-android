@@ -47,7 +47,7 @@ class DirectGuestViewModel : ViewModel() {
         viewModelScope.launch {
             _trackerState.value = UiState.Loading
             try {
-                val res = RetrofitClient.api().getTrackerDetail(groupId)
+                val res = RetrofitClient.trkApi().getTrackerDetail(groupId)
 
                 if (res.isSuccess && res.result != null) {
                     _trackerState.value = UiState.Success(res.result)
@@ -66,7 +66,7 @@ class DirectGuestViewModel : ViewModel() {
         viewModelScope.launch {
             _meetingState.value = UiState.Loading
             try {
-                val res = RetrofitClient.api().getTrackerMeeting(groupId)
+                val res = RetrofitClient.trkApi().getTrackerMeeting(groupId)
                 if (res.isSuccess && res.result != null) {
                     _meetingState.value = UiState.Success(res.result)
                 } else {
@@ -81,7 +81,7 @@ class DirectGuestViewModel : ViewModel() {
     fun startReading(groupId: Long) {
         viewModelScope.launch {
             try {
-                val res = RetrofitClient.api().patchTrackerReadingStart(groupId)
+                val res = RetrofitClient.trkApi().patchTrackerReadingStart(groupId)
                 if (res.isSuccess) {
                     _event.send(DirectGuestEvent.ReadingStartSuccess)
                 } else {
@@ -100,7 +100,7 @@ class DirectGuestViewModel : ViewModel() {
     fun doneTracker(groupId: Long) {
         viewModelScope.launch {
             try {
-                val res = RetrofitClient.api().patchTrackerDone(groupId)
+                val res = RetrofitClient.trkApi().patchTrackerDone(groupId)
                 if (res.isSuccess) {
                     _event.send(DirectGuestEvent.DoneSuccess)
                 } else {
@@ -115,7 +115,7 @@ class DirectGuestViewModel : ViewModel() {
     fun extendPeriod(groupId: Long, days: Int) {
         viewModelScope.launch {
             try {
-                val res = RetrofitClient.api().patchTrackerExtension(groupId, days)
+                val res = RetrofitClient.trkApi().patchTrackerExtension(groupId, days)
                 if (res.isSuccess) {
                     _extensionApplied.value = true
                     _event.send(DirectGuestEvent.ExtensionSuccess)
@@ -131,7 +131,7 @@ class DirectGuestViewModel : ViewModel() {
     fun makeMeeting(groupId: Long, date: String, place: String) {
         viewModelScope.launch {
             try {
-                val res = RetrofitClient.api().makeMeeting(
+                val res = RetrofitClient.trkApi().makeMeeting(
                     groupId = groupId,
                     request = TrackerMeetingRequest(
                         meetingTime = date,
@@ -153,7 +153,7 @@ class DirectGuestViewModel : ViewModel() {
     fun completeMeeting(groupId: Long) {
         viewModelScope.launch {
             try {
-                val res = RetrofitClient.api().patchMeetingComplete(groupId)
+                val res = RetrofitClient.trkApi().patchMeetingComplete(groupId)
 
                 if (res.isSuccessful) {
                     _event.send(DirectGuestEvent.ExchangeCompleteSuccess)

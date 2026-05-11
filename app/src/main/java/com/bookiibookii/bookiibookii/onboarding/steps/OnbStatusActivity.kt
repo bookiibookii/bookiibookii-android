@@ -141,7 +141,7 @@ class OnbStatusActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             runCatching {
-                RetrofitClient.api().postOnboarding(req)
+                RetrofitClient.userApi().postOnboarding(req)
             }.onSuccess { res ->
                 val body = res.body()
 

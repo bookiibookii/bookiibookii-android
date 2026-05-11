@@ -50,7 +50,7 @@ class MypMyReviewFragment : BaseDetailFragment<FragmentMypMyReviewsBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getRelayReviews()
+                val response = RetrofitClient.libApi().getRelayReviews()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result

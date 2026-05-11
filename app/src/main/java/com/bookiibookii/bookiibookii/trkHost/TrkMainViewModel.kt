@@ -45,7 +45,7 @@ class TrkMainViewModel : ViewModel() {
     private fun loadHostTrackers() {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.api().getHostTrackers()
+                val response = RetrofitClient.trkApi().getHostTrackers()
                 if (!response.isSuccessful) {
                     android.util.Log.e("TRACKER", "HOST HTTP ${response.code()} ${response.message()}")
                     return@launch
@@ -65,7 +65,7 @@ class TrkMainViewModel : ViewModel() {
     private fun loadGuestTrackers() {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.api().getGuestTrackers()
+                val response = RetrofitClient.trkApi().getGuestTrackers()
                 if (!response.isSuccessful) {
                     android.util.Log.e("TRACKER", "GUEST HTTP ${response.code()} ${response.message()}")
                     return@launch

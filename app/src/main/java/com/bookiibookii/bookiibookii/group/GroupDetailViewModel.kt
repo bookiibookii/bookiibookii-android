@@ -6,15 +6,17 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.GroupItemDto
+import com.bookiibookii.bookiibookii.data.model.group.CommentCreateRequest
+import com.bookiibookii.bookiibookii.data.model.group.CommentItem
+import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class GroupDetailViewModel : ViewModel() {
 
     // [1] 그룹 상세 데이터
-    private val _groupDetail = MutableLiveData<GroupItemDto.GroupDetailResult?>()
-    val groupDetail: LiveData<GroupItemDto.GroupDetailResult?> get() = _groupDetail
+    private val _groupDetail = MutableLiveData<GroupDetailResponse?>()
+    val groupDetail: LiveData<GroupDetailResponse?> get() = _groupDetail
 
     // [2] 댓글 작성 성공 여부
     private val _commentWriteSuccess = MutableLiveData<Boolean>()
@@ -32,7 +34,7 @@ class GroupDetailViewModel : ViewModel() {
     fun fetchGroupDetail(groupId: Int) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.api().getGroupDetail(groupId)
+                val response = RetrofitClient.grpApi().getGroupDetail(groupId)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _groupDetail.value = response.body()!!.result
@@ -52,12 +54,12 @@ class GroupDetailViewModel : ViewModel() {
             try {
                 // parentId가 있으면 답글 요청, 없으면 일반 댓글 요청
                 // (서버 API 스펙에 따라 Request 객체 생성 부분이 달라질 수 있음)
-                val request = GroupItemDto.CommentCreateRequest(
+                val request = CommentCreateRequest(
                     content = content,
                     parentId = parentId, // ★ 서버로 이 값을 보내야 함
                     secret = secret
                 )
-                val response = RetrofitClient.api().postComment(groupId, request)
+                val response = RetrofitClient.grpApi().postComment(groupId, request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _commentWriteSuccess.value = true
@@ -70,14 +72,14 @@ class GroupDetailViewModel : ViewModel() {
         }
     }
 
-    private val _commentList = MutableLiveData<List<GroupItemDto.CommentItem>?>()
-    val commentList: LiveData<List<GroupItemDto.CommentItem>?> get() = _commentList
+    private val _commentList = MutableLiveData<List<CommentItem>?>()
+    val commentList: LiveData<List<CommentItem>?> get() = _commentList
 
     // --- 댓글 목록 조회 ---
     fun fetchComments(groupId: Long) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.api().getComments(groupId)
+                val response = RetrofitClient.grpApi().getComments(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     // 성공 시 데이터 저장
                     _commentList.value = response.body()!!.result
@@ -96,7 +98,7 @@ class GroupDetailViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 // 1. API 호출
-                val response = RetrofitClient.api().deleteComment(groupId, commentId)
+                val response = RetrofitClient.grpApi().deleteComment(groupId, commentId)
 
                 // 2. HTTP 통신 성공 여부 확인 (200 OK 등)
                 if (response.isSuccessful) {

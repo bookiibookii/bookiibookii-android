@@ -25,9 +25,9 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.GroupCreateRequest
-import com.bookiibookii.bookiibookii.data.model.GroupItemDto
-import com.bookiibookii.bookiibookii.data.model.GroupTagRequest
+import com.bookiibookii.bookiibookii.data.model.group.GroupCreateRequest
+import com.bookiibookii.bookiibookii.data.model.group.GroupModifyRequest
+import com.bookiibookii.bookiibookii.data.model.group.GroupTagRequest
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpGenerationBinding
 import com.google.android.material.chip.Chip
 import com.google.android.material.datepicker.CalendarConstraints
@@ -179,7 +179,7 @@ class GroupGenerationActivity :
     private fun fetchMyPageDataAndPreFill() {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().getMypage()
+                val response = RetrofitClient.mypApi().getMypage()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val profile = response.body()?.result
                     profile?.let { data ->
@@ -553,7 +553,7 @@ class GroupGenerationActivity :
     //  4. API 호출
     private suspend fun searchBooksFromApi(query: String) {
         try {
-            val response = RetrofitClient.api().searchBooks(query, 1, 10)
+            val response = RetrofitClient.grpApi().searchBooks(query, 1, 10)
             if (response.isSuccessful && response.body()?.isSuccess == true) {
                 val books = response.body()?.result?.books ?: emptyList()
                 if (books.isNotEmpty()) {
@@ -596,7 +596,7 @@ class GroupGenerationActivity :
 
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().createGroup(request)
+                val response = RetrofitClient.grpApi().createGroup(request)
                 handleApiResponse(response.isSuccessful, response.errorBody()?.string()) {
                     showCustomToast("그룹 생성 완료되었습니다. ",true)
                     finish()
@@ -613,7 +613,7 @@ class GroupGenerationActivity :
         val (finalTags, customTagString) = getCombinedTags()
         val duration = binding.actGrpGenBookLimitBar.text.toString().toIntOrNull() ?: 0
 
-        val request = GroupItemDto.GroupModifyRequest(
+        val request = GroupModifyRequest(
             startDate = selectedDate ?: "",
             readingPeriod = duration,
             groupComment = binding.actGrpGenIntroduceBar.text.toString(),
@@ -624,7 +624,7 @@ class GroupGenerationActivity :
         lifecycleScope.launch {
             try {
                 // 1. API 호출
-                val response = RetrofitClient.api().modifyGroup(currentGroupId.toLong(), request)
+                val response = RetrofitClient.grpApi().modifyGroup(currentGroupId.toLong(), request)
 
                 // 2. 응답 처리
                 if (response.isSuccessful) {

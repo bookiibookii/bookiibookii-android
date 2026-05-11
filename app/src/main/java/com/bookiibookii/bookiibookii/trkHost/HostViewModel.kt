@@ -114,7 +114,7 @@ class HostViewModel : ViewModel() {
             _uiState.value = HostTrackerUiState(isLoading = true)
 
             try {
-                val body = RetrofitClient.api().getTrackerDetail(groupId)
+                val body = RetrofitClient.trkApi().getTrackerDetail(groupId)
 
                 if (!body.isSuccess || body.result == null) {
                     _uiState.value = HostTrackerUiState(
@@ -147,7 +147,7 @@ class HostViewModel : ViewModel() {
             _readingStartState.value = UiState.Loading
 
             try {
-                val body = RetrofitClient.api().patchTrackerReadingStart(groupId)
+                val body = RetrofitClient.trkApi().patchTrackerReadingStart(groupId)
 
                 if (!body.isSuccess || body.result == null) {
                     _readingStartState.value = UiState.Error(body.message ?: "API error")
@@ -170,7 +170,7 @@ class HostViewModel : ViewModel() {
             _extensionState.value = UiState.Loading
 
             try {
-                val body = RetrofitClient.api().patchTrackerExtension(groupId, days)
+                val body = RetrofitClient.trkApi().patchTrackerExtension(groupId, days)
 
                 if (!body.isSuccess || body.result == null) {
                     _extensionState.value = UiState.Error(body.message ?: "API error")
@@ -193,7 +193,7 @@ class HostViewModel : ViewModel() {
             _doneState.value = UiState.Loading
 
             try {
-                val body = RetrofitClient.api().patchTrackerDone(groupId)
+                val body = RetrofitClient.trkApi().patchTrackerDone(groupId)
 
                 if (!body.isSuccess || body.result == null) {
                     _doneState.value = UiState.Error(body.message ?: "API error")
@@ -222,7 +222,7 @@ class HostViewModel : ViewModel() {
             _shippingStartState.value = UiState.Loading
 
             try {
-                val presignedBody = RetrofitClient.api().getTrackerImagePresignedUrl(groupId)
+                val presignedBody = RetrofitClient.trkApi().getTrackerImagePresignedUrl(groupId)
                 if (!presignedBody.isSuccess || presignedBody.result == null) {
                     _shippingStartState.value =
                         UiState.Error(presignedBody.message ?: "presigned-url error")
@@ -248,7 +248,7 @@ class HostViewModel : ViewModel() {
                     s3Key = s3Key
                 )
 
-                val shipBody = RetrofitClient.api().postTrackerShippingStart(groupId, req)
+                val shipBody = RetrofitClient.trkApi().postTrackerShippingStart(groupId, req)
                 if (!shipBody.isSuccess || shipBody.result == null) {
                     _shippingStartState.value =
                         UiState.Error(shipBody.message ?: "shipping start error")
@@ -275,7 +275,7 @@ class HostViewModel : ViewModel() {
             _receiveState.value = UiState.Loading
 
             try {
-                val presignedBody = RetrofitClient.api()
+                val presignedBody = RetrofitClient.trkApi()
                     .getTrackerImagePresignedUrl(groupId)
 
                 if (!presignedBody.isSuccess || presignedBody.result == null) {
@@ -297,7 +297,7 @@ class HostViewModel : ViewModel() {
                     return@launch
                 }
 
-                val body = RetrofitClient.api().patchTrackerReceive(
+                val body = RetrofitClient.trkApi().patchTrackerReceive(
                     groupId = groupId,
                     request = TrackerReceptionRequest(s3Key)
                 )
@@ -323,7 +323,7 @@ class HostViewModel : ViewModel() {
             _confirmReceptionState.value = UiState.Loading
 
             try {
-                val body = RetrofitClient.api().patchConfirmReception(groupId)
+                val body = RetrofitClient.trkApi().patchConfirmReception(groupId)
 
                 if (!body.isSuccess || body.result == null) {
                     _confirmReceptionState.value =
@@ -346,7 +346,7 @@ class HostViewModel : ViewModel() {
         viewModelScope.launch {
             _receivedImageState.value = UiState.Loading
             try {
-                val body = RetrofitClient.api().getTrackerCheckReceivedImage(groupId)
+                val body = RetrofitClient.trkApi().getTrackerCheckReceivedImage(groupId)
 
                 if (!body.isSuccess || body.result == null) {
                     _receivedImageState.value =

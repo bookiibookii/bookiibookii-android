@@ -71,7 +71,7 @@ class HostGroupManageBottomDialogFragment : BottomSheetDialogFragment() {
         lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().deleteGroup(groupId)
+                val response = RetrofitClient.grpApi().deleteGroup(groupId)
 
                 if (response.isSuccessful) {
                     val body = response.body()

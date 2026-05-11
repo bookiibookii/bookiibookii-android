@@ -83,7 +83,7 @@ object TokenManager {
 
             val accessToken = getAccessToken(context)?.takeIf { it.isNotBlank() } ?: return false
 
-            val response = RetrofitClient.apiNoAuth().postRefresh(
+            val response = RetrofitClient.authApiNoAuth().postRefresh(
                 authorization = "Bearer $accessToken",
                 request = TokenRefreshRequest(refreshToken)
             )

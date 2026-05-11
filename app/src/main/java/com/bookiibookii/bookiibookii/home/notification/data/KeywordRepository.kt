@@ -1,6 +1,6 @@
 package com.bookiibookii.bookiibookii.home.notification.data
 
-import com.bookiibookii.bookiibookii.data.api.ApiService
+import com.bookiibookii.bookiibookii.data.api.KwdApi
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.keyword.KeywordCreateRequest
 import com.bookiibookii.bookiibookii.data.model.keyword.KeywordCreateResult
@@ -8,7 +8,7 @@ import com.bookiibookii.bookiibookii.data.model.keyword.KeywordListResult
 import retrofit2.Response
 
 class KeywordRepository(
-    private val api: ApiService
+    private val api: KwdApi
 ) {
     suspend fun fetchKeywords(sort: String): Response<ApiResponse<KeywordListResult>> {
         return api.getKeywords(sort = sort)

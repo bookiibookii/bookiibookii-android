@@ -123,7 +123,7 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getMyGroups()
+                val response = RetrofitClient.mypApi().getMyGroups()
                 val safeContext = context ?: return@launch
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -180,7 +180,7 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getGroupMembers(groupId)
+                val response = RetrofitClient.mypApi().getGroupMembers(groupId)
                 val safeContext = context ?: return@launch
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -394,7 +394,7 @@ class MypReportWriteFragment : BaseDetailFragment<FragmentMypReportWriteBinding>
                     content = content
                 )
 
-                val response = RetrofitClient.api().postReport(request)
+                val response = RetrofitClient.mypApi().postReport(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     safeContext.showCustomToast("신고가 정상적으로 접수되었습니다.", true)

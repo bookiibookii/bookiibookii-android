@@ -96,7 +96,7 @@ class LibrarySearchFragment : BaseDetailFragment<FragmentLibSearchBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 if (source == "LIBRARY") {
-                    val response = RetrofitClient.api().getLibraryBooks()
+                    val response = RetrofitClient.libApi().getLibraryBooks()
                     val myNickname = myPageViewModel.confirmedNickname ?: myPageViewModel.profileData.value?.nickname ?: ""
 
                     if (response.isSuccessful && response.body()?.isSuccess == true) {

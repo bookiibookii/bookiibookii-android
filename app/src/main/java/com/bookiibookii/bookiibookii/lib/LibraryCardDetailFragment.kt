@@ -248,7 +248,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
     }
 
     private suspend fun fetchCardDetail() {
-        val response = RetrofitClient.api().getCardDetail(cardId)
+        val response = RetrofitClient.libApi().getCardDetail(cardId)
         if (response.isSuccessful && response.body()?.isSuccess == true) {
             val result = response.body()?.result ?: return
 
@@ -274,7 +274,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
                 this@LibraryCardDetailFragment.writerName = apiWriterName
 
                 try {
-                    val profileResponse = RetrofitClient.api().getUserProfile(apiWriterName)
+                    val profileResponse = RetrofitClient.userApi().getUserProfile(apiWriterName)
                     if (profileResponse.isSuccessful && profileResponse.body()?.isSuccess == true) {
                         val finalProfileUrl = profileResponse.body()?.result?.profileImageUrl
                         loadProfileImage(finalProfileUrl)
@@ -330,7 +330,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
     }
 
     private suspend fun fetchComments() {
-        val response = RetrofitClient.api().getCardComments(cardId)
+        val response = RetrofitClient.libApi().getCardComments(cardId)
         if (response.isSuccessful && response.body()?.isSuccess == true) {
             val result = response.body()?.result ?: return
             binding.includeChatBottom.libCardChatTotalTv.text = "${result.totalCount}"
@@ -344,7 +344,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
             loadingDialog.show()
             try {
                 val request = PostCommentRequest(content)
-                val response = RetrofitClient.api().postCardComment(cardId, request)
+                val response = RetrofitClient.libApi().postCardComment(cardId, request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     binding.includeChatBottom.etInput.setText("")
                     hideKeyboard()
@@ -361,7 +361,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
         if (cardId == -1L) return
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().toggleBookmark(cardId)
+                val response = RetrofitClient.libApi().toggleBookmark(cardId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
                     val newStatus = result?.bookmarked ?: !isBookmarked
@@ -389,7 +389,7 @@ class LibraryCardDetailFragment : BaseDetailFragment<FragmentLibCardBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().deleteCard(cardId)
+                val response = RetrofitClient.libApi().deleteCard(cardId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     requireContext().showCustomToast("카드가 삭제되었습니다.", true)
                     requireActivity().supportFragmentManager.popBackStack()

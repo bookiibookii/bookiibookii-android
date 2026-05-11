@@ -63,7 +63,7 @@ class MypReportFragment : BaseDetailFragment<FragmentMypReportBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getReportList()
+                val response = RetrofitClient.mypApi().getReportList()
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = response.body()!!.result

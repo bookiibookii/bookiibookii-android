@@ -43,7 +43,7 @@ class LibraryCardViewModel : ViewModel() {
             _errorMessage.value = null
 
             try {
-                val response = RetrofitClient.api().getGroupCards(groupId)
+                val response = RetrofitClient.libApi().getGroupCards(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
                     if (result != null) {
@@ -59,14 +59,14 @@ class LibraryCardViewModel : ViewModel() {
                                     var commentCount = 0
 
                                     try {
-                                        val profileRes = RetrofitClient.api().getUserProfile(card.creatorName)
+                                        val profileRes = RetrofitClient.userApi().getUserProfile(card.creatorName)
                                         if (profileRes.isSuccessful && profileRes.body()?.isSuccess == true) {
                                             profileUrl = profileRes.body()?.result?.profileImageUrl
                                         }
                                     } catch (e: Exception) { }
 
                                     try {
-                                        val commentRes = RetrofitClient.api().getCardComments(card.cardId.toLong())
+                                        val commentRes = RetrofitClient.libApi().getCardComments(card.cardId.toLong())
                                         if (commentRes.isSuccessful && commentRes.body()?.isSuccess == true) {
                                             commentCount = commentRes.body()?.result?.totalCount ?: 0
                                         }
@@ -106,7 +106,7 @@ class LibraryCardViewModel : ViewModel() {
             _errorMessage.value = null
 
             try {
-                val response = RetrofitClient.api().getBookmarkedCards()
+                val response = RetrofitClient.libApi().getBookmarkedCards()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val rawCards = response.body()?.result ?: emptyList()
 
@@ -117,14 +117,14 @@ class LibraryCardViewModel : ViewModel() {
                                 var commentCount = 0
 
                                 try {
-                                    val profileRes = RetrofitClient.api().getUserProfile(card.creatorName)
+                                    val profileRes = RetrofitClient.userApi().getUserProfile(card.creatorName)
                                     if (profileRes.isSuccessful && profileRes.body()?.isSuccess == true) {
                                         profileUrl = profileRes.body()?.result?.profileImageUrl
                                     }
                                 } catch (e: Exception) {}
 
                                 try {
-                                    val commentRes = RetrofitClient.api().getCardComments(card.cardId.toLong())
+                                    val commentRes = RetrofitClient.libApi().getCardComments(card.cardId.toLong())
                                     if (commentRes.isSuccessful && commentRes.body()?.isSuccess == true) {
                                         commentCount = commentRes.body()?.result?.totalCount ?: 0
                                     }

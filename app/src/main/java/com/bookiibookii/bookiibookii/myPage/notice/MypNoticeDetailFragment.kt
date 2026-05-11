@@ -49,7 +49,7 @@ class MypNoticeDetailFragment : BaseDetailFragment<FragmentMypNoticeDetailBindin
         viewLifecycleOwner.lifecycleScope.launch {
             loadingDialog.show()
             try {
-                val response = RetrofitClient.api().getNoticeDetail(id)
+                val response = RetrofitClient.mypApi().getNoticeDetail(id)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val detail = response.body()!!.result
