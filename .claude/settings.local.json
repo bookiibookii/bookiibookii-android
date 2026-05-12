@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(grep -E \"\\\\.\\(kt|xml\\)$\")",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "mcp__plugin_figma_figma__get_design_context",
+      "mcp__plugin_figma_figma__get_screenshot"
     ]
   }
 }
