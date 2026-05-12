@@ -81,7 +81,7 @@ interface MypApi {
     ): Response<GroupMemberResponse>
 
     // 프로필 이미지 업로드
-    @POST("api/users/me/image/presigend-url")
+    @POST("api/users/me/image/presigned-url")
     suspend fun getPresignedUrl(): Response<PresignedUrlResponse>
 
     @PUT

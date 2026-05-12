@@ -3,6 +3,14 @@
     "allow": [
       "Bash(grep -E \"\\\\.\\(kt|xml\\)$\")",
       "Bash(xargs ls *)",
+      "mcp__plugin_figma_figma__get_design_context",
+      "Bash(findstr *)",
+      "Bash(grep -v \"^\\\\s*$\")",
+      "Bash(Select-Object Name)",
+      "Bash(Sort-Object Name)",
+      "PowerShell(Get-ChildItem \"E:\\\\BookkiiTest\\\\app\\\\src\\\\main\\\\res\\\\drawable\\\\\" | ForEach-Object { $_.BaseName } | Sort-Object)",
+      "PowerShell(Get-ChildItem \"E:\\\\BookiiBookii\\\\app\\\\src\\\\main\\\\res\\\\\" -Directory | ForEach-Object { $_.Name })",
+      "PowerShell(Get-ChildItem \"E:\\\\BookiiBookii\\\\app\\\\src\\\\main\\\\java\\\\com\\\\bookiibookii\\\\bookiibookii\\\\\" -Directory | ForEach-Object { $_.Name })"
     ]
   }
 }
