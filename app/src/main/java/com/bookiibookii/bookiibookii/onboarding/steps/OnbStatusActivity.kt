@@ -11,11 +11,11 @@ import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.OnboardingRequest
-import com.bookiibookii.bookiibookii.data.model.OnboardingTag
+import com.bookiibookii.bookiibookii.data.model.user.OnboardingRequest
+import com.bookiibookii.bookiibookii.data.model.user.OnboardingTag
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
-import androidx.core.content.edit
 
 // 온보딩 완료/로딩 상태를 표시하는 액티비티
 class OnbStatusActivity : AppCompatActivity() {
@@ -141,7 +141,7 @@ class OnbStatusActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             runCatching {
-                RetrofitClient.api().postOnboarding(req)
+                RetrofitClient.userApi().postOnboarding(req)
             }.onSuccess { res ->
                 val body = res.body()
 
@@ -181,8 +181,7 @@ class OnbStatusActivity : AppCompatActivity() {
 
     // 온보딩 완료 여부 로컬 저장
     private fun setOnboardingDone() {
-        val prefs = getSharedPreferences("auth_prefs", MODE_PRIVATE)
-        prefs.edit { putBoolean("onboarding_done", true) }
+        TokenManager.saveOnboardingDone(this, true)
     }
 
     // 화면 상태 enum

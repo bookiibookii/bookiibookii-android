@@ -7,21 +7,22 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.LoginRequest
-import com.bookiibookii.bookiibookii.data.model.LoginResponse
+import com.bookiibookii.bookiibookii.data.model.auth.LoginRequest
+import com.bookiibookii.bookiibookii.data.model.auth.LoginResult
+import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import kotlinx.coroutines.launch
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _loginResult = MutableLiveData<LoginResponse?>()
-    val loginResult: LiveData<LoginResponse?> get() = _loginResult
+    private val _loginResult = MutableLiveData<ApiResponse<LoginResult>?>()
+    val loginResult: LiveData<ApiResponse<LoginResult>?> get() = _loginResult
 
     fun postLogin(kakaoAccessToken: String) {
         viewModelScope.launch {
             try {
                 val request = LoginRequest(socialType = "KAKAO", token = kakaoAccessToken)
 
-                val response = RetrofitClient.api().postLogin(request)
+                val response = RetrofitClient.authApiNoAuth().postLogin(request)
 
                 if (response.isSuccessful) {
                     _loginResult.value = response.body()

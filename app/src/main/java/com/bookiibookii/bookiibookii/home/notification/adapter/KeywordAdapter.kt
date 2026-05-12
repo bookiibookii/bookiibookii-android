@@ -7,15 +7,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.KeywordItemDto
+import com.bookiibookii.bookiibookii.data.model.keyword.KeywordItem
 
 class KeywordAdapter(
-    private val onDeleteClick: (KeywordItemDto) -> Unit
+    private val onDeleteClick: (KeywordItem) -> Unit
 ) : RecyclerView.Adapter<KeywordAdapter.VH>() {
 
-    private val items = mutableListOf<KeywordItemDto>()
+    private val items = mutableListOf<KeywordItem>()
 
-    fun submitList(list: List<KeywordItemDto>) {
+    fun submitList(list: List<KeywordItem>) {
         items.clear()
         items.addAll(list)
         notifyDataSetChanged()
@@ -38,7 +38,7 @@ class KeywordAdapter(
         private val tvKeyword: TextView = itemView.findViewById(R.id.tv_keyword)
         private val ivDelete: ImageView = itemView.findViewById(R.id.iv_delete)
 
-        fun bind(item: KeywordItemDto) {
+        fun bind(item: KeywordItem) {
             tvKeyword.text = item.content
             ivDelete.setOnClickListener { onDeleteClick(item) }
         }

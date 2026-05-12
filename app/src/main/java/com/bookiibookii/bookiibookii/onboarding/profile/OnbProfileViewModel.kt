@@ -8,6 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.api.S3Uploader
+import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
+import com.bookiibookii.bookiibookii.data.model.user.NicknameValidationResult
+import com.bookiibookii.bookiibookii.data.model.user.PresignedUrlResult
 import kotlinx.coroutines.launch
 
 class OnbProfileViewModel : ViewModel() {
@@ -31,7 +34,7 @@ class OnbProfileViewModel : ViewModel() {
             _nicknameState.value = NicknameCheckState.Loading
 
             runCatching {
-                RetrofitClient.api().postNicknameValidation(nickname)
+                RetrofitClient.userApi().postNicknameValidation(nickname)
             }.onSuccess { response ->
                 if (!response.isSuccessful) {
                     _nicknameState.value =
@@ -77,7 +80,7 @@ class OnbProfileViewModel : ViewModel() {
                 // TODO: 추후 로그 삭제
                 android.util.Log.d("IMG_UPLOAD", "📡 request presigned-url")
 
-                val presignedRes = RetrofitClient.api().postPresignedUrl()
+                val presignedRes = RetrofitClient.userApi().postPresignedUrl()
                 if (!presignedRes.isSuccessful) {
                     error("Presigned URL 발급 실패 (HTTP ${presignedRes.code()})")
                 }

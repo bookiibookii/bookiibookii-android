@@ -34,7 +34,10 @@ import com.bookiibookii.bookiibookii.common.CommonDialog
 import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.GroupItemDto
+import com.bookiibookii.bookiibookii.data.model.group.CommentItem
+import com.bookiibookii.bookiibookii.data.model.group.GroupApplyRequest
+import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
+import com.bookiibookii.bookiibookii.data.model.group.ParticipantSlot
 import com.bookiibookii.bookiibookii.databinding.ActivityGrpHostBinding
 import com.bookiibookii.bookiibookii.databinding.DialogGroupJoinBinding
 import com.bookiibookii.bookiibookii.group.generation.GroupGenerationActivity
@@ -56,7 +59,7 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
 
     private val memberAdapter = GroupMemberAdapter {}
 
-    private var allCommentsList: List<GroupItemDto.CommentItem> = emptyList()
+    private var allCommentsList: List<CommentItem> = emptyList()
 
     private val commentAdapter = GroupChatAdapter(
         onReplyClick = { commentId, writerName ->
@@ -371,7 +374,7 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
         }
     }
 
-    private fun getRealCommentCount(list: List<GroupItemDto.CommentItem>): Int {
+    private fun getRealCommentCount(list: List<CommentItem>): Int {
         return list.sumOf { parent ->
             var count = 0
             if (!parent.deleted) count++
@@ -395,7 +398,7 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
         imm.hideSoftInputFromWindow(binding.grpMgBottomSheetInputEt.windowToken, 0)
     }
 
-    private fun bindUi(data: GroupItemDto.GroupDetailResult) {
+    private fun bindUi(data: GroupDetailResponse) {
         val isDirectExchange = !data.meetPlace.isNullOrBlank()
         val strokeWidth1dp = dpToPx(1).toFloat()
         binding.actGrpHoRegionLayout.visibility = if (isDirectExchange) View.VISIBLE else View.GONE
@@ -463,7 +466,7 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
         binding.actGrpHoMemberStatus3Tv.text = "${data.maxCapacity}"
     }
 
-    private fun updateMemberAdapter(slots: List<GroupItemDto.ParticipantSlot>?, hostProfile: String?, myNick: String? = null) {
+    private fun updateMemberAdapter(slots: List<ParticipantSlot>?, hostProfile: String?, myNick: String? = null) {
         val processed = slots?.map { slot ->
             if (slot.role == "HOST" && slot.profileImage.isNullOrBlank()) {
                 slot.copy(profileImage = hostProfile)
@@ -476,7 +479,7 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
     }
 
     // ★ [핵심 수정] 서재/트래커 이동 전 상태 체크 로직 추가
-    private fun handleButtonStatus(data: GroupItemDto.GroupDetailResult) {
+    private fun handleButtonStatus(data: GroupDetailResponse) {
         val itemBinding = binding.actGrpHoIncludedItem
         val btnLayout = itemBinding.grpItemManageBtn
         val btnTitle = itemBinding.grpItemBtnTitleTv
@@ -605,8 +608,8 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
     private fun requestJoinGroup(groupId: Long, message: String, dialog: Dialog) {
         lifecycleScope.launch {
             try {
-                val request = GroupItemDto.GroupApplyRequest(applyMsg = message)
-                val response = RetrofitClient.api().applyGroup(groupId, request)
+                val request = GroupApplyRequest(applyMsg = message)
+                val response = RetrofitClient.grpApi().applyGroup(groupId, request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
 
                     showCustomToast("그룹 신청 되었습니다.",true)
@@ -625,7 +628,7 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
     private fun requestCancelGroup(groupId: Long) {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().cancelGroupApplication(groupId)
+                val response = RetrofitClient.grpApi().cancelGroupApplication(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     showCustomToast("신청 취소 요청되었습니다.",true)
                     finish()
@@ -692,7 +695,7 @@ class GroupDetailActivity : BaseActivity<ActivityGrpHostBinding>() {
     private fun requestDeleteGroup(groupId: Long) {
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().deleteGroup(groupId)
+                val response = RetrofitClient.grpApi().deleteGroup(groupId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     //Toast.makeText(this@GroupDetailActivity, "삭제 완료", Toast.LENGTH_SHORT).show()
                     showCustomToast("그룹이 정상적으로 삭제 되었습니다.",true)

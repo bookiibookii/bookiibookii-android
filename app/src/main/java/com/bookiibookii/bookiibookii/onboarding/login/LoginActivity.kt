@@ -29,7 +29,7 @@ import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.LoginRequest
+import com.bookiibookii.bookiibookii.data.model.auth.LoginRequest
 import com.bookiibookii.bookiibookii.data.model.mypage.MypageResult
 import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroAnimActivity
 import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
@@ -226,7 +226,7 @@ class LoginActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val request = LoginRequest(socialType = socialType, token = token)
-                val response = RetrofitClient.api().postLogin(request)
+                val response = RetrofitClient.authApiNoAuth().postLogin(request)
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result

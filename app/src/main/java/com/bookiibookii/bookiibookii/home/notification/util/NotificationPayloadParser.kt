@@ -1,11 +1,11 @@
 package com.bookiibookii.bookiibookii.home.notification.util
 
-import com.bookiibookii.bookiibookii.data.model.NotificationItemDto
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationItem
 import org.json.JSONObject
 
 object NotificationPayloadParser {
 
-    fun getGroupId(item: NotificationItemDto): Long? {
+    fun getGroupId(item: NotificationItem): Long? {
         val payload = item.payload ?: return null
 
         if (payload is Map<*, *>) {

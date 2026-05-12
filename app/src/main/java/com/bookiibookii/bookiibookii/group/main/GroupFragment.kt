@@ -196,7 +196,7 @@ class GroupFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.api().getGroupList(
+                val response = RetrofitClient.grpApi().getGroupList(
                     groupTypes = if (groupTypes.isEmpty()) null else groupTypes,
                     tradeTypes = if (tradeTypes.isEmpty()) null else tradeTypes,
                     meetPlace = meetPlace,

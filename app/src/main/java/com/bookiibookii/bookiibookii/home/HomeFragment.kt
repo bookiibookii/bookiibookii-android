@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.RecommendedBookmateDto
+import com.bookiibookii.bookiibookii.data.model.recommendation.RecommendedBookmateItem
 import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeExchangeProgressBinding
 import com.bookiibookii.bookiibookii.databinding.SectionHomeGroupBinding
@@ -41,8 +41,9 @@ class HomeFragment : Fragment() {
     private lateinit var groupBinding: SectionHomeGroupBinding
     private lateinit var mateBinding: SectionHomeMateBinding
 
-    private val api by lazy { RetrofitClient.api() }
-    private val trkApi by lazy { RetrofitClient.trkApi() } // ✅ 여기로 받기
+    private val notiApi by lazy { RetrofitClient.notiApi() }
+    private val recmApi by lazy { RetrofitClient.recmApi() }
+    private val trkApi by lazy { RetrofitClient.trkApi() }
 
     private var notiBadge: View? = null
 
@@ -161,14 +162,14 @@ class HomeFragment : Fragment() {
                 val size = 20
 
                 // SYSTEM 1페이지
-                val systemRes = api.getNotifications(
+                val systemRes = notiApi.getNotifications(
                     category = "SYSTEM",
                     cursor = null,
                     size = size
                 )
 
                 // KEYWORD 1페이지
-                val keywordRes = api.getNotifications(
+                val keywordRes = notiApi.getNotifications(
                     category = "KEYWORD",
                     cursor = null,
                     size = size
@@ -244,7 +245,7 @@ class HomeFragment : Fragment() {
 
     private fun loadRecommendedGroups(refresh: Boolean) {
         viewLifecycleOwner.lifecycleScope.launch {
-            runCatching { api.getRecommendedGroups(refresh = refresh) }
+            runCatching { recmApi.getRecommendedGroups(refresh = refresh) }
                 .onSuccess { response ->
                     val list = if (response.isSuccessful) response.body()?.result.orEmpty() else emptyList()
                     android.util.Log.d("HOME_API", "groups=$list")
@@ -261,7 +262,7 @@ class HomeFragment : Fragment() {
 
     private fun loadRecommendedBookmates() {
         viewLifecycleOwner.lifecycleScope.launch {
-            runCatching { api.getRecommendedBookmates() }
+            runCatching { recmApi.getRecommendedBookmates() }
                 .onSuccess { response ->
                     if (!response.isSuccessful) {
                         android.util.Log.e("MATE_API", "http fail code=${response.code()}")

@@ -9,8 +9,8 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.google.android.material.button.MaterialButton
-import androidx.core.content.edit
 
 class OnbStepActivity : AppCompatActivity() {
 
@@ -181,8 +181,7 @@ class OnbStepActivity : AppCompatActivity() {
     }
 
     private fun setOnboardingDone() {
-        val prefs = getSharedPreferences("auth_prefs", MODE_PRIVATE)
-        prefs.edit { putBoolean("onboarding_done", true) }
+        TokenManager.saveOnboardingDone(this, true)
     }
 
     // 현재 단계에서 "다음" 버튼을 활성화할 수 있는지 판단

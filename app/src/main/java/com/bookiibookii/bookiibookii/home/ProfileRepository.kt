@@ -1,12 +1,12 @@
 package com.bookiibookii.bookiibookii.home
 
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.OtherProfileApiResult
 import com.bookiibookii.bookiibookii.data.model.mypage.ProfileResult
+import com.bookiibookii.bookiibookii.data.model.user.OtherProfileResult
 
 class ProfileRepository {
 
-    private val api = RetrofitClient.api()
+    private val api = RetrofitClient.userApi()
 
     suspend fun getUserProfile(nickname: String): ProfileResult? {
         val response = api.getUserProfile(nickname)
@@ -14,7 +14,7 @@ class ProfileRepository {
 
         if (!response.isSuccessful || body?.isSuccess != true) return null
 
-        val r: OtherProfileApiResult = body.result ?: return null
+        val r: OtherProfileResult = body.result ?: return null
 
         return ProfileResult(
             userId = r.userId,
