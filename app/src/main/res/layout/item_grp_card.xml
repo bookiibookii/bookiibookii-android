@@ -282,7 +282,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/pretendard_variable"
                 android:text="참여 요청 관리"
-                android:textColor="@color/pre_main"
+                android:textColor="@color/ui_main"
                 android:textSize="15sp" />
 
             <TextView
@@ -292,7 +292,7 @@
                 android:layout_marginStart="4dp"
                 android:fontFamily="@font/pretendard_variable"
                 android:text="(5)"
-                android:textColor="@color/pre_main"
+                android:textColor="@color/ui_main"
                 android:textSize="15sp" />
         </LinearLayout>
     </FrameLayout>

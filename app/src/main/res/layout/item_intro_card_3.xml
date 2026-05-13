@@ -56,7 +56,7 @@
                     android:layout_height="wrap_content"
                     android:text="글씨가 예뻐요"
                     android:textAppearance="@style/regular12"
-                    android:textColor="@color/pre_main"
+                    android:textColor="@color/ui_main"
                     android:background="@drawable/bg_round_20dp_main_pale_stroke_1dp_main"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="8dp" />
@@ -114,7 +114,7 @@
                     android:layout_height="wrap_content"
                     android:text="코멘트가 재미있어요"
                     android:textAppearance="@style/regular12"
-                    android:textColor="@color/pre_main"
+                    android:textColor="@color/ui_main"
                     android:background="@drawable/bg_round_20dp_main_pale_stroke_1dp_main"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="8dp" />

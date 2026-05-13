@@ -235,7 +235,7 @@
                     android:fontFamily="@font/pretendard_variable"
                     android:padding="8dp"
                     android:text="최신순"
-                    android:textColor="@color/pre_main"
+                    android:textColor="@color/ui_main"
                     android:textSize="14sp" />
 
                 <View

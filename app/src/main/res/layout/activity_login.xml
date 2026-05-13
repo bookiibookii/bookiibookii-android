@@ -8,7 +8,7 @@
         android:id="@+id/splashRoot"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/pre_main">
+        android:background="@color/ui_main">
 
         <!-- 중앙 로고 + 타이틀 이미지 영역 -->
         <LinearLayout

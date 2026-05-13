@@ -2,7 +2,7 @@
 <resources>
 
     <style name="Theme.BookiiBookii.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/pre_main</item>
+        <item name="windowSplashScreenBackground">@color/ui_main</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_dummy_splash</item>
         <item name="postSplashScreenTheme">@style/Theme.BookiiBookii</item>
     </style>

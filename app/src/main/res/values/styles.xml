@@ -146,7 +146,7 @@
         <item name="chipStrokeWidth">0dp</item>
         <item name="android:checkable">false</item>
         <item name="android:clickable">false</item>
-        <item name="chipBackgroundColor">@color/pre_main</item>
+        <item name="chipBackgroundColor">@color/ui_main</item>
         <item name="android:textColor">@color/grey_100</item>
     </style>
 
@@ -198,8 +198,8 @@
 
     <!-- home: 버튼 색상 (pre) -->
     <style name="Widget.BookiiBookii.HomeButton.Pre" parent="Widget.BookiiBookii.HomeButton">
-        <item name="backgroundTint">@color/pre_main_pale</item>
-        <item name="android:textColor">@color/pre_main</item>
+        <item name="backgroundTint">@color/ui_main_pale</item>
+        <item name="android:textColor">@color/ui_main</item>
     </style>
 
     <!-- home: 버튼 색상 (dark) -->
@@ -229,7 +229,7 @@
         <item name="android:paddingTop">4dp</item>
         <item name="android:paddingBottom">4dp</item>
         <item name="android:textSize">11sp</item>
-        <item name="android:textColor">@color/pre_main</item>
+        <item name="android:textColor">@color/ui_main</item>
         <item name="android:background">@drawable/bg_home_chip_pale</item>
     </style>
 
@@ -267,11 +267,11 @@
         <item name="android:textAlignment">gravity</item>
         <item name="chipCornerRadius">8dp</item>
         <item name="chipStrokeWidth">1dp</item>
-        <item name="chipStrokeColor">@color/pre_main_pale</item>
+        <item name="chipStrokeColor">@color/ui_main_pale</item>
         <item name="android:checkable">false</item>
         <item name="android:clickable">false</item>
-        <item name="chipBackgroundColor">@color/pre_main_pale</item>
-        <item name="android:textColor">@color/pre_main</item>
+        <item name="chipBackgroundColor">@color/ui_main_pale</item>
+        <item name="android:textColor">@color/ui_main</item>
     </style>
 
     <style name="Widget.App.Chip.GroupGen.Choice" parent="Base.App.Chip">
@@ -320,7 +320,7 @@
 
 
     <style name="CustomDatePickerTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
-        <item name="colorPrimary">@color/pre_main</item>
+        <item name="colorPrimary">@color/ui_main</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSurface">@color/white</item>
         <item name="elevationOverlayEnabled">false</item>

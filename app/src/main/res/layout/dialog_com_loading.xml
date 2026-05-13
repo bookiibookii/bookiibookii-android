@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/pre_main_pale">
+    android:background="@color/ui_main_pale">
 
     <ImageView
         android:id="@+id/iv_fox"
@@ -22,7 +22,7 @@
         android:text="로딩 중"
         android:layout_marginTop="60dp"
         android:textAppearance="@style/regular16"
-        android:textColor="@color/pre_main"
+        android:textColor="@color/ui_main"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/iv_fox"/>
