@@ -45,12 +45,12 @@
                 android:layout_height="wrap_content"
                 android:text=""
                 android:textAppearance="@style/medium14"
-                android:textColor="@color/pre_main"
+                android:textColor="@color/ui_main"
                 android:layout_marginStart="8dp"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
                 android:background="@drawable/bg_round_10dp_gray300"
-                android:backgroundTint="@color/pre_main_pale"/>
+                android:backgroundTint="@color/ui_main_pale"/>
         </LinearLayout>
 
         <LinearLayout
@@ -99,7 +99,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textAppearance="@style/medium24"
-                    android:textColor="@color/pre_main" />
+                    android:textColor="@color/ui_main" />
             </LinearLayout>
             <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#DDDDDD"/>
             <LinearLayout
@@ -122,7 +122,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textAppearance="@style/medium24"
-                    android:textColor="@color/pre_main" />
+                    android:textColor="@color/ui_main" />
             </LinearLayout>
             <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#DDDDDD"/>
             <LinearLayout
@@ -145,7 +145,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textAppearance="@style/medium24"
-                    android:textColor="@color/pre_main" />
+                    android:textColor="@color/ui_main" />
             </LinearLayout>
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

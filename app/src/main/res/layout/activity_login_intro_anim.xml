@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:text="우리들의 비밀스런 북클럽\n부키부키"
         android:textSize="23sp"
-        android:textColor="@color/pre_main"
+        android:textColor="@color/ui_main"
         android:gravity="center"
         android:alpha="0"
         android:includeFontPadding="false"

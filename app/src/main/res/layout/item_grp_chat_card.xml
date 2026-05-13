@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/pretendard_variable"
-        android:textColor="@color/pre_main"
+        android:textColor="@color/ui_main"
         android:textSize="14sp"
         android:layout_marginStart="12dp"
         app:layout_constraintStart_toEndOf="@id/item_grp_chat_card_profile_card"

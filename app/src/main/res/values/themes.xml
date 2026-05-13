@@ -2,7 +2,7 @@
 
     <!--    기본 테마 설정-->
     <style name="Base.Theme.BookiiBookii" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:windowBackground">@color/ui_bg</item>
     </style>
 
     <!-- application 단위 기본 테마 -->
@@ -10,7 +10,7 @@
 
     <!-- 스플래시 전용 테마 -->
     <style name="Theme.BookiiBookii.Splash" parent="Theme.BookiiBookii">
-        <item name="android:windowBackground">@color/pre_main</item>
+        <item name="android:windowBackground">@color/ui_main</item>
     </style>
 
     <!-- bottomSheet 배경 어두워짐 제거 -->

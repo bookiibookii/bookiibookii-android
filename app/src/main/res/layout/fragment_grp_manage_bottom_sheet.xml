@@ -48,7 +48,7 @@
         android:layout_marginStart="8dp"
         android:fontFamily="@font/pretendard_variable"
         android:text="3"
-        android:textColor="@color/pre_main"
+        android:textColor="@color/ui_main"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/grp_mg_bottom_sheet_title_Tv"
         app:layout_constraintStart_toEndOf="@id/grp_mg_bottom_sheet_title_Tv"

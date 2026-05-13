@@ -155,7 +155,7 @@
                     android:layout_height="wrap_content"
                     android:text="읽는 중"
                     android:textAppearance="@style/medium11"
-                    android:textColor="@color/pre_main"
+                    android:textColor="@color/ui_main"
                     android:layout_marginTop="8dp"
                     app:layout_constraintStart_toStartOf="@id/g1"
                     app:layout_constraintEnd_toEndOf="@id/g1"
