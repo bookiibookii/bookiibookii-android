@@ -34,6 +34,9 @@ object S3Uploader {
         runCatching {
             val bytes = compressImage(contentResolver, uri)
 
+            // TODO: 추후 로그 삭제
+            android.util.Log.d("IMG_UPLOAD", "upload size=${bytes.size}B (${bytes.size / 1024}KB")
+
             val requestBody = bytes.toRequestBody(MIME_JPEG.toMediaTypeOrNull())
             val request = Request.Builder()
                 .url(presignedPutUrl)
