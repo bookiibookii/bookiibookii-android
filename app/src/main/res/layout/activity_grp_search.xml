@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/ui_bg">
+    android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_start"
@@ -24,7 +23,6 @@
         android:id="@+id/act_grp_search_dashBoard_Iv"
         android:layout_width="match_parent"
         android:layout_height="68dp"
-        android:background="@drawable/bg_grp_dashboard_border"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -33,7 +31,7 @@
         android:id="@+id/act_grp_search_back_Iv"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@drawable/ic_back_button"
+        android:src="@drawable/ic_back"
         app:layout_constraintBottom_toBottomOf="@id/act_grp_search_dashBoard_Iv"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintTop_toTopOf="@id/act_grp_search_dashBoard_Iv" />
@@ -43,8 +41,7 @@
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:layout_marginStart="8dp"
-        android:background="@drawable/bg_grp_search_input"
-        android:drawableStart="@drawable/ic_search_simple"
+        android:drawableStart="@drawable/ic_search"
         android:drawablePadding="8dp"
         android:fontFamily="@font/pretendard_variable"
         android:hint="도서명, 저자명, 태그 검색"
@@ -112,7 +109,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:background="@drawable/bg_round_20dp_white"
                     android:padding="24dp">
                     <TextView
                         android:id="@+id/act_search_hot_grp_card_title_Tv"
@@ -155,7 +151,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:background="@drawable/bg_round_20dp_white"
                     android:padding="24dp">
                     <TextView
                         android:id="@+id/act_search_grp_card_title_Tv"
@@ -188,7 +183,6 @@
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:layout_marginTop="20dp"
-                        android:background="@drawable/bg_round_10dp_gray900"
                         android:fontFamily="@font/pretendard_variable"
                         android:stateListAnimator="@null"
                         android:text="그룹 만들기"
@@ -205,7 +199,6 @@
             android:id="@+id/layout_search_result"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/ui_bg"
             android:visibility="gone">
             <TextView
                 android:id="@+id/tv_result_count"
@@ -241,8 +234,7 @@
                 <View
                     android:layout_width="1dp"
                     android:layout_height="12dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="@color/grey_400" />
+                    android:layout_gravity="center_vertical" />
 
                 <TextView
                     android:id="@+id/tv_sort_popular"

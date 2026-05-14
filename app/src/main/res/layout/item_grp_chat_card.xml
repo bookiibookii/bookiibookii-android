@@ -81,7 +81,7 @@
         android:id="@+id/item_grp_chat_card_secret_Tv"
         android:layout_width="12dp"
         android:layout_height="12dp"
-        android:src="@drawable/ic_tabler_lock"
+        android:src="@drawable/ic_lock"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/item_grp_chat_card_time_ago_Tv"
         app:layout_constraintTop_toTopOf="@id/item_grp_chat_card_time_ago_Tv"
