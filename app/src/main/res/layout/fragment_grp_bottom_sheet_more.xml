@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_bottom_sheet_top_round"
     android:paddingBottom="24dp">
 
     <View
@@ -12,7 +11,6 @@
         android:layout_width="40dp"
         android:layout_height="4dp"
         android:layout_marginTop="12dp"
-        android:background="@color/grey_200"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -37,7 +35,6 @@
         android:layout_height="1dp"
         android:layout_marginHorizontal="24dp"
         android:layout_marginTop="16dp"
-        android:background="@color/grey_200"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/grp_bottom_sheet_more_title_Tv" />
@@ -54,7 +51,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:background="@drawable/bg_round_20dp_red105"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="16dp"
@@ -64,7 +60,7 @@
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:src="@drawable/ic_warning"
+                android:src="@drawable/ic_alert"
                 app:tint="@color/ui_point_red" />
 
             <TextView
@@ -82,7 +78,6 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="20dp"
-            android:background="@color/grey_200"
             android:visibility="gone"
             tools:visibility="visible"/>
 

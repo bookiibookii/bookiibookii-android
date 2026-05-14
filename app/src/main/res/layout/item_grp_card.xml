@@ -5,14 +5,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_round_20dp_white"
     android:padding="16dp">
 
     <ImageView
         android:id="@+id/grp_item_cover_Iv"
         android:layout_width="74dp"
         android:layout_height="94dp"
-        android:background="@drawable/bg_round_10dp_gray300"
         android:scaleType="centerCrop"
         android:clipToOutline="true"
         app:layout_constraintStart_toStartOf="parent"
@@ -86,7 +84,7 @@
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:layout_marginTop="12dp"
-        android:src="@drawable/ic_cal"
+        android:src="@drawable/ic_calender"
         app:tint="@color/grey_500"
         app:layout_constraintStart_toStartOf="@id/grp_item_book_author_Tv"
         app:layout_constraintTop_toBottomOf="@id/grp_item_book_author_Tv" />
@@ -118,7 +116,7 @@
         android:layout_width="wrap_content"
         android:layout_height="16dp"
         android:layout_marginStart="4dp"
-        android:src="@drawable/ic_vector_86"
+        android:src="@drawable/ic_check"
         app:layout_constraintStart_toEndOf="@id/grp_item_deadlineTxt_Tv"
         app:layout_constraintTop_toTopOf="@id/grp_item_cal_Iv" />
 
@@ -267,8 +265,7 @@
         <View
             android:id="@+id/grp_item_manage_Btn"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_round_20dp_pale" />
+            android:layout_height="56dp" />
 
         <LinearLayout
             android:layout_width="wrap_content"

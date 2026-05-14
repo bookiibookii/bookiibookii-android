@@ -4,8 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/ui_bg">
+    android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_start"
@@ -26,7 +25,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_grp_dashboard_border"
         app:layout_constraintBottom_toTopOf="@id/grp_main_sort_recommend_Tv"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -202,7 +200,7 @@
             android:clickable="true"
             android:elevation="0dp"
             android:focusable="true"
-            android:src="@drawable/ic_share_read"
+            android:src="@drawable/ic_share"
             android:stateListAnimator="@null" />
 
         <ImageView
@@ -212,7 +210,7 @@
             android:clickable="true"
             android:elevation="0dp"
             android:focusable="true"
-            android:src="@drawable/ic_relay"
+            android:src="@drawable/ic_back"
             android:stateListAnimator="@null" />
     </LinearLayout>
 
@@ -224,7 +222,7 @@
         android:elevation="0dp"
         android:focusable="true"
         android:scaleType="fitCenter"
-        android:src="@drawable/ic_grouplist"
+        android:src="@drawable/ic_group"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
         android:layout_marginBottom="16dp"/>
