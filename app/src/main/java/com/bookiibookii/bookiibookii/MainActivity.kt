@@ -1,12 +1,12 @@
 package com.bookiibookii.bookiibookii
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -17,20 +17,18 @@ import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.main.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
-import com.bookiibookii.bookiibookii.home.OtherProfileFragment
 import com.bookiibookii.bookiibookii.lib.LibraryAddCardFragment
 import com.bookiibookii.bookiibookii.lib.LibraryBookDetailFragment
 import com.bookiibookii.bookiibookii.lib.LibraryBookDetailIngFragment
 import com.bookiibookii.bookiibookii.lib.LibraryBookDetailRelayWriteFragment
 import com.bookiibookii.bookiibookii.lib.LibraryFragment
-import com.bookiibookii.bookiibookii.myPage.main.MypageFragment
 import com.bookiibookii.bookiibookii.trkGuest.GuestActivity
 import com.bookiibookii.bookiibookii.trkHost.ExchangeRole
 import com.bookiibookii.bookiibookii.trkHost.HostActivity
 import com.bookiibookii.bookiibookii.trkHost.TrkMainFragment
 import kotlinx.coroutines.launch
 
-private enum class NavTab { HOME, GROUP, TRACKER, LIBRARY, MY }
+private enum class NavTab { GROUP, TRACKER, LIBRARY }
 
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
@@ -55,7 +53,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         // 최초 진입 시 홈 Fragment
         if (savedInstanceState == null) {
-            setBottomNavSelected(NavTab.HOME)
+            setBottomNavSelected(NavTab.GROUP)
             replaceFragment(HomeFragment())
         }
 
@@ -272,25 +270,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
 
     private fun initBottomNav() {
-
-        findViewById<View>(R.id.itemHome).setOnClickListener {
-            selectTab(NavTab.HOME, HomeFragment())
+        binding.bottomNav.itemGroup.setOnClickListener {
+            selectTab(NavTab.GROUP, HomeFragment())
         }
 
-        findViewById<View>(R.id.itemGroup).setOnClickListener {
-            selectTab(NavTab.GROUP, GroupFragment())
-        }
-
-        findViewById<View>(R.id.itemTracker).setOnClickListener {
+        binding.bottomNav.itemTracker.setOnClickListener {
             selectTab(NavTab.TRACKER, TrkMainFragment())
         }
 
-        findViewById<View>(R.id.itemLibrary).setOnClickListener {
+        binding.bottomNav.itemLibrary.setOnClickListener {
             selectTab(NavTab.LIBRARY, LibraryFragment())
-        }
-
-        findViewById<View>(R.id.itemMy).setOnClickListener {
-            selectTab(NavTab.MY, MypageFragment())
         }
     }
 
@@ -314,84 +303,23 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         startActivity(intent)
     }
 
-    fun moveToOtherProfile(nickname: String) {
-        val fragment = OtherProfileFragment().apply {
-            arguments = Bundle().apply {
-                putString(OtherProfileFragment.ARG_NICKNAME, nickname)
-            }
-        }
-
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, fragment) // ✅ 여기 수정
-            .addToBackStack(null) // 뒤로가기 가능
-            .commit()
-    }
-
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
     }
 
-    fun moveToMyPageTab() {
-        // 내부적으로 탭 아이콘을 바꾸고(setBottomNavSelected),
-        // 프래그먼트를 마이페이지로 교체(replaceFragment)합니다.
-        selectTab(NavTab.MY, MypageFragment())
-    }
-
     private fun setBottomNavSelected(tab: NavTab) {
-
-        fun setItem(
-            ivId: Int,
-            tvId: Int,
-            selectedIcon: Int,
-            unselectedIcon: Int,
-            selected: Boolean
-        ) {
-            val iv = findViewById<ImageView>(ivId)
-            val tv = findViewById<TextView>(tvId)
-
-            iv.setImageResource(if (selected) selectedIcon else unselectedIcon)
-            tv.setTextColor(
-                if (selected) getColor(R.color.grey_900)
-                else getColor(R.color.grey_400)
-            )
+        fun setItem(item: LinearLayout, tv: TextView, selected: Boolean) {
+            item.background = if (selected)
+                ContextCompat.getDrawable(this, R.drawable.bg_nav_item_selected)
+            else null
+            tv.visibility = if (selected) View.GONE else View.VISIBLE
         }
 
-        setItem(
-            R.id.ivHome, R.id.tvHome,
-            R.drawable.ic_home_selected,
-            R.drawable.ic_home_unselected,
-            tab == NavTab.HOME
-        )
-
-        setItem(
-            R.id.ivGroup, R.id.tvGroup,
-            R.drawable.ic_group_selected,
-            R.drawable.ic_group_unselected,
-            tab == NavTab.GROUP
-        )
-
-        setItem(
-            R.id.ivTracker, R.id.tvTracker,
-            R.drawable.ic_tracker_selected,
-            R.drawable.ic_tracker_unselected,
-            tab == NavTab.TRACKER
-        )
-
-        setItem(
-            R.id.ivLibrary, R.id.tvLibrary,
-            R.drawable.ic_library_selected,
-            R.drawable.ic_library_unselected,
-            tab == NavTab.LIBRARY
-        )
-
-        setItem(
-            R.id.ivMy, R.id.tvMy,
-            R.drawable.ic_mypage_selected,
-            R.drawable.ic_mypage_unselected,
-            tab == NavTab.MY
-        )
+        setItem(binding.bottomNav.itemGroup, binding.bottomNav.tvGroup, tab == NavTab.GROUP)
+        setItem(binding.bottomNav.itemTracker, binding.bottomNav.tvTracker, tab == NavTab.TRACKER)
+        setItem(binding.bottomNav.itemLibrary, binding.bottomNav.tvLibrary, tab == NavTab.LIBRARY)
     }
 
     override fun setupWindowInsets(view: View) {
