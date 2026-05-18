@@ -1,142 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/bottomNavRoot"
-    android:layout_width="match_parent"
-    android:layout_height="76dp"
-    android:baselineAligned="false"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:background="@drawable/bg_round_20dp_white_stroke_1dp_gray200"
-    android:paddingStart="18dp"
-    android:paddingEnd="18dp"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent"
-    android:gravity="center">
+    android:background="@drawable/bg_bottom_nav_pill"
+    android:padding="8dp"
+    android:gravity="center"
+    android:elevation="10dp">
 
-    <!-- item 1: 홈 -->
-    <LinearLayout
-        android:id="@+id/itemHome"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <ImageView
-            android:id="@+id/ivHome"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_home_unselected" />
-
-        <TextView
-            android:id="@+id/tvHome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="홈"
-            android:textSize="11sp"
-            android:textColor="@color/grey_400" />
-    </LinearLayout>
-
-    <!-- item 2: 그룹 -->
+    <!-- 그룹 -->
     <LinearLayout
         android:id="@+id/itemGroup"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
+        android:layout_width="80dp"
+        android:layout_height="60dp"
         android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="center"
+        android:background="@drawable/bg_nav_item_selected">
 
         <ImageView
             android:id="@+id/ivGroup"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_group_unselected" />
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_group_32"
+            android:contentDescription="@null" />
 
         <TextView
             android:id="@+id/tvGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
             android:text="그룹"
             android:textSize="11sp"
-            android:textColor="@color/grey_400" />
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium"
+            android:visibility="gone" />
     </LinearLayout>
 
-    <!-- item 3: 트래커 -->
+    <!-- 트래커 -->
     <LinearLayout
         android:id="@+id/itemTracker"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
+        android:layout_width="80dp"
+        android:layout_height="60dp"
         android:orientation="vertical"
         android:gravity="center">
 
         <ImageView
             android:id="@+id/ivTracker"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_tracker_unselected" />
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_tracker_32"
+            android:contentDescription="@null" />
 
         <TextView
             android:id="@+id/tvTracker"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="2dp"
             android:text="트래커"
             android:textSize="11sp"
-            android:textColor="@color/grey_400" />
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium" />
     </LinearLayout>
 
-    <!-- item 4: 서재 -->
+    <!-- 서재 -->
     <LinearLayout
         android:id="@+id/itemLibrary"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
+        android:layout_width="80dp"
+        android:layout_height="60dp"
         android:orientation="vertical"
         android:gravity="center">
 
         <ImageView
             android:id="@+id/ivLibrary"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_library_unselected" />
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_book_32"
+            android:contentDescription="@null" />
 
         <TextView
             android:id="@+id/tvLibrary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="2dp"
             android:text="서재"
             android:textSize="11sp"
-            android:textColor="@color/grey_400" />
+            android:textColor="@color/grey_900"
+            android:fontFamily="@font/pretendard_medium" />
     </LinearLayout>
 
-    <!-- item 5: 마이페이지 -->
-    <LinearLayout
-        android:id="@+id/itemMy"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <ImageView
-            android:id="@+id/ivMy"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_mypage_unselected" />
-
-        <TextView
-            android:id="@+id/tvMy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="마이페이지"
-            android:textSize="11sp"
-            android:textColor="@color/grey_400" />
-    </LinearLayout>
 </LinearLayout>
