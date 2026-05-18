@@ -7,7 +7,6 @@ import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.google.android.material.button.MaterialButton
@@ -162,18 +161,19 @@ class OnbStepActivity : AppCompatActivity() {
     }
 
     // 현재 단계에 맞게 진행바 UI 갱신
+    // TODO: 이거는 한번 확인 좀 active랑 inactive round 값이 달라서
     private fun renderProgress(step: Int) {
         progress1.setBackgroundResource(
-            if (step >= 1) R.drawable.bg_onb_progress_active
-            else R.drawable.bg_onb_progress_inactive
+            if (step >= 1) R.drawable.bg_sub150_r99
+            else R.drawable.bg_grey200_r30
         )
         progress2.setBackgroundResource(
-            if (step >= 2) R.drawable.bg_onb_progress_active
-            else R.drawable.bg_onb_progress_inactive
+            if (step >= 2) R.drawable.bg_sub150_r99
+            else R.drawable.bg_grey200_r30
         )
         progress3.setBackgroundResource(
-            if (step >= 3) R.drawable.bg_onb_progress_active
-            else R.drawable.bg_onb_progress_inactive
+            if (step >= 3) R.drawable.bg_sub150_r99
+            else R.drawable.bg_grey200_r30
         )
 
         // Step3에서도 버튼 문구는 동일하게 유지

@@ -11,15 +11,15 @@ import com.bookiibookii.bookiibookii.data.model.library.CreateCardRequest
 import com.bookiibookii.bookiibookii.data.model.library.CreateCardResponse
 import com.bookiibookii.bookiibookii.data.model.library.GroupCardListResponse
 import com.bookiibookii.bookiibookii.data.model.library.LibraryResponse
-import com.bookiibookii.bookiibookii.data.model.mypage.RelayReviewResponse
 import com.bookiibookii.bookiibookii.data.model.library.PostCommentRequest
 import com.bookiibookii.bookiibookii.data.model.library.PostCommentResponse
-import com.bookiibookii.bookiibookii.data.model.PresignedUrlResponse
 import com.bookiibookii.bookiibookii.data.model.library.RelayBookReviewRequest
 import com.bookiibookii.bookiibookii.data.model.library.RelayReviewRequest
 import com.bookiibookii.bookiibookii.data.model.library.ReviewRequest
 import com.bookiibookii.bookiibookii.data.model.library.TrackerResponse
 import com.bookiibookii.bookiibookii.data.model.library.UpdateCardRequest
+import com.bookiibookii.bookiibookii.data.model.mypage.RelayReviewResponse
+import com.bookiibookii.bookiibookii.data.model.user.PresignedUrlResult
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -64,7 +64,7 @@ interface LibApi {
     @POST("api/cards/{userBookId}/presigned-url")
     suspend fun postPresignedUrl(
         @Path("userBookId") userBookId: Int
-    ): Response<PresignedUrlResponse>
+    ): Response<ApiResponse<PresignedUrlResult>>
 
     @POST("api/cards/{userBookId}")
     suspend fun createCard(

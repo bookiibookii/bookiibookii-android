@@ -69,10 +69,10 @@ class SystemAdapter(
 
         private fun applyIconStyle(isUnread: Boolean) {
             if (isUnread) {
-                ivIcon.setBackgroundResource(R.drawable.bg_circle_main_pale)
-                ivIcon.setColorFilter(itemView.context.getColor(R.color.pre_main))
+                ivIcon.setBackgroundResource(R.drawable.bg_main_pale_circle)
+                ivIcon.setColorFilter(itemView.context.getColor(R.color.ui_main))
             } else {
-                ivIcon.setBackgroundResource(R.drawable.bg_circle_grey_200)
+                ivIcon.setBackgroundResource(R.drawable.bg_grey200_circle)
                 ivIcon.setColorFilter(itemView.context.getColor(R.color.white))
             }
         }
