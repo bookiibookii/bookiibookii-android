@@ -17,12 +17,10 @@ import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.notification.NotificationCategory
 import com.bookiibookii.bookiibookii.data.model.notification.NotificationItem
-import com.bookiibookii.bookiibookii.group.GroupDetailActivity
-import com.bookiibookii.bookiibookii.group.GroupJoinManagementActivity
 import com.bookiibookii.bookiibookii.home.notification.adapter.SystemAdapter
 import com.bookiibookii.bookiibookii.home.notification.data.NotificationRepository
-import com.bookiibookii.bookiibookii.home.notification.model.NotificationUiItem
 import com.bookiibookii.bookiibookii.home.notification.model.NotificationType
+import com.bookiibookii.bookiibookii.home.notification.model.NotificationUiItem
 import com.bookiibookii.bookiibookii.home.notification.util.NotificationPayloadParser
 import com.bookiibookii.bookiibookii.home.notification.util.TimeAgoFormatter
 import com.bookiibookii.bookiibookii.home.notification.vm.NotificationViewModel
@@ -118,16 +116,9 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
         when (type) {
 
             // GRP-030 (요청관리)
+            // TODO: 이동 로직 수정
             NotificationType.GROUP_JOIN_REQUEST -> {
-                val groupId = NotificationPayloadParser.getGroupId(dto)
-                if (groupId == null) {
-                    Toast.makeText(requireContext(), "알림 이동에 필요한 정보가 없습니다.", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                val intent = Intent(requireContext(), GroupJoinManagementActivity::class.java).apply {
-                    putExtra("GROUP_ID", groupId)
-                }
-                startActivity(intent)
+                Toast.makeText(requireContext(), "TODO: 요청관리 이동", Toast.LENGTH_SHORT).show()
             }
 
             // GRP-001 (리스트)
@@ -150,17 +141,9 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
             }
 
             // GRP-010 (그룹 상세/댓글)
+            // TODO: 이동 로직 수정
             NotificationType.GROUP_COMMENT_CREATED -> {
-                val groupId = NotificationPayloadParser.getGroupId(dto)
-                if (groupId == null) {
-                    Toast.makeText(requireContext(), "알림 이동에 필요한 정보가 없습니다.", Toast.LENGTH_SHORT).show()
-                    return
-                }
-
-                val intent = Intent(requireContext(), GroupDetailActivity::class.java).apply {
-                    putExtra("GROUP_ID", groupId)
-                }
-                startActivity(intent)
+                Toast.makeText(requireContext(), "TODO: 요청관리 이동", Toast.LENGTH_SHORT).show()
             }
 
             // TRK-010 (트래커)

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- TODO: background 원본 @drawable/bg_round_24dp_white -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="340dp"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_round_24dp_white"
+    android:background="@android:color/transparent"
     android:padding="24dp">
 
     <TextView
@@ -21,11 +22,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- TODO: src 원본 @drawable/ic_close_round -->
     <ImageView
         android:id="@+id/dialog_none_address_close_iv"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@drawable/ic_close_round"
+        android:src="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/dialog_none_address_title_tv"
         app:layout_constraintBottom_toBottomOf="@id/dialog_none_address_title_tv"/>

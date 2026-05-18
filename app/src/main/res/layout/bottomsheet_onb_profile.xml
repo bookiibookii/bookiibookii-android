@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- TODO: background 원본 @drawable/bg_round_top_24dp_white -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -10,9 +11,10 @@
     android:paddingEnd="20dp"
     android:paddingTop="10dp"
     android:paddingBottom="24dp"
-    android:background="@drawable/bg_round_top_24dp_white">
+    android:background="@android:color/transparent">
 
     <!-- drag handle -->
+    <!-- TODO: background 원본 @drawable/bg_round_20dp_gray200 -->
     <View
         android:id="@+id/view_handle"
         android:layout_width="44dp"
@@ -20,7 +22,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="4dp"
         android:layout_marginBottom="14dp"
-        android:background="@drawable/bg_round_20dp_gray200" />
+        android:background="@android:color/transparent" />
 
     <TextView
         android:id="@+id/tv_title"
@@ -34,6 +36,7 @@
         android:layout_marginBottom="14dp"/>
 
     <!-- 사진 촬영 -->
+    <!-- TODO: background 원본 @drawable/bg_round_20dp_gray900 -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_camera"
         android:layout_width="match_parent"
@@ -46,7 +49,7 @@
         android:insetBottom="0dp"
         android:stateListAnimator="@null"
         app:backgroundTint="@null"
-        android:background="@drawable/bg_round_20dp_gray900"
+        android:background="@android:color/transparent"
         android:textColor="@color/grey_100"
         app:icon="@drawable/ic_camera"
         app:iconGravity="textStart"
@@ -54,6 +57,7 @@
         app:iconTint="@color/white" />
 
     <!-- 앨범에서 선택 -->
+    <!-- TODO: background 원본 @drawable/bg_round_20dp_white_stroke_2dp_gray200, icon 원본 @drawable/ic_gallery -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_gallery"
         android:layout_width="match_parent"
@@ -67,9 +71,9 @@
         android:insetBottom="0dp"
         android:stateListAnimator="@null"
         app:backgroundTint="@null"
-        android:background="@drawable/bg_round_20dp_white_stroke_2dp_gray200"
+        android:background="@android:color/transparent"
         android:textColor="@color/grey_900"
-        app:icon="@drawable/ic_gallery"
+        app:icon="@android:color/transparent"
         app:iconGravity="textStart"
         app:iconPadding="10dp"
         app:iconTint="@color/grey_900" />

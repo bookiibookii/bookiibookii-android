@@ -49,6 +49,7 @@
                 android:textAppearance="@style/regular20"
                 android:textColor="@color/grey_900" />
 
+            <!-- TODO: background 원본 @drawable/bg_round_10dp_gray300 -->
             <TextView
                 android:id="@+id/myp_temp_tv"
                 android:layout_width="wrap_content"
@@ -59,7 +60,7 @@
                 android:layout_marginStart="8dp"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
-                android:background="@drawable/bg_round_10dp_gray300"
+                android:background="@android:color/transparent"
                 android:backgroundTint="@color/ui_main_pale"/>
         </LinearLayout>
 
@@ -75,11 +76,12 @@
 
         </LinearLayout>
 
+        <!-- TODO: background 원본 @drawable/bg_round_10dp_gray300 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:background="@drawable/bg_round_10dp_gray300"
+            android:background="@android:color/transparent"
             android:backgroundTint="@color/grey_100"
             android:layout_marginHorizontal="33dp"
             android:layout_marginTop="16dp"

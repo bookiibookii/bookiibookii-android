@@ -75,7 +75,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private fun setBottomNavSelected(tab: NavTab) {
         fun setItem(item: LinearLayout, tv: TextView, selected: Boolean) {
             item.background = if (selected)
-                ContextCompat.getDrawable(this, R.drawable.bg_grey100_round)
+                ContextCompat.getDrawable(this, R.drawable.bg_grey100_circle)
             else null
             tv.visibility = if (selected) View.GONE else View.VISIBLE
         }

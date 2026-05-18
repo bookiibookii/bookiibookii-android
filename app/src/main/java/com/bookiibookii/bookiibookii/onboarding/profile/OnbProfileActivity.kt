@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.onboarding.profile
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputFilter
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
@@ -15,9 +16,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.core.graphics.toColorInt
 import androidx.core.widget.addTextChangedListener
-import android.text.InputFilter
-import android.text.Spannable
-import android.view.inputmethod.BaseInputConnection
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.ActivityOnbProfileBinding
 import com.bookiibookii.bookiibookii.onboarding.steps.OnbStepActivity
@@ -211,15 +209,16 @@ class OnbProfileActivity : AppCompatActivity() {
     }
 
     // 닉네임 사용 가능 UI 처리
+    // TODO: 이것도 처리 좀
     private fun showSuccess(message: String) {
         isNicknameChecked = true
 
         binding.layoutValidation.apply {
             visibility = View.VISIBLE
-            setBackgroundResource(R.drawable.bg_validation_success)
+//            setBackgroundResource(R.drawable.bg_validation_success)
         }
 
-        binding.ivValidation.setImageResource(R.drawable.ic_success)
+//        binding.ivValidation.setImageResource(R.drawable.ic_success)
         binding.tvValidation.text = message
         binding.tvValidation.setTextColor("#00C317".toColorInt())
 
@@ -227,15 +226,16 @@ class OnbProfileActivity : AppCompatActivity() {
     }
 
     // 닉네임 오류 UI 처리
+    // TODO: 얘도
     private fun showError(message: String) {
         isNicknameChecked = false
 
         binding.layoutValidation.apply {
             visibility = View.VISIBLE
-            setBackgroundResource(R.drawable.bg_validation_error)
+//            setBackgroundResource(R.drawable.bg_validation_error)
         }
 
-        binding.ivValidation.setImageResource(R.drawable.ic_error)
+//        binding.ivValidation.setImageResource(R.drawable.ic_error)
         binding.tvValidation.text = message
         binding.tvValidation.setTextColor(getColor(R.color.ui_point_red))
 

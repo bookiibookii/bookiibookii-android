@@ -13,7 +13,6 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -266,7 +265,7 @@ class NotificationKeywordSettingActivity : BaseActivity<ActivityNotificationKeyw
 
     private fun renderSortUi(isLatest: Boolean) {
         if (isLatest) {
-            tvSortLatest.setTextColor(getColor(R.color.pre_main))
+            tvSortLatest.setTextColor(getColor(R.color.ui_main))
             tvSortLatest.setTypeface(null, Typeface.BOLD)
 
             tvSortAbc.setTextColor(getColor(R.color.grey_500))
@@ -275,7 +274,7 @@ class NotificationKeywordSettingActivity : BaseActivity<ActivityNotificationKeyw
             tvSortLatest.setTextColor(getColor(R.color.grey_500))
             tvSortLatest.setTypeface(null, Typeface.NORMAL)
 
-            tvSortAbc.setTextColor(getColor(R.color.pre_main))
+            tvSortAbc.setTextColor(getColor(R.color.ui_main))
             tvSortAbc.setTypeface(null, Typeface.BOLD)
         }
     }

@@ -105,8 +105,9 @@ class OnbStep1Fragment : Fragment(R.layout.fragment_onb_step1) {
             setPadding(dp(22), 0, dp(22), 0)
 
             textSize = 14f
-            setTextColor(requireContext().getColorStateList(R.color.selector_onb_step_text))
-            background = requireContext().getDrawable(R.drawable.bg_onb_chip_selector)
+            // TODO: 처리 부탁
+//            setTextColor(requireContext().getColorStateList(R.color.selector_onb_step_text))
+//            background = requireContext().getDrawable(R.drawable.bg_onb_chip_selector)
 
             // 선택 가능한 UI 요소로 동작하도록 설정
             isClickable = true

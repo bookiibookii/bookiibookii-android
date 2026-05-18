@@ -45,10 +45,11 @@
                     android:textColor="@color/grey_700" />
 
                 <!-- 북마크 아이콘 -->
+                <!-- TODO: src 원본 @drawable/ic_bookmark_orange -->
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/ic_bookmark_orange" />
+                    android:src="@android:color/transparent" />
             </LinearLayout>
 
             <!-- 코멘트 텍스트 -->

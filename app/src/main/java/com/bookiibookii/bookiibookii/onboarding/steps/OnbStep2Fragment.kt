@@ -127,7 +127,8 @@ class OnbStep2Fragment : Fragment(R.layout.fragment_onb_step2) {
         // "모든 방식을 환영해요" 카드
         containerAll.removeAllViews()
         viewAll = inflater.inflate(R.layout.item_onb_step2, containerAll, false).apply {
-            bindStep2Item(this, R.string.onb_step2_record_all, R.drawable.ic_onb_record_all)
+            // TODO: 처리 부탁
+//            bindStep2Item(this, R.string.onb_step2_record_all, R.drawable.ic_onb_record_all)
             setOnClickListener { vm.toggleAllRecordMethods() }
         }
         containerAll.addView(viewAll)
@@ -135,7 +136,8 @@ class OnbStep2Fragment : Fragment(R.layout.fragment_onb_step2) {
         // "아직 잘 모르겠어요" 카드
         containerUnknown.removeAllViews()
         viewUnknown = inflater.inflate(R.layout.item_onb_step2, containerUnknown, false).apply {
-            bindStep2Item(this, R.string.onb_step2_record_unknown, R.drawable.ic_onb_record_unknown)
+            // TODO: 처리 부탁
+//            bindStep2Item(this, R.string.onb_step2_record_unknown, R.drawable.ic_onb_record_unknown)
             setOnClickListener { vm.toggleStep2Unknown() }
         }
         containerUnknown.addView(viewUnknown)
