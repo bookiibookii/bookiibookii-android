@@ -10,16 +10,17 @@
     android:paddingHorizontal="16dp"
 >
 
+    <!-- TODO: background 원본 @drawable/bg_round_10dp_gray300, tools:srcCompat 원본 @drawable/bg_round_10dp_gray300 -->
     <ImageView
         android:id="@+id/item_search_cover_iv"
         android:layout_width="30dp"
         android:layout_height="45dp"
-        android:background="@drawable/bg_round_10dp_gray300"
+        android:background="@android:color/transparent"
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@drawable/bg_round_10dp_gray300" />
+        tools:srcCompat="@android:color/transparent" />
 
     <TextView
         android:id="@+id/item_search_title_tv"

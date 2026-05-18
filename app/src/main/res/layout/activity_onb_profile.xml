@@ -13,11 +13,12 @@
     android:paddingBottom="20dp"
     tools:context=".onboarding.profile.OnbProfileActivity">
 
+    <!-- TODO: src 원본 @drawable/ic_home_logo -->
     <ImageView
         android:id="@+id/iv_logo"
         android:layout_width="204dp"
         android:layout_height="21.79dp"
-        android:src="@drawable/ic_home_logo"
+        android:src="@android:color/transparent"
         android:layout_marginTop="30dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,26 +33,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- TODO: background 원본 @drawable/bg_onb_profile -->
         <ImageView
             android:id="@+id/iv_profile"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_onb_profile"
+            android:background="@android:color/transparent"
             android:clipToOutline="true"
             android:src="@drawable/img_profile_default"
             android:scaleType="centerCrop" />
 
+        <!-- TODO: src 원본 @drawable/ic_camera_button -->
         <ImageView
             android:id="@+id/iv_profile_edit"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="bottom|end"
-            android:src="@drawable/ic_camera_button"
+            android:src="@android:color/transparent"
             android:clickable="true"
             android:focusable="true" />
 
     </FrameLayout>
 
+    <!-- TODO: background 원본 @drawable/bg_onb_input_default -->
     <FrameLayout
         android:id="@+id/layout_nickname_row"
         android:layout_width="0dp"
@@ -59,7 +63,7 @@
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
         android:layout_marginTop="50dp"
-        android:background="@drawable/bg_onb_input_default"
+        android:background="@android:color/transparent"
         app:layout_constraintTop_toBottomOf="@id/profile_container"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -79,6 +83,7 @@
             android:textColor="@color/grey_900"
             android:textColorHint="@color/grey_500"/>
 
+        <!-- TODO: background 원본 @drawable/selector_onb_check_button_bg -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_check"
             android:layout_width="100dp"
@@ -91,13 +96,14 @@
             android:enabled="false"
             app:backgroundTint="@null"
             android:layout_gravity="center_vertical|end"
-            android:background="@drawable/selector_onb_check_button_bg"
+            android:background="@android:color/transparent"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:stateListAnimator="@null" />
 
     </FrameLayout>
 
+    <!-- TODO: background 원본 @drawable/bg_validation_error -->
     <LinearLayout
         android:id="@+id/layout_validation"
         android:layout_width="0dp"
@@ -111,16 +117,17 @@
         android:gravity="center_vertical"
         android:visibility="gone"
         tools:visibility="visible"
-        android:background="@drawable/bg_validation_error"
+        android:background="@android:color/transparent"
         app:layout_constraintTop_toBottomOf="@id/layout_nickname_row"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- TODO: src 원본 @drawable/ic_error -->
         <ImageView
             android:id="@+id/iv_validation"
             android:layout_width="18dp"
             android:layout_height="18dp"
-            android:src="@drawable/ic_error"
+            android:src="@android:color/transparent"
             android:contentDescription="@null"/>
 
         <TextView

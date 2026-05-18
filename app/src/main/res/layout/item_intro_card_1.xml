@@ -21,11 +21,12 @@
             android:paddingBottom="14dp">
 
             <!-- 책 표지 -->
+            <!-- TODO: background 원본 @drawable/bg_round_10dp_gray300 -->
             <FrameLayout
                 android:id="@+id/frame_cover"
                 android:layout_width="56dp"
                 android:layout_height="72dp"
-                android:background="@drawable/bg_round_10dp_gray300"
+                android:background="@android:color/transparent"
                 android:clipToOutline="true"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
@@ -195,31 +196,34 @@
                     app:layout_constraintTop_toTopOf="@id/label1" />
 
                 <!-- 트랙 바 (회색) -->
+                <!-- TODO: background 원본 @drawable/bg_progress_track -->
                 <View
                     android:id="@+id/track"
                     android:layout_width="0dp"
                     android:layout_height="8dp"
                     android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_progress_track"
+                    android:background="@android:color/transparent"
                     app:layout_constraintTop_toBottomOf="@id/label1"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
                 <!-- 진행 바 (주황) -->
+                <!-- TODO: background 원본 @drawable/bg_progress_thumb -->
                 <View
                     android:layout_width="0dp"
                     android:layout_height="8dp"
-                    android:background="@drawable/bg_progress_thumb"
+                    android:background="@android:color/transparent"
                     app:layout_constraintTop_toTopOf="@id/track"
                     app:layout_constraintBottom_toBottomOf="@id/track"
                     app:layout_constraintStart_toStartOf="@id/track"
                     app:layout_constraintEnd_toEndOf="@id/g1" />
 
                 <!-- 도트 4개 -->
+                <!-- TODO: 아래 도트 4개 background 원본 @drawable/bg_circle_grey100 -->
                 <View
                     android:layout_width="6dp"
                     android:layout_height="6dp"
-                    android:background="@drawable/bg_circle_grey100"
+                    android:background="@android:color/transparent"
                     app:layout_constraintTop_toTopOf="@id/track"
                     app:layout_constraintBottom_toBottomOf="@id/track"
                     app:layout_constraintStart_toStartOf="@id/g1"
@@ -228,7 +232,7 @@
                 <View
                     android:layout_width="6dp"
                     android:layout_height="6dp"
-                    android:background="@drawable/bg_circle_grey100"
+                    android:background="@android:color/transparent"
                     app:layout_constraintTop_toTopOf="@id/track"
                     app:layout_constraintBottom_toBottomOf="@id/track"
                     app:layout_constraintStart_toStartOf="@id/g2"
@@ -237,7 +241,7 @@
                 <View
                     android:layout_width="6dp"
                     android:layout_height="6dp"
-                    android:background="@drawable/bg_circle_grey100"
+                    android:background="@android:color/transparent"
                     app:layout_constraintTop_toTopOf="@id/track"
                     app:layout_constraintBottom_toBottomOf="@id/track"
                     app:layout_constraintStart_toStartOf="@id/g3"
@@ -246,7 +250,7 @@
                 <View
                     android:layout_width="6dp"
                     android:layout_height="6dp"
-                    android:background="@drawable/bg_circle_grey100"
+                    android:background="@android:color/transparent"
                     app:layout_constraintTop_toTopOf="@id/track"
                     app:layout_constraintBottom_toBottomOf="@id/track"
                     app:layout_constraintStart_toStartOf="@id/g4"

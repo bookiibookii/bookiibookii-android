@@ -1,33 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- TODO: background 원본 @drawable/selector_onb_step2_item_bg -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/itemRoot"
     android:layout_width="match_parent"
     android:layout_height="52dp"
-    android:background="@drawable/selector_onb_step2_item_bg"
+    android:background="@android:color/transparent"
     android:paddingStart="14dp"
     android:paddingEnd="14dp">
 
+    <!-- TODO: src 원본 @drawable/ic_onb_record_pen, background 원본 @drawable/selector_onb_step2_icon_bg -->
     <ImageView
         android:id="@+id/ivIcon"
         android:layout_width="28dp"
         android:layout_height="28dp"
         android:padding="6dp"
-        android:src="@drawable/ic_onb_record_pen"
+        android:src="@android:color/transparent"
         android:duplicateParentState="true"
-        android:background="@drawable/selector_onb_step2_icon_bg"
+        android:background="@android:color/transparent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
+    <!-- TODO: textColor 원본 @color/selector_onb_step_text -->
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textSize="15sp"
         android:letterSpacing="-0.02"
-        android:textColor="@color/selector_onb_step_text"
+        android:textColor="@android:color/transparent"
         android:layout_marginStart="10dp"
         app:layout_constraintStart_toEndOf="@id/ivIcon"
         app:layout_constraintEnd_toEndOf="parent"

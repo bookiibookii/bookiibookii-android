@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- TODO: textColor 원본 @color/selector_frag_button_text, background 원본 @drawable/selector_frag_button_bg -->
 <com.google.android.material.button.MaterialButton
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -11,7 +12,7 @@
     android:minHeight="40dp"
     android:textAllCaps="false"
     android:textSize="14sp"
-    android:textColor="@color/selector_frag_button_text"
-    android:background="@drawable/selector_frag_button_bg"
+    android:textColor="@android:color/transparent"
+    android:background="@android:color/transparent"
     app:backgroundTint="@null"
     app:rippleColor="@android:color/transparent" />
