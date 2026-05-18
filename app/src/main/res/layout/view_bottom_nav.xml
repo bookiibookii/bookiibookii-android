@@ -5,7 +5,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:background="@drawable/bg_bottom_nav_pill"
+    android:background="@drawable/bg_white_stroke_round"
     android:padding="8dp"
     android:gravity="center"
     android:elevation="10dp">
@@ -17,7 +17,7 @@
         android:layout_height="60dp"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="@drawable/bg_nav_item_selected">
+        android:background="@drawable/bg_grey100_round">
 
         <ImageView
             android:id="@+id/ivGroup"
