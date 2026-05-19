@@ -3,8 +3,11 @@ package com.bookiibookii.bookiibookii.ui.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,10 +74,94 @@ fun SearchInputButton(
     }
 }
 
+enum class BottomSheetBtnStyle { White, Dark, Orange, Grey }
+
+@Composable
+fun BottomSheetTwoBtnShort(
+    text: String,
+    style: BottomSheetBtnStyle,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = BookiiBookiiTheme.shape.round16
+    val containerColor: Color
+    val contentColor: Color
+    val borderColor: Color?
+    when (style) {
+        BottomSheetBtnStyle.White -> {
+            containerColor = BookiiBookiiTheme.colors.white
+            contentColor = BookiiBookiiTheme.colors.grey900
+            borderColor = BookiiBookiiTheme.colors.grey200
+        }
+        BottomSheetBtnStyle.Dark -> {
+            containerColor = BookiiBookiiTheme.colors.grey900
+            contentColor = BookiiBookiiTheme.colors.white
+            borderColor = null
+        }
+        BottomSheetBtnStyle.Orange -> {
+            containerColor = BookiiBookiiTheme.colors.uiMain
+            contentColor = BookiiBookiiTheme.colors.white
+            borderColor = null
+        }
+        BottomSheetBtnStyle.Grey -> {
+            containerColor = BookiiBookiiTheme.colors.grey200
+            contentColor = BookiiBookiiTheme.colors.grey500
+            borderColor = null
+        }
+    }
+    Box(
+        modifier = modifier
+            .height(56.dp)
+            .clip(shape)
+            .background(containerColor)
+            .then(
+                if (borderColor != null) {
+                    Modifier.border(width = 1.dp, color = borderColor, shape = shape)
+                } else {
+                    Modifier
+                },
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = BookiiBookiiTheme.typography.medium16,
+            color = contentColor,
+            maxLines = 1,
+        )
+    }
+}
+
 @Preview
 @Composable
 private fun SearchInputButtonPreview() {
     BookiiPreview {
         SearchInputButton(onClick = {})
+    }
+}
+
+@Preview
+@Composable
+private fun BottomSheetTwoBtnShortPreview() {
+    BookiiPreview {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            BottomSheetTwoBtnShort(
+                text = "취소",
+                style = BottomSheetBtnStyle.White,
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+            BottomSheetTwoBtnShort(
+                text = "적용",
+                style = BottomSheetBtnStyle.Dark,
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }

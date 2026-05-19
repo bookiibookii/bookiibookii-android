@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
+
+// 그룹 검색 메인 카드 아이템
 @Composable
 fun ExploreGroupCard(
     title: String,
