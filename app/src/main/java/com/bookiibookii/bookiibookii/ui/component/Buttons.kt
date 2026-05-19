@@ -16,19 +16,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 enum class BottomSheetBtnStyle { White, Dark, Orange, Grey }
-
 @Composable
 fun BottomSheetTwoBtnShort(
     text: String,
     style: BottomSheetBtnStyle,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    textStyle: TextStyle = BookiiBookiiTheme.typography.medium16,
 ) {
     val shape = BookiiBookiiTheme.shape.round16
     val containerColor: Color
@@ -74,7 +75,7 @@ fun BottomSheetTwoBtnShort(
     ) {
         Text(
             text = text,
-            style = BookiiBookiiTheme.typography.medium16,
+            style = textStyle,
             color = contentColor,
             maxLines = 1,
         )
@@ -100,6 +101,7 @@ private fun BottomSheetTwoBtnShortPreview() {
                 style = BottomSheetBtnStyle.Dark,
                 onClick = {},
                 modifier = Modifier.weight(1f),
+                textStyle = BookiiBookiiTheme.typography.regular16
             )
         }
     }
@@ -158,6 +160,71 @@ private fun FooterButtonPreview() {
                 text = "그룹 만들기",
                 onClick = {},
                 enabled = false,
+            )
+        }
+    }
+}
+
+enum class CardButtonStyle { Main, MainPale }
+
+@Composable
+fun CardButton(
+    text: String,
+    style: CardButtonStyle,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = BookiiBookiiTheme.typography.regular16,
+) {
+    val shape = BookiiBookiiTheme.shape.round16
+    val containerColor: Color
+    val contentColor: Color
+    when (style) {
+        CardButtonStyle.Main -> {
+            containerColor = BookiiBookiiTheme.colors.uiMain
+            contentColor = BookiiBookiiTheme.colors.white
+        }
+        CardButtonStyle.MainPale -> {
+            containerColor = BookiiBookiiTheme.colors.uiMainPale
+            contentColor = BookiiBookiiTheme.colors.uiMain
+        }
+    }
+    Box(
+        modifier = modifier
+            .height(56.dp)
+            .clip(shape)
+            .background(containerColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = textStyle,
+            color = contentColor,
+            maxLines = 1,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun CardButtonPreview() {
+    BookiiPreview {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            CardButton(
+                text = "Main",
+                style = CardButtonStyle.Main,
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+            CardButton(
+                text = "MainPale",
+                style = CardButtonStyle.MainPale,
+                onClick = {},
+                modifier = Modifier.weight(1f),
             )
         }
     }
