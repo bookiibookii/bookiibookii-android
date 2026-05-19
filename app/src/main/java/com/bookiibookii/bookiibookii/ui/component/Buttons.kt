@@ -5,74 +5,21 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
-
-@Composable
-fun SearchInputButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    hint: String = "그룹명, 도서명, 저자로 검색",
-) {
-    val shape = RoundedCornerShape(
-        topStart = 20.dp,
-        bottomStart = 20.dp,
-        topEnd = 30.dp,
-        bottomEnd = 30.dp,
-    )
-    Row(
-        modifier = modifier
-            .clip(shape)
-            .background(BookiiBookiiTheme.colors.white)
-            .border(width = 1.dp, color = BookiiBookiiTheme.colors.grey200, shape = shape)
-            .clickable(onClick = onClick)
-            .padding(start = 16.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = hint,
-            style = BookiiBookiiTheme.typography.regular15,
-            color = BookiiBookiiTheme.colors.grey500,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .background(
-                    color = BookiiBookiiTheme.colors.grey300,
-                    shape = BookiiBookiiTheme.shape.round50,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_search),
-                contentDescription = null,
-                tint = BookiiBookiiTheme.colors.white,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-    }
-}
 
 enum class BottomSheetBtnStyle { White, Dark, Orange, Grey }
 
@@ -136,14 +83,6 @@ fun BottomSheetTwoBtnShort(
 
 @Preview
 @Composable
-private fun SearchInputButtonPreview() {
-    BookiiPreview {
-        SearchInputButton(onClick = {})
-    }
-}
-
-@Preview
-@Composable
 private fun BottomSheetTwoBtnShortPreview() {
     BookiiPreview {
         Row(
@@ -161,6 +100,64 @@ private fun BottomSheetTwoBtnShortPreview() {
                 style = BottomSheetBtnStyle.Dark,
                 onClick = {},
                 modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+fun FooterButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    val shape = BookiiBookiiTheme.shape.round20
+    val containerColor = if (enabled) {
+        BookiiBookiiTheme.colors.grey900
+    } else {
+        BookiiBookiiTheme.colors.grey200
+    }
+    val contentColor = if (enabled) {
+        BookiiBookiiTheme.colors.white
+    } else {
+        BookiiBookiiTheme.colors.grey500
+    }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(72.dp)
+            .clip(shape)
+            .background(containerColor)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 18.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = BookiiBookiiTheme.typography.medium18,
+            color = contentColor,
+            maxLines = 1,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun FooterButtonPreview() {
+    BookiiPreview {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            FooterButton(
+                text = "그룹 만들기",
+                onClick = {},
+            )
+            FooterButton(
+                text = "그룹 만들기",
+                onClick = {},
+                enabled = false,
             )
         }
     }
