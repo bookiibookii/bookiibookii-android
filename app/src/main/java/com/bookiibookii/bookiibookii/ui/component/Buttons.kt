@@ -1,32 +1,167 @@
 package com.bookiibookii.bookiibookii.ui.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// 임시로 만들어둔 거임 수정 필요
 @Composable
-fun BookiiPrimaryButton(
-    text: String,
+fun SearchInputButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
+    hint: String = "그룹명, 도서명, 저자로 검색",
 ) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        shape = BookiiBookiiTheme.shape.round20,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = BookiiBookiiTheme.colors.uiMain,
-            contentColor = BookiiBookiiTheme.colors.white,
-        ),
-        modifier = modifier.height(52.dp),
+    val shape = RoundedCornerShape(
+        topStart = 20.dp,
+        bottomStart = 20.dp,
+        topEnd = 30.dp,
+        bottomEnd = 30.dp,
+    )
+    Row(
+        modifier = modifier
+            .clip(shape)
+            .background(BookiiBookiiTheme.colors.white)
+            .border(width = 1.dp, color = BookiiBookiiTheme.colors.grey200, shape = shape)
+            .clickable(onClick = onClick)
+            .padding(start = 16.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text, style = BookiiBookiiTheme.typography.medium16)
+        Text(
+            text = hint,
+            style = BookiiBookiiTheme.typography.regular15,
+            color = BookiiBookiiTheme.colors.grey500,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(
+                    color = BookiiBookiiTheme.colors.grey300,
+                    shape = BookiiBookiiTheme.shape.round50,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_search),
+                contentDescription = null,
+                tint = BookiiBookiiTheme.colors.white,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+    }
+}
+
+enum class BottomSheetBtnStyle { White, Dark, Orange, Grey }
+
+@Composable
+fun BottomSheetTwoBtnShort(
+    text: String,
+    style: BottomSheetBtnStyle,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = BookiiBookiiTheme.shape.round16
+    val containerColor: Color
+    val contentColor: Color
+    val borderColor: Color?
+    when (style) {
+        BottomSheetBtnStyle.White -> {
+            containerColor = BookiiBookiiTheme.colors.white
+            contentColor = BookiiBookiiTheme.colors.grey900
+            borderColor = BookiiBookiiTheme.colors.grey200
+        }
+        BottomSheetBtnStyle.Dark -> {
+            containerColor = BookiiBookiiTheme.colors.grey900
+            contentColor = BookiiBookiiTheme.colors.white
+            borderColor = null
+        }
+        BottomSheetBtnStyle.Orange -> {
+            containerColor = BookiiBookiiTheme.colors.uiMain
+            contentColor = BookiiBookiiTheme.colors.white
+            borderColor = null
+        }
+        BottomSheetBtnStyle.Grey -> {
+            containerColor = BookiiBookiiTheme.colors.grey200
+            contentColor = BookiiBookiiTheme.colors.grey500
+            borderColor = null
+        }
+    }
+    Box(
+        modifier = modifier
+            .height(56.dp)
+            .clip(shape)
+            .background(containerColor)
+            .then(
+                if (borderColor != null) {
+                    Modifier.border(width = 1.dp, color = borderColor, shape = shape)
+                } else {
+                    Modifier
+                },
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = BookiiBookiiTheme.typography.medium16,
+            color = contentColor,
+            maxLines = 1,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun SearchInputButtonPreview() {
+    BookiiPreview {
+        SearchInputButton(onClick = {})
+    }
+}
+
+@Preview
+@Composable
+private fun BottomSheetTwoBtnShortPreview() {
+    BookiiPreview {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            BottomSheetTwoBtnShort(
+                text = "취소",
+                style = BottomSheetBtnStyle.White,
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+            BottomSheetTwoBtnShort(
+                text = "적용",
+                style = BottomSheetBtnStyle.Dark,
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }

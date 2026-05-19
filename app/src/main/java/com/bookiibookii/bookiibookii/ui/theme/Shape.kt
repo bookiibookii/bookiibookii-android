@@ -12,6 +12,7 @@ data class BookiiShape(
     val round8: Shape,
     val round16: Shape,
     val round20: Shape,
+    val round26: Shape,
     val round50: Shape,
 )
 
@@ -20,6 +21,7 @@ val bookiiShape = BookiiShape(
     round8 = RoundedCornerShape(8.dp),
     round16 = RoundedCornerShape(16.dp),
     round20 = RoundedCornerShape(20.dp),
+    round26 = RoundedCornerShape(26.dp),
     round50 = RoundedCornerShape(50.dp),
 )
 
