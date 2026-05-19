@@ -175,9 +175,9 @@ fun RegionBottomSheet(
                     BottomSheetChip(text = NATIONWIDE, selected = true, onClick = {})
                 } else {
                     FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth(0.9f),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                         maxItemsInEachRow = 4,
                     ) {
                         currentCity.districts.forEach { district ->
