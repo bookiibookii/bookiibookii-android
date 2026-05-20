@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.dp
 
 @Immutable
 data class BookiiShape(
+    val round4: Shape,
     val round5: Shape,
     val round8: Shape,
     val round16: Shape,
@@ -18,6 +19,7 @@ data class BookiiShape(
 )
 
 val bookiiShape = BookiiShape(
+    round4 = RoundedCornerShape(4.dp),
     round5 = RoundedCornerShape(5.dp),
     round8 = RoundedCornerShape(8.dp),
     round16 = RoundedCornerShape(16.dp),
