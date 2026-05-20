@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-enum class BottomSheetBtnStyle { White, Dark, Orange, Grey }
+enum class BottomSheetBtnStyle { White, Dark, Orange, Grey, Red }
 @Composable
 fun BottomSheetTwoBtnShort(
     text: String,
@@ -54,6 +54,11 @@ fun BottomSheetTwoBtnShort(
         BottomSheetBtnStyle.Grey -> {
             containerColor = BookiiBookiiTheme.colors.grey200
             contentColor = BookiiBookiiTheme.colors.grey500
+            borderColor = null
+        }
+        BottomSheetBtnStyle.Red -> {
+            containerColor = BookiiBookiiTheme.colors.uiPointRed
+            contentColor = BookiiBookiiTheme.colors.white
             borderColor = null
         }
     }

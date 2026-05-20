@@ -13,6 +13,7 @@ val Pretendard = FontFamily(
     Font(R.font.pretendard_regular, FontWeight.Normal),
     Font(R.font.pretendard_medium, FontWeight.Medium),
     Font(R.font.pretendard_semibold, FontWeight.SemiBold),
+    Font(R.font.pretendard_bold, FontWeight.Bold)
 )
 
 @Immutable
@@ -40,6 +41,12 @@ data class BookiiTypography(
     val semibold14: TextStyle,
     val semibold18: TextStyle,
     val semibold20: TextStyle,
+    val bold12: TextStyle,
+    val bold14: TextStyle,
+    val bold16: TextStyle,
+    val bold18: TextStyle,
+    val bold20: TextStyle,
+    val bold24: TextStyle,
 )
 
 private fun pretendard(weight: FontWeight, size: Int) = TextStyle(
@@ -72,6 +79,12 @@ val bookiiTypography = BookiiTypography(
     semibold14 = pretendard(FontWeight.SemiBold, 14),
     semibold18 = pretendard(FontWeight.SemiBold, 18),
     semibold20 = pretendard(FontWeight.SemiBold, 20),
+    bold12 = pretendard(FontWeight.Bold, 12),
+    bold14 = pretendard(FontWeight.Bold, 14),
+    bold16 = pretendard(FontWeight.Bold, 16),
+    bold18 = pretendard(FontWeight.Bold, 18),
+    bold20 = pretendard(FontWeight.Bold, 20),
+    bold24 = pretendard(FontWeight.Bold, 24),
 )
 
 val LocalBookiiTypography = staticCompositionLocalOf<BookiiTypography> {
