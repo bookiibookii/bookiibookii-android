@@ -10,16 +10,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -171,7 +176,7 @@ private fun FooterButtonPreview() {
     }
 }
 
-enum class CardButtonStyle { Main, MainPale }
+enum class CardButtonStyle { Main, MainPale, Grey, White }
 
 @Composable
 fun CardButton(
@@ -184,14 +189,27 @@ fun CardButton(
 ) {
     val containerColor: Color
     val contentColor: Color
+    val borderColor: Color?
     when (style) {
         CardButtonStyle.Main -> {
             containerColor = BookiiBookiiTheme.colors.uiMain
             contentColor = BookiiBookiiTheme.colors.white
+            borderColor = null
         }
         CardButtonStyle.MainPale -> {
             containerColor = BookiiBookiiTheme.colors.uiMainPale
             contentColor = BookiiBookiiTheme.colors.uiMain
+            borderColor = null
+        }
+        CardButtonStyle.Grey -> {
+            containerColor = BookiiBookiiTheme.colors.grey200
+            contentColor = BookiiBookiiTheme.colors.grey500
+            borderColor = null
+        }
+        CardButtonStyle.White -> {
+            containerColor = BookiiBookiiTheme.colors.white
+            contentColor = BookiiBookiiTheme.colors.grey900
+            borderColor = BookiiBookiiTheme.colors.grey200
         }
     }
     Box(
@@ -199,6 +217,13 @@ fun CardButton(
             .height(56.dp)
             .clip(shape)
             .background(containerColor)
+            .then(
+                if (borderColor != null) {
+                    Modifier.border(width = 1.dp, color = borderColor, shape = shape)
+                } else {
+                    Modifier
+                },
+            )
             .clickable(onClick = onClick)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
@@ -233,5 +258,36 @@ private fun CardButtonPreview() {
                 modifier = Modifier.weight(1f),
             )
         }
+    }
+}
+
+@Composable
+fun CloseButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentDescription: String = "닫기",
+) {
+    Box(
+        modifier = modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(BookiiBookiiTheme.colors.grey100)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_x),
+            contentDescription = contentDescription,
+            tint = BookiiBookiiTheme.colors.grey900,
+            modifier = Modifier.size(20.dp),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun CloseButtonPreview() {
+    BookiiPreview {
+        CloseButton(onClick = {})
     }
 }
