@@ -24,8 +24,8 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
-        enableEdgeToEdge() // Edge-To-Edge
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge() // Edge-To-Edge
 
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)

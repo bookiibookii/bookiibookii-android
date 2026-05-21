@@ -17,15 +17,6 @@
         android:theme="@style/Theme.BookiiBookii"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".trkDirectGuest.DirectGuestActivity"
-            android:exported="false" />
-        <activity
-            android:name=".trkDirectHost.DirectHostActivity"
-            android:exported="false" />
-        <activity
-            android:name=".trkGuest.GuestActivity"
-            android:exported="false" />
-        <activity
             android:name=".common.ComErrorActivity"
             android:exported="false" />
         <activity
@@ -33,6 +24,16 @@
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.BookiiBookii.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!--<activity
             android:name=".common.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.BookiiBookii.Splash">
@@ -43,12 +44,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".onboarding.login.LoginActivity"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize"></activity>
+            android:windowSoftInputMode="adjustResize" />-->
+        <activity
+            android:name=".onboarding.login.LoginActivity"
+            android:exported="false" />
         <activity
             android:name=".home.notification.ui.NotificationActivity"
             android:exported="false" />
@@ -57,36 +58,13 @@
             android:exported="false" />
         <activity
             android:name=".onboarding.profile.OnbProfileActivity"
-            android:exported="false"></activity>
-        <activity
-            android:name=".group.search.GrpSearchActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".onboarding.steps.OnbStepActivity"
             android:exported="false" />
         <activity
-            android:name=".onboarding.steps.OnbStatusActivity"
-            android:exported="false" />
-        <activity
-            android:name=".group.GroupDetailActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".group.generation.GroupGenerationActivity"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".group.GroupJoinManagementActivity"
-            android:exported="false" />
-        <activity
-            android:name=".group.GroupDetailReportContainerActivity"
-            android:screenOrientation="portrait" />
-        <activity
             android:name=".common.BaseActivity"
             android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".trkHost.HostActivity"
-            android:exported="false" />
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
             android:exported="true">

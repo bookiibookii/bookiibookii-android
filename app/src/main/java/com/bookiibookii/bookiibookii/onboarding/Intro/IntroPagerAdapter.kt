@@ -11,13 +11,15 @@ class IntroPagerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     override fun getItemViewType(position: Int) = position
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val layoutRes = when (viewType) {
-            0 -> R.layout.item_intro_card_1
+        /*val layoutRes = when (viewType) {
+            *//*0 -> R.layout.item_intro_card_1
             1 -> R.layout.item_intro_card_2
-            else -> R.layout.item_intro_card_3
+            else -> R.layout.item_intro_card_3*//*
+
         }
         val view = LayoutInflater.from(parent.context).inflate(layoutRes, parent, false)
-        return object : RecyclerView.ViewHolder(view) {}
+        return object : RecyclerView.ViewHolder(view) {}*/
+        return TODO("추후에 스플래시 화면 구현할 때 복구")
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {

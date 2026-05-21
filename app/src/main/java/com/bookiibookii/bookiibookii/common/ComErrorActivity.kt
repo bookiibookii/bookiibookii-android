@@ -36,7 +36,6 @@ class ComErrorActivity : AppCompatActivity() {
     }
 
     private fun bindViews() {
-        ivError = findViewById(R.id.iv_error_image)
         tvTitle = findViewById(R.id.tv_error_title)
         tvDes = findViewById(R.id.tv_error_des)
 
