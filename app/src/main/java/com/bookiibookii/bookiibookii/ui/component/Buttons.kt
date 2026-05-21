@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -184,6 +185,7 @@ fun CardButton(
     style: CardButtonStyle,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    height: Dp = 56.dp,
     shape: Shape = BookiiBookiiTheme.shape.round16,
     textStyle: TextStyle = BookiiBookiiTheme.typography.regular16,
 ) {
@@ -214,7 +216,7 @@ fun CardButton(
     }
     Box(
         modifier = modifier
-            .height(56.dp)
+            .height(height)
             .clip(shape)
             .background(containerColor)
             .then(
