@@ -50,10 +50,9 @@ class LoginIntroAnimActivity : AppCompatActivity() {
     private var pendingDesc: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
+        super.onCreate(savedInstanceState)
         enableEdgeToEdge() // Edge-to-Edge 적용
 
-        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_intro_anim)
 
         // 뒤로가기 막기

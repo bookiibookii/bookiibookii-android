@@ -17,10 +17,10 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
     abstract fun getViewBinding(): B
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         // 1. 화면을 시스템 바 영역까지 확장 (Edge-to-Edge)
         enableEdgeToEdge()
-
-        super.onCreate(savedInstanceState)
 
         binding = getViewBinding()
         setContentView(binding.root)

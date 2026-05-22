@@ -34,13 +34,14 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <!-- TODO: background 원본 @drawable/bg_onb_profile -->
+        <!-- TODO: src 원본 @drawable/img_profile_default -->
         <ImageView
             android:id="@+id/iv_profile"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
             android:clipToOutline="true"
-            android:src="@drawable/img_profile_default"
+            android:src="@android:color/transparent"
             android:scaleType="centerCrop" />
 
         <!-- TODO: src 원본 @drawable/ic_camera_button -->

@@ -11,19 +11,6 @@
     android:paddingBottom="16dp"
     tools:context=".common.ComErrorActivity">
 
-    <!-- 캐릭터 / 에러 이미지 -->
-    <ImageView
-        android:id="@+id/iv_error_image"
-        android:layout_width="match_parent"
-        android:layout_height="324dp"
-        android:layout_marginBottom="30dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/img_error_fox"
-        app:layout_constraintBottom_toTopOf="@id/tv_error_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="ContentDescription" />
-
     <!-- 타이틀 -->
     <TextView
         android:id="@+id/tv_error_title"

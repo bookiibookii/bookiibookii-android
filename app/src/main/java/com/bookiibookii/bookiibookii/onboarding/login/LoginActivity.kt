@@ -266,13 +266,11 @@ class LoginActivity : AppCompatActivity() {
         tvComplete.visibility = View.VISIBLE
 
         tvComplete.postDelayed({
-            val isNewUser = !TokenManager.isOnboardingDone(this)
-
-            if (isNewUser) {
-                moveToOnboarding()
-            } else {
-                moveToMain()
-            }
+            // TODO: 온보딩 화면 구현 완료 후 아래 분기 복구
+            // val isNewUser = !TokenManager.isOnboardingDone(this)
+            // if (isNewUser) moveToOnboarding() else moveToMain()
+            TokenManager.saveOnboardingDone(this, true)
+            moveToMain()
         }, 800L)
     }
 
@@ -304,11 +302,10 @@ class LoginActivity : AppCompatActivity() {
         tvComplete.visibility = View.VISIBLE
 
         tvComplete.postDelayed({
-            if (TokenManager.isOnboardingDone(this)) {
-                moveToMain()
-            } else {
-                moveToOnboarding()
-            }
+            // TODO: 온보딩 화면 구현 완료 후 아래 분기 복구
+            // if (TokenManager.isOnboardingDone(this)) moveToMain() else moveToOnboarding()
+            TokenManager.saveOnboardingDone(this, true)
+            moveToMain()
         }, 1500L)
     }
 

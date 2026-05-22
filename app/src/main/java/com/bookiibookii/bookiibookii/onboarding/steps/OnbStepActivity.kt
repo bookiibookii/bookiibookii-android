@@ -7,6 +7,7 @@ import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.google.android.material.button.MaterialButton
@@ -144,13 +145,13 @@ class OnbStepActivity : AppCompatActivity() {
         val s3Key = intent.getStringExtra(EXTRA_S3_KEY) // null 가능
 
         startActivity(
-            Intent(this, OnbStatusActivity::class.java)
-                .putExtra(OnbStatusActivity.EXTRA_STATUS, "LOADING")
+            Intent(this, MainActivity::class.java)
+                /*.putExtra(OnbStatusActivity.EXTRA_STATUS, "LOADING")
                 .putExtra(OnbStatusActivity.EXTRA_NAME, name)
                 .putExtra(OnbStatusActivity.EXTRA_S3_KEY, s3Key)
                 .putStringArrayListExtra(OnbStatusActivity.EXTRA_GENRES, ArrayList(genreValues))
                 .putStringArrayListExtra(OnbStatusActivity.EXTRA_METHODS, ArrayList(methodValues))
-                .putExtra(OnbStatusActivity.EXTRA_SPEED, speedValue)
+                .putExtra(OnbStatusActivity.EXTRA_SPEED, speedValue)*/
         )
         finish()
     }

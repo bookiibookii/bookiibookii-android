@@ -11,9 +11,12 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.home.HomeFragment
+import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 
 private enum class NavTab { HOME, TRACKER, LIBRARY }
 
@@ -25,7 +28,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        if (!TokenManager.hasAccessToken(this)) {
+            startActivity(Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
+            finish()
+            return
+        }
 
         if (savedInstanceState == null) {
             setBottomNavSelected(NavTab.HOME)
