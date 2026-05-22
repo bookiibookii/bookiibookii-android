@@ -1,155 +1,109 @@
 package com.bookiibookii.bookiibookii.tracker.ui.detail
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
+import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerDetailContent
+import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStep
+import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStepStatus
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
-import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
 fun TrackerDeliveryDetailScreen(
+    groupName: String,
+    dDay: String,
+    bookTitle: String,
+    statusLabel: String,
+    currentStepLabel: String,
+    myProfile: TrackerProfileItem,
+    partnerProfile: TrackerProfileItem,
+    secondaryActionLabel: String,
+    primaryActionLabel: String,
+    steps: List<TrackerStep>,
     onBackClick: () -> Unit,
     onMessageClick: () -> Unit,
     onMoreClick: () -> Unit,
+    onSecondaryActionClick: () -> Unit,
+    onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(BookiiBookiiTheme.colors.uiBg),
-    ) {
-        TrackerDetailHeader(
-            onBackClick = onBackClick,
-            onMessageClick = onMessageClick,
-            onMoreClick = onMoreClick,
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            // TODO B1~B3: 트래커 상세 카드 (그룹 정보 + 두 트래커 + 액션 버튼)
-            // TODO C: TrackerStepList
-        }
-    }
+    TrackerDetailContent(
+        groupName = groupName,
+        dDay = dDay,
+        bookTitle = bookTitle,
+        statusLabel = statusLabel,
+        currentStepLabel = currentStepLabel,
+        myProfile = myProfile,
+        partnerProfile = partnerProfile,
+        exchangeLabel = "택배 교환",
+        secondaryActionLabel = secondaryActionLabel,
+        primaryActionLabel = primaryActionLabel,
+        steps = steps,
+        onBackClick = onBackClick,
+        onMessageClick = onMessageClick,
+        onMoreClick = onMoreClick,
+        onSecondaryActionClick = onSecondaryActionClick,
+        onPrimaryActionClick = onPrimaryActionClick,
+        modifier = modifier,
+    )
 }
 
-@Composable
-private fun TrackerDetailHeader(
-    onBackClick: () -> Unit,
-    onMessageClick: () -> Unit,
-    onMoreClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(BookiiBookiiTheme.colors.white),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(68.dp)
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            IconCircleButton(
-                iconRes = R.drawable.ic_back,
-                onClick = onBackClick,
-            )
-            Text(
-                text = "교환 현황",
-                style = BookiiBookiiTheme.typography.medium20,
-                color = BookiiBookiiTheme.colors.grey900,
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconCircleButton(
-                    iconRes = R.drawable.ic_message,
-                    onClick = onMessageClick,
-                )
-                IconCircleButton(
-                    iconRes = R.drawable.ic_meetball,
-                    onClick = onMoreClick,
-                )
-            }
-        }
-        HorizontalDivider(
-            thickness = 1.dp,
-            color = BookiiBookiiTheme.colors.grey200,
-        )
-    }
-}
-
-@Composable
-private fun IconCircleButton(
-    iconRes: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = null,
-            modifier = Modifier.size(32.dp),
-            tint = Color.Unspecified,
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun TrackerDetailHeaderPreview() {
-    BookiiPreview {
-        TrackerDetailHeader(
-            onBackClick = {},
-            onMessageClick = {},
-            onMoreClick = {},
-        )
-    }
-}
-
-@Preview(showBackground = true, heightDp = 800)
+@Preview(showBackground = true, heightDp = 1000)
 @Composable
 private fun TrackerDeliveryDetailScreenPreview() {
     BookiiPreview {
         TrackerDeliveryDetailScreen(
+            groupName = "김영하 도장깨기 하실 분",
+            dDay = "D-2",
+            bookTitle = "살인자의 기억법",
+            statusLabel = "후기 작성",
+            currentStepLabel = "내 책 읽기",
+            myProfile = TrackerProfileItem(
+                nickname = "나",
+                bookTitle = "살인자의 기억법",
+                bookCoverUrl = null,
+                profileImageUrl = null,
+                progressPercent = 100,
+                isMine = true,
+            ),
+            partnerProfile = TrackerProfileItem(
+                nickname = "noshel",
+                bookTitle = "작별인사",
+                bookCoverUrl = null,
+                profileImageUrl = null,
+                progressPercent = 0,
+                isMine = false,
+            ),
+            secondaryActionLabel = "독서카드 작성",
+            primaryActionLabel = "책 후기 작성",
+            steps = listOf(
+                TrackerStep(
+                    title = "반납",
+                    description = "파트너에게 책을 돌려보내주세요",
+                    status = TrackerStepStatus.Pending,
+                ),
+                TrackerStep(
+                    title = "파트너 책 읽기",
+                    description = "작별인사를 읽고 진행률을 기록해주세요",
+                    status = TrackerStepStatus.InProgress(chipText = "D-2"),
+                ),
+                TrackerStep(
+                    title = "교환",
+                    description = "파트너와 책을 교환해주세요",
+                    status = TrackerStepStatus.Completed,
+                ),
+                TrackerStep(
+                    title = "살인자의 기억법 읽기",
+                    description = "독서카드를 작성하면 교환독서가 더 즐거워져요",
+                    status = TrackerStepStatus.Completed,
+                ),
+            ),
             onBackClick = {},
             onMessageClick = {},
             onMoreClick = {},
+            onSecondaryActionClick = {},
+            onPrimaryActionClick = {},
         )
     }
 }
