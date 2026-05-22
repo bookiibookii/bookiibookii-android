@@ -2,21 +2,26 @@ package com.bookiibookii.bookiibookii.onboarding.login
 
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
+import android.view.WindowManager
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
+import android.text.style.StyleSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.Group
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.credentials.CredentialManager
@@ -35,7 +40,6 @@ import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroAnimActivity
 import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.material.card.MaterialCardView
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
@@ -82,6 +86,7 @@ class LoginActivity : AppCompatActivity() {
 
         bindLoginButtons()
         setupTermsNotice()
+        setupTagline()
 
         // TODO: 추후 로그 삭제 (카카오 키해시 확인용)
         Log.e("KeyHash_Check", "내 앱의 현재 키 해시: ${com.kakao.sdk.common.KakaoSdk.keyHash}")
@@ -95,29 +100,17 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun bindLoginButtons() {
-        val kakaoButton = findViewById<View>(R.id.btn_kakao_login)
-        val googleButton = findViewById<View>(R.id.btn_google_login)
+        val kakaoButton = findViewById<ImageButton>(R.id.btn_kakao_circle)
+        val googleButton = findViewById<ImageButton>(R.id.btn_google_circle)
 
-        setupButtonUI(
-            root = kakaoButton,
-            text = "카카오로 시작하기",
-            iconRes = R.drawable.ic_kakao,
-            bgRes = R.color.kakao,
-            textRes = R.color.grey_900
-        ) {
-            if (isNavigating) return@setupButtonUI
+        kakaoButton.setOnClickListener {
+            if (isNavigating) return@setOnClickListener
             showLoadingState(true)
             loginToKakao()
         }
 
-        setupButtonUI(
-            root = googleButton,
-            text = "구글로 시작하기",
-            iconRes = R.drawable.ic_google,
-            bgRes = R.color.grey_100,
-            textRes = R.color.grey_900
-        ) {
-            if (isNavigating) return@setupButtonUI
+        googleButton.setOnClickListener {
+            if (isNavigating) return@setOnClickListener
             showLoadingState(true)
             signInWithGoogle()
         }
@@ -287,10 +280,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showLoadingState(isLoading: Boolean) {
-        val buttonsGroup = findViewById<Group>(R.id.group_login_buttons)
+        val snsSection = findViewById<LinearLayout>(R.id.layout_sns_section)
         val terms = findViewById<TextView>(R.id.tv_terms_notice)
 
-        buttonsGroup.visibility = if (isLoading) View.GONE else View.VISIBLE
+        snsSection.visibility = if (isLoading) View.GONE else View.VISIBLE
         terms.visibility = if (isLoading) View.GONE else View.VISIBLE
     }
 
@@ -310,27 +303,6 @@ class LoginActivity : AppCompatActivity() {
                 moveToOnboarding()
             }
         }, 1500L)
-    }
-
-    private fun setupButtonUI(
-        root: View,
-        text: String,
-        iconRes: Int,
-        bgRes: Int,
-        textRes: Int,
-        onClick: () -> Unit
-    ) {
-        val card = root as MaterialCardView
-        val tv = root.findViewById<TextView>(R.id.tv_login_text)
-        val iv = root.findViewById<ImageView>(R.id.iv_login_icon)
-
-        tv.text = text
-        tv.setTextColor(getColor(textRes))
-        iv.setImageResource(iconRes)
-        iv.imageTintList = null
-        card.setCardBackgroundColor(getColor(bgRes))
-
-        root.setOnClickListener { onClick() }
     }
 
     private fun moveToMain() {
@@ -360,14 +332,29 @@ class LoginActivity : AppCompatActivity() {
         val result: MypageResult?
     )
 
+    private fun setupTagline() {
+        val tv = findViewById<TextView>(R.id.tv_tagline)
+        val line1 = "읽고, 교환하고, 기록하다 –\n"
+        val bold = "부키부키"
+        val line2 = "에서 교환독서 파트너를 찾아보세요"
+        val spannable = SpannableStringBuilder(line1 + bold + line2)
+        spannable.setSpan(
+            StyleSpan(Typeface.BOLD),
+            line1.length,
+            line1.length + bold.length,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        tv.text = spannable
+    }
+
     private fun setupTermsNotice() {
         val tv = findViewById<TextView>(R.id.tv_terms_notice)
 
-        val prefix = "로그인하면 "
+        val prefix = "로그인하면 부키부키의 "
         val terms = "서비스 약관"
         val mid = " 및 "
         val privacy = "개인정보 처리방침"
-        val suffix = "에 동의한 것으로 간주합니다."
+        val suffix = "에 동의하게 됩니다."
 
         val full = prefix + terms + mid + privacy + suffix
         val spannable = SpannableString(full)
@@ -428,6 +415,16 @@ class LoginActivity : AppCompatActivity() {
         ivClose.setOnClickListener { dialog.dismiss() }
 
         dialog.show()
+
+        // 카드 크기: 380dp × 480dp
+        val density = resources.displayMetrics.density
+        dialog.window?.setLayout(
+            (380 * density).toInt(),
+            (480 * density).toInt()
+        )
+        // dim 배경 (rgba(0,0,0,0.45))
+        dialog.window?.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        dialog.window?.setDimAmount(0.45f)
     }
 
     private fun readRawText(rawResId: Int): String {
