@@ -255,14 +255,12 @@ private fun TrackerReadingPeriodEditDialogContent(
                 style = CardButtonStyle.White,
                 onClick = onDismiss,
                 modifier = Modifier.weight(1f),
-                height = 48.dp,
             )
             CardButton(
                 text = "수정",
                 style = if (selectedDate != null) CardButtonStyle.Main else CardButtonStyle.Grey,
                 onClick = {},
                 modifier = Modifier.weight(1f),
-                height = 48.dp,
             )
         }
     }
