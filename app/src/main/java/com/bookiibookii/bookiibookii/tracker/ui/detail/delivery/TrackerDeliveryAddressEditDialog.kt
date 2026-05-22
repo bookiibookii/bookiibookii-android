@@ -137,14 +137,12 @@ private fun TrackerDeliveryAddressEditDialogContent(
                 style = CardButtonStyle.White,
                 onClick = onDismiss,
                 modifier = Modifier.weight(1f),
-                height = 48.dp,
             )
             CardButton(
                 text = "확인",
                 style = CardButtonStyle.Main,
                 onClick = onConfirmClick,
                 modifier = Modifier.weight(1f),
-                height = 48.dp,
             )
         }
     }
