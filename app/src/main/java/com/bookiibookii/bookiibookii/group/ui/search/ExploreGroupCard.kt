@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -32,6 +33,7 @@ fun ExploreGroupCard(
     nickname: String,
     groupName: String,
     modifier: Modifier = Modifier,
+    imageUrl: String? = null,
 ) {
     Row(
         modifier = modifier
@@ -41,12 +43,10 @@ fun ExploreGroupCard(
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // 책 썸네일 placeholder
-        Box(
-            modifier = Modifier
-                .size(width = 72.dp, height = 100.dp)
-                .clip(BookiiBookiiTheme.shape.round8)
-                .background(BookiiBookiiTheme.colors.uiBg),
+        // 책 표지
+        BookCover(
+            imageUrl = imageUrl,
+            modifier = Modifier.size(width = 72.dp, height = 100.dp),
         )
 
         Column(
