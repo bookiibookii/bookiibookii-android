@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
+import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
@@ -45,7 +46,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         initBottomNav()
+        observeFragmentChanges()
         handleNavigationIntent(intent)
+    }
+
+    // 컨테이너에 들어온 Fragment 종류에 따라 BottomNav 표시 여부 토글
+    // 우선 GroupFragment만 추가
+    private fun observeFragmentChanges() {
+        supportFragmentManager.addOnBackStackChangedListener {
+            val current = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+            binding.bottomNav.root.visibility =
+                if (current is GroupFragment) View.GONE else View.VISIBLE
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
