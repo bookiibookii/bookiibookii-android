@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,8 +55,10 @@ import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.model.GroupEditorUiState
 import com.bookiibookii.bookiibookii.group.model.ReadingStyle
+import com.bookiibookii.bookiibookii.group.model.SelectablePlace
 import com.bookiibookii.bookiibookii.group.ui.component.BookSearchDropdown
 import com.bookiibookii.bookiibookii.group.vm.GroupEditorViewModel
+import com.bookiibookii.bookiibookii.ui.component.AddressButton
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -67,6 +70,18 @@ fun GroupEditorRoute(
     viewModel: GroupEditorViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    var submitError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                // TODO: 네비 그래프 연결 후 생성된 그룹 상세로 이동. 일단 뒤로 가기
+                is GroupEditorViewModel.Event.Created -> onBack()
+                is GroupEditorViewModel.Event.ShowError -> submitError = event.message
+            }
+        }
+    }
+
     GroupEditorScreen(
         uiState = uiState,
         onBookSearchQueryChange = viewModel::onBookSearchQueryChange,
@@ -75,6 +90,7 @@ fun GroupEditorRoute(
         onBookSelect = viewModel::onBookSelect,
         onGroupNameChange = viewModel::onGroupNameChange,
         onTradeTypeSelect = viewModel::onTradeTypeSelect,
+        onPlaceSelect = viewModel::onPlaceSelect,
         onReadingPeriodSelect = viewModel::onReadingPeriodSelect,
         onRuleStyleSelect = viewModel::onRuleStyleSelect,
         onGroupCommentChange = viewModel::onGroupCommentChange,
@@ -82,7 +98,11 @@ fun GroupEditorRoute(
         onCustomRuleChange = viewModel::onCustomRuleChange,
         onRemoveCustomRule = viewModel::onRemoveCustomRule,
         onBack = onBack,
-        onSubmit = {},  // 후속: 제출
+        onSubmit = {
+            submitError = null
+            viewModel.createGroup()
+        },
+        submitError = submitError,
     )
 }
 
@@ -96,6 +116,7 @@ fun GroupEditorScreen(
     onBookSelect: (BookItem) -> Unit,
     onGroupNameChange: (String) -> Unit,
     onTradeTypeSelect: (ExchangeType) -> Unit,
+    onPlaceSelect: (Long) -> Unit,
     onReadingPeriodSelect: (Int) -> Unit,
     onRuleStyleSelect: (ReadingStyle) -> Unit,
     onGroupCommentChange: (String) -> Unit,
@@ -104,6 +125,7 @@ fun GroupEditorScreen(
     onRemoveCustomRule: (Int) -> Unit,
     onBack: () -> Unit,
     onSubmit: () -> Unit,
+    submitError: String? = null,
 ) {
     Column(
         modifier = Modifier
@@ -148,7 +170,12 @@ fun GroupEditorScreen(
                     onSelect = onTradeTypeSelect,
                 )
                 uiState.tradeType?.let { type ->
-                    AddressSection(tradeType = type)
+                    AddressSection(
+                        tradeType = type,
+                        places = uiState.places,
+                        selectedPlaceId = uiState.selectedPlaceId,
+                        onPlaceSelect = onPlaceSelect,
+                    )
                 }
             }
             SectionDivider()
@@ -172,16 +199,24 @@ fun GroupEditorScreen(
             )
         }
 
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(BookiiBookiiTheme.colors.white)
                 .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            if (submitError != null) {
+                Text(
+                    text = submitError,
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.uiPointRed,
+                )
+            }
             FooterButton(
                 text = "그룹 만들기",
                 onClick = onSubmit,
-                enabled = uiState.canSubmit,
+                enabled = uiState.canSubmit && !uiState.submitting,
             )
         }
     }
@@ -495,16 +530,34 @@ private fun ExchangeTypeCard(
     }
 }
 
-// 주소 섹션. ExchangeType에 따라 라벨 분기
-// 현재는 CTA 등록 안됨
+// 주소 섹션. 주소가 없으면 등록 안내, 있으면 카드 1~2개 중 선택
 @Composable
 private fun AddressSection(
     tradeType: ExchangeType,
+    places: List<SelectablePlace>,
+    selectedPlaceId: Long?,
+    onPlaceSelect: (Long) -> Unit,
 ) {
-    val label = when (tradeType) {
-        ExchangeType.DIRECT -> "희망 교환 장소"
-        ExchangeType.DELIVERY -> "배송지"
+    if (places.isEmpty()) {
+        AddressEmpty(tradeType = tradeType)
+    } else {
+        AddressList(
+            tradeType = tradeType,
+            places = places,
+            selectedPlaceId = selectedPlaceId,
+            onPlaceSelect = onPlaceSelect,
+        )
     }
+}
+
+private fun addressLabel(tradeType: ExchangeType) = when (tradeType) {
+    ExchangeType.DIRECT -> "희망 교환 장소"
+    ExchangeType.DELIVERY -> "배송지"
+}
+
+// 주소 미등록: 등록 안내 placeholder + 주소지 관리 링크
+@Composable
+private fun AddressEmpty(tradeType: ExchangeType) {
     val placeholder = when (tradeType) {
         ExchangeType.DIRECT -> "희망 교환 장소를 등록해주세요"
         ExchangeType.DELIVERY -> "배송지를 등록해주세요"
@@ -514,7 +567,7 @@ private fun AddressSection(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            FieldLabel(text = label, required = true)
+            FieldLabel(text = addressLabel(tradeType), required = true)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -542,6 +595,29 @@ private fun AddressSection(
             textDecoration = TextDecoration.Underline,
             modifier = Modifier.clickable { /* TODO: 주소 관리 화면 이동 */ },
         )
+    }
+}
+
+// 주소 등록됨: 카드 1~2개 중 하나 선택
+@Composable
+private fun AddressList(
+    tradeType: ExchangeType,
+    places: List<SelectablePlace>,
+    selectedPlaceId: Long?,
+    onPlaceSelect: (Long) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        FieldLabel(text = addressLabel(tradeType), required = true)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            places.forEach { place ->
+                AddressButton(
+                    title = place.placeName,
+                    address = place.address,
+                    selected = place.id == selectedPlaceId,
+                    onClick = { onPlaceSelect(place.id) },
+                )
+            }
+        }
     }
 }
 
@@ -971,6 +1047,7 @@ private fun GroupEditorScreenPreview() {
             onBookSelect = {},
             onGroupNameChange = {},
             onTradeTypeSelect = {},
+            onPlaceSelect = {},
             onReadingPeriodSelect = {},
             onRuleStyleSelect = {},
             onGroupCommentChange = {},

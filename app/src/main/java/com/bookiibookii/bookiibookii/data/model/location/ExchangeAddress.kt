@@ -17,5 +17,5 @@ data class ExchangeAddressRequest(
     val placeName: String,
     val address: String,
     val zipCode: String,
-    val addressDetail: String,
+    val addressDetail: String?,
 )
