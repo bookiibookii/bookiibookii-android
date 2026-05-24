@@ -13,6 +13,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
+import com.bookiibookii.bookiibookii.group.GroupFragment
+import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 
 class HomeFragment : Fragment() {
 
@@ -84,7 +86,13 @@ class HomeFragment : Fragment() {
             // TODO: 검색 화면으로 이동
         }
         binding.btnCreateGroup.setOnClickListener {
-            // TODO: 그룹 생성 화면으로 이동
+            parentFragmentManager.beginTransaction()
+                .replace(
+                    R.id.fragmentContainer,
+                    GroupFragment.newInstance(GroupDestinations.EDITOR)
+                )
+                .addToBackStack(null)
+                .commit()
         }
         binding.btnAlert.setOnClickListener {
             // TODO: 알림 화면으로 이동

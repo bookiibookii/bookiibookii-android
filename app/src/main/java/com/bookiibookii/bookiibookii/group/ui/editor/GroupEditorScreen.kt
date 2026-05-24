@@ -53,9 +53,10 @@ import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// 그룹 생성/수정 화면 (stateful: VM 주입·상태 수집)
+// 그룹 생성/수정 화면
 @Composable
 fun GroupEditorRoute(
+    onBack: () -> Unit,
     viewModel: GroupEditorViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -69,7 +70,7 @@ fun GroupEditorRoute(
         onAddCustomRule = viewModel::onAddCustomRule,
         onCustomRuleChange = viewModel::onCustomRuleChange,
         onRemoveCustomRule = viewModel::onRemoveCustomRule,
-        onBack = {},    // 후속: 네비게이션
+        onBack = onBack,
         onSubmit = {},  // 후속: 제출
     )
 }
