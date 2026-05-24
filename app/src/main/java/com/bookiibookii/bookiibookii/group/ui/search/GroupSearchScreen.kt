@@ -58,7 +58,9 @@ fun GroupSearchRoute(
     GroupSearchScreen(
         uiState = uiState,
         onBack = onBack,
-        onRetry = viewModel::loadGroups,
+        onRetry = viewModel::retry,
+        onQueryChange = viewModel::onQueryChange,
+        onSearch = viewModel::onSearch,
         onApplyTradeTypes = viewModel::applyTradeTypes,
         onApplyCategories = viewModel::applyCategories,
         onLoadMore = viewModel::loadMore,
@@ -72,6 +74,8 @@ fun GroupSearchScreen(
     uiState: GroupSearchUiState,
     onBack: () -> Unit,
     onRetry: () -> Unit,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
     onApplyTradeTypes: (List<String>) -> Unit,
     onApplyCategories: (List<String>) -> Unit,
     onLoadMore: () -> Unit,
@@ -109,9 +113,10 @@ fun GroupSearchScreen(
                         tint = BookiiBookiiTheme.colors.grey900,
                     )
                 }
-                // TODO(다음 단계): 검색 화면 진입
-                SearchInputButton(
-                    onClick = {},
+                SearchInputField(
+                    query = uiState.query,
+                    onQueryChange = onQueryChange,
+                    onSearch = onSearch,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -167,7 +172,7 @@ fun GroupSearchScreen(
 
                 uiState.items.isEmpty() -> {
                     Text(
-                        text = "조건에 맞는 그룹이 없어요",
+                        text = if (uiState.isSearchMode) "검색 결과가 없어요" else "조건에 맞는 그룹이 없어요",
                         style = BookiiBookiiTheme.typography.regular14,
                         color = BookiiBookiiTheme.colors.grey500,
                     )
@@ -193,6 +198,15 @@ fun GroupSearchScreen(
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
+                        if (uiState.isSearchMode && uiState.totalCount != null) {
+                            item {
+                                Text(
+                                    text = "${uiState.totalCount} 권",
+                                    style = BookiiBookiiTheme.typography.regular14,
+                                    color = BookiiBookiiTheme.colors.grey900,
+                                )
+                            }
+                        }
                         items(uiState.items, key = { it.groupId }) { item ->
                             ExploreGroupCard(
                                 title = item.title,
@@ -306,6 +320,8 @@ private fun GroupSearchScreenPreview() {
             ),
             onBack = {},
             onRetry = {},
+            onQueryChange = {},
+            onSearch = {},
             onApplyTradeTypes = {},
             onApplyCategories = {},
             onLoadMore = {},
