@@ -26,13 +26,25 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 교환 방식 필터 바텀시트
+// API tradeTypes: 0=전체([]), 1=직접 교환([DIRECT]), 2=택배 교환([DELIVERY])
 @Composable
 fun ExchangeMethodBottomSheet(
+    onApply: (List<String>) -> Unit,
+    onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    initialTradeTypes: List<String> = emptyList(),
 ) {
     val sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     val options = listOf("전체", "직접 교환", "택배 교환")
-    var selectedIndex by remember { mutableIntStateOf(0) }
+    var selectedIndex by remember {
+        mutableIntStateOf(
+            when {
+                "DIRECT" in initialTradeTypes -> 1
+                "DELIVERY" in initialTradeTypes -> 2
+                else -> 0
+            }
+        )
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -92,13 +104,21 @@ fun ExchangeMethodBottomSheet(
             BottomSheetTwoBtnShort(
                 text = "취소",
                 style = BottomSheetBtnStyle.White,
-                onClick = {},
+                onClick = onCancel,
                 modifier = Modifier.weight(1f),
             )
             BottomSheetTwoBtnShort(
                 text = "적용",
                 style = BottomSheetBtnStyle.Dark,
-                onClick = {},
+                onClick = {
+                    onApply(
+                        when (selectedIndex) {
+                            1 -> listOf("DIRECT")
+                            2 -> listOf("DELIVERY")
+                            else -> emptyList()
+                        }
+                    )
+                },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -109,6 +129,6 @@ fun ExchangeMethodBottomSheet(
 @Composable
 private fun ExchangeMethodBottomSheetPreview() {
     BookiiPreview {
-        ExchangeMethodBottomSheet()
+        ExchangeMethodBottomSheet(onApply = {}, onCancel = {})
     }
 }

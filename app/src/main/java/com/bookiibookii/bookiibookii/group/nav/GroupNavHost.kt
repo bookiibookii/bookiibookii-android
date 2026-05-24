@@ -9,7 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bookiibookii.bookiibookii.group.ui.detail.GroupDetailScreen
 import com.bookiibookii.bookiibookii.group.ui.editor.GroupEditorRoute
-import com.bookiibookii.bookiibookii.group.ui.search.GroupSearchScreen
+import com.bookiibookii.bookiibookii.group.ui.search.GroupSearchRoute
 
 @Composable
 fun GroupNavHost(
@@ -24,7 +24,10 @@ fun GroupNavHost(
         modifier = modifier,
     ) {
         composable(GroupDestinations.SEARCH) {
-            GroupSearchScreen()
+            GroupSearchRoute(
+                // 백스택이 있으면 이전 화면으로, 없으면(홈에서 직접 진입) 그룹 도메인 밖으로 나감
+                onBack = { if (!navController.popBackStack()) onExit() },
+            )
         }
         composable(
             route = GroupDestinations.EDITOR,

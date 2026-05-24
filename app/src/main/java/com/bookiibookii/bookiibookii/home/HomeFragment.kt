@@ -83,7 +83,13 @@ class HomeFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.searchBar.setOnClickListener {
-            // TODO: 검색 화면으로 이동
+            parentFragmentManager.beginTransaction()
+                .replace(
+                    R.id.fragmentContainer,
+                    GroupFragment.newInstance(GroupDestinations.SEARCH)
+                )
+                .addToBackStack(null)
+                .commit()
         }
         binding.btnCreateGroup.setOnClickListener {
             parentFragmentManager.beginTransaction()

@@ -46,9 +46,8 @@ interface GrpApi {
     // 그룹 목록 조회
     @GET("/api/groups")
     suspend fun getGroupList(
-        @Query("groupTypes") groupTypes: List<String>?,
         @Query("tradeTypes") tradeTypes: List<String>?,
-        @Query("meetPlace") meetPlace: List<String>?,
+        @Query("regions") regions: List<String>?,
         @Query("categories") categories: List<String>?,
         @Query("sort") sort: String,
         @Query("page") page: Int,
@@ -63,7 +62,9 @@ interface GrpApi {
     @GET("/api/groups/search")
     suspend fun searchGroups(
         @Query("keyword") keyword: String,
-        @Query("sort") sort: String = "latest"
+        @Query("sort") sort: String = "LATEST",
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10
     ): Response<ApiResponse<GroupSearchResponse>>
 
     // 그룹 상세 조회

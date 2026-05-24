@@ -52,6 +52,42 @@ private fun genresOf(category: String?): List<String> = when (category) {
     else -> emptyList()
 }
 
+private val literatureCodes = listOf(
+    "KOREAN_NOVEL", "WORLD_NOVEL", "GENRE_NOVEL", "ROMANCE",
+    "HISTORICAL_NOVEL", "POETRY_ESSAY", "PLAY_LITERATURE", "LITERATURE_ETC",
+)
+private val nonLiteratureCodes = listOf(
+    "ECONOMY_BUSINESS", "SCIENCE_IT", "HUMANITIES_HISTORY", "HOME_HOBBY",
+    "ART_CULTURE", "SELF_DEVELOPMENT", "POLITICS_SOCIETY", "NON_LITERATURE_ETC",
+)
+private val literatureLabelToCode = literatureGenres.zip(literatureCodes).toMap()
+private val nonLiteratureLabelToCode = nonLiteratureGenres.zip(nonLiteratureCodes).toMap()
+
+private data class GenreSelection(val category: String?, val subs: Set<String>)
+
+// 선택(카테고리 + 하위 장르)
+private fun computeCategories(category: String?, subs: Set<String>): List<String> = when (category) {
+    LITERATURE ->
+        if (subs.isEmpty()) listOf("LITERATURE_ALL")
+        else literatureGenres.filter { it in subs }.map { literatureLabelToCode.getValue(it) }
+    NON_LITERATURE ->
+        if (subs.isEmpty()) listOf("NON_LITERATURE_ALL")
+        else nonLiteratureGenres.filter { it in subs }.map { nonLiteratureLabelToCode.getValue(it) }
+    else -> emptyList() // 전체/미선택 = 필터 없음
+}
+
+// 바텀시트 재진입 시 현재 필터 반영
+private fun selectionOf(codes: List<String>): GenreSelection = when {
+    codes.isEmpty() -> GenreSelection(null, emptySet())
+    codes == listOf("LITERATURE_ALL") -> GenreSelection(LITERATURE, emptySet())
+    codes == listOf("NON_LITERATURE_ALL") -> GenreSelection(NON_LITERATURE, emptySet())
+    codes.any { it in literatureCodes } ->
+        GenreSelection(LITERATURE, literatureGenres.filter { literatureLabelToCode.getValue(it) in codes }.toSet())
+    codes.any { it in nonLiteratureCodes } ->
+        GenreSelection(NON_LITERATURE, nonLiteratureGenres.filter { nonLiteratureLabelToCode.getValue(it) in codes }.toSet())
+    else -> GenreSelection(null, emptySet())
+}
+
 private fun headSummary(category: String?, subs: Set<String>, orderedGenres: List<String>): String {
     if (category == null) return ""
     if (category == ALL || subs.isEmpty()) return category
@@ -68,11 +104,15 @@ private fun headSummary(category: String?, subs: Set<String>, orderedGenres: Lis
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GenreBottomSheet(
+    onApply: (List<String>) -> Unit,
+    onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    initialCategories: List<String> = emptyList(),
 ) {
     val sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
-    var selectedSubs by remember { mutableStateOf(setOf<String>()) }
+    val initial = remember(initialCategories) { selectionOf(initialCategories) }
+    var selectedCategory by remember { mutableStateOf(initial.category) }
+    var selectedSubs by remember { mutableStateOf(initial.subs) }
 
     val subGenres = genresOf(selectedCategory)
 
@@ -171,13 +211,13 @@ fun GenreBottomSheet(
             BottomSheetTwoBtnShort(
                 text = "취소",
                 style = BottomSheetBtnStyle.White,
-                onClick = {},
+                onClick = onCancel,
                 modifier = Modifier.weight(1f),
             )
             BottomSheetTwoBtnShort(
                 text = "적용",
                 style = BottomSheetBtnStyle.Dark,
-                onClick = {},
+                onClick = { onApply(computeCategories(selectedCategory, selectedSubs)) },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -235,6 +275,6 @@ private fun GenreSubChip(
 @Composable
 private fun GenreBottomSheetPreview() {
     BookiiPreview {
-        GenreBottomSheet()
+        GenreBottomSheet(onApply = {}, onCancel = {})
     }
 }
