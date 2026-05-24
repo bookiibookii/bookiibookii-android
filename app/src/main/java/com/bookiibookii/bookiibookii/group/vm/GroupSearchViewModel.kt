@@ -52,6 +52,42 @@ class GroupSearchViewModel : ViewModel() {
         }
     }
 
+    // 다음 페이지를 이어붙인다 (무한 스크롤). 중복/불가 상황이면 무시
+    fun loadMore() {
+        val s = _state.value
+        if (!s.hasNext || s.loading || s.loadingMore) return
+        val nextPage = s.currentPage + 1
+        viewModelScope.launch {
+            _state.update { it.copy(loadingMore = true) }
+            try {
+                val res = RetrofitClient.grpApi().getGroupList(
+                    tradeTypes = s.tradeTypes,
+                    regions = s.regions,
+                    categories = s.categories,
+                    sort = s.sort,
+                    page = nextPage,
+                    size = PAGE_SIZE,
+                )
+                val result = res.body()?.result
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    _state.update {
+                        it.copy(
+                            items = it.items + result?.groupList.orEmpty(),
+                            currentPage = result?.currentPage ?: nextPage,
+                            hasNext = result?.hasNext ?: false,
+                            loadingMore = false,
+                        )
+                    }
+                } else {
+                    // 추가 로드 실패는 조용히 멈춤(기존 목록 유지)
+                    _state.update { it.copy(loadingMore = false) }
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(loadingMore = false) }
+            }
+        }
+    }
+
     // 필터 변경 → 상태 갱신 후 재조회
     fun applyTradeTypes(tradeTypes: List<String>) {
         _state.update { it.copy(tradeTypes = tradeTypes) }

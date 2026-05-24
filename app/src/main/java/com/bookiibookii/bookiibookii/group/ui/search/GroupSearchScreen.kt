@@ -10,8 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -20,6 +21,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +61,7 @@ fun GroupSearchRoute(
         onRetry = viewModel::loadGroups,
         onApplyTradeTypes = viewModel::applyTradeTypes,
         onApplyCategories = viewModel::applyCategories,
+        onLoadMore = viewModel::loadMore,
     )
 }
 
@@ -70,6 +74,7 @@ fun GroupSearchScreen(
     onRetry: () -> Unit,
     onApplyTradeTypes: (List<String>) -> Unit,
     onApplyCategories: (List<String>) -> Unit,
+    onLoadMore: () -> Unit,
 ) {
     var openSheet by remember { mutableStateOf<FilterSheet?>(null) }
     val sheetState = rememberModalBottomSheetState()
@@ -169,14 +174,26 @@ fun GroupSearchScreen(
                 }
 
                 else -> {
-                    Column(
+                    val listState = rememberLazyListState()
+                    // 마지막 아이템이 보이면 다음 페이지 요청 (중복/불가 상황은 VM에서 무시)
+                    val reachedEnd by remember {
+                        derivedStateOf {
+                            val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                            last != null && last >= listState.layoutInfo.totalItemsCount - 1
+                        }
+                    }
+                    LaunchedEffect(reachedEnd) {
+                        if (reachedEnd) onLoadMore()
+                    }
+
+                    LazyColumn(
+                        state = listState,
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        uiState.items.forEach { item ->
+                        items(uiState.items, key = { it.groupId }) { item ->
                             ExploreGroupCard(
                                 title = item.title,
                                 author = item.author.orEmpty(),
@@ -187,6 +204,21 @@ fun GroupSearchScreen(
                                 groupName = item.groupName,
                                 imageUrl = item.bookImage,
                             )
+                        }
+                        if (uiState.loadingMore) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = BookiiBookiiTheme.colors.uiMain,
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -276,6 +308,7 @@ private fun GroupSearchScreenPreview() {
             onRetry = {},
             onApplyTradeTypes = {},
             onApplyCategories = {},
+            onLoadMore = {},
         )
     }
 }

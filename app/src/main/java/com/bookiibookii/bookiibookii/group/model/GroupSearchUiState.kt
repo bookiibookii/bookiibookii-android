@@ -5,7 +5,8 @@ import com.bookiibookii.bookiibookii.data.model.group.GroupItem
 // 그룹 탐색(목록) 화면 UI 상태 — GET /api/groups
 data class GroupSearchUiState(
     val items: List<GroupItem> = emptyList(),
-    val loading: Boolean = false,
+    val loading: Boolean = false,        // 첫 페이지 로딩(진입/필터변경/재시도)
+    val loadingMore: Boolean = false,    // 다음 페이지 이어붙이는 중(무한 스크롤)
     val error: String? = null,
     val currentPage: Int = 0,
     val hasNext: Boolean = false,
