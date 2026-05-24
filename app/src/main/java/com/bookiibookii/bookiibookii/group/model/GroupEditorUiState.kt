@@ -1,8 +1,14 @@
 package com.bookiibookii.bookiibookii.group.model
 
+import com.bookiibookii.bookiibookii.data.model.group.BookItem
+
 // 그룹 생성/수정 화면 UI 상태
 data class GroupEditorUiState(
     val isbn13: String? = null,
+    val bookSearchQuery: String = "",
+    val bookSearchResults: List<BookItem> = emptyList(),
+    val bookSearchLoading: Boolean = false,
+    val bookSearchError: String? = null,
     val groupName: String = "",
     val tradeType: ExchangeType? = null,
     val preferRegion: String? = null,      // DIRECT/DELIVERY

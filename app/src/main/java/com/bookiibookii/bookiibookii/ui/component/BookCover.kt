@@ -3,10 +3,13 @@ package com.bookiibookii.bookiibookii.ui.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 책 표지 영역. 사이즈는 호출처에서 modifier로 지정
@@ -26,8 +29,13 @@ fun BookCover(
                 shape = shape,
             ),
     ) {
-        if (imageUrl != null) {
-            // TODO: Coil 도입 후 AsyncImage로 표지 이미지 로드
+        if (!imageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }

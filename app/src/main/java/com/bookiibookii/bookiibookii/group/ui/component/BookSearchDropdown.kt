@@ -22,22 +22,16 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// 임시 모델 — API 연결 단계에서 data/model의 정식 응답 모델로 교체
-data class Book(
-    val title: String,
-    val author: String,
-    val genre: String,
-)
-
 // 도서 검색 결과 드롭다운
 @Composable
 fun BookSearchDropdown(
-    books: List<Book>,
-    onBookClick: (Book) -> Unit,
+    books: List<BookItem>,
+    onBookClick: (BookItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val shape = BookiiBookiiTheme.shape.round16
@@ -58,7 +52,7 @@ fun BookSearchDropdown(
 
 @Composable
 private fun BookCard(
-    book: Book,
+    book: BookItem,
     onClick: () -> Unit,
 ) {
     Row(
@@ -72,6 +66,7 @@ private fun BookCard(
             modifier = Modifier
                 .width(48.dp)
                 .height(60.dp),
+            imageUrl = book.image,
         )
         Column(
             modifier = Modifier.weight(1f),
@@ -85,7 +80,7 @@ private fun BookCard(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = "${book.author} (${book.genre})",
+                text = "${book.author} (${book.categoryLabel})",
                 style = BookiiBookiiTheme.typography.regular14,
                 color = BookiiBookiiTheme.colors.grey600,
                 maxLines = 1,
@@ -101,10 +96,15 @@ private fun BookSearchDropdownPreview() {
     BookiiPreview {
         BookSearchDropdown(
             books = List(6) {
-                Book(
+                BookItem(
                     title = "살인자의 기억법",
                     author = "김영하",
-                    genre = "한국소설",
+                    image = "",
+                    publisher = "문학동네",
+                    isbn13 = "9788954636049",
+                    category = "novel",
+                    categoryLabel = "한국소설",
+                    link = "",
                 )
             },
             onBookClick = {},

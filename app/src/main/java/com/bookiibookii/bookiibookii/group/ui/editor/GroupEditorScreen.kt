@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -28,7 +29,10 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -44,10 +48,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.layout.heightIn
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.model.GroupEditorUiState
 import com.bookiibookii.bookiibookii.group.model.ReadingStyle
+import com.bookiibookii.bookiibookii.group.ui.component.BookSearchDropdown
 import com.bookiibookii.bookiibookii.group.vm.GroupEditorViewModel
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -62,6 +69,10 @@ fun GroupEditorRoute(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     GroupEditorScreen(
         uiState = uiState,
+        onBookSearchQueryChange = viewModel::onBookSearchQueryChange,
+        onSearchBooks = viewModel::searchBooks,
+        onClearBookSearch = viewModel::onClearBookSearch,
+        onBookSelect = viewModel::onBookSelect,
         onGroupNameChange = viewModel::onGroupNameChange,
         onTradeTypeSelect = viewModel::onTradeTypeSelect,
         onReadingPeriodSelect = viewModel::onReadingPeriodSelect,
@@ -79,6 +90,10 @@ fun GroupEditorRoute(
 @Composable
 fun GroupEditorScreen(
     uiState: GroupEditorUiState,
+    onBookSearchQueryChange: (String) -> Unit,
+    onSearchBooks: () -> Unit,
+    onClearBookSearch: () -> Unit,
+    onBookSelect: (BookItem) -> Unit,
     onGroupNameChange: (String) -> Unit,
     onTradeTypeSelect: (ExchangeType) -> Unit,
     onReadingPeriodSelect: (Int) -> Unit,
@@ -112,17 +127,30 @@ fun GroupEditorScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                BookSearchSection()
+                BookSearchSection(
+                    query = uiState.bookSearchQuery,
+                    onQueryChange = onBookSearchQueryChange,
+                    onSearchClick = onSearchBooks,
+                    onClearClick = onClearBookSearch,
+                    results = uiState.bookSearchResults,
+                    onBookSelect = onBookSelect,
+                    error = uiState.bookSearchError,
+                )
                 GroupNameSection(
                     value = uiState.groupName,
                     onValueChange = onGroupNameChange,
                 )
             }
             SectionDivider()
-            ExchangeTypeSection(
-                selected = uiState.tradeType,
-                onSelect = onTradeTypeSelect,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                ExchangeTypeSection(
+                    selected = uiState.tradeType,
+                    onSelect = onTradeTypeSelect,
+                )
+                uiState.tradeType?.let { type ->
+                    AddressSection(tradeType = type)
+                }
+            }
             SectionDivider()
             ReadingPeriodSection(
                 selectedIndex = uiState.readingPeriodIndex,
@@ -228,34 +256,102 @@ private fun FieldLabel(
 
 // 도서 검색 섹션
 @Composable
-private fun BookSearchSection() {
+private fun BookSearchSection(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearchClick: () -> Unit,
+    onClearClick: () -> Unit,
+    results: List<BookItem>,
+    onBookSelect: (BookItem) -> Unit,
+    error: String? = null,
+) {
+    var fieldSize by remember { mutableStateOf(IntSize.Zero) }
+    val density = LocalDensity.current
     Column {
         FieldLabel(text = "도서 검색", required = true)
-        // TODO: 알라딘 API 연동
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(BookiiBookiiTheme.shape.round16)
-                .background(BookiiBookiiTheme.colors.white)
-                .border(
-                    width = 1.dp,
-                    color = BookiiBookiiTheme.colors.grey300,
-                    shape = BookiiBookiiTheme.shape.round16,
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onSizeChanged { fieldSize = it }
+                    .clip(BookiiBookiiTheme.shape.round16)
+                    .background(BookiiBookiiTheme.colors.white)
+                    .border(
+                        width = 1.dp,
+                        color = BookiiBookiiTheme.colors.grey300,
+                        shape = BookiiBookiiTheme.shape.round16,
+                    )
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_search),
+                    contentDescription = "검색",
+                    tint = BookiiBookiiTheme.colors.grey500,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { onSearchClick() },
                 )
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_search),
-                contentDescription = null,
-                tint = BookiiBookiiTheme.colors.grey500,
-                modifier = Modifier.size(24.dp),
-            )
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    singleLine = true,
+                    textStyle = BookiiBookiiTheme.typography.regular16.copy(
+                        color = BookiiBookiiTheme.colors.grey900,
+                    ),
+                    cursorBrush = SolidColor(BookiiBookiiTheme.colors.uiMain),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { onSearchClick() }),
+                    modifier = Modifier.weight(1f),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (query.isEmpty()) {
+                                Text(
+                                    text = "어떤 책을 읽어볼까요?",
+                                    style = BookiiBookiiTheme.typography.regular16,
+                                    color = BookiiBookiiTheme.colors.grey500,
+                                )
+                            }
+                            innerTextField()
+                        }
+                    },
+                )
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = "초기화",
+                    tint = BookiiBookiiTheme.colors.black,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable { onClearClick() },
+                )
+            }
+            if (results.isNotEmpty()) {
+                Popup(
+                    alignment = Alignment.TopStart,
+                    offset = IntOffset(
+                        x = 0,
+                        y = fieldSize.height + with(density) { 8.dp.roundToPx() },
+                    ),
+                    onDismissRequest = {},
+                    properties = PopupProperties(focusable = false),
+                ) {
+                    BookSearchDropdown(
+                        books = results,
+                        onBookClick = onBookSelect,
+                        modifier = Modifier
+                            .width(with(density) { fieldSize.width.toDp() })
+                            .heightIn(max = 320.dp),
+                    )
+                }
+            }
+        }
+        if (error != null && results.isEmpty()) {
             Text(
-                text = "어떤 책을 읽어볼까요?",
-                style = BookiiBookiiTheme.typography.regular16,
-                color = BookiiBookiiTheme.colors.grey500,
+                text = error,
+                style = BookiiBookiiTheme.typography.regular14,
+                color = BookiiBookiiTheme.colors.uiPointRed,
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
     }
@@ -288,15 +384,28 @@ private fun GroupNameSection(
                 )
                 .padding(16.dp),
             decorationBox = { innerTextField ->
-                Box {
-                    if (value.isEmpty()) {
-                        Text(
-                            text = "그룹명을 입력해주세요",
-                            style = BookiiBookiiTheme.typography.regular16,
-                            color = BookiiBookiiTheme.colors.grey500,
-                        )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {  // placeholder 겹치기는 Box 유지
+                        if (value.isEmpty()) {
+                            Text(
+                                text = "그룹명을 입력해주세요",
+                                style = BookiiBookiiTheme.typography.regular16,
+                                color = BookiiBookiiTheme.colors.grey500,
+                            )
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
+                    Icon(
+                        painter = painterResource(R.drawable.ic_x),
+                        contentDescription = null,
+                        tint = BookiiBookiiTheme.colors.black,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { onValueChange("") },
+                    )
                 }
             },
         )
@@ -382,6 +491,56 @@ private fun ExchangeTypeCard(
             text = description,
             style = BookiiBookiiTheme.typography.regular12,
             color = descriptionColor,
+        )
+    }
+}
+
+// 주소 섹션. ExchangeType에 따라 라벨 분기
+// 현재는 CTA 등록 안됨
+@Composable
+private fun AddressSection(
+    tradeType: ExchangeType,
+) {
+    val label = when (tradeType) {
+        ExchangeType.DIRECT -> "희망 교환 장소"
+        ExchangeType.DELIVERY -> "배송지"
+    }
+    val placeholder = when (tradeType) {
+        ExchangeType.DIRECT -> "희망 교환 장소를 등록해주세요"
+        ExchangeType.DELIVERY -> "배송지를 등록해주세요"
+    }
+    Column(
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            FieldLabel(text = label, required = true)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(BookiiBookiiTheme.shape.round16)
+                    .background(BookiiBookiiTheme.colors.grey200)
+                    .border(
+                        width = 1.dp,
+                        color = BookiiBookiiTheme.colors.grey300,
+                        shape = BookiiBookiiTheme.shape.round16,
+                    )
+                    .clickable { /* TODO: 주소 관리 화면 이동 */ }
+                    .padding(16.dp),
+            ) {
+                Text(
+                    text = placeholder,
+                    style = BookiiBookiiTheme.typography.regular16,
+                    color = BookiiBookiiTheme.colors.grey400,
+                )
+            }
+        }
+        Text(
+            text = "주소지 관리",
+            style = BookiiBookiiTheme.typography.regular14,
+            color = BookiiBookiiTheme.colors.grey400,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable { /* TODO: 주소 관리 화면 이동 */ },
         )
     }
 }
@@ -806,6 +965,10 @@ private fun GroupEditorScreenPreview() {
     BookiiPreview {
         GroupEditorScreen(
             uiState = GroupEditorUiState(),
+            onBookSearchQueryChange = {},
+            onSearchBooks = {},
+            onClearBookSearch = {},
+            onBookSelect = {},
             onGroupNameChange = {},
             onTradeTypeSelect = {},
             onReadingPeriodSelect = {},
@@ -817,5 +980,24 @@ private fun GroupEditorScreenPreview() {
             onBack = {},
             onSubmit = {},
         )
+    }
+}
+
+// BookSearchSection 에러 상태 Preview
+@Preview(widthDp = 360, showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun BookSearchSectionWithErrorPreview() {
+    BookiiPreview {
+        Box(modifier = Modifier.padding(16.dp)) {
+            BookSearchSection(
+                query = "살인자",
+                onQueryChange = {},
+                onSearchClick = {},
+                onClearClick = {},
+                results = emptyList(),
+                onBookSelect = {},
+                error = "네트워크 오류가 발생했어요",
+            )
+        }
     }
 }
