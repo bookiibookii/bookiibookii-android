@@ -67,6 +67,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 @Composable
 fun GroupEditorRoute(
     onBack: () -> Unit,
+    onCreated: (Long?) -> Unit,
     viewModel: GroupEditorViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -75,8 +76,7 @@ fun GroupEditorRoute(
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
-                // TODO: 네비 그래프 연결 후 생성된 그룹 상세로 이동. 일단 뒤로 가기
-                is GroupEditorViewModel.Event.Created -> onBack()
+                is GroupEditorViewModel.Event.Created -> onCreated(event.groupId)
                 is GroupEditorViewModel.Event.ShowError -> submitError = event.message
             }
         }
