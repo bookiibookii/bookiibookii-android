@@ -70,7 +70,7 @@ interface GrpApi {
     // 그룹 상세 조회
     @GET("api/groups/{groupId}")
     suspend fun getGroupDetail(
-        @Path("groupId") groupId: Int
+        @Path("groupId") groupId: Long
     ): Response<ApiResponse<GroupDetailResponse>>
 
     // 그룹 신청하기

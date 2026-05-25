@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.bookiibookii.bookiibookii.group.ui.detail.GroupDetailScreen
+import com.bookiibookii.bookiibookii.group.ui.detail.GroupDetailRoute
 import com.bookiibookii.bookiibookii.group.ui.editor.GroupEditorRoute
 import com.bookiibookii.bookiibookii.group.ui.search.GroupSearchRoute
 
@@ -65,12 +65,12 @@ fun GroupNavHost(
                     type = NavType.LongType
                 },
             ),
-        ) { backStackEntry ->
-            // 방어용 fallback 0L
-            val groupId = backStackEntry.arguments?.getLong(GroupDestinations.ARG_GROUP_ID) ?: 0L
-            GroupDetailScreen(
-                groupId = groupId,
+        ) {
+            // groupId는 SavedStateHandle을 통해 GroupDetailViewModel이 직접 수신 (navArgument 선언이 근거)
+            GroupDetailRoute(
                 onBack = { if (!navController.popBackStack()) onExit() },
+                // 액션 버튼(APPLY/MANAGE/CANCEL) 클릭 시 분기 네비게이션은 후속 작업
+                onActionClick = {},
             )
         }
     }

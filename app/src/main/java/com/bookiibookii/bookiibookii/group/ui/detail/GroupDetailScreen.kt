@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.group.ui.detail
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,11 +14,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,19 +32,44 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
+import com.bookiibookii.bookiibookii.data.model.group.GroupRule
+import com.bookiibookii.bookiibookii.data.model.group.ParticipantSlot
+import com.bookiibookii.bookiibookii.group.model.GroupDetailActionButton
+import com.bookiibookii.bookiibookii.group.model.GroupDetailUiState
+import com.bookiibookii.bookiibookii.group.vm.GroupDetailViewModel
+import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// 그룹 상세 화면
-// groupId: 라우트로 전달받는 그룹 식별자 (현재는 미사용, 다음 VM 연결 단계에서 사용)
-@Suppress("UNUSED_PARAMETER")
+// 그룹 상세 화면 — VM 주입/상태 수집 (stateful)
+@Composable
+fun GroupDetailRoute(
+    onBack: () -> Unit,
+    onActionClick: () -> Unit,
+    viewModel: GroupDetailViewModel = viewModel(),
+) {
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+    GroupDetailScreen(
+        uiState = uiState,
+        onBack = onBack,
+        onActionClick = onActionClick,
+        onRetry = viewModel::retry,
+    )
+}
+
+// 그룹 상세 화면 (stateless: 상태·콜백을 파라미터로 받음)
 @Composable
 fun GroupDetailScreen(
-    groupId: Long,
+    uiState: GroupDetailUiState,
     onBack: () -> Unit,
+    onActionClick: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -49,35 +77,87 @@ fun GroupDetailScreen(
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
         GroupDetailHeader(onBack = onBack)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            contentAlignment = Alignment.Center,
+        ) {
+            when {
+                uiState.loading && uiState.detail == null -> {
+                    CircularProgressIndicator(color = BookiiBookiiTheme.colors.uiMain)
+                }
+
+                uiState.error != null && uiState.detail == null -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = uiState.error,
+                            style = BookiiBookiiTheme.typography.regular14,
+                            color = BookiiBookiiTheme.colors.grey500,
+                        )
+                        Text(
+                            text = "다시 시도",
+                            style = BookiiBookiiTheme.typography.medium14,
+                            color = BookiiBookiiTheme.colors.uiMain,
+                            modifier = Modifier.clickable(onClick = onRetry),
+                        )
+                    }
+                }
+
+                uiState.detail != null -> {
+                    GroupDetailContent(
+                        detail = uiState.detail,
+                        actionButton = uiState.actionButton,
+                        onActionClick = onActionClick,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// 성공 상태 본문 (스크롤)
+@Composable
+private fun GroupDetailContent(
+    detail: GroupDetailResponse,
+    actionButton: GroupDetailActionButton?,
+    onActionClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+    ) {
+        GroupDetailInfoSection(
+            detail = detail,
+            actionButton = actionButton,
+            onActionClick = onActionClick,
+        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            GroupDetailInfoSection()
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                GroupDetailDescriptionCard(
-                    title = "그룹 소개",
-                    body = "고전 문학이랑 교환 원해요. 민음사 전집 도장 깨기 중입니다...",
-                    exchangePlaceName = "숭실대학교정보과학관",
-                    exchangePlaceAddress = "서울 동작구 사당로 50",
-                )
-                GroupDetailDescriptionCard(
-                    title = "그룹 규칙",
-                    body = "책을 자유롭게 읽어주세요.\n독서카드 많이많이 올려주셨으면 좋겠어요!",
-                )
-                GroupDetailMembersCard(
-                    currentCount = 1,
-                    maxCount = 2,
-                    hostName = "noshel",
-                )
-            }
+            GroupDetailDescriptionCard(
+                title = "그룹 소개",
+                body = detail.groupComment.orEmpty(),
+                exchangePlaceName = detail.placeName,
+                exchangePlaceAddress = detail.address,
+            )
+            GroupDetailDescriptionCard(
+                title = "그룹 규칙",
+                // rules는 응답에서 content가 항상 채워짐 (프리셋 태그도 백엔드가 표시 텍스트 제공)
+                body = detail.rules.joinToString("\n") { it.content },
+            )
+            GroupDetailMembersCard(
+                matchedCount = detail.matchedCount,
+                maxCapacity = detail.maxCapacity,
+                participantSlots = detail.participantSlots,
+            )
         }
     }
 }
@@ -115,9 +195,13 @@ private fun GroupDetailHeader(onBack: () -> Unit) {
     }
 }
 
-// 그룹 정보 카드 + 하단 버튼
+// 그룹 정보 카드 + 하단 액션 버튼
 @Composable
-private fun GroupDetailInfoSection() {
+private fun GroupDetailInfoSection(
+    detail: GroupDetailResponse,
+    actionButton: GroupDetailActionButton?,
+    onActionClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -126,20 +210,24 @@ private fun GroupDetailInfoSection() {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         GroupDetailBookInfo(
-            title = "살인자의 기억법",
-            author = "김영하",
-            category = "한국소설",
-            exchangeType = "직접",
-            expectedDays = 7,
-            nickname = "닉네임",
-            groupName = "그룹명",
+            title = detail.title,
+            author = detail.author,
+            category = detail.genre,
+            exchangeType = tradeTypeLabel(detail.tradeType),
+            expectedDays = detail.readingPeriod,
+            nickname = detail.hostNickname,
+            groupName = detail.groupName,
+            bookImage = detail.bookImage,
         )
-        CardButton(
-            text = "참여 신청하기",
-            style = CardButtonStyle.Main,
-            onClick = {},
-            modifier = Modifier.fillMaxWidth(),
-        )
+        // buttonStatus가 TRACKER/FULL/unknown이면 actionButton이 null → 버튼 미표시
+        if (actionButton != null) {
+            CardButton(
+                text = actionButton.text,
+                style = actionButton.style,
+                onClick = onActionClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
 
@@ -152,16 +240,15 @@ private fun GroupDetailBookInfo(
     expectedDays: Int,
     nickname: String,
     groupName: String,
+    bookImage: String?,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(width = 72.dp, height = 100.dp)
-                .clip(BookiiBookiiTheme.shape.round8)
-                .background(BookiiBookiiTheme.colors.uiBg),
+        BookCover(
+            imageUrl = bookImage,
+            modifier = Modifier.size(width = 72.dp, height = 100.dp),
         )
         Column(
             modifier = Modifier
@@ -363,9 +450,9 @@ private fun DashedDivider(
 // 참여 멤버 카드
 @Composable
 private fun GroupDetailMembersCard(
-    currentCount: Int,
-    maxCount: Int,
-    hostName: String,
+    matchedCount: Int,
+    maxCapacity: Int,
+    participantSlots: List<ParticipantSlot>,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -388,7 +475,7 @@ private fun GroupDetailMembersCard(
                     color = BookiiBookiiTheme.colors.grey900,
                 )
                 Text(
-                    text = "$currentCount/$maxCount 명",
+                    text = "$matchedCount/$maxCapacity 명",
                     style = BookiiBookiiTheme.typography.regular14,
                     color = BookiiBookiiTheme.colors.uiMain,
                 )
@@ -396,48 +483,52 @@ private fun GroupDetailMembersCard(
             HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey100)
         }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // 호스트
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            participantSlots.forEach { slot ->
+                ParticipantSlotRow(slot = slot)
+            }
+        }
+    }
+}
+
+// 슬롯 한 줄 (HOST / GUEST / EMPTY)
+@Composable
+private fun ParticipantSlotRow(slot: ParticipantSlot) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // 프로필 이미지 자리 (이미지 로딩은 후속 작업)
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(BookiiBookiiTheme.shape.round16)
+                .background(BookiiBookiiTheme.colors.uiBg),
+        )
+        when (slot.role) {
+            "HOST" -> Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(BookiiBookiiTheme.shape.round16)
-                        .background(BookiiBookiiTheme.colors.uiBg),
+                Text(
+                    text = slot.nickname.orEmpty(),
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey900,
                 )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = hostName,
-                        style = BookiiBookiiTheme.typography.regular14,
-                        color = BookiiBookiiTheme.colors.grey900,
-                    )
-                    GroupDetailHostChip()
-                }
+                GroupDetailHostChip()
             }
-            // 모집 중 빈 자리
-            repeat(maxCount - currentCount) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(BookiiBookiiTheme.shape.round16)
-                            .background(BookiiBookiiTheme.colors.uiBg),
-                    )
-                    Text(
-                        text = "모집 중",
-                        style = BookiiBookiiTheme.typography.regular14,
-                        color = BookiiBookiiTheme.colors.grey600,
-                    )
-                }
-            }
+
+            "EMPTY" -> Text(
+                text = "모집 중",
+                style = BookiiBookiiTheme.typography.regular14,
+                color = BookiiBookiiTheme.colors.grey600,
+            )
+
+            // GUEST 등 그 외 — 닉네임만 표시
+            else -> Text(
+                text = slot.nickname.orEmpty(),
+                style = BookiiBookiiTheme.typography.regular14,
+                color = BookiiBookiiTheme.colors.grey900,
+            )
         }
     }
 }
@@ -458,10 +549,72 @@ private fun GroupDetailHostChip() {
     }
 }
 
+// tradeType 코드 → 표시 라벨 (Search 화면과 동일 규칙)
+private fun tradeTypeLabel(tradeType: String): String = when (tradeType) {
+    "DIRECT" -> "직접"
+    "DELIVERY" -> "택배"
+    else -> ""
+}
+
 @Preview(widthDp = 412, heightDp = 917, showBackground = true)
 @Composable
 private fun GroupDetailScreenPreview() {
     BookiiPreview {
-        GroupDetailScreen(groupId = 0L, onBack = {})
+        GroupDetailScreen(
+            uiState = GroupDetailUiState(
+                detail = GroupDetailResponse(
+                    groupId = 12,
+                    groupStatus = "RECRUITING",
+                    isHost = true,
+                    tradeType = "DELIVERY",
+                    placeName = "자취방",
+                    address = "서울특별시",
+                    title = "녹나무의 여신",
+                    bookImage = null,
+                    author = "히가시노 게이고",
+                    genre = "기타",
+                    readingPeriod = 14,
+                    matchedCount = 1,
+                    maxCapacity = 2,
+                    waitingCount = 0,
+                    isHot = false,
+                    createdAt = "2026. 05. 24.",
+                    startDate = null,
+                    hostNickname = "이중희카카오",
+                    hostProfileImageUrl = null,
+                    groupComment = "잠수는 안됩니다",
+                    groupName = "안녕하세요",
+                    rules = listOf(
+                        GroupRule(tag = "MEMO", content = "책에 직접 코멘트를 남겨요!"),
+                        GroupRule(tag = "CUSTOM", content = "책을 소중히 다룹시다"),
+                        GroupRule(tag = "CUSTOM", content = "반갑습니다"),
+                    ),
+                    participantSlots = listOf(
+                        ParticipantSlot(
+                            nickname = "이중희카카오",
+                            profileImageUrl = null,
+                            role = "HOST",
+                            isMe = true,
+                        ),
+                        ParticipantSlot(
+                            nickname = null,
+                            profileImageUrl = null,
+                            role = "EMPTY",
+                            isMe = false,
+                        ),
+                    ),
+                    buttonStatus = "MANAGE",
+                ),
+                actionButton = GroupDetailActionButton(
+                    text = "참여 요청 관리 0",
+                    style = CardButtonStyle.Main,
+                ),
+                loading = false,
+                error = null,
+            ),
+            onBack = {},
+            onActionClick = {},
+            onRetry = {},
+        )
     }
 }
