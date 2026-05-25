@@ -44,6 +44,7 @@ import com.bookiibookii.bookiibookii.group.vm.GroupDetailViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -218,6 +219,7 @@ private fun GroupDetailInfoSection(
             nickname = detail.hostNickname,
             groupName = detail.groupName,
             bookImage = detail.bookImage,
+            hostProfileImageUrl = detail.hostProfileImageUrl,
         )
         // buttonStatus가 TRACKER/FULL/unknown이면 actionButton이 null → 버튼 미표시
         if (actionButton != null) {
@@ -241,6 +243,7 @@ private fun GroupDetailBookInfo(
     nickname: String,
     groupName: String,
     bookImage: String?,
+    hostProfileImageUrl: String?,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -302,11 +305,9 @@ private fun GroupDetailBookInfo(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(BookiiBookiiTheme.shape.round50)
-                            .background(BookiiBookiiTheme.colors.uiBg),
+                    ProfilePlaceholder(
+                        modifier = Modifier.size(20.dp),
+                        imageUrl = hostProfileImageUrl,
                     )
                     Text(
                         text = nickname,
@@ -497,12 +498,9 @@ private fun ParticipantSlotRow(slot: ParticipantSlot) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // 프로필 이미지 자리 (이미지 로딩은 후속 작업)
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(BookiiBookiiTheme.shape.round16)
-                .background(BookiiBookiiTheme.colors.uiBg),
+        ProfilePlaceholder(
+            modifier = Modifier.size(40.dp),
+            imageUrl = slot.profileImageUrl,
         )
         when (slot.role) {
             "HOST" -> Row(

@@ -221,6 +221,7 @@ fun GroupSearchScreen(
                                 groupName = item.groupName,
                                 onClick = { onGroupClick(item.groupId) },
                                 imageUrl = item.bookImage,
+                                hostProfileImageUrl = item.hostProfileImageUrl,
                             )
                         }
                         if (uiState.loadingMore) {

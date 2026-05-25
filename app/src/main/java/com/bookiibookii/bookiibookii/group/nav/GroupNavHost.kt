@@ -66,7 +66,7 @@ fun GroupNavHost(
                 },
             ),
         ) {
-            // groupId는 SavedStateHandle을 통해 GroupDetailViewModel이 직접 수신 (navArgument 선언이 근거)
+            // groupId는 SavedStateHandle을 통해 GroupDetailViewModel이 직접 수신
             GroupDetailRoute(
                 onBack = { if (!navController.popBackStack()) onExit() },
                 // 액션 버튼(APPLY/MANAGE/CANCEL) 클릭 시 분기 네비게이션은 후속 작업

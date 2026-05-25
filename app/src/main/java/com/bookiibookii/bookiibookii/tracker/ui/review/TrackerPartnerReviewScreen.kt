@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -135,12 +136,8 @@ private fun ReviewCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(20.dp)
-                    .clip(CircleShape)
-                    .background(BookiiBookiiTheme.colors.grey200),
-            )
+            // 파트너 프로필 — VM 연결 시 imageUrl 와이어링
+            ProfilePlaceholder(modifier = Modifier.size(20.dp))
             Text(
                 text = buildAnnotatedString {
                     withStyle(SpanStyle(color = BookiiBookiiTheme.colors.uiMain)) {
@@ -292,13 +289,13 @@ private fun BookColumn(
                     }
                 }
             }
-            Box(
+            // TrackerCard 위 파트너 오버레이 — BookCover와 겹치므로 innerStroke=true. URL은 VM 연결 후속
+            ProfilePlaceholder(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(start = 17.dp)
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(BookiiBookiiTheme.colors.grey200),
+                    .size(44.dp),
+                innerStroke = true,
             )
         }
         Text(

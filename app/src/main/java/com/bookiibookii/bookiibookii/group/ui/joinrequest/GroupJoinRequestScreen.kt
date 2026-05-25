@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -168,12 +169,8 @@ private fun JoinRequestUserRow(nickname: String, date: String) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(BookiiBookiiTheme.colors.uiBg),
-        )
+        // 프로필 이미지 — JoinRequestItem에 profileImageUrl 추가 시 imageUrl 전달 (VM 연결 후속 작업)
+        ProfilePlaceholder(modifier = Modifier.size(48.dp))
         Column {
             Text(
                 text = nickname,
