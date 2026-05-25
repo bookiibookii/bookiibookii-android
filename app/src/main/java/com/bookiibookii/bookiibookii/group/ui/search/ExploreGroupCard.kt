@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.group.ui.search
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ fun ExploreGroupCard(
     expectedDays: Int,
     nickname: String,
     groupName: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     imageUrl: String? = null,
 ) {
@@ -40,6 +42,7 @@ fun ExploreGroupCard(
             .fillMaxWidth()
             .clip(BookiiBookiiTheme.shape.round20)
             .background(BookiiBookiiTheme.colors.white)
+            .clickable(onClick = onClick)
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -164,6 +167,7 @@ private fun ExploreGroupCardPreview() {
             expectedDays = 7,
             nickname = "닉네임",
             groupName = "그룹명",
+            onClick = {},
         )
     }
 }

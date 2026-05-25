@@ -9,7 +9,7 @@ object GroupDestinations {
     const val EDITOR = "editor?$ARG_GROUP_ID={$ARG_GROUP_ID}"
     const val JOIN_REQUESTS = "joinRequests/{$ARG_GROUP_ID}"
 
-    fun detail(groupId: String) = "detail/$groupId"
+    fun detail(groupId: Long) = "detail/$groupId"
 
     // groupId == null -> 생성, not null -> 수정
     fun editor(groupId: String? = null) =

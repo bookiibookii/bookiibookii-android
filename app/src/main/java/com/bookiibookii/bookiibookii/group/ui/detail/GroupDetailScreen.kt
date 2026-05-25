@@ -36,14 +36,19 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 그룹 상세 화면
+// groupId: 라우트로 전달받는 그룹 식별자 (현재는 미사용, 다음 VM 연결 단계에서 사용)
+@Suppress("UNUSED_PARAMETER")
 @Composable
-fun GroupDetailScreen() {
+fun GroupDetailScreen(
+    groupId: Long,
+    onBack: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
-        GroupDetailHeader()
+        GroupDetailHeader(onBack = onBack)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -79,7 +84,7 @@ fun GroupDetailScreen() {
 
 // 헤더
 @Composable
-private fun GroupDetailHeader() {
+private fun GroupDetailHeader(onBack: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
         Box(
             modifier = Modifier
@@ -88,7 +93,7 @@ private fun GroupDetailHeader() {
                 .padding(horizontal = 16.dp),
         ) {
             IconButton(
-                onClick = {},
+                onClick = onBack,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .size(40.dp),
@@ -457,6 +462,6 @@ private fun GroupDetailHostChip() {
 @Composable
 private fun GroupDetailScreenPreview() {
     BookiiPreview {
-        GroupDetailScreen()
+        GroupDetailScreen(groupId = 0L, onBack = {})
     }
 }
