@@ -42,6 +42,8 @@ class GroupEditorViewModel(
         data class Created(val groupId: Long?) : Event()   // 생성 성공
         data class Updated(val groupId: Long) : Event()    // 수정 성공
         data class ShowError(val message: String) : Event()
+        // 수정 모드 진입 시 기존 그룹 데이터 프리필 실패 — 토스트 + 뒤로가기
+        data class PrefillFailed(val message: String) : Event()
     }
 
     init {
@@ -69,9 +71,11 @@ class GroupEditorViewModel(
                             customRules = customRules,
                         )
                     }
+                } else {
+                    _eventFlow.emit(Event.PrefillFailed("그룹 정보를 불러오지 못했어요"))
                 }
             } catch (e: Exception) {
-                // 프리필 실패 시 빈 폼 유지
+                _eventFlow.emit(Event.PrefillFailed("네트워크 오류가 발생했어요"))
             }
         }
     }

@@ -44,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.heightIn
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.model.GroupEditorUiState
@@ -72,6 +74,7 @@ fun GroupEditorRoute(
     viewModel: GroupEditorViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var submitError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
@@ -80,6 +83,11 @@ fun GroupEditorRoute(
                 is GroupEditorViewModel.Event.Created -> onCreated(event.groupId)
                 is GroupEditorViewModel.Event.Updated -> onUpdated(event.groupId)
                 is GroupEditorViewModel.Event.ShowError -> submitError = event.message
+                // 프리필 실패 — 토스트 + 자동 뒤로가기 (빈 폼으로 PATCH 못 누르게)
+                is GroupEditorViewModel.Event.PrefillFailed -> {
+                    context.showCustomToast(event.message, isSuccess = false)
+                    onBack()
+                }
             }
         }
     }
