@@ -289,7 +289,7 @@ private fun BookColumn(
                     }
                 }
             }
-            // TrackerCard 위 파트너 오버레이 — BookCover와 겹치므로 innerStroke=true. URL은 VM 연결 후속
+            // TrackerCard 위 파트너 오버레이 — BookCover와 겹치므로 innerStroke=true
             ProfilePlaceholder(
                 modifier = Modifier
                     .align(Alignment.TopStart)

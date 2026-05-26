@@ -124,7 +124,7 @@ interface GrpApi {
         @Path("groupId") groupId: Long
     ): Response<ApiResponse<List<CommentItem>>>
 
-    // 그룹 댓글 삭제 — ApiResponseVoid (result 없음, 프로젝트 컨벤션상 String으로 받음)
+    // 그룹 댓글 삭제
     @DELETE("api/groups/{groupId}/comments/{commentId}")
     suspend fun deleteComment(
         @Path("groupId") groupId: Long,

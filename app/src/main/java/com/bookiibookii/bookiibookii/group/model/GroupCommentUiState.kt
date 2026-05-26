@@ -20,7 +20,7 @@ data class GroupCommentUiState(
     val replyTargetId: Long? = null,
     // 답글 멘션에 표시할 닉네임
     val mentionNickname: String? = null,
-    // startReply 호출마다 증가하는 토큰. 같은 댓글 재클릭(값 동일)에도 focus/키보드 재요청을 트리거하기 위함
+    // startReply 호출마다 증가하는 토큰. 같은 댓글 재클릭에도 focus/키보드 재요청을 트리거하기 위함
     val replyRequestId: Int = 0,
 
     // POST 진행 중

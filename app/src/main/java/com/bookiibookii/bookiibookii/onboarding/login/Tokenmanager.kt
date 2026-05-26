@@ -71,7 +71,6 @@ object TokenManager {
     }
 
     // 로그인된 사용자 id. 저장 안 됐으면 null.
-    // Int로 저장돼 있지만 서버 모델은 대부분 Long이라 Long으로 노출.
     // (임시) 댓글 본인 여부 비교용. 백엔드가 isMe 필드 추가하면 제거 예정
     fun getUserId(context: Context): Long? {
         val id = prefs(context).getInt(KEY_USER_ID, -1)

@@ -38,8 +38,8 @@ private val ProfileSquircleShape: Shape = GenericShape { size, _ ->
 // 프로필 영역 (placeholder + 실제 이미지)
 // - 크기는 호출처에서 modifier.size()
 // - imageUrl == null/blank → profile_bg 모양에 grey500 채움 (기본 placeholder)
-// - imageUrl != null → 위에 AsyncImage 오버레이 (squircle로 잘림)
-// - innerStroke == true → 안쪽 1dp grey100 stroke. BookCover와 겹치는 자리에만 true
+// - imageUrl != null → 위에 AsyncImage 오버레이
+// - innerStroke == true → 안쪽 1dp grey100 stroke. BookCover와 겹칠 때만 true 넣기
 @Composable
 fun ProfilePlaceholder(
     modifier: Modifier = Modifier,
@@ -62,7 +62,7 @@ fun ProfilePlaceholder(
                 modifier = Modifier.fillMaxSize(),
             )
         }
-        // 안쪽 stroke는 마지막에 그려야 AsyncImage 위에 보임
+        // 안쪽 stroke
         if (innerStroke) {
             Box(
                 modifier = Modifier
