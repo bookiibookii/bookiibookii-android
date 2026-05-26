@@ -14,9 +14,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 // 그룹 참여 신청 관련 도메인 VM
-// 게스트 신청 (POST /apply)
+// 게스트 신청 (POST /apply), 게스트 취소 (DELETE /apply)
 // 후속(자발적 wiring 금지 — 합의 후 추가):
-//   - DELETE /api/groups/{groupId}/apply (참여 신청 취소)
 //   - PATCH /api/groups/apply/{applyId} (수락/거절)
 //   - GET /api/groups/{groupId}/applylist (신청자 명단 조회)
 //   - GET /api/groups/apply/me (내가 신청한 그룹 목록)
@@ -32,8 +31,13 @@ class JoinRequestViewModel : ViewModel() {
     sealed class Event {
         // 신청 성공 — 다이얼로그 닫고 상세 새로고침 트리거용
         data object Applied : Event()
+        // 신청 취소 성공 — 토스트 + 상세 새로고침 트리거용
+        data object Canceled : Event()
         data class ShowError(val message: String) : Event()
     }
+
+    // 취소 중복 호출 가드
+    private var canceling = false
 
     // 다이얼로그 닫힐 때 호출
     fun reset() {
@@ -106,6 +110,27 @@ class JoinRequestViewModel : ViewModel() {
                 _eventFlow.emit(Event.ShowError("네트워크 오류가 발생했어요"))
             } finally {
                 _state.update { it.copy(submitting = false) }
+            }
+        }
+    }
+
+    // 그룹 참여 신청 취소 — DELETE /api/groups/{groupId}/apply
+    // 성공 시 토스트 + 상세 새로고침
+    fun cancelApply(groupId: Long) {
+        if (canceling) return
+        canceling = true
+        viewModelScope.launch {
+            try {
+                val res = RetrofitClient.grpApi().cancelGroupApplication(groupId)
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    _eventFlow.emit(Event.Canceled)
+                } else {
+                    _eventFlow.emit(Event.ShowError(res.body()?.message ?: "신청 취소에 실패했어요"))
+                }
+            } catch (e: Exception) {
+                _eventFlow.emit(Event.ShowError("네트워크 오류가 발생했어요"))
+            } finally {
+                canceling = false
             }
         }
     }

@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.group.ui.detail
 
-import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -55,6 +54,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupRule
 import com.bookiibookii.bookiibookii.data.model.group.ParticipantSlot
@@ -97,11 +97,14 @@ fun GroupDetailRoute(
             when (event) {
                 is GroupDetailViewModel.Event.Deleted -> onDeleted()
                 is GroupDetailViewModel.Event.ShowError ->
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    context.showCustomToast(event.message, isSuccess = false)
             }
         }
     }
-    // 참여 신청 결과 처리: 성공 -> 다이얼로그 닫고 상세 새로고침(버튼 상태 갱신), 실패 → 토스트
+    // 참여 신청/취소 결과 처리
+    //   Applied  -> 다이얼로그 닫고 상세 새로고침(버튼 상태 갱신)
+    //   Canceled -> 성공 토스트 + 상세 새로고침
+    //   ShowError -> 실패 토스트
     LaunchedEffect(Unit) {
         applyViewModel.eventFlow.collect { event ->
             when (event) {
@@ -110,8 +113,12 @@ fun GroupDetailRoute(
                     applyViewModel.reset()
                     viewModel.retry()
                 }
+                is JoinRequestViewModel.Event.Canceled -> {
+                    context.showCustomToast("참여 신청을 취소했어요", isSuccess = true)
+                    viewModel.retry()
+                }
                 is JoinRequestViewModel.Event.ShowError ->
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    context.showCustomToast(event.message, isSuccess = false)
             }
         }
     }
@@ -136,12 +143,16 @@ fun GroupDetailRoute(
             // 액션 버튼은 buttonStatus에 따라 분기
             //   APPLY  → 참여 신청 다이얼로그
             //   MANAGE → 참여 요청 관리 화면으로 이동
-            //   CANCEL → 후속 작업 (현재 no-op)
+            //   CANCEL → 확인 모달 없이 바로 DELETE 호출 (성공 시 토스트 + 상세 새로고침)
             onActionClick = {
-                when (uiState.detail?.buttonStatus) {
-                    "APPLY" -> showApplyDialog = true
-                    "MANAGE" -> uiState.detail?.let { onManage(it.groupId) }
-                    else -> Unit
+                val detail = uiState.detail
+                if (detail != null) {
+                    when (detail.buttonStatus) {
+                        "APPLY" -> showApplyDialog = true
+                        "MANAGE" -> onManage(detail.groupId)
+                        "CANCEL" -> applyViewModel.cancelApply(detail.groupId)
+                        else -> Unit
+                    }
                 }
             },
             onEditClick = { uiState.detail?.let { onEdit(it.groupId) } },

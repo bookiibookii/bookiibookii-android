@@ -68,7 +68,7 @@ fun GroupDeleteDialog(
             }
         }
         Text(
-            text = "그룹 \"$groupName\"을 삭제하시겠습니까? 삭제하면 그룹 정보가 즉시 사라지며, 이후 되돌릴 수 없습니다.",
+            text = "그룹을 삭제하시겠습니까? 삭제하면 그룹 정보가 즉시 사라지며, 이후 되돌릴 수 없습니다.",
             style = BookiiBookiiTheme.typography.regular16,
             color = BookiiBookiiTheme.colors.grey900,
             modifier = Modifier.padding(top = 24.dp),
