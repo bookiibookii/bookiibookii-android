@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.data.model.group.GroupApplyRequest
+import com.bookiibookii.bookiibookii.group.model.ApplicationListUiState
 import com.bookiibookii.bookiibookii.group.model.GroupApplyUiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,15 +15,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 // 그룹 참여 신청 관련 도메인 VM
-// 게스트 신청 (POST /apply), 게스트 취소 (DELETE /apply)
+// 게스트 신청 (POST /apply), 게스트 취소 (DELETE /apply), 호스트 명단 조회 (GET /applylist)
 // 후속(자발적 wiring 금지 — 합의 후 추가):
 //   - PATCH /api/groups/apply/{applyId} (수락/거절)
-//   - GET /api/groups/{groupId}/applylist (신청자 명단 조회)
 //   - GET /api/groups/apply/me (내가 신청한 그룹 목록)
 class JoinRequestViewModel : ViewModel() {
 
+    // 게스트 신청 다이얼로그 상태 (apply/cancel)
     private val _state = MutableStateFlow(GroupApplyUiState())
     val state: StateFlow<GroupApplyUiState> = _state
+
+    // 호스트 신청자 명단 화면 상태 (loadApplicationList) — 다이얼로그 상태와 분리
+    private val _applicationListState = MutableStateFlow(ApplicationListUiState())
+    val applicationListState: StateFlow<ApplicationListUiState> = _applicationListState
 
     private val _eventFlow = MutableSharedFlow<Event>()
     val eventFlow = _eventFlow.asSharedFlow()
@@ -110,6 +115,36 @@ class JoinRequestViewModel : ViewModel() {
                 _eventFlow.emit(Event.ShowError("네트워크 오류가 발생했어요"))
             } finally {
                 _state.update { it.copy(submitting = false) }
+            }
+        }
+    }
+
+    // 신청자 명단 조회 — GET /api/groups/{groupId}/applylist
+    // 결과는 applicationListState로 노출. 에러는 inline(state.error)
+    fun loadApplicationList(groupId: Long) {
+        viewModelScope.launch {
+            _applicationListState.update { it.copy(loading = true, error = null) }
+            try {
+                val res = RetrofitClient.grpApi().getGroupApplications(groupId)
+                val result = res.body()?.result
+                if (res.isSuccessful && res.body()?.isSuccess == true && result != null) {
+                    _applicationListState.update {
+                        it.copy(
+                            items = result.applicationList,
+                            totalCount = result.totalCount,
+                            loading = false,
+                            error = null,
+                        )
+                    }
+                } else {
+                    _applicationListState.update {
+                        it.copy(error = "신청자 명단을 불러오지 못했어요", loading = false)
+                    }
+                }
+            } catch (e: Exception) {
+                _applicationListState.update {
+                    it.copy(error = "네트워크 오류가 발생했어요", loading = false)
+                }
             }
         }
     }

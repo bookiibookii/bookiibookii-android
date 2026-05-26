@@ -9,7 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bookiibookii.bookiibookii.group.ui.detail.GroupDetailRoute
 import com.bookiibookii.bookiibookii.group.ui.editor.GroupEditorRoute
-import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupJoinRequestScreen
+import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupJoinRequestRoute
 import com.bookiibookii.bookiibookii.group.ui.search.GroupSearchRoute
 
 @Composable
@@ -102,9 +102,10 @@ fun GroupNavHost(
                     type = NavType.LongType
                 },
             ),
-        ) {
-            // 화면 내부 데이터(VM/groupId) 연결은 후속 작업 — 지금은 정적 화면 + 뒤로가기만
-            GroupJoinRequestScreen(
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getLong(GroupDestinations.ARG_GROUP_ID) ?: 0L
+            GroupJoinRequestRoute(
+                groupId = groupId,
                 onBack = { if (!navController.popBackStack()) onExit() },
             )
         }
