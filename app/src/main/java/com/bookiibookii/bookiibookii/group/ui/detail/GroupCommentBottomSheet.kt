@@ -344,13 +344,12 @@ private fun CommentItemRow(
         }
         if (showPopover) {
             val density = LocalDensity.current
-            // 행 기준 왼쪽 208dp 들여쓰고 오른쪽 28dp 여백 → popover 너비 = 행너비 - 208 - 28
-            // 디자인 컨펌 받고 수정
-            val popoverWidth = with(density) { rowSize.width.toDp() } - 208.dp - 28.dp
+            // 행 기준 왼쪽 208dp / 오른쪽 28dp. 대댓글은 보정해 댓글과 동일 크기로 맞춤
+            val popoverWidth = with(density) { rowSize.width.toDp() } + indentStart - 208.dp - 28.dp
             Popup(
                 alignment = Alignment.TopStart,
                 offset = IntOffset(
-                    x = with(density) { 208.dp.roundToPx() },
+                    x = with(density) { (216.dp - indentStart).roundToPx() },
                     y = rowSize.height,
                 ),
                 onDismissRequest = { showPopover = false },

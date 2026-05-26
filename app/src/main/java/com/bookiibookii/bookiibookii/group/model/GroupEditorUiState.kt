@@ -18,18 +18,27 @@ data class GroupEditorUiState(
     val groupComment: String = "",         // 선택, 최대 500자
     val ruleStyle: ReadingStyle? = null,   // 프리셋 1개 (드롭다운)
     val customRules: List<String> = emptyList(),  // CUSTOM 항목, 최대 4개
-    val submitting: Boolean = false,              // 그룹 생성 요청 중
+    val submitting: Boolean = false,              // 그룹 생성/수정 요청 중
+    val isEdit: Boolean = false,                  // 수정 모드 (groupId로 진입). 생성=false
 ) {
     val readingPeriod: Int get() = PERIODS[readingPeriodIndex]
 
+    // 수정 모드는 PATCH 가능 필드(그룹명/독서기간/소개/규칙)만 검증 — 도서/교환유형/주소는 수정 불가
     val canSubmit: Boolean
-        get() = isbn13 != null &&
+        get() = if (isEdit) {
             groupName.isNotBlank() &&
-            tradeType != null &&
-            selectedPlaceId != null &&
-            groupComment.length <= 500 &&
-            ruleStyle != null &&
-            (1 + customRules.count { it.isNotBlank() }) in 1..5
+                groupComment.length <= 500 &&
+                ruleStyle != null &&
+                (1 + customRules.count { it.isNotBlank() }) in 1..5
+        } else {
+            isbn13 != null &&
+                groupName.isNotBlank() &&
+                tradeType != null &&
+                selectedPlaceId != null &&
+                groupComment.length <= 500 &&
+                ruleStyle != null &&
+                (1 + customRules.count { it.isNotBlank() }) in 1..5
+        }
 
     companion object {
         val PERIODS = listOf(3, 7, 14, 21, 28)

@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.group.ui.detail
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -24,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,24 +35,35 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupRule
 import com.bookiibookii.bookiibookii.data.model.group.ParticipantSlot
 import com.bookiibookii.bookiibookii.group.model.GroupDetailActionButton
 import com.bookiibookii.bookiibookii.group.model.GroupDetailUiState
+import com.bookiibookii.bookiibookii.group.ui.editor.GroupDeleteDialog
+import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupApplyDialog
 import com.bookiibookii.bookiibookii.group.vm.GroupDetailViewModel
+import com.bookiibookii.bookiibookii.group.vm.JoinRequestViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
@@ -58,19 +72,58 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 그룹 상세 화면 — VM 주입/상태 수집 (stateful)
-// 댓글 sheet는 BottomSheetScaffold 대신 직접 Box stack으로 구현:
-//   - 본문은 항상 bottom 170dp (peek 높이) padding을 받아 sheet 아래로 가려지지 않음
 //   - sheet 높이 3단계: peek 170 / expanded 544 / keyboard 580
 //   - swipe up/down으로 expand 토글 (누적 drag 50dp 초과 시)
 //   - 키보드: sheet는 안 올리고 높이만 580으로 키움 + 입력창만 imePadding (입력창 위 댓글 1개 노출)
 @Composable
 fun GroupDetailRoute(
     onBack: () -> Unit,
-    onActionClick: () -> Unit,
+    onManage: (groupId: Long) -> Unit,
+    onEdit: (groupId: Long) -> Unit,
+    onDeleted: () -> Unit,
     viewModel: GroupDetailViewModel = viewModel(),
+    applyViewModel: JoinRequestViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val applyState by applyViewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showApplyDialog by remember { mutableStateOf(false) }
+
+    // 삭제 결과 처리: 성공 -> 그룹 목록 이동, 실패 -> 토스트
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is GroupDetailViewModel.Event.Deleted -> onDeleted()
+                is GroupDetailViewModel.Event.ShowError ->
+                    context.showCustomToast(event.message, isSuccess = false)
+            }
+        }
+    }
+    // 참여 신청/취소 결과 처리
+    //   Applied  -> 다이얼로그 닫고 상세 새로고침(버튼 상태 갱신)
+    //   Canceled -> 성공 토스트 + 상세 새로고침
+    //   ShowError -> 실패 토스트
+    LaunchedEffect(Unit) {
+        applyViewModel.eventFlow.collect { event ->
+            when (event) {
+                is JoinRequestViewModel.Event.Applied -> {
+                    showApplyDialog = false
+                    applyViewModel.reset()
+                    viewModel.retry()
+                }
+                is JoinRequestViewModel.Event.Canceled -> {
+                    context.showCustomToast("참여 신청을 취소했어요", isSuccess = true)
+                    viewModel.retry()
+                }
+                is JoinRequestViewModel.Event.ShowError ->
+                    context.showCustomToast(event.message, isSuccess = false)
+
+                else -> {}
+            }
+        }
+    }
     // 키보드 표시 여부 — 키보드 뜨면 sheet 높이를 키워 입력창 위 댓글 공간 확보
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     // 3단계 높이: keyboard(580) > expanded(544) > peek(170)
@@ -89,7 +142,23 @@ fun GroupDetailRoute(
         GroupDetailScreen(
             uiState = uiState,
             onBack = onBack,
-            onActionClick = onActionClick,
+            // 액션 버튼은 buttonStatus에 따라 분기
+            //   APPLY  → 참여 신청 다이얼로그
+            //   MANAGE → 참여 요청 관리 화면으로 이동
+            //   CANCEL → 확인 모달 없이 바로 DELETE 호출 (성공 시 토스트 + 상세 새로고침)
+            onActionClick = {
+                val detail = uiState.detail
+                if (detail != null) {
+                    when (detail.buttonStatus) {
+                        "APPLY" -> showApplyDialog = true
+                        "MANAGE" -> onManage(detail.groupId)
+                        "CANCEL" -> applyViewModel.cancelApply(detail.groupId)
+                        else -> Unit
+                    }
+                }
+            },
+            onEditClick = { uiState.detail?.let { onEdit(it.groupId) } },
+            onDeleteClick = { showDeleteDialog = true },
             onRetry = viewModel::retry,
             // 본문 하단은 항상 peek 170dp만큼 padding (sheet 아래로 가지 않게)
             modifier = Modifier.padding(bottom = 170.dp),
@@ -119,6 +188,54 @@ fun GroupDetailRoute(
                     }
                 },
         )
+
+        // 참여 신청 다이얼로그 (게스트 APPLY 버튼)
+        if (showApplyDialog) {
+            Dialog(
+                onDismissRequest = {
+                    showApplyDialog = false
+                    applyViewModel.reset()
+                },
+                properties = DialogProperties(usePlatformDefaultWidth = false),
+            ) {
+                GroupApplyDialog(
+                    bookSearchQuery = applyState.bookSearchQuery,
+                    bookSearchResults = applyState.bookSearchResults,
+                    applyMsg = applyState.applyMsg,
+                    canSubmit = applyState.canSubmit && !applyState.submitting,
+                    onQueryChange = applyViewModel::onBookSearchQueryChange,
+                    onSearchClick = applyViewModel::searchBooks,
+                    onBookSelect = applyViewModel::onBookSelect,
+                    onApplyMsgChange = applyViewModel::onApplyMsgChange,
+                    onSubmit = {
+                        uiState.detail?.let { applyViewModel.apply(it.groupId) }
+                    },
+                    onDismiss = {
+                        showApplyDialog = false
+                        applyViewModel.reset()
+                    },
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                )
+            }
+        }
+
+        // 삭제 확인 다이얼로그 (호스트 미트볼 > 삭제하기)
+        if (showDeleteDialog) {
+            Dialog(
+                onDismissRequest = { showDeleteDialog = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false),
+            ) {
+                GroupDeleteDialog(
+                    groupName = uiState.detail?.groupName.orEmpty(),
+                    onDismiss = { showDeleteDialog = false },
+                    onConfirm = {
+                        showDeleteDialog = false
+                        viewModel.deleteGroup()
+                    },
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                )
+            }
+        }
     }
 }
 
@@ -128,6 +245,8 @@ fun GroupDetailScreen(
     uiState: GroupDetailUiState,
     onBack: () -> Unit,
     onActionClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -136,7 +255,13 @@ fun GroupDetailScreen(
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
-        GroupDetailHeader(onBack = onBack)
+        GroupDetailHeader(
+            onBack = onBack,
+            // 미트볼(수정/삭제) 메뉴는 MANAGE(호스트)에서만 노출
+            showEditMenu = uiState.detail?.buttonStatus == "MANAGE",
+            onEditClick = onEditClick,
+            onDeleteClick = onDeleteClick,
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -223,7 +348,12 @@ private fun GroupDetailContent(
 
 // 헤더
 @Composable
-private fun GroupDetailHeader(onBack: () -> Unit) {
+private fun GroupDetailHeader(
+    onBack: () -> Unit,
+    showEditMenu: Boolean,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
     Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
         Box(
             modifier = Modifier
@@ -249,8 +379,121 @@ private fun GroupDetailHeader(onBack: () -> Unit) {
                 color = BookiiBookiiTheme.colors.grey900,
                 modifier = Modifier.align(Alignment.Center),
             )
+            if (showEditMenu) {
+                GroupDetailEditMenu(
+                    onEditClick = onEditClick,
+                    onDeleteClick = onDeleteClick,
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                )
+            }
         }
         HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey200)
+    }
+}
+
+// 미트볼 메뉴 팝오버 — 수정하기/삭제하기를 한 카드에 담음
+@Composable
+private fun GroupDetailMenuPopover(
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .width(160.dp)
+            .shadow(elevation = 6.dp, shape = BookiiBookiiTheme.shape.round10)
+            .background(
+                color = BookiiBookiiTheme.colors.white,
+                shape = BookiiBookiiTheme.shape.round10,
+            )
+            .border(
+                width = 1.dp,
+                color = BookiiBookiiTheme.colors.grey200,
+                shape = BookiiBookiiTheme.shape.round10,
+            )
+            .padding(vertical = 4.dp),
+    ) {
+        GroupDetailMenuItem(
+            text = "수정하기",
+            iconRes = R.drawable.ic_edit,
+            onClick = onEditClick,
+        )
+        HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey100)
+        GroupDetailMenuItem(
+            text = "삭제하기",
+            iconRes = R.drawable.ic_trash,
+            onClick = onDeleteClick,
+        )
+    }
+}
+
+@Composable
+private fun GroupDetailMenuItem(
+    text: String,
+    iconRes: Int,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = text,
+            style = BookiiBookiiTheme.typography.medium14,
+            color = BookiiBookiiTheme.colors.grey700,
+        )
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = BookiiBookiiTheme.colors.grey700,
+            modifier = Modifier.size(24.dp),
+        )
+    }
+}
+
+// 미트볼 아이콘 + 메뉴 팝오버 (MANAGE 상태에서만 헤더 우측에 노출). 바깥 탭/항목 선택 시 닫힘
+@Composable
+private fun GroupDetailEditMenu(
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val popupOffsetY = with(LocalDensity.current) { 56.dp.roundToPx() }
+    Box(modifier = modifier) {
+        IconButton(
+            onClick = { expanded = true },
+            modifier = Modifier.size(40.dp),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_meetball),
+                contentDescription = "더보기",
+                tint = BookiiBookiiTheme.colors.black,
+            )
+        }
+        if (expanded) {
+            Popup(
+                alignment = Alignment.TopEnd,
+                offset = IntOffset(x = 0, y = popupOffsetY),
+                onDismissRequest = { expanded = false },
+                properties = PopupProperties(focusable = true),
+            ) {
+                GroupDetailMenuPopover(
+                    onEditClick = {
+                        expanded = false
+                        onEditClick()
+                    },
+                    onDeleteClick = {
+                        expanded = false
+                        onDeleteClick()
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -605,7 +848,7 @@ private fun GroupDetailHostChip() {
     }
 }
 
-// tradeType 코드 → 표시 라벨 (Search 화면과 동일 규칙)
+// tradeType 코드 -> 표시 라벨
 private fun tradeTypeLabel(tradeType: String): String = when (tradeType) {
     "DIRECT" -> "직접"
     "DELIVERY" -> "택배"
@@ -670,6 +913,8 @@ private fun GroupDetailScreenPreview() {
             ),
             onBack = {},
             onActionClick = {},
+            onEditClick = {},
+            onDeleteClick = {},
             onRetry = {},
         )
     }

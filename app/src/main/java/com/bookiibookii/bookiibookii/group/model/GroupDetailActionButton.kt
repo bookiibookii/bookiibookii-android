@@ -23,7 +23,7 @@ fun groupDetailActionButton(
         style = CardButtonStyle.Main,
     )
     "MANAGE" -> GroupDetailActionButton(
-        text = "참여 요청 관리 $waitingCount",
+        text = "참여 요청 관리 ($waitingCount)",
         style = CardButtonStyle.Main,
     )
     "CANCEL" -> GroupDetailActionButton(

@@ -69,6 +69,35 @@ private fun toggleDistrict(current: Set<String>, district: String): Set<String> 
     return if (next.isEmpty()) setOf(ALL) else next
 }
 
+// 선택 상태 → 백엔드 regions 토큰 리스트
+//   NATIONWIDE / 도시 미선택 -> [] (전체)
+//   도시 + ALL -> (city 단일)
+//   도시 + 특정 구 다중 -> (city + 구)
+private fun toRegionTokens(
+    selectedRegion: String,
+    selectedDistricts: Set<String>,
+    city: City?,
+): List<String> {
+    if (selectedRegion == NATIONWIDE || city == null) return emptyList()
+    if (selectedDistricts.contains(ALL) || selectedDistricts.isEmpty()) return listOf(city.name)
+    return city.districts
+        .filter { it != ALL && it in selectedDistricts }
+        .map { "${city.name} $it" }
+}
+
+//   빈 리스트 -> NATIONWIDE + ALL
+//   ["서울"] -> 서울 + ALL
+//   ["서울 강남구", "서울 송파구"] → 서울 + {강남구, 송파구}
+private fun fromRegionTokens(tokens: List<String>): Pair<String, Set<String>> {
+    if (tokens.isEmpty()) return NATIONWIDE to setOf(ALL)
+    val first = tokens.first().substringBefore(' ')
+    val city = cities.firstOrNull { it.name == first } ?: return NATIONWIDE to setOf(ALL)
+    val districts = tokens
+        .mapNotNull { it.removePrefix(city.name).trim().ifBlank { null } }
+        .toSet()
+    return if (districts.isEmpty()) city.name to setOf(ALL) else city.name to districts
+}
+
 private fun headSummary(
     selectedRegion: String,
     city: City?,
@@ -86,15 +115,20 @@ private fun headSummary(
 }
 
 // 지역 필터 바텀시트
-// UI + 선택 로직, 텍스트 고정
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RegionBottomSheet(
+    initialRegions: List<String>,
+    onApply: (List<String>) -> Unit,
+    onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-    var selectedRegion by remember { mutableStateOf(NATIONWIDE) }
-    var selectedDistricts by remember { mutableStateOf(setOf(ALL)) }
+    val (initialCityName, initialDistricts) = remember(initialRegions) {
+        fromRegionTokens(initialRegions)
+    }
+    var selectedRegion by remember { mutableStateOf(initialCityName) }
+    var selectedDistricts by remember { mutableStateOf(initialDistricts) }
 
     val currentCity = cities.firstOrNull { it.name == selectedRegion }
 
@@ -201,20 +235,22 @@ fun RegionBottomSheet(
             BottomSheetTwoBtnShort(
                 text = "취소",
                 style = BottomSheetBtnStyle.White,
-                onClick = {},
+                onClick = onCancel,
                 modifier = Modifier.weight(1f),
             )
             BottomSheetTwoBtnShort(
                 text = "적용",
                 style = BottomSheetBtnStyle.Dark,
-                onClick = {},
+                onClick = {
+                    onApply(toRegionTokens(selectedRegion, selectedDistricts, currentCity))
+                },
                 modifier = Modifier.weight(1f),
             )
         }
     }
 }
 
-// 좌측 지역 목록 아이템. 우측 라인 구분선 덧칠.
+// 좌측 지역 목록 아이템. 우측 라인 구분선 덧칠
 @Composable
 private fun RegionItem(
     text: String,
@@ -262,6 +298,10 @@ private fun RegionItem(
 @Composable
 private fun RegionBottomSheetPreview() {
     BookiiPreview {
-        RegionBottomSheet()
+        RegionBottomSheet(
+            initialRegions = emptyList(),
+            onApply = {},
+            onCancel = {},
+        )
     }
 }

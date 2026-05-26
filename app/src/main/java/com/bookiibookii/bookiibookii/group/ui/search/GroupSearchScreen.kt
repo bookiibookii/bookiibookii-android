@@ -46,7 +46,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import kotlinx.coroutines.launch
 
 // 열려 있는 필터 바텀시트 종류
-private enum class FilterSheet { EXCHANGE, GENRE }
+private enum class FilterSheet { EXCHANGE, REGION, GENRE }
 
 // 그룹 탐색(목록) 화면 — VM 주입/상태 수집 (stateful)
 @Composable
@@ -63,6 +63,7 @@ fun GroupSearchRoute(
         onQueryChange = viewModel::onQueryChange,
         onSearch = viewModel::onSearch,
         onApplyTradeTypes = viewModel::applyTradeTypes,
+        onApplyRegions = viewModel::applyRegions,
         onApplyCategories = viewModel::applyCategories,
         onLoadMore = viewModel::loadMore,
         onGroupClick = onGroupClick,
@@ -79,6 +80,7 @@ fun GroupSearchScreen(
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
     onApplyTradeTypes: (List<String>) -> Unit,
+    onApplyRegions: (List<String>) -> Unit,
     onApplyCategories: (List<String>) -> Unit,
     onLoadMore: () -> Unit,
     onGroupClick: (Long) -> Unit,
@@ -129,11 +131,10 @@ fun GroupSearchScreen(
                     selected = uiState.tradeTypes.isNotEmpty(),
                     onClick = { openSheet = FilterSheet.EXCHANGE },
                 )
-                // TODO(보류): 지역 필터 — regions 문자열 포맷 백엔드 확인 후 연동
                 FilterChip(
                     text = "지역별",
                     selected = uiState.regions.isNotEmpty(),
-                    onClick = {},
+                    onClick = { openSheet = FilterSheet.REGION },
                 )
                 FilterChip(
                     text = "분야별",
@@ -141,6 +142,19 @@ fun GroupSearchScreen(
                     onClick = { openSheet = FilterSheet.GENRE },
                 )
             }
+        }
+
+        // "N 권" 헤더 — LazyColumn 밖에 고정 배치
+        // 진입 직후(아직 응답 전) totalCount=null이면 표시 안 함
+        if (uiState.totalCount != null) {
+            Text(
+                text = "${uiState.totalCount} 권",
+                style = BookiiBookiiTheme.typography.regular14,
+                color = BookiiBookiiTheme.colors.grey900,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+            )
         }
 
         Box(
@@ -201,15 +215,6 @@ fun GroupSearchScreen(
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        if (uiState.isSearchMode && uiState.totalCount != null) {
-                            item {
-                                Text(
-                                    text = "${uiState.totalCount} 권",
-                                    style = BookiiBookiiTheme.typography.regular14,
-                                    color = BookiiBookiiTheme.colors.grey900,
-                                )
-                            }
-                        }
                         items(uiState.items, key = { it.groupId }) { item ->
                             ExploreGroupCard(
                                 title = item.title,
@@ -256,6 +261,12 @@ fun GroupSearchScreen(
                 FilterSheet.EXCHANGE -> ExchangeMethodBottomSheet(
                     initialTradeTypes = uiState.tradeTypes,
                     onApply = { onApplyTradeTypes(it); closeSheet() },
+                    onCancel = closeSheet,
+                )
+
+                FilterSheet.REGION -> RegionBottomSheet(
+                    initialRegions = uiState.regions,
+                    onApply = { onApplyRegions(it); closeSheet() },
                     onCancel = closeSheet,
                 )
 
@@ -328,6 +339,7 @@ private fun GroupSearchScreenPreview() {
             onQueryChange = {},
             onSearch = {},
             onApplyTradeTypes = {},
+            onApplyRegions = {},
             onApplyCategories = {},
             onLoadMore = {},
             onGroupClick = {},

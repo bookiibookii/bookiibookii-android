@@ -9,13 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,21 +22,24 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// "삭제" 한 줄짜리 dropdown
-// - 사용처: 댓글 long-press 시 본인 댓글 아래에 나타남
-// - 클릭 영역 전체에서 onDeleteClick 호출
+// "삭제" 한 줄 팝오버
 @Composable
 fun DeletePopover(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(10.dp)
     Column(
         modifier = modifier
-            .shadow(elevation = 4.dp, shape = shape)
-            .clip(shape)
-            .background(BookiiBookiiTheme.colors.white)
-            .border(width = 1.dp, color = BookiiBookiiTheme.colors.grey200, shape = shape)
+            .shadow(elevation = 6.dp, shape = BookiiBookiiTheme.shape.round10)
+            .background(
+                color = BookiiBookiiTheme.colors.white,
+                shape = BookiiBookiiTheme.shape.round10,
+            )
+            .border(
+                width = 1.dp,
+                color = BookiiBookiiTheme.colors.grey200,
+                shape = BookiiBookiiTheme.shape.round10,
+            )
             .padding(vertical = 4.dp),
     ) {
         Row(
@@ -46,8 +47,8 @@ fun DeletePopover(
                 .fillMaxWidth()
                 .clickable(onClick = onDeleteClick)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "삭제",

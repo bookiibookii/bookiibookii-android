@@ -15,10 +15,10 @@ data class GroupSearchUiState(
     // 검색
     val query: String = "",          // 검색바 입력값(제출 전 포함)
     val searchKeyword: String = "",  // 제출되어 현재 결과를 만든 검색어
-    val totalCount: Int? = null,     // 검색 결과 개수(검색 모드에서만)
+    val totalCount: Int? = null,
     // 필터 (검색 모드에선 비움). 비어 있으면 전체
     val tradeTypes: List<String> = emptyList(),  // TradeType: DIRECT / DELIVERY
-    val regions: List<String> = emptyList(),     // 시+구 문자열, 예: "인천시 미추홀구"
+    val regions: List<String> = emptyList(),
     val categories: List<String> = emptyList(),  // CustomCategory, 예: KOREAN_NOVEL
     val sort: String = "LATEST",                 // GroupSortType
 ) {
