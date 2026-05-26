@@ -40,7 +40,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
@@ -53,6 +56,7 @@ import com.bookiibookii.bookiibookii.group.vm.GroupDetailViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
+import com.bookiibookii.bookiibookii.ui.component.EditPopover
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -66,7 +70,8 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 @Composable
 fun GroupDetailRoute(
     onBack: () -> Unit,
-    onActionClick: () -> Unit,
+    onManage: (groupId: Long) -> Unit,
+    onEdit: (groupId: Long) -> Unit,
     viewModel: GroupDetailViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -89,7 +94,16 @@ fun GroupDetailRoute(
         GroupDetailScreen(
             uiState = uiState,
             onBack = onBack,
-            onActionClick = onActionClick,
+            // 액션 버튼은 buttonStatus에 따라 분기
+            //   MANAGE → 참여 요청 관리 화면으로 이동
+            //   APPLY / CANCEL → 신청·취소 플로우 디자인 후 후속 작업 (현재 no-op)
+            onActionClick = {
+                val detail = uiState.detail
+                if (detail != null && detail.buttonStatus == "MANAGE") {
+                    onManage(detail.groupId)
+                }
+            },
+            onEditClick = { uiState.detail?.let { onEdit(it.groupId) } },
             onRetry = viewModel::retry,
             // 본문 하단은 항상 peek 170dp만큼 padding (sheet 아래로 가지 않게)
             modifier = Modifier.padding(bottom = 170.dp),
@@ -128,6 +142,7 @@ fun GroupDetailScreen(
     uiState: GroupDetailUiState,
     onBack: () -> Unit,
     onActionClick: () -> Unit,
+    onEditClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -136,7 +151,12 @@ fun GroupDetailScreen(
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
-        GroupDetailHeader(onBack = onBack)
+        GroupDetailHeader(
+            onBack = onBack,
+            // 미트볼/수정 메뉴는 MANAGE(호스트)에서만 노출
+            showEditMenu = uiState.detail?.buttonStatus == "MANAGE",
+            onEditClick = onEditClick,
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -223,7 +243,11 @@ private fun GroupDetailContent(
 
 // 헤더
 @Composable
-private fun GroupDetailHeader(onBack: () -> Unit) {
+private fun GroupDetailHeader(
+    onBack: () -> Unit,
+    showEditMenu: Boolean,
+    onEditClick: () -> Unit,
+) {
     Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
         Box(
             modifier = Modifier
@@ -249,8 +273,52 @@ private fun GroupDetailHeader(onBack: () -> Unit) {
                 color = BookiiBookiiTheme.colors.grey900,
                 modifier = Modifier.align(Alignment.Center),
             )
+            if (showEditMenu) {
+                GroupDetailEditMenu(
+                    onEditClick = onEditClick,
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                )
+            }
         }
         HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey200)
+    }
+}
+
+// 미트볼 아이콘 + "수정하기" 팝오버 (MANAGE 상태에서만 헤더 우측에 노출)
+// 클릭 시 아이콘 아래로 EditPopover를 띄우고, 바깥 탭이나 항목 선택 시 닫힘
+@Composable
+private fun GroupDetailEditMenu(
+    onEditClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val popupOffsetY = with(LocalDensity.current) { 56.dp.roundToPx() }
+    Box(modifier = modifier) {
+        IconButton(
+            onClick = { expanded = true },
+            modifier = Modifier.size(40.dp),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_meetball),
+                contentDescription = "더보기",
+                tint = BookiiBookiiTheme.colors.black,
+            )
+        }
+        if (expanded) {
+            Popup(
+                alignment = Alignment.TopEnd,
+                offset = IntOffset(x = 0, y = popupOffsetY),
+                onDismissRequest = { expanded = false },
+                properties = PopupProperties(focusable = true),
+            ) {
+                EditPopover(
+                    onClick = {
+                        expanded = false
+                        onEditClick()
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -670,6 +738,7 @@ private fun GroupDetailScreenPreview() {
             ),
             onBack = {},
             onActionClick = {},
+            onEditClick = {},
             onRetry = {},
         )
     }

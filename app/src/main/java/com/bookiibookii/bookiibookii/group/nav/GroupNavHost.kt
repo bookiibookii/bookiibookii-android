@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bookiibookii.bookiibookii.group.ui.detail.GroupDetailRoute
 import com.bookiibookii.bookiibookii.group.ui.editor.GroupEditorRoute
+import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupJoinRequestScreen
 import com.bookiibookii.bookiibookii.group.ui.search.GroupSearchRoute
 
 @Composable
@@ -42,11 +43,12 @@ fun GroupNavHost(
                 },
             ),
         ) {
+            // 수정 모드 판별(groupId)은 GroupEditorViewModel이 SavedStateHandle로 직접 수신
             GroupEditorRoute(
                 // 백스택이 있으면 이전 화면(수정 진입: DETAIL)으로,
-                // 없으면(생성 진입: EDITOR가 시작점) 그룹 도메인 밖으로 나간다
+                // 없으면(생성 진입: EDITOR가 시작점) 그룹 도메인 밖으로 나감
                 onBack = { if (!navController.popBackStack()) onExit() },
-                // 생성 성공 → 그룹 상세로 이동. 편집 화면은 백스택에서 제거(뒤로가기 시 폼 재진입 방지)
+                // 생성 성공 -> 그룹 상세로 이동. 편집 화면은 백스택에서 제거(뒤로가기 시 폼 재진입 방지)
                 onCreated = { groupId ->
                     if (groupId != null) {
                         navController.navigate(GroupDestinations.detail(groupId)) {
@@ -54,6 +56,13 @@ fun GroupNavHost(
                         }
                     } else if (!navController.popBackStack()) {
                         onExit()
+                    }
+                },
+                // 수정 성공 -> 갱신된 상세로 교체. 기존 상세 화면으로 되돌아갈 스택 삭제. 서치 스택은 유지
+                onUpdated = { groupId ->
+                    navController.navigate(GroupDestinations.detail(groupId)) {
+                        popUpTo(GroupDestinations.DETAIL) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
             )
@@ -69,8 +78,27 @@ fun GroupNavHost(
             // groupId는 SavedStateHandle을 통해 GroupDetailViewModel이 직접 수신
             GroupDetailRoute(
                 onBack = { if (!navController.popBackStack()) onExit() },
-                // 액션 버튼(APPLY/MANAGE/CANCEL) 클릭 시 분기 네비게이션은 후속 작업
-                onActionClick = {},
+                // MANAGE 버튼 → 참여 요청 관리 화면으로 이동
+                onManage = { groupId ->
+                    navController.navigate(GroupDestinations.joinRequests(groupId.toString()))
+                },
+                // 미트볼 -> 수정하기 -> 그룹 수정(editor) 진입
+                onEdit = { groupId ->
+                    navController.navigate(GroupDestinations.editor(groupId.toString()))
+                },
+            )
+        }
+        composable(
+            route = GroupDestinations.JOIN_REQUESTS,
+            arguments = listOf(
+                navArgument(GroupDestinations.ARG_GROUP_ID) {
+                    type = NavType.LongType
+                },
+            ),
+        ) {
+            // 화면 내부 데이터(VM/groupId) 연결은 후속 작업 — 지금은 정적 화면 + 뒤로가기만
+            GroupJoinRequestScreen(
+                onBack = { if (!navController.popBackStack()) onExit() },
             )
         }
     }

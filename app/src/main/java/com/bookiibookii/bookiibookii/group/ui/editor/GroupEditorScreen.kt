@@ -68,6 +68,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 fun GroupEditorRoute(
     onBack: () -> Unit,
     onCreated: (Long?) -> Unit,
+    onUpdated: (Long) -> Unit,
     viewModel: GroupEditorViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -77,6 +78,7 @@ fun GroupEditorRoute(
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is GroupEditorViewModel.Event.Created -> onCreated(event.groupId)
+                is GroupEditorViewModel.Event.Updated -> onUpdated(event.groupId)
                 is GroupEditorViewModel.Event.ShowError -> submitError = event.message
             }
         }
@@ -100,7 +102,7 @@ fun GroupEditorRoute(
         onBack = onBack,
         onSubmit = {
             submitError = null
-            viewModel.createGroup()
+            viewModel.submit()
         },
         submitError = submitError,
     )
@@ -133,7 +135,7 @@ fun GroupEditorScreen(
             .background(BookiiBookiiTheme.colors.white),
     ) {
         GroupEditorHeader(
-            title = "그룹 만들기",
+            title = if (uiState.isEdit) "그룹 수정" else "그룹 만들기",
             onBack = onBack,
         )
 
@@ -149,33 +151,39 @@ fun GroupEditorScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                BookSearchSection(
-                    query = uiState.bookSearchQuery,
-                    onQueryChange = onBookSearchQueryChange,
-                    onSearchClick = onSearchBooks,
-                    onClearClick = onClearBookSearch,
-                    results = uiState.bookSearchResults,
-                    onBookSelect = onBookSelect,
-                    error = uiState.bookSearchError,
-                )
+                // 수정 모드이면 도서 검색 섹션 숨김
+                if (!uiState.isEdit) {
+                    BookSearchSection(
+                        query = uiState.bookSearchQuery,
+                        onQueryChange = onBookSearchQueryChange,
+                        onSearchClick = onSearchBooks,
+                        onClearClick = onClearBookSearch,
+                        results = uiState.bookSearchResults,
+                        onBookSelect = onBookSelect,
+                        error = uiState.bookSearchError,
+                    )
+                }
                 GroupNameSection(
                     value = uiState.groupName,
                     onValueChange = onGroupNameChange,
                 )
             }
-            SectionDivider()
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                ExchangeTypeSection(
-                    selected = uiState.tradeType,
-                    onSelect = onTradeTypeSelect,
-                )
-                uiState.tradeType?.let { type ->
-                    AddressSection(
-                        tradeType = type,
-                        places = uiState.places,
-                        selectedPlaceId = uiState.selectedPlaceId,
-                        onPlaceSelect = onPlaceSelect,
+            // 수정 모드에서는 교환 유형, 주소를 바꿀 수 없어 섹션째 숨김
+            if (!uiState.isEdit) {
+                SectionDivider()
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ExchangeTypeSection(
+                        selected = uiState.tradeType,
+                        onSelect = onTradeTypeSelect,
                     )
+                    uiState.tradeType?.let { type ->
+                        AddressSection(
+                            tradeType = type,
+                            places = uiState.places,
+                            selectedPlaceId = uiState.selectedPlaceId,
+                            onPlaceSelect = onPlaceSelect,
+                        )
+                    }
                 }
             }
             SectionDivider()
@@ -214,7 +222,7 @@ fun GroupEditorScreen(
                 )
             }
             FooterButton(
-                text = "그룹 만들기",
+                text = if (uiState.isEdit) "수정하기" else "그룹 만들기",
                 onClick = onSubmit,
                 enabled = uiState.canSubmit && !uiState.submitting,
             )
@@ -1041,6 +1049,39 @@ private fun GroupEditorScreenPreview() {
     BookiiPreview {
         GroupEditorScreen(
             uiState = GroupEditorUiState(),
+            onBookSearchQueryChange = {},
+            onSearchBooks = {},
+            onClearBookSearch = {},
+            onBookSelect = {},
+            onGroupNameChange = {},
+            onTradeTypeSelect = {},
+            onPlaceSelect = {},
+            onReadingPeriodSelect = {},
+            onRuleStyleSelect = {},
+            onGroupCommentChange = {},
+            onAddCustomRule = {},
+            onCustomRuleChange = { _, _ -> },
+            onRemoveCustomRule = {},
+            onBack = {},
+            onSubmit = {},
+        )
+    }
+}
+
+// 수정 모드 Preview — 도서검색/교환유형 숨김, 헤더 "그룹 수정", 주소 섹션 표시
+@Preview(widthDp = 412, heightDp = 917, showBackground = true)
+@Composable
+private fun GroupEditorScreenEditPreview() {
+    BookiiPreview {
+        GroupEditorScreen(
+            uiState = GroupEditorUiState(
+                isEdit = true,
+                groupName = "아자스",
+                readingPeriodIndex = 2,
+                ruleStyle = ReadingStyle.COMMENT,
+                customRules = listOf("끝까지 함께하실 분!"),
+                groupComment = "안녕하세요:)",
+            ),
             onBookSearchQueryChange = {},
             onSearchBooks = {},
             onClearBookSearch = {},

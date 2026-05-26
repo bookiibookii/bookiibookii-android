@@ -69,7 +69,9 @@ private val sampleJoinRequests = listOf(
 )
 
 @Composable
-fun GroupJoinRequestScreen() {
+fun GroupJoinRequestScreen(
+    onBack: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -78,6 +80,7 @@ fun GroupJoinRequestScreen() {
         GroupJoinRequestHeader(
             requestCount = sampleJoinRequests.size,
             bookTitle = SAMPLE_BOOK_TITLE,
+            onBack = onBack,
         )
         if (sampleJoinRequests.isNotEmpty()) {
             Column(
@@ -101,6 +104,7 @@ fun GroupJoinRequestScreen() {
 private fun GroupJoinRequestHeader(
     requestCount: Int,
     bookTitle: String,
+    onBack: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
         Box(
@@ -110,7 +114,7 @@ private fun GroupJoinRequestHeader(
                 .padding(horizontal = 16.dp),
         ) {
             IconButton(
-                onClick = {},
+                onClick = onBack,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .size(40.dp),
@@ -386,7 +390,7 @@ private fun JoinRequestRejectDialog(nickname: String) {
 @Composable
 private fun GroupJoinRequestScreenPreview() {
     BookiiPreview {
-        GroupJoinRequestScreen()
+        GroupJoinRequestScreen(onBack = {})
     }
 }
 
@@ -430,6 +434,7 @@ private fun GroupJoinRequestScreenEmptyPreview() {
             GroupJoinRequestHeader(
                 requestCount = 0,
                 bookTitle = SAMPLE_BOOK_TITLE,
+                onBack = {},
             )
         }
     }

@@ -16,6 +16,7 @@ import com.bookiibookii.bookiibookii.data.model.group.GroupDeleteResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupListResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupModifyRequest
+import com.bookiibookii.bookiibookii.data.model.group.GroupModifyResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupSearchResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -109,7 +110,7 @@ interface GrpApi {
     suspend fun modifyGroup(
         @Path("groupId") groupId: Long,
         @Body request: GroupModifyRequest
-    ): Response<ApiResponse<String>>
+    ): Response<ApiResponse<GroupModifyResponse>>
 
     // 그룹 댓글 달기
     @POST("api/groups/{groupId}/comments")
