@@ -1,8 +1,10 @@
 package com.bookiibookii.bookiibookii.group.ui.detail
 
+import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -24,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,9 +36,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
@@ -42,6 +48,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,11 +60,11 @@ import com.bookiibookii.bookiibookii.data.model.group.GroupRule
 import com.bookiibookii.bookiibookii.data.model.group.ParticipantSlot
 import com.bookiibookii.bookiibookii.group.model.GroupDetailActionButton
 import com.bookiibookii.bookiibookii.group.model.GroupDetailUiState
+import com.bookiibookii.bookiibookii.group.ui.editor.GroupDeleteDialog
 import com.bookiibookii.bookiibookii.group.vm.GroupDetailViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
-import com.bookiibookii.bookiibookii.ui.component.EditPopover
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -72,10 +80,24 @@ fun GroupDetailRoute(
     onBack: () -> Unit,
     onManage: (groupId: Long) -> Unit,
     onEdit: (groupId: Long) -> Unit,
+    onDeleted: () -> Unit,
     viewModel: GroupDetailViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // 삭제 결과 처리: 성공 → 그룹 목록 이동, 실패 → 토스트
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is GroupDetailViewModel.Event.Deleted -> onDeleted()
+                is GroupDetailViewModel.Event.ShowError ->
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     // 키보드 표시 여부 — 키보드 뜨면 sheet 높이를 키워 입력창 위 댓글 공간 확보
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     // 3단계 높이: keyboard(580) > expanded(544) > peek(170)
@@ -104,6 +126,7 @@ fun GroupDetailRoute(
                 }
             },
             onEditClick = { uiState.detail?.let { onEdit(it.groupId) } },
+            onDeleteClick = { showDeleteDialog = true },
             onRetry = viewModel::retry,
             // 본문 하단은 항상 peek 170dp만큼 padding (sheet 아래로 가지 않게)
             modifier = Modifier.padding(bottom = 170.dp),
@@ -133,6 +156,24 @@ fun GroupDetailRoute(
                     }
                 },
         )
+
+        // 삭제 확인 다이얼로그 (호스트 미트볼 > 삭제하기)
+        if (showDeleteDialog) {
+            Dialog(
+                onDismissRequest = { showDeleteDialog = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false),
+            ) {
+                GroupDeleteDialog(
+                    groupName = uiState.detail?.groupName.orEmpty(),
+                    onDismiss = { showDeleteDialog = false },
+                    onConfirm = {
+                        showDeleteDialog = false
+                        viewModel.deleteGroup()
+                    },
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                )
+            }
+        }
     }
 }
 
@@ -143,6 +184,7 @@ fun GroupDetailScreen(
     onBack: () -> Unit,
     onActionClick: () -> Unit,
     onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -153,9 +195,10 @@ fun GroupDetailScreen(
     ) {
         GroupDetailHeader(
             onBack = onBack,
-            // 미트볼/수정 메뉴는 MANAGE(호스트)에서만 노출
+            // 미트볼(수정/삭제) 메뉴는 MANAGE(호스트)에서만 노출
             showEditMenu = uiState.detail?.buttonStatus == "MANAGE",
             onEditClick = onEditClick,
+            onDeleteClick = onDeleteClick,
         )
         Box(
             modifier = Modifier
@@ -247,6 +290,7 @@ private fun GroupDetailHeader(
     onBack: () -> Unit,
     showEditMenu: Boolean,
     onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
         Box(
@@ -276,6 +320,7 @@ private fun GroupDetailHeader(
             if (showEditMenu) {
                 GroupDetailEditMenu(
                     onEditClick = onEditClick,
+                    onDeleteClick = onDeleteClick,
                     modifier = Modifier.align(Alignment.CenterEnd),
                 )
             }
@@ -284,11 +329,75 @@ private fun GroupDetailHeader(
     }
 }
 
-// 미트볼 아이콘 + "수정하기" 팝오버 (MANAGE 상태에서만 헤더 우측에 노출)
-// 클릭 시 아이콘 아래로 EditPopover를 띄우고, 바깥 탭이나 항목 선택 시 닫힘
+// 미트볼 메뉴 팝오버 — 수정하기/삭제하기를 한 카드에 담음
+@Composable
+private fun GroupDetailMenuPopover(
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .width(160.dp)
+            .shadow(elevation = 6.dp, shape = BookiiBookiiTheme.shape.round10)
+            .background(
+                color = BookiiBookiiTheme.colors.white,
+                shape = BookiiBookiiTheme.shape.round10,
+            )
+            .border(
+                width = 1.dp,
+                color = BookiiBookiiTheme.colors.grey200,
+                shape = BookiiBookiiTheme.shape.round10,
+            )
+            .padding(vertical = 4.dp),
+    ) {
+        GroupDetailMenuItem(
+            text = "수정하기",
+            iconRes = R.drawable.ic_edit,
+            onClick = onEditClick,
+        )
+        HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey100)
+        GroupDetailMenuItem(
+            text = "삭제하기",
+            iconRes = R.drawable.ic_trash,
+            onClick = onDeleteClick,
+        )
+    }
+}
+
+@Composable
+private fun GroupDetailMenuItem(
+    text: String,
+    iconRes: Int,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = text,
+            style = BookiiBookiiTheme.typography.medium14,
+            color = BookiiBookiiTheme.colors.grey700,
+        )
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = BookiiBookiiTheme.colors.grey700,
+            modifier = Modifier.size(24.dp),
+        )
+    }
+}
+
+// 미트볼 아이콘 + 메뉴 팝오버 (MANAGE 상태에서만 헤더 우측에 노출). 바깥 탭/항목 선택 시 닫힘
 @Composable
 private fun GroupDetailEditMenu(
     onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -311,10 +420,14 @@ private fun GroupDetailEditMenu(
                 onDismissRequest = { expanded = false },
                 properties = PopupProperties(focusable = true),
             ) {
-                EditPopover(
-                    onClick = {
+                GroupDetailMenuPopover(
+                    onEditClick = {
                         expanded = false
                         onEditClick()
+                    },
+                    onDeleteClick = {
+                        expanded = false
+                        onDeleteClick()
                     },
                 )
             }
@@ -739,6 +852,7 @@ private fun GroupDetailScreenPreview() {
             onBack = {},
             onActionClick = {},
             onEditClick = {},
+            onDeleteClick = {},
             onRetry = {},
         )
     }

@@ -86,6 +86,13 @@ fun GroupNavHost(
                 onEdit = { groupId ->
                     navController.navigate(GroupDestinations.editor(groupId.toString()))
                 },
+                // 삭제 성공 → 그룹 목록으로 이동, 삭제된 상세는 백스택에서 제거
+                onDeleted = {
+                    navController.navigate(GroupDestinations.SEARCH) {
+                        popUpTo(GroupDestinations.SEARCH) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
             )
         }
         composable(
