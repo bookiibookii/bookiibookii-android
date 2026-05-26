@@ -52,6 +52,7 @@ private enum class FilterSheet { EXCHANGE, GENRE }
 @Composable
 fun GroupSearchRoute(
     onBack: () -> Unit,
+    onGroupClick: (Long) -> Unit,
     viewModel: GroupSearchViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -64,6 +65,7 @@ fun GroupSearchRoute(
         onApplyTradeTypes = viewModel::applyTradeTypes,
         onApplyCategories = viewModel::applyCategories,
         onLoadMore = viewModel::loadMore,
+        onGroupClick = onGroupClick,
     )
 }
 
@@ -79,6 +81,7 @@ fun GroupSearchScreen(
     onApplyTradeTypes: (List<String>) -> Unit,
     onApplyCategories: (List<String>) -> Unit,
     onLoadMore: () -> Unit,
+    onGroupClick: (Long) -> Unit,
 ) {
     var openSheet by remember { mutableStateOf<FilterSheet?>(null) }
     val sheetState = rememberModalBottomSheetState()
@@ -216,7 +219,9 @@ fun GroupSearchScreen(
                                 expectedDays = item.readingPeriod,
                                 nickname = item.hostNickname.orEmpty(),
                                 groupName = item.groupName,
+                                onClick = { onGroupClick(item.groupId) },
                                 imageUrl = item.bookImage,
+                                hostProfileImageUrl = item.hostProfileImageUrl,
                             )
                         }
                         if (uiState.loadingMore) {
@@ -325,6 +330,7 @@ private fun GroupSearchScreenPreview() {
             onApplyTradeTypes = {},
             onApplyCategories = {},
             onLoadMore = {},
+            onGroupClick = {},
         )
     }
 }

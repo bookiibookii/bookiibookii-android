@@ -1,7 +1,6 @@
 package com.bookiibookii.bookiibookii.tracker.ui.detail.component
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -38,6 +36,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -357,18 +356,13 @@ private fun ProfileColumn(
                 }
             }
         }
-        Box(
+        ProfilePlaceholder(
             modifier = Modifier
                 .offset(x = 27.dp, y = 0.dp)
                 .size(44.dp),
-        ) {
-            Image(
-                painter = painterResource(R.drawable.profile_bg),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.grey500),
-            )
-        }
+            imageUrl = profile.profileImageUrl,
+            innerStroke = true,
+        )
     }
 }
 

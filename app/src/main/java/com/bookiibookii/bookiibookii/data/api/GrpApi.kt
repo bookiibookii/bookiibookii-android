@@ -4,7 +4,6 @@ import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.group.BookSearchResponse
 import com.bookiibookii.bookiibookii.data.model.group.CommentCreateRequest
 import com.bookiibookii.bookiibookii.data.model.group.CommentCreateResponse
-import com.bookiibookii.bookiibookii.data.model.group.CommentDeleteResponse
 import com.bookiibookii.bookiibookii.data.model.group.CommentItem
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppListResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppStatusRequest
@@ -70,7 +69,7 @@ interface GrpApi {
     // 그룹 상세 조회
     @GET("api/groups/{groupId}")
     suspend fun getGroupDetail(
-        @Path("groupId") groupId: Int
+        @Path("groupId") groupId: Long
     ): Response<ApiResponse<GroupDetailResponse>>
 
     // 그룹 신청하기
@@ -128,7 +127,7 @@ interface GrpApi {
     // 그룹 댓글 삭제
     @DELETE("api/groups/{groupId}/comments/{commentId}")
     suspend fun deleteComment(
-        @Path("groupId") groupId: Int,
-        @Path("commentId") commentId: Int
-    ): Response<ApiResponse<CommentDeleteResponse>>
+        @Path("groupId") groupId: Long,
+        @Path("commentId") commentId: Long
+    ): Response<ApiResponse<String>>
 }

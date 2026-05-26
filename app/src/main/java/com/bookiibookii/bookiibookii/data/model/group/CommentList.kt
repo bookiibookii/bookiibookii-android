@@ -5,7 +5,7 @@ data class CommentItem(
     val deleted: Boolean,
     val secret: Boolean,
     val content: String,
-    var parentId: Long?,
+    val parentId: Long?,
     val writer: CommentWriter,
     val createdAt: String,
     val children: List<CommentItem>? = null

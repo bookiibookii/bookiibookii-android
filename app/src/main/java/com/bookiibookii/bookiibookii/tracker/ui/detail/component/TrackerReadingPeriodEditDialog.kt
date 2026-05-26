@@ -121,7 +121,7 @@ private fun TrackerReadingPeriodEditDialogContent(
             }
             Text(
                 text = "${displayMonth.year}년 ${displayMonth.monthValue}월",
-                style = BookiiBookiiTheme.typography.semibold20,
+                style = BookiiBookiiTheme.typography.medium20,
                 color = BookiiBookiiTheme.colors.grey900,
             )
             Box(

@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.group.ui.search
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.component.BookCover
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -32,14 +34,17 @@ fun ExploreGroupCard(
     expectedDays: Int,
     nickname: String,
     groupName: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     imageUrl: String? = null,
+    hostProfileImageUrl: String? = null,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(BookiiBookiiTheme.shape.round20)
             .background(BookiiBookiiTheme.colors.white)
+            .clickable(onClick = onClick)
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -102,12 +107,9 @@ fun ExploreGroupCard(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // 프로필 이미지 placeholder
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(BookiiBookiiTheme.shape.round50)
-                            .background(BookiiBookiiTheme.colors.uiBg),
+                    ProfilePlaceholder(
+                        modifier = Modifier.size(20.dp),
+                        imageUrl = hostProfileImageUrl,
                     )
                     Text(
                         text = nickname,
@@ -164,6 +166,7 @@ private fun ExploreGroupCardPreview() {
             expectedDays = 7,
             nickname = "닉네임",
             groupName = "그룹명",
+            onClick = {},
         )
     }
 }
