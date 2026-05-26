@@ -61,7 +61,9 @@ import com.bookiibookii.bookiibookii.data.model.group.ParticipantSlot
 import com.bookiibookii.bookiibookii.group.model.GroupDetailActionButton
 import com.bookiibookii.bookiibookii.group.model.GroupDetailUiState
 import com.bookiibookii.bookiibookii.group.ui.editor.GroupDeleteDialog
+import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupApplyDialog
 import com.bookiibookii.bookiibookii.group.vm.GroupDetailViewModel
+import com.bookiibookii.bookiibookii.group.vm.JoinRequestViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
@@ -70,8 +72,6 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 그룹 상세 화면 — VM 주입/상태 수집 (stateful)
-// 댓글 sheet는 BottomSheetScaffold 대신 직접 Box stack으로 구현:
-//   - 본문은 항상 bottom 170dp (peek 높이) padding을 받아 sheet 아래로 가려지지 않음
 //   - sheet 높이 3단계: peek 170 / expanded 544 / keyboard 580
 //   - swipe up/down으로 expand 토글 (누적 drag 50dp 초과 시)
 //   - 키보드: sheet는 안 올리고 높이만 580으로 키움 + 입력창만 imePadding (입력창 위 댓글 1개 노출)
@@ -82,18 +82,35 @@ fun GroupDetailRoute(
     onEdit: (groupId: Long) -> Unit,
     onDeleted: () -> Unit,
     viewModel: GroupDetailViewModel = viewModel(),
+    applyViewModel: JoinRequestViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val applyState by applyViewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showApplyDialog by remember { mutableStateOf(false) }
 
-    // 삭제 결과 처리: 성공 → 그룹 목록 이동, 실패 → 토스트
+    // 삭제 결과 처리: 성공 -> 그룹 목록 이동, 실패 -> 토스트
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is GroupDetailViewModel.Event.Deleted -> onDeleted()
                 is GroupDetailViewModel.Event.ShowError ->
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    // 참여 신청 결과 처리: 성공 -> 다이얼로그 닫고 상세 새로고침(버튼 상태 갱신), 실패 → 토스트
+    LaunchedEffect(Unit) {
+        applyViewModel.eventFlow.collect { event ->
+            when (event) {
+                is JoinRequestViewModel.Event.Applied -> {
+                    showApplyDialog = false
+                    applyViewModel.reset()
+                    viewModel.retry()
+                }
+                is JoinRequestViewModel.Event.ShowError ->
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
         }
@@ -117,12 +134,14 @@ fun GroupDetailRoute(
             uiState = uiState,
             onBack = onBack,
             // 액션 버튼은 buttonStatus에 따라 분기
+            //   APPLY  → 참여 신청 다이얼로그
             //   MANAGE → 참여 요청 관리 화면으로 이동
-            //   APPLY / CANCEL → 신청·취소 플로우 디자인 후 후속 작업 (현재 no-op)
+            //   CANCEL → 후속 작업 (현재 no-op)
             onActionClick = {
-                val detail = uiState.detail
-                if (detail != null && detail.buttonStatus == "MANAGE") {
-                    onManage(detail.groupId)
+                when (uiState.detail?.buttonStatus) {
+                    "APPLY" -> showApplyDialog = true
+                    "MANAGE" -> uiState.detail?.let { onManage(it.groupId) }
+                    else -> Unit
                 }
             },
             onEditClick = { uiState.detail?.let { onEdit(it.groupId) } },
@@ -156,6 +175,36 @@ fun GroupDetailRoute(
                     }
                 },
         )
+
+        // 참여 신청 다이얼로그 (게스트 APPLY 버튼)
+        if (showApplyDialog) {
+            Dialog(
+                onDismissRequest = {
+                    showApplyDialog = false
+                    applyViewModel.reset()
+                },
+                properties = DialogProperties(usePlatformDefaultWidth = false),
+            ) {
+                GroupApplyDialog(
+                    bookSearchQuery = applyState.bookSearchQuery,
+                    bookSearchResults = applyState.bookSearchResults,
+                    applyMsg = applyState.applyMsg,
+                    canSubmit = applyState.canSubmit && !applyState.submitting,
+                    onQueryChange = applyViewModel::onBookSearchQueryChange,
+                    onSearchClick = applyViewModel::searchBooks,
+                    onBookSelect = applyViewModel::onBookSelect,
+                    onApplyMsgChange = applyViewModel::onApplyMsgChange,
+                    onSubmit = {
+                        uiState.detail?.let { applyViewModel.apply(it.groupId) }
+                    },
+                    onDismiss = {
+                        showApplyDialog = false
+                        applyViewModel.reset()
+                    },
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                )
+            }
+        }
 
         // 삭제 확인 다이얼로그 (호스트 미트볼 > 삭제하기)
         if (showDeleteDialog) {
@@ -786,7 +835,7 @@ private fun GroupDetailHostChip() {
     }
 }
 
-// tradeType 코드 → 표시 라벨 (Search 화면과 동일 규칙)
+// tradeType 코드 -> 표시 라벨
 private fun tradeTypeLabel(tradeType: String): String = when (tradeType) {
     "DIRECT" -> "직접"
     "DELIVERY" -> "택배"
