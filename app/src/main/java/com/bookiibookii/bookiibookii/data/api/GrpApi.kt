@@ -4,7 +4,6 @@ import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.group.BookSearchResponse
 import com.bookiibookii.bookiibookii.data.model.group.CommentCreateRequest
 import com.bookiibookii.bookiibookii.data.model.group.CommentCreateResponse
-import com.bookiibookii.bookiibookii.data.model.group.CommentDeleteResponse
 import com.bookiibookii.bookiibookii.data.model.group.CommentItem
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppListResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppStatusRequest
@@ -125,10 +124,10 @@ interface GrpApi {
         @Path("groupId") groupId: Long
     ): Response<ApiResponse<List<CommentItem>>>
 
-    // 그룹 댓글 삭제
+    // 그룹 댓글 삭제 — ApiResponseVoid (result 없음, 프로젝트 컨벤션상 String으로 받음)
     @DELETE("api/groups/{groupId}/comments/{commentId}")
     suspend fun deleteComment(
-        @Path("groupId") groupId: Int,
-        @Path("commentId") commentId: Int
-    ): Response<ApiResponse<CommentDeleteResponse>>
+        @Path("groupId") groupId: Long,
+        @Path("commentId") commentId: Long
+    ): Response<ApiResponse<String>>
 }

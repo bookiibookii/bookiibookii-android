@@ -1,7 +1,9 @@
 package com.bookiibookii.bookiibookii.common
 
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -10,10 +12,18 @@ object DateUtils {
         .ofPattern("yyyy. MM. dd.", Locale.US)
         .withZone(ZoneId.systemDefault())
 
+    // 서버 시간 문자열 → Instant
+    // "...Z"/offset 있으면 Instant.parse, 없으면 UTC LocalDateTime으로 간주
+    private fun parseInstant(serverTime: String): Instant = try {
+        Instant.parse(serverTime)
+    } catch (e: Exception) {
+        LocalDateTime.parse(serverTime).toInstant(ZoneOffset.UTC)
+    }
+
     fun formatDate(dateString: String?): String {
         if (dateString.isNullOrBlank()) return "0000. 00. 00."
         return try {
-            formatter.format(Instant.parse(dateString))
+            formatter.format(parseInstant(dateString))
         } catch (e: Exception) {
             "0000. 00. 00."
         }
@@ -22,7 +32,7 @@ object DateUtils {
     fun calculateTimeAgo(serverTime: String?): String {
         if (serverTime.isNullOrEmpty()) return ""
         return try {
-            val instant = Instant.parse(serverTime)
+            val instant = parseInstant(serverTime)
             val diff = System.currentTimeMillis() - instant.toEpochMilli()
             val minutes = diff / (1000 * 60)
             val hours = minutes / 60

@@ -1,15 +1,19 @@
 package com.bookiibookii.bookiibookii.group.ui.detail
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -21,12 +25,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,6 +58,11 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 그룹 상세 화면 — VM 주입/상태 수집 (stateful)
+// 댓글 sheet는 BottomSheetScaffold 대신 직접 Box stack으로 구현:
+//   - 본문은 항상 bottom 170dp (peek 높이) padding을 받아 sheet 아래로 가려지지 않음
+//   - sheet 높이 3단계: peek 170 / expanded 544 / keyboard 580
+//   - swipe up/down으로 expand 토글 (누적 drag 50dp 초과 시)
+//   - 키보드: sheet는 안 올리고 높이만 580으로 키움 + 입력창만 imePadding (입력창 위 댓글 1개 노출)
 @Composable
 fun GroupDetailRoute(
     onBack: () -> Unit,
@@ -56,24 +70,69 @@ fun GroupDetailRoute(
     viewModel: GroupDetailViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
-    GroupDetailScreen(
-        uiState = uiState,
-        onBack = onBack,
-        onActionClick = onActionClick,
-        onRetry = viewModel::retry,
+    var expanded by remember { mutableStateOf(false) }
+    // 키보드 표시 여부 — 키보드 뜨면 sheet 높이를 키워 입력창 위 댓글 공간 확보
+    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    // 3단계 높이: keyboard(580) > expanded(544) > peek(170)
+    // sheet 자체엔 imePadding 안 줌 (화면 하단 고정). 입력창만 imePadding으로 키보드 위에 붙고,
+    // 높이를 키워서 그 위로 댓글이 보이게 함
+    val sheetHeight by animateDpAsState(
+        targetValue = when {
+            imeVisible -> 600.dp
+            expanded -> 544.dp
+            else -> 170.dp
+        },
+        label = "sheetHeight",
     )
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        GroupDetailScreen(
+            uiState = uiState,
+            onBack = onBack,
+            onActionClick = onActionClick,
+            onRetry = viewModel::retry,
+            // 본문 하단은 항상 peek 170dp만큼 padding (sheet 아래로 가지 않게)
+            modifier = Modifier.padding(bottom = 170.dp),
+        )
+        GroupCommentBottomSheetRoute(
+            expanded = expanded,
+            onExpand = { expanded = true },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(sheetHeight)
+                .pointerInput(Unit) {
+                    // 누적 drag가 50dp 임계 넘으면 토글. drag 끝에서 결정
+                    val triggerPx = 50.dp.toPx()
+                    var totalDrag = 0f
+                    detectVerticalDragGestures(
+                        onDragStart = { totalDrag = 0f },
+                        onDragEnd = {
+                            when {
+                                totalDrag < -triggerPx -> expanded = true   // swipe up
+                                totalDrag > triggerPx -> expanded = false   // swipe down
+                            }
+                        },
+                        onDragCancel = { totalDrag = 0f },
+                    ) { _, dragAmount ->
+                        totalDrag += dragAmount
+                    }
+                },
+        )
+    }
 }
 
-// 그룹 상세 화면 (stateless: 상태·콜백을 파라미터로 받음)
+// 그룹 상세 화면
 @Composable
 fun GroupDetailScreen(
     uiState: GroupDetailUiState,
     onBack: () -> Unit,
     onActionClick: () -> Unit,
     onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
@@ -151,7 +210,6 @@ private fun GroupDetailContent(
             )
             GroupDetailDescriptionCard(
                 title = "그룹 규칙",
-                // rules는 응답에서 content가 항상 채워짐 (프리셋 태그도 백엔드가 표시 텍스트 제공)
                 body = detail.rules.joinToString("\n") { it.content },
             )
             GroupDetailMembersCard(
