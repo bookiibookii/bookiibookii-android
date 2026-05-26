@@ -7,6 +7,7 @@ import com.bookiibookii.bookiibookii.data.model.group.CommentCreateResponse
 import com.bookiibookii.bookiibookii.data.model.group.CommentItem
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppListResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppStatusRequest
+import com.bookiibookii.bookiibookii.data.model.group.GroupAppStatusResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupApplyRequest
 import com.bookiibookii.bookiibookii.data.model.group.GroupApplyResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupCancelResponse
@@ -97,7 +98,7 @@ interface GrpApi {
     suspend fun updateApplicationStatus(
         @Path("applyId") applyId: Long,
         @Body request: GroupAppStatusRequest
-    ): Response<ApiResponse<String>>
+    ): Response<ApiResponse<GroupAppStatusResponse>>
 
     // 그룹 삭제하기
     @DELETE("api/groups/{groupId}")

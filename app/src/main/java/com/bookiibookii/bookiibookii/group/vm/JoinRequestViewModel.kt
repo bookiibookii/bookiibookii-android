@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
+import com.bookiibookii.bookiibookii.data.model.group.GroupAppStatusRequest
 import com.bookiibookii.bookiibookii.data.model.group.GroupApplyRequest
 import com.bookiibookii.bookiibookii.group.model.ApplicationListUiState
 import com.bookiibookii.bookiibookii.group.model.GroupApplyUiState
@@ -15,10 +16,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 // 그룹 참여 신청 관련 도메인 VM
-// 게스트 신청 (POST /apply), 게스트 취소 (DELETE /apply), 호스트 명단 조회 (GET /applylist)
-// 후속(자발적 wiring 금지 — 합의 후 추가):
-//   - PATCH /api/groups/apply/{applyId} (수락/거절)
-//   - GET /api/groups/apply/me (내가 신청한 그룹 목록)
+// 게스트 신청 (POST /apply), 게스트 취소 (DELETE /apply),
+// 호스트 명단 조회 (GET /applylist), 호스트 수락/거절 (PATCH /apply/{applyId})
+// GET /api/groups/apply/me (내가 신청한 그룹 목록)
 class JoinRequestViewModel : ViewModel() {
 
     // 게스트 신청 다이얼로그 상태 (apply/cancel)
@@ -38,11 +38,16 @@ class JoinRequestViewModel : ViewModel() {
         data object Applied : Event()
         // 신청 취소 성공 — 토스트 + 상세 새로고침 트리거용
         data object Canceled : Event()
+        // 수락/거절 성공 — Route가 토스트 띄움 ("{이름} 님의 요청을 {수락|거절}했어요")
+        // status: "ACCEPTED" | "REJECTED"
+        data class ApplicationUpdated(val status: String, val applicantName: String) : Event()
         data class ShowError(val message: String) : Event()
     }
 
     // 취소 중복 호출 가드
     private var canceling = false
+
+    private val updatingApplyIds = mutableSetOf<Long>()
 
     // 다이얼로그 닫힐 때 호출
     fun reset() {
@@ -145,6 +150,37 @@ class JoinRequestViewModel : ViewModel() {
                 _applicationListState.update {
                     it.copy(error = "네트워크 오류가 발생했어요", loading = false)
                 }
+            }
+        }
+    }
+
+    // 호스트가 게스트의 신청을 수락/거절 — PATCH /api/groups/apply/{applyId}
+    // status: "ACCEPTED" | "REJECTED". 성공 시 명단 새로고침
+    fun updateApplicationStatus(
+        applyId: Long,
+        status: String,
+        applicantName: String,
+        groupId: Long,
+    ) {
+        if (applyId in updatingApplyIds) return
+        updatingApplyIds += applyId
+        viewModelScope.launch {
+            try {
+                val res = RetrofitClient.grpApi().updateApplicationStatus(
+                    applyId = applyId,
+                    request = GroupAppStatusRequest(status = status),
+                )
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    _eventFlow.emit(Event.ApplicationUpdated(status, applicantName))
+                    // 명단 새로고침 (상태 갱신: 수락된 항목 제거 등은 서버가 결정)
+                    loadApplicationList(groupId)
+                } else {
+                    _eventFlow.emit(Event.ShowError(res.body()?.message ?: "처리에 실패했어요"))
+                }
+            } catch (e: Exception) {
+                _eventFlow.emit(Event.ShowError("네트워크 오류가 발생했어요"))
+            } finally {
+                updatingApplyIds -= applyId
             }
         }
     }

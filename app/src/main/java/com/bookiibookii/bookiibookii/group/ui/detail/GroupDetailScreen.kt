@@ -119,6 +119,8 @@ fun GroupDetailRoute(
                 }
                 is JoinRequestViewModel.Event.ShowError ->
                     context.showCustomToast(event.message, isSuccess = false)
+
+                else -> {}
             }
         }
     }

@@ -25,12 +25,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppItem
 import com.bookiibookii.bookiibookii.group.model.ApplicationListUiState
 import com.bookiibookii.bookiibookii.group.vm.JoinRequestViewModel
@@ -49,14 +51,39 @@ fun GroupJoinRequestRoute(
     viewModel: JoinRequestViewModel = viewModel(),
 ) {
     val uiState by viewModel.applicationListState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     // 진입 시 및 groupId 변경 시 명단 로드
     LaunchedEffect(groupId) {
         viewModel.loadApplicationList(groupId)
+    }
+    // 수락/거절 결과 처리 — 성공 시 토스트(공통 디자인), 실패 시 에러 토스트
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is JoinRequestViewModel.Event.ApplicationUpdated -> {
+                    val verb = if (event.status == "ACCEPTED") "수락" else "거절"
+                    context.showCustomToast(
+                        "${event.applicantName} 님의 요청을 ${verb}했어요",
+                        isSuccess = true,
+                    )
+                }
+                is JoinRequestViewModel.Event.ShowError ->
+                    context.showCustomToast(event.message, isSuccess = false)
+                is JoinRequestViewModel.Event.Applied,
+                is JoinRequestViewModel.Event.Canceled -> Unit
+            }
+        }
     }
     GroupJoinRequestScreen(
         uiState = uiState,
         onBack = onBack,
         onRetry = { viewModel.loadApplicationList(groupId) },
+        onAccept = { applyId, name ->
+            viewModel.updateApplicationStatus(applyId, "ACCEPTED", name, groupId)
+        },
+        onReject = { applyId, name ->
+            viewModel.updateApplicationStatus(applyId, "REJECTED", name, groupId)
+        },
     )
 }
 
@@ -65,6 +92,8 @@ fun GroupJoinRequestScreen(
     uiState: ApplicationListUiState,
     onBack: () -> Unit,
     onRetry: () -> Unit,
+    onAccept: (applyId: Long, applicantName: String) -> Unit,
+    onReject: (applyId: Long, applicantName: String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -122,7 +151,11 @@ fun GroupJoinRequestScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         uiState.items.forEach { item ->
-                            JoinRequestCard(item = item)
+                            JoinRequestCard(
+                                item = item,
+                                onAccept = onAccept,
+                                onReject = onReject,
+                            )
                         }
                     }
                 }
@@ -131,7 +164,7 @@ fun GroupJoinRequestScreen(
     }
 }
 
-// 헤더 — "참여 요청 관리 (N)" + 뒤로가기. 책 제목은 항목별로 다르므로 헤더 서브타이틀에서 제거
+// 헤더 — "참여 요청 관리 (N)" + 뒤로가기
 @Composable
 private fun GroupJoinRequestHeader(
     requestCount: Int,
@@ -166,9 +199,15 @@ private fun GroupJoinRequestHeader(
     }
 }
 
-// 신청자 카드 한 장 (GroupAppItem 1개)
+// 신청자 카드 한 장
 @Composable
-private fun JoinRequestCard(item: GroupAppItem) {
+private fun JoinRequestCard(
+    item: GroupAppItem,
+    onAccept: (applyId: Long, applicantName: String) -> Unit,
+    onReject: (applyId: Long, applicantName: String) -> Unit,
+) {
+    val applyId = item.applicationId
+    val applicantName = item.name.orEmpty()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -178,7 +217,7 @@ private fun JoinRequestCard(item: GroupAppItem) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         JoinRequestUserRow(
-            nickname = item.name.orEmpty(),
+            nickname = applicantName,
             date = item.createdAt.orEmpty(),
             profileImageUrl = item.profileImageUrl,
         )
@@ -188,8 +227,10 @@ private fun JoinRequestCard(item: GroupAppItem) {
             author = item.bookAuthor.orEmpty(),
             bookImage = item.bookImage,
         )
-        // 거절/수락 액션은 PATCH 연결 후속 작업 — 현재 no-op
-        JoinRequestActions()
+        JoinRequestActions(
+            onAccept = { applyId?.let { onAccept(it, applicantName) } },
+            onReject = { applyId?.let { onReject(it, applicantName) } },
+        )
     }
 }
 
@@ -275,7 +316,10 @@ private fun JoinRequestBookRow(
 
 // 액션 버튼 (거절/수락) — PATCH 연결은 후속
 @Composable
-private fun JoinRequestActions() {
+private fun JoinRequestActions(
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -283,13 +327,13 @@ private fun JoinRequestActions() {
         BottomSheetTwoBtnShort(
             text = "거절",
             style = BottomSheetBtnStyle.White,
-            onClick = {},
+            onClick = onReject,
             modifier = Modifier.weight(1f),
         )
         BottomSheetTwoBtnShort(
             text = "수락",
             style = BottomSheetBtnStyle.Orange,
-            onClick = {},
+            onClick = onAccept,
             modifier = Modifier.weight(1f),
         )
     }
@@ -458,6 +502,8 @@ private fun GroupJoinRequestScreenPreview() {
             ),
             onBack = {},
             onRetry = {},
+            onAccept = { _, _ -> },
+            onReject = { _, _ -> },
         )
     }
 }
@@ -470,6 +516,8 @@ private fun GroupJoinRequestScreenEmptyPreview() {
             uiState = ApplicationListUiState(items = emptyList(), totalCount = 0),
             onBack = {},
             onRetry = {},
+            onAccept = { _, _ -> },
+            onReject = { _, _ -> },
         )
     }
 }

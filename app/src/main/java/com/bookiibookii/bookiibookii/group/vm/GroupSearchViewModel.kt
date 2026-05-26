@@ -42,7 +42,7 @@ class GroupSearchViewModel : ViewModel() {
                                 items = r?.groupList.orEmpty(),
                                 currentPage = r?.currentPage ?: 0,
                                 hasNext = r?.hasNext ?: false,
-                                totalCount = null,
+                                totalCount = r?.totalCount,
                                 loading = false,
                             )
                         }
@@ -141,10 +141,11 @@ class GroupSearchViewModel : ViewModel() {
         _state.update { it.copy(query = value) }
 
     // 검색 제출. 빈 검색어면 검색 해제 → 필터(전체) 목록, 아니면 필터 초기화 후 검색
+    // totalCount는 비우지 않음 — 응답 도착 시 갱신(헤더 깜빡임 방지)
     fun onSearch() {
         val keyword = _state.value.query.trim()
         if (keyword.isBlank()) {
-            _state.update { it.copy(searchKeyword = "", totalCount = null) }
+            _state.update { it.copy(searchKeyword = "") }
         } else {
             _state.update {
                 it.copy(
@@ -152,7 +153,6 @@ class GroupSearchViewModel : ViewModel() {
                     tradeTypes = emptyList(),
                     regions = emptyList(),
                     categories = emptyList(),
-                    totalCount = null,
                 )
             }
         }
@@ -161,17 +161,17 @@ class GroupSearchViewModel : ViewModel() {
 
     // 필터 변경 → 검색 해제(검색어/입력값 비움) 후 첫 페이지부터 재조회
     fun applyTradeTypes(tradeTypes: List<String>) {
-        _state.update { it.copy(tradeTypes = tradeTypes, query = "", searchKeyword = "", totalCount = null) }
+        _state.update { it.copy(tradeTypes = tradeTypes, query = "", searchKeyword = "") }
         load()
     }
 
     fun applyRegions(regions: List<String>) {
-        _state.update { it.copy(regions = regions, query = "", searchKeyword = "", totalCount = null) }
+        _state.update { it.copy(regions = regions, query = "", searchKeyword = "") }
         load()
     }
 
     fun applyCategories(categories: List<String>) {
-        _state.update { it.copy(categories = categories, query = "", searchKeyword = "", totalCount = null) }
+        _state.update { it.copy(categories = categories, query = "", searchKeyword = "") }
         load()
     }
 
