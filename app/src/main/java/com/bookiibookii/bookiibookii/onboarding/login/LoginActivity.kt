@@ -20,15 +20,11 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
@@ -37,9 +33,10 @@ import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.auth.LoginRequest
 import com.bookiibookii.bookiibookii.data.model.mypage.MypageResult
 import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroAnimActivity
-import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.bookiibookii.bookiibookii.onboarding.steps.OnbStepActivity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
@@ -48,8 +45,28 @@ import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var credentialManager: CredentialManager
     private var isNavigating = false
+
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account.idToken
+            if (idToken != null) {
+                sendTokenToBackend("GOOGLE", idToken)
+            } else {
+                // TODO: 추후 로그 삭제 (Google ID Token null 확인용)
+                Log.e("Login", "Google ID Token is null")
+                showLoadingState(false)
+            }
+        } catch (e: ApiException) {
+            // TODO: 추후 로그 삭제 (Google 로그인 실패 확인용)
+            Log.e("Login", "Google 로그인 실패: ${e.statusCode}", e)
+            showLoadingState(false)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge() // 이거 추가했음 -> BaseActivity 사용하기에는 findViewById 사용되서 어려움 ..
@@ -82,8 +99,6 @@ class LoginActivity : AppCompatActivity() {
         // 자동 로그인 분기
         if (routeAutoLoginIfPossible()) return
 
-        credentialManager = CredentialManager.create(this)
-
         bindLoginButtons()
         setupTermsNotice()
         setupTagline()
@@ -94,6 +109,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun routeAutoLoginIfPossible(): Boolean {
         if (!TokenManager.hasAccessToken(this)) return false
+        if (!TokenManager.isOnboardingDone(this)) return false
 
         showLoginCompleteThenRoute()
         return true
@@ -117,59 +133,14 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun signInWithGoogle() {
-        val webClientId = getString(R.string.web_client_id)
-
-        val googleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(webClientId)
-            .setAutoSelectEnabled(false)
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.web_client_id))
+            .requestEmail()
             .build()
 
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
-
-        lifecycleScope.launch {
-            try {
-                val result: GetCredentialResponse = credentialManager.getCredential(
-                    request = request,
-                    context = this@LoginActivity
-                )
-                handleGoogleSignIn(result)
-            } catch (e: GetCredentialException) {
-                // TODO: 추후 로그 삭제 (Credential Manager 예외 확인용)
-                Log.e("Login", "Credential Manager 에러: ${e.message}", e)
-                showLoadingState(false)
-            } catch (e: Exception) {
-                // TODO: 추후 로그 삭제 (예상치 못한 예외 확인용)
-                Log.e("Login", "예상치 못한 에러", e)
-                showLoadingState(false)
-            }
-        }
-    }
-
-    private fun handleGoogleSignIn(result: GetCredentialResponse) {
-        val credential = result.credential
-
-        val isGoogleToken =
-            credential is CustomCredential &&
-                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-
-        if (!isGoogleToken) {
-            // TODO: 추후 로그 삭제 (인증 타입 분기 확인용)
-            Log.e("Login", "알 수 없는 인증 타입: ${credential.type}")
-            showLoadingState(false)
-            return
-        }
-
-        try {
-            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-            val idToken = googleIdTokenCredential.idToken
-            sendTokenToBackend(socialType = "GOOGLE", token = idToken)
-        } catch (e: Exception) {
-            // TODO: 추후 로그 삭제 (구글 토큰 파싱 실패 확인용)
-            Log.e("Login", "인증 정보 파싱 실패", e)
-            showLoadingState(false)
+        val googleSignInClient = GoogleSignIn.getClient(this, gso)
+        googleSignInClient.signOut().addOnCompleteListener {
+            googleSignInLauncher.launch(googleSignInClient.signInIntent)
         }
     }
 
@@ -259,11 +230,8 @@ class LoginActivity : AppCompatActivity() {
         tvComplete.visibility = View.VISIBLE
 
         tvComplete.postDelayed({
-            // TODO: 온보딩 화면 구현 완료 후 아래 분기 복구
-            // val isNewUser = !TokenManager.isOnboardingDone(this)
-            // if (isNewUser) moveToOnboarding() else moveToMain()
-            TokenManager.saveOnboardingDone(this, true)
-            moveToMain()
+            val isNewUser = !TokenManager.isOnboardingDone(this)
+            if (isNewUser) moveToOnboarding() else moveToMain()
         }, 800L)
     }
 
@@ -295,10 +263,7 @@ class LoginActivity : AppCompatActivity() {
         tvComplete.visibility = View.VISIBLE
 
         tvComplete.postDelayed({
-            // TODO: 온보딩 화면 구현 완료 후 아래 분기 복구
-            // if (TokenManager.isOnboardingDone(this)) moveToMain() else moveToOnboarding()
-            TokenManager.saveOnboardingDone(this, true)
-            moveToMain()
+            if (TokenManager.isOnboardingDone(this)) moveToMain() else moveToOnboarding()
         }, 1500L)
     }
 
@@ -313,13 +278,19 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun moveToOnboarding() {
-        val intent = Intent(this, OnbProfileActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(Intent(this, OnbStepActivity::class.java))
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // OnbStepActivity에서 뒤로 돌아왔을 때 토큰 제거 및 UI 초기화
+        if (isNavigating) {
+            isNavigating = false
+            TokenManager.clear(this)
+            val tvComplete = findViewById<TextView>(R.id.tv_login_complete)
+            tvComplete.visibility = View.GONE
+            showLoadingState(false)
         }
-        startActivity(intent)
-        finish()
     }
 
     data class ProfileResponse(

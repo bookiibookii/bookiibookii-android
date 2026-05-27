@@ -12,7 +12,6 @@ import com.bookiibookii.bookiibookii.databinding.ActivitySplashBinding
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroAnimActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
-import com.bookiibookii.bookiibookii.onboarding.profile.OnbProfileActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.jvm.java

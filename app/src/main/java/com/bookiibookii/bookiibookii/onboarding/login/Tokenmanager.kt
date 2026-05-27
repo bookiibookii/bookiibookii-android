@@ -17,6 +17,7 @@ object TokenManager {
     private const val KEY_REFRESH = "refresh_token"
     private const val KEY_USER_ID = "user_id"
     private const val KEY_ONBOARDING = "onboarding_done"
+    private const val KEY_NICKNAME = "nickname"
 
     @Volatile private var encryptedPrefs: SharedPreferences? = null
 
@@ -52,6 +53,14 @@ object TokenManager {
 
     fun saveOnboardingDone(context: Context, onboardingDone: Boolean) {
         prefs(context).edit().putBoolean(KEY_ONBOARDING, onboardingDone).apply()
+    }
+
+    fun saveNickname(context: Context, nickname: String) {
+        prefs(context).edit().putString(KEY_NICKNAME, nickname).apply()
+    }
+
+    fun getNickname(context: Context): String? {
+        return prefs(context).getString(KEY_NICKNAME, null)
     }
 
     fun hasAccessToken(context: Context): Boolean {

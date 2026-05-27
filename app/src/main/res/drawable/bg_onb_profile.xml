@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Squircle shape from Figma (node 8:1085), viewport 128x128.
+  Path: cubic bezier squircle starting at midpoints of each side.
+  Used as background for iv_profile — clipToOutline=true clips user photos to this shape.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <path
+        android:fillColor="@color/grey_300"
+        android:pathData="M0,64C0,11.296 11.296,0 64,0C116.704,0 128,11.296 128,64C128,116.704 116.704,128 64,128C11.296,128 0,116.704 0,64Z" />
+</vector>

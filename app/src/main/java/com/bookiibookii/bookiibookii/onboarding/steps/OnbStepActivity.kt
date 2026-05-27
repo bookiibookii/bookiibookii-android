@@ -1,197 +1,133 @@
 package com.bookiibookii.bookiibookii.onboarding.steps
 
+import android.Manifest
+import android.content.ContentValues
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.view.View
-import android.widget.ImageView
-import androidx.activity.OnBackPressedCallback
+import android.provider.MediaStore
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
-import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
-import com.google.android.material.button.MaterialButton
+import com.bookiibookii.bookiibookii.onboarding.steps.model.OnboardingSubmitState
+import com.bookiibookii.bookiibookii.onboarding.steps.ui.OnbStepScreen
+import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import kotlinx.coroutines.launch
+import java.io.File
 
 class OnbStepActivity : AppCompatActivity() {
 
-    // 온보딩 전체 상태를 관리하는 ViewModel
     private val vm: OnbViewModel by viewModels()
 
-    // 상단 네비게이션/진행바/하단 버튼
-    private lateinit var ivBack: ImageView
-    private lateinit var progress1: View
-    private lateinit var progress2: View
-    private lateinit var progress3: View
-    private lateinit var btnNext: MaterialButton
+    // ── 프로필 이미지: 카메라 ───────────────────────────────────────────────────
+    private var cameraImageUri: Uri? = null
 
-    // 현재 온보딩 단계(1~3)
-    private var currentStep = 1
+    private val cameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) launchCamera()
+        }
+
+    private val takePictureLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) {
+                val uri = cameraImageUri ?: return@registerForActivityResult
+                vm.setProfileUri(uri)
+                vm.uploadProfileImage(contentResolver, uri)
+            }
+        }
+
+    // ── 프로필 이미지: 갤러리 ───────────────────────────────────────────────────
+    private val pickProfileImageLauncher =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                val localUri = copyUriToLocalCache(uri)
+                if (localUri != null) {
+                    vm.setProfileUri(localUri)
+                    vm.uploadProfileImage(contentResolver, localUri)
+                } else {
+                    Toast.makeText(this, "이미지를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_onb_step)
 
-        // View 참조 및 클릭 이벤트 바인딩
-        bindViews()
-        bindActions()
-
-        // 시스템 뒤로가기 동작을 온보딩 플로우에 맞게 커스텀
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                handleBack()
+        vm.onboardingSubmitState.observe(this) { state ->
+            when (state) {
+                is OnboardingSubmitState.Success -> {
+                    TokenManager.saveOnboardingDone(this, true)
+                    vm.state.value?.nickname?.let { TokenManager.saveNickname(this, it) }
+                    startActivity(
+                        Intent(this, MainActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                    )
+                    finish()
+                }
+                is OnboardingSubmitState.Error -> {
+                    Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
+                }
+                else -> Unit
             }
-        })
-
-        // 상태 변화 감지 → 현재 단계 기준으로 버튼 활성화 상태 자동 갱신
-        vm.state.observe(this) {
-            updateNextButtonState()
         }
 
-        // 최초 진입 시에만 Step1 화면을 초기 세팅
-        if (savedInstanceState == null) {
-            currentStep = 1
-            renderProgress(currentStep)
-            updateNextButtonState()
-
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.stepContainer, OnbStep1Fragment())
-                .commit()
-        }
-    }
-
-    // Activity 내부에서 사용하는 View 참조 바인딩
-    private fun bindViews() {
-        ivBack = findViewById(R.id.ivBack)
-        progress1 = findViewById(R.id.progress1)
-        progress2 = findViewById(R.id.progress2)
-        progress3 = findViewById(R.id.progress3)
-
-        // 1순위: 원래 의도(btn_footer)
-        val btn1 = findViewById<MaterialButton>(R.id.btn_onb_footer)
-
-        // 2순위: 현재 기기에서 실제로 존재하는 버튼(id가 include_footer_button로 되어있는 케이스)
-        val btn2 = findViewById<MaterialButton>(R.id.include_footer_button)
-
-        btnNext = btn1 ?: btn2 ?: throw IllegalStateException("Next button not found")
-    }
-
-
-
-    // 클릭 이벤트 바인딩
-    private fun bindActions() {
-        ivBack.setOnClickListener { handleBack() }
-        btnNext.setOnClickListener { handleNext() }
-    }
-
-    // 뒤로가기 처리: 백스택이 없으면 종료, 있으면 이전 단계로 복귀
-    private fun handleBack() {
-        if (supportFragmentManager.backStackEntryCount == 0) {
-            finish()
-            return
-        }
-
-        supportFragmentManager.popBackStack()
-        currentStep -= 1
-        renderProgress(currentStep)
-        updateNextButtonState()
-    }
-
-    // 다음 버튼 처리: 현재 단계에 따라 다음 화면으로 이동하거나 온보딩 종료
-    private fun handleNext() {
-        when (currentStep) {
-            1 -> moveToStep2()
-            2 -> moveToStep3()
-            3 -> finishOnboarding()
+        setContent {
+            BookiiBookiiTheme {
+                OnbStepScreen(
+                    vm = vm,
+                    onBack = { finish() },
+                    onFinish = { vm.submitOnboarding() },
+                    onOpenProfileCamera = {
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    },
+                    onOpenProfileGallery = {
+                        pickProfileImageLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    }
+                )
+            }
         }
     }
 
-    // Step2 화면으로 전환 + 백스택 추가
-    private fun moveToStep2() {
-        currentStep = 2
-        renderProgress(currentStep)
-        updateNextButtonState()
-
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.stepContainer, OnbStep2Fragment())
-            .addToBackStack("step2")
-            .commit()
+    private fun launchCamera() {
+        val uri = createCameraImageUri()
+        cameraImageUri = uri
+        takePictureLauncher.launch(uri)
     }
 
-    // Step3 화면으로 전환 + 백스택 추가
-    private fun moveToStep3() {
-        currentStep = 3
-        renderProgress(currentStep)
-        updateNextButtonState()
-
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.stepContainer, OnbStep3Fragment())
-            .addToBackStack("step3")
-            .commit()
-    }
-
-    // 온보딩 완료 후 로딩 화면으로 이동
-    private fun finishOnboarding() {
-        val state = vm.state.value ?: return
-
-        val genreValues = state.readingPreferences.map { it.serverValue }
-
-        // PHOTO/FOCUS 둘 다 serverValue가 CLEAN이니까 중복 제거 필요
-        val methodValues = state.recordMethods.map { it.serverValue }.distinct()
-
-        val speedValue = state.readingPace?.serverValue ?: return
-
-        // 프로필에서 넘어온 값 (onCreate에서 intent로 받아서 멤버로 들고있다고 가정)
-        val name = intent.getStringExtra(EXTRA_NAME) ?: return
-        val s3Key = intent.getStringExtra(EXTRA_S3_KEY) // null 가능
-
-        startActivity(
-            Intent(this, MainActivity::class.java)
-                /*.putExtra(OnbStatusActivity.EXTRA_STATUS, "LOADING")
-                .putExtra(OnbStatusActivity.EXTRA_NAME, name)
-                .putExtra(OnbStatusActivity.EXTRA_S3_KEY, s3Key)
-                .putStringArrayListExtra(OnbStatusActivity.EXTRA_GENRES, ArrayList(genreValues))
-                .putStringArrayListExtra(OnbStatusActivity.EXTRA_METHODS, ArrayList(methodValues))
-                .putExtra(OnbStatusActivity.EXTRA_SPEED, speedValue)*/
-        )
-        finish()
-    }
-
-    companion object {
-        const val EXTRA_NAME = "extra_name"
-        const val EXTRA_S3_KEY = "extra_s3_key"
-    }
-
-    // 현재 단계에 맞게 진행바 UI 갱신
-    // TODO: 이거는 한번 확인 좀 active랑 inactive round 값이 달라서
-    private fun renderProgress(step: Int) {
-        progress1.setBackgroundResource(
-            if (step >= 1) R.drawable.bg_sub150_r99
-            else R.drawable.bg_grey200_r30
-        )
-        progress2.setBackgroundResource(
-            if (step >= 2) R.drawable.bg_sub150_r99
-            else R.drawable.bg_grey200_r30
-        )
-        progress3.setBackgroundResource(
-            if (step >= 3) R.drawable.bg_sub150_r99
-            else R.drawable.bg_grey200_r30
-        )
-
-        // Step3에서도 버튼 문구는 동일하게 유지
-        btnNext.text = "다음"
-    }
-
-    private fun setOnboardingDone() {
-        TokenManager.saveOnboardingDone(this, true)
-    }
-
-    // 현재 단계에서 "다음" 버튼을 활성화할 수 있는지 판단
-    private fun updateNextButtonState() {
-        btnNext.isEnabled = when (currentStep) {
-            1 -> vm.canGoStep2Next()
-            2 -> vm.canGoStep3Next()
-            3 -> vm.canFinish()
-            else -> false
+    // 갤러리 URI를 로컬 캐시에 복사 (클라우드 백업 사진 등 openInputStream이 실패하는 케이스 방어)
+    private fun copyUriToLocalCache(sourceUri: Uri): Uri? {
+        return try {
+            val tempFile = File(cacheDir, "profile_${System.currentTimeMillis()}.jpg")
+            contentResolver.openInputStream(sourceUri)?.use { input ->
+                tempFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            if (tempFile.length() > 0) Uri.fromFile(tempFile) else null
+        } catch (e: Exception) {
+            // TODO: 추후 로그 삭제 (갤러리 URI 복사 실패 확인용)
+            Log.e("OnbStepActivity", "갤러리 URI 로컬 복사 실패", e)
+            null
         }
+    }
+
+    private fun createCameraImageUri(): Uri {
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "profile_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        }
+        return contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
     }
 }

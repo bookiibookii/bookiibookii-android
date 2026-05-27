@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.onboarding.profile
+package com.bookiibookii.bookiibookii.onboarding.steps.model
 
 sealed class ProfileImageUploadState {
     data object Idle : ProfileImageUploadState()
