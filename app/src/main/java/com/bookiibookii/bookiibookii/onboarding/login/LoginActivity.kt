@@ -20,11 +20,14 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
@@ -34,9 +37,8 @@ import com.bookiibookii.bookiibookii.data.model.auth.LoginRequest
 import com.bookiibookii.bookiibookii.data.model.mypage.MypageResult
 import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroAnimActivity
 import com.bookiibookii.bookiibookii.onboarding.steps.OnbStepActivity
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
@@ -46,27 +48,6 @@ import kotlinx.coroutines.launch
 class LoginActivity : AppCompatActivity() {
 
     private var isNavigating = false
-
-    private val googleSignInLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            val idToken = account.idToken
-            if (idToken != null) {
-                sendTokenToBackend("GOOGLE", idToken)
-            } else {
-                // TODO: 추후 로그 삭제 (Google ID Token null 확인용)
-                Log.e("Login", "Google ID Token is null")
-                showLoadingState(false)
-            }
-        } catch (e: ApiException) {
-            // TODO: 추후 로그 삭제 (Google 로그인 실패 확인용)
-            Log.e("Login", "Google 로그인 실패: ${e.statusCode}", e)
-            showLoadingState(false)
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge() // 이거 추가했음 -> BaseActivity 사용하기에는 findViewById 사용되서 어려움 ..
@@ -133,14 +114,29 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun signInWithGoogle() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.web_client_id))
-            .requestEmail()
+        val option = GetSignInWithGoogleOption.Builder(getString(R.string.web_client_id)).build()
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(option)
             .build()
 
-        val googleSignInClient = GoogleSignIn.getClient(this, gso)
-        googleSignInClient.signOut().addOnCompleteListener {
-            googleSignInLauncher.launch(googleSignInClient.signInIntent)
+        lifecycleScope.launch {
+            try {
+                val result = CredentialManager.create(this@LoginActivity)
+                    .getCredential(this@LoginActivity, request)
+                val credential = result.credential
+                if (credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                ) {
+                    val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+                    sendTokenToBackend("GOOGLE", idToken)
+                } else {
+                    showLoadingState(false)
+                }
+            } catch (e: GetCredentialException) {
+                // TODO: 추후 로그 삭제 (Google 로그인 실패 확인용)
+                Log.e("Login", "Google 로그인 실패", e)
+                showLoadingState(false)
+            }
         }
     }
 
