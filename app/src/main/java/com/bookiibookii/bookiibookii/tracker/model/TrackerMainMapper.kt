@@ -3,7 +3,7 @@ package com.bookiibookii.bookiibookii.tracker.model
 import com.bookiibookii.bookiibookii.data.model.tracker.BookInfo
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListItemResDTO
 
-// displayStatus → 한글 라벨
+// displayStatus -> 한글 라벨
 private fun displayStatusToLabel(status: String?): String = when (status) {
     "READING" -> "읽는 중"
     "REVIEW_WRITING" -> "후기 작성"
