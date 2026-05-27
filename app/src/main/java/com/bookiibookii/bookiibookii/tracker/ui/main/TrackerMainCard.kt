@@ -154,7 +154,7 @@ private fun TrackerProfileColumn(
         ) {
             BookCover(
                 bookCoverUrl = profile.bookCoverUrl,
-                isMine = profile.isMine,
+                isOwnerBook = profile.isOwnerBook,
             )
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -207,7 +207,7 @@ private fun TrackerProfileColumn(
 @Composable
 private fun BookCover(
     bookCoverUrl: String?,
-    isMine: Boolean,
+    isOwnerBook: Boolean,
 ) {
     Box(
         modifier = Modifier
@@ -216,7 +216,7 @@ private fun BookCover(
             .background(BookiiBookiiTheme.colors.uiBg),
         contentAlignment = Alignment.BottomEnd,
     ) {
-        if (isMine) {
+        if (isOwnerBook) {
             Box(
                 modifier = Modifier
                     .padding(4.dp)
@@ -258,6 +258,7 @@ private fun TrackerMainCardPreview() {
     BookiiPreview {
         TrackerMainCard(
             card = TrackerCardModel(
+                groupId = 0L,
                 groupName = "김영하 도장깨기 하실 분",
                 bookTitle = "살인자의 기억법",
                 progressLabel = "읽는 중",
@@ -268,7 +269,7 @@ private fun TrackerMainCardPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 48,
-                    isMine = true,
+                    isOwnerBook = true,
                 ),
                 right = TrackerProfileItem(
                     nickname = "noshel",
@@ -276,7 +277,7 @@ private fun TrackerMainCardPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 48,
-                    isMine = false,
+                    isOwnerBook = false,
                 ),
                 primaryActionLabel = "진행률 기록",
                 secondaryActionLabel = "독서카드 작성",

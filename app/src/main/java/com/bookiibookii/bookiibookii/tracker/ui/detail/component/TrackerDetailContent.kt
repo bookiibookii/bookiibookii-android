@@ -317,7 +317,7 @@ private fun ProfileColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            BookCover(isMine = profile.isMine)
+            BookCover(isOwnerBook = profile.isOwnerBook)
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -367,7 +367,7 @@ private fun ProfileColumn(
 }
 
 @Composable
-private fun BookCover(isMine: Boolean) {
+private fun BookCover(isOwnerBook: Boolean) {
     Box(
         modifier = Modifier
             .size(width = 80.dp, height = 104.dp)
@@ -375,7 +375,7 @@ private fun BookCover(isMine: Boolean) {
             .background(BookiiBookiiTheme.colors.uiBg),
         contentAlignment = Alignment.BottomEnd,
     ) {
-        if (isMine) {
+        if (isOwnerBook) {
             Box(
                 modifier = Modifier
                     .padding(4.dp)
@@ -498,7 +498,7 @@ private fun TrackerDetailContentPreview() {
                 bookCoverUrl = null,
                 profileImageUrl = null,
                 progressPercent = 100,
-                isMine = true,
+                isOwnerBook = true,
             ),
             partnerProfile = TrackerProfileItem(
                 nickname = "noshel",
@@ -506,7 +506,7 @@ private fun TrackerDetailContentPreview() {
                 bookCoverUrl = null,
                 profileImageUrl = null,
                 progressPercent = 0,
-                isMine = false,
+                isOwnerBook = false,
             ),
             exchangeLabel = "택배 교환",
             secondaryActionLabel = "독서카드 작성",

@@ -21,6 +21,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,10 +33,14 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
+import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
 import com.bookiibookii.bookiibookii.tracker.model.TrackerNotificationItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
+import com.bookiibookii.bookiibookii.tracker.vm.TrackerMainViewModel
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -406,20 +411,40 @@ private fun TrackerEmptyCardPreview() {
     }
 }
 
+// stateful: VM 주입 + state 수집
 @Composable
-fun TrackerMainScreen(
-    nickname: String,
-    total: Int,
-    reading: Int,
-    exchanging: Int,
-    review: Int,
-    notifications: List<TrackerNotificationItem>,
-    groups: List<TrackerCardModel>,
+fun TrackerMainRoute(
     onProfileClick: () -> Unit,
     onAlertClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
-    onPrimaryAction: (groupIndex: Int) -> Unit,
-    onSecondaryAction: (groupIndex: Int) -> Unit,
+    onPrimaryAction: (groupId: Long) -> Unit,
+    onSecondaryAction: (groupId: Long) -> Unit,
+    viewModel: TrackerMainViewModel = viewModel(),
+) {
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+    TrackerMainScreen(
+        uiState = uiState,
+        // TODO: 닉네임 / 알림 API 연동 전까지 placeholder
+        nickname = "",
+        notifications = emptyList(),
+        onProfileClick = onProfileClick,
+        onAlertClick = onAlertClick,
+        onCreateGroupClick = onCreateGroupClick,
+        onPrimaryAction = onPrimaryAction,
+        onSecondaryAction = onSecondaryAction,
+    )
+}
+
+@Composable
+fun TrackerMainScreen(
+    uiState: TrackerMainUiState,
+    nickname: String,
+    notifications: List<TrackerNotificationItem>,
+    onProfileClick: () -> Unit,
+    onAlertClick: () -> Unit,
+    onCreateGroupClick: () -> Unit,
+    onPrimaryAction: (groupId: Long) -> Unit,
+    onSecondaryAction: (groupId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -438,7 +463,7 @@ fun TrackerMainScreen(
                 onAlertClick = onAlertClick,
             )
             TrackerNoticeBanner(nickname = nickname)
-            if (groups.isNotEmpty()) {
+            if (uiState.cards.isNotEmpty()) {
                 TrackerNotificationCard(notifications = notifications)
             }
         }
@@ -450,19 +475,19 @@ fun TrackerMainScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TrackerCountBoard(
-                total = total,
-                reading = reading,
-                exchanging = exchanging,
-                review = review,
+                total = uiState.totalCount,
+                reading = uiState.readingCount,
+                exchanging = uiState.exchangingCount,
+                review = uiState.reviewCount,
             )
-            if (groups.isEmpty()) {
+            if (uiState.cards.isEmpty()) {
                 TrackerEmptyCard(onCreateGroupClick = onCreateGroupClick)
             } else {
-                groups.forEachIndexed { index, group ->
+                uiState.cards.forEach { card ->
                     TrackerMainCard(
-                        card = group,
-                        onPrimaryAction = { onPrimaryAction(index) },
-                        onSecondaryAction = { onSecondaryAction(index) },
+                        card = card,
+                        onPrimaryAction = { onPrimaryAction(card.groupId) },
+                        onSecondaryAction = { onSecondaryAction(card.groupId) },
                     )
                 }
             }
@@ -475,13 +500,9 @@ fun TrackerMainScreen(
 private fun TrackerMainScreenEmptyPreview() {
     BookiiPreview {
         TrackerMainScreen(
+            uiState = TrackerMainUiState(),
             nickname = "sayo",
-            total = 0,
-            reading = 0,
-            exchanging = 0,
-            review = 0,
             notifications = emptyList(),
-            groups = emptyList(),
             onProfileClick = {},
             onAlertClick = {},
             onCreateGroupClick = {},
@@ -525,6 +546,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
         )
         val groups = listOf(
             TrackerCardModel(
+                groupId = 1L,
                 groupName = "김영하 도장깨기 하실 분",
                 bookTitle = "살인자의 기억법",
                 progressLabel = "읽는 중",
@@ -535,7 +557,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 48,
-                    isMine = true,
+                    isOwnerBook = true,
                 ),
                 right = TrackerProfileItem(
                     nickname = "noshel",
@@ -543,12 +565,13 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 48,
-                    isMine = false,
+                    isOwnerBook = false,
                 ),
                 primaryActionLabel = "진행률 기록",
                 secondaryActionLabel = "독서카드 작성",
             ),
             TrackerCardModel(
+                groupId = 2L,
                 groupName = "김영하 도장깨기 하실 분",
                 bookTitle = "살인자의 기억법",
                 progressLabel = "후기 작성",
@@ -559,7 +582,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 100,
-                    isMine = true,
+                    isOwnerBook = true,
                 ),
                 right = TrackerProfileItem(
                     nickname = "noshel",
@@ -567,12 +590,13 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 100,
-                    isMine = false,
+                    isOwnerBook = false,
                 ),
                 primaryActionLabel = "진행률 기록",
                 secondaryActionLabel = "독서카드 작성",
             ),
             TrackerCardModel(
+                groupId = 3L,
                 groupName = "독서 모임 셋째",
                 bookTitle = "데미안",
                 progressLabel = "교환 중",
@@ -583,7 +607,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 20,
-                    isMine = true,
+                    isOwnerBook = true,
                 ),
                 right = TrackerProfileItem(
                     nickname = "partner3",
@@ -591,20 +615,22 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 35,
-                    isMine = false,
+                    isOwnerBook = false,
                 ),
                 primaryActionLabel = "진행률 기록",
                 secondaryActionLabel = "독서카드 작성",
             ),
         )
         TrackerMainScreen(
+            uiState = TrackerMainUiState(
+                cards = groups,
+                totalCount = 3,
+                readingCount = 2,
+                exchangingCount = 1,
+                reviewCount = 0,
+            ),
             nickname = "sayo",
-            total = 3,
-            reading = 2,
-            exchanging = 1,
-            review = 0,
             notifications = notifications,
-            groups = groups,
             onProfileClick = {},
             onAlertClick = {},
             onCreateGroupClick = {},

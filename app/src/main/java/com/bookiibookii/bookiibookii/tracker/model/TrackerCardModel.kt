@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.tracker.model
 
 data class TrackerCardModel(
+    val groupId: Long,
     val groupName: String,
     val bookTitle: String,
     val progressLabel: String,
@@ -17,5 +18,5 @@ data class TrackerProfileItem(
     val bookCoverUrl: String?,
     val profileImageUrl: String?,
     val progressPercent: Int,
-    val isMine: Boolean,
+    val isOwnerBook: Boolean,
 )
