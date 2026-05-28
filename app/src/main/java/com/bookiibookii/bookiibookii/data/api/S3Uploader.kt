@@ -2,9 +2,7 @@ package com.bookiibookii.bookiibookii.data.api
 
 import android.content.ContentResolver
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Matrix
-import android.media.ExifInterface
+import android.graphics.ImageDecoder
 import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,6 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.ByteArrayOutputStream
+import java.io.File
 
 object S3Uploader {
 
@@ -35,7 +34,7 @@ object S3Uploader {
             val bytes = compressImage(contentResolver, uri)
 
             // TODO: 추후 로그 삭제
-            android.util.Log.d("IMG_UPLOAD", "upload size=${bytes.size}B (${bytes.size / 1024}KB")
+            android.util.Log.d("IMG_UPLOAD", "upload size=${bytes.size}B (${bytes.size / 1024}KB)")
 
             val requestBody = bytes.toRequestBody(MIME_JPEG.toMediaTypeOrNull())
             val request = Request.Builder()
@@ -53,7 +52,7 @@ object S3Uploader {
     }
 
     private fun compressImage(contentResolver: ContentResolver, uri: Uri): ByteArray {
-        val bitmap = decodeAndResize(contentResolver, uri)
+        val bitmap = decodeImage(contentResolver, uri)
         try {
             var quality = INITIAL_QUALITY
             var bytes = bitmap.toJpegBytes(quality)
@@ -67,70 +66,27 @@ object S3Uploader {
         }
     }
 
-    private fun decodeAndResize(contentResolver: ContentResolver, uri: Uri): Bitmap {
-        val (width, height) = readImageSize(contentResolver, uri)
-        val sampleSize = calculateInSampleSize(width, height, MAX_LONG_SIDE_PX)
-
-        val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
-        val sampled = contentResolver.openInputStream(uri)?.use {
-            BitmapFactory.decodeStream(it, null, options)
-        } ?: error("이미지 파일을 불러오지 못했습니다.")
-
-        val rotated = applyExifRotation(contentResolver, uri, sampled)
-        return scaleToLongSide(rotated, MAX_LONG_SIDE_PX)
-    }
-
-    private fun readImageSize(contentResolver: ContentResolver, uri: Uri): Pair<Int, Int> {
-        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        contentResolver.openInputStream(uri)?.use {
-            BitmapFactory.decodeStream(it, null, options)
-        } ?: error("이미지 파일을 불러오지 못했습니다.")
-        return options.outWidth to options.outHeight
-    }
-
-    private fun calculateInSampleSize(width: Int, height: Int, maxLongSide: Int): Int {
-        val longSide = maxOf(width, height)
-        if (longSide <= maxLongSide) return 1
-        var sample = 1
-        while (longSide / (sample * 2) >= maxLongSide) {
-            sample *= 2
+    // ImageDecoder 사용: JPEG, PNG, WebP, HEIF/HEIC 등 모든 포맷 + EXIF 회전 자동 처리
+    // minSdk 28 = Android 9 이상이므로 별도 버전 분기 불필요
+    private fun decodeImage(contentResolver: ContentResolver, uri: Uri): Bitmap {
+        val source = if (uri.scheme == "file") {
+            ImageDecoder.createSource(File(uri.path ?: error("이미지 경로를 확인할 수 없습니다.")))
+        } else {
+            ImageDecoder.createSource(contentResolver, uri)
         }
-        return sample
-    }
 
-    private fun applyExifRotation(
-        contentResolver: ContentResolver,
-        uri: Uri,
-        bitmap: Bitmap
-    ): Bitmap {
-        val orientation = contentResolver.openInputStream(uri)?.use {
-            ExifInterface(it).getAttributeInt(
-                ExifInterface.TAG_ORIENTATION,
-                ExifInterface.ORIENTATION_NORMAL
-            )
-        } ?: return bitmap
-
-        val matrix = Matrix()
-        when (orientation) {
-            ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
-            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
-            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
-            else -> return bitmap
+        return ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+            val longSide = maxOf(info.size.width, info.size.height)
+            if (longSide > MAX_LONG_SIDE_PX) {
+                val ratio = MAX_LONG_SIDE_PX.toFloat() / longSide
+                decoder.setTargetSize(
+                    maxOf(1, (info.size.width * ratio).toInt()),
+                    maxOf(1, (info.size.height * ratio).toInt())
+                )
+            }
+            // ALLOCATOR_SOFTWARE: hardware bitmap은 Bitmap.compress() 불가
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
         }
-        val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-        if (rotated != bitmap) bitmap.recycle()
-        return rotated
-    }
-
-    private fun scaleToLongSide(bitmap: Bitmap, maxLongSide: Int): Bitmap {
-        val longSide = maxOf(bitmap.width, bitmap.height)
-        if (longSide <= maxLongSide) return bitmap
-        val ratio = maxLongSide.toFloat() / longSide
-        val newWidth = (bitmap.width * ratio).toInt()
-        val newHeight = (bitmap.height * ratio).toInt()
-        val scaled = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
-        if (scaled != bitmap) bitmap.recycle()
-        return scaled
     }
 
     private fun Bitmap.toJpegBytes(quality: Int): ByteArray {

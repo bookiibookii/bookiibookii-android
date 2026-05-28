@@ -40,6 +40,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             return
         }
 
+        if (!TokenManager.isOnboardingDone(this)) {
+            startActivity(Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
+            finish()
+            return
+        }
+
         if (savedInstanceState == null) {
             setBottomNavSelected(NavTab.HOME)
             replaceFragment(HomeFragment())

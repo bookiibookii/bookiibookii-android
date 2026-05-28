@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Profile placeholder: squircle (grey_300 #C6C5C2) + white person silhouette
+  Viewport 128x128. Union SVG from Figma (81x95.375) offset at (24, 32.63).
+  Head: center(64, 52.63), r=20
+  Body: M40.5,46.375 → offset (+24, +32.63) in 128 coord space
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+
+    <!-- Squircle background (grey_300 #C6C5C2) -->
+    <path
+        android:fillColor="#C6C5C2"
+        android:pathData="M0,64C0,11.296 11.296,0 64,0C116.704,0 128,11.296 128,64C128,116.704 116.704,128 64,128C11.296,128 0,116.704 0,64Z" />
+
+    <!-- Person silhouette (white), clipped to squircle -->
+    <group>
+        <clip-path
+            android:pathData="M0,64C0,11.296 11.296,0 64,0C116.704,0 128,11.296 128,64C128,116.704 116.704,128 64,128C11.296,128 0,116.704 0,64Z" />
+
+        <!-- Head: circle center(64, 52.63), r=20 — from Union head path offset by (24, 32.63) -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M64,32.63C75.046,32.63 84,41.584 84,52.63C84,63.676 75.046,72.63 64,72.63C52.954,72.63 44,63.676 44,52.63C44,41.584 52.954,32.63 64,32.63Z" />
+
+        <!-- Body: Union body path offset by (24, 32.63) into 128 coord space -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M64.5,79.005C86.868,79.005 105,97.809 105,121.005C105,121.589 104.985,122.171 104.962,122.749C95.403,126.663 82.159,128.005 64,128.005C46.474,128.005 33.527,126.754 24.052,123.149C24.017,122.439 24,121.724 24,121.005C24,97.809 42.133,79.005 64.5,79.005Z" />
+    </group>
+
+</vector>

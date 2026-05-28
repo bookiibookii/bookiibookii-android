@@ -1,107 +1,224 @@
 package com.bookiibookii.bookiibookii.onboarding.steps
 
+import android.content.ContentResolver
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.bookiibookii.bookiibookii.onboarding.steps.data.OnbState
-import com.bookiibookii.bookiibookii.onboarding.steps.data.ReadingPace
-import com.bookiibookii.bookiibookii.onboarding.steps.data.ReadingPreference
-import com.bookiibookii.bookiibookii.onboarding.steps.data.RecordMethod
+import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.api.S3Uploader
+import com.bookiibookii.bookiibookii.data.model.group.BookItem
+import com.bookiibookii.bookiibookii.data.model.user.OnboardingBook
+import com.bookiibookii.bookiibookii.data.model.user.OnboardingRequest
+import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
+import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
+import com.bookiibookii.bookiibookii.onboarding.steps.model.OnbState
+import com.bookiibookii.bookiibookii.onboarding.steps.model.ProfileImageUploadState
+import com.bookiibookii.bookiibookii.onboarding.steps.model.OnboardingSubmitState
+import com.bookiibookii.bookiibookii.onboarding.steps.model.RecordMethod
+import kotlinx.coroutines.launch
 
 class OnbViewModel : ViewModel() {
 
     private val _state = MutableLiveData(OnbState())
     val state: LiveData<OnbState> = _state
 
-    private val step1MaxSelect = 3
+    private val _nicknameCheckState =
+        MutableLiveData<NicknameCheckState>(NicknameCheckState.Idle)
+    val nicknameCheckState: LiveData<NicknameCheckState> = _nicknameCheckState
 
-    // Step2: "아직 잘 모르겠어요" (단독 선택)
-    private var step2Unknown = false
+    private val _imageUploadState =
+        MutableLiveData<ProfileImageUploadState>(ProfileImageUploadState.Idle)
+    val imageUploadState: LiveData<ProfileImageUploadState> = _imageUploadState
+
+    private val _bookSearchState =
+        MutableLiveData<BookSearchState>(BookSearchState.Idle)
+    val bookSearchState: LiveData<BookSearchState> = _bookSearchState
+
+    private val _onboardingSubmitState =
+        MutableLiveData<OnboardingSubmitState>(OnboardingSubmitState.Idle)
+    val onboardingSubmitState: LiveData<OnboardingSubmitState> = _onboardingSubmitState
 
     private fun currentState(): OnbState = _state.value ?: OnbState()
-    private fun updateState(newState: OnbState) {
-        _state.value = newState
+    private fun updateState(newState: OnbState) { _state.value = newState }
+
+    // ── Step 1: 프로필 ─────────────────────────────────────────────────────────
+
+    fun setNickname(nickname: String) {
+        updateState(currentState().copy(nickname = nickname))
+        _nicknameCheckState.value = NicknameCheckState.Idle
     }
 
-    // Step1: 취향(ReadingPreference) 토글 (+ 최대 3개 제한)
-    fun togglePreference(pref: ReadingPreference) {
-        val cur = currentState()
-        val next = cur.readingPreferences.toMutableSet()
+    fun setGender(gender: String) {
+        updateState(currentState().copy(gender = gender))
+    }
 
-        if (next.contains(pref)) {
-            next.remove(pref)
-            updateState(cur.copy(readingPreferences = next))
+    fun setBirthdate(birthdate: String) {
+        updateState(currentState().copy(birthdate = birthdate))
+    }
+
+    fun setProfileUri(uri: Uri) {
+        updateState(currentState().copy(profileUri = uri))
+    }
+
+    fun checkNickname(nickname: String) {
+        viewModelScope.launch {
+            _nicknameCheckState.value = NicknameCheckState.Loading
+            runCatching {
+                RetrofitClient.userApi().postNicknameValidation(nickname)
+            }.onSuccess { response ->
+                if (!response.isSuccessful) {
+                    _nicknameCheckState.value =
+                        NicknameCheckState.Error("서버 오류가 발생했습니다. (${response.code()})")
+                    return@onSuccess
+                }
+                val body = response.body()
+                if (body?.isSuccess != true || body.result == null) {
+                    _nicknameCheckState.value =
+                        NicknameCheckState.Error(body?.message ?: "요청에 실패했습니다.")
+                    return@onSuccess
+                }
+                val result = body.result
+                val msg = result.message.ifBlank { "요청에 실패했습니다." }
+                _nicknameCheckState.value = when (result.code) {
+                    "SUCCESS" -> NicknameCheckState.Available(msg)
+                    "DUPLICATE", "BAD_WORD" -> NicknameCheckState.Duplicated(msg)
+                    else -> NicknameCheckState.Error(msg)
+                }
+            }.onFailure { e ->
+                _nicknameCheckState.value =
+                    NicknameCheckState.Error(e.message ?: "네트워크 오류가 발생했습니다.")
+            }
+        }
+    }
+
+    fun uploadProfileImage(contentResolver: ContentResolver, uri: Uri) {
+        viewModelScope.launch {
+            _imageUploadState.value = ProfileImageUploadState.Loading
+            runCatching {
+                val presignedRes = RetrofitClient.userApi().postPresignedUrl()
+                if (!presignedRes.isSuccessful) error("Presigned URL 발급 실패 (HTTP ${presignedRes.code()})")
+                val body = presignedRes.body()
+                if (body?.isSuccess != true || body.result == null) error(body?.message ?: "Presigned URL 발급 실패")
+                val s3Key = body.result.s3Key
+                val putUrl = body.result.presignedPutUrl
+                S3Uploader.uploadImage(contentResolver, uri, putUrl).getOrThrow()
+                s3Key
+            }.onSuccess { s3Key ->
+                updateState(currentState().copy(profileS3Key = s3Key))
+                _imageUploadState.value = ProfileImageUploadState.Success(s3Key)
+            }.onFailure { e ->
+                _imageUploadState.value =
+                    ProfileImageUploadState.Error(e.message ?: "이미지 업로드에 실패했습니다.")
+            }
+        }
+    }
+
+    // ── Step 2: 인생 책 ────────────────────────────────────────────────────────
+
+    fun setLifeBook(slotIndex: Int, book: BookItem) {
+        val books = currentState().lifeBooks.toMutableList()
+        books[slotIndex] = book
+        updateState(currentState().copy(lifeBooks = books))
+    }
+
+    fun removeLifeBook(slotIndex: Int) {
+        val books = currentState().lifeBooks.toMutableList()
+        books[slotIndex] = null
+        updateState(currentState().copy(lifeBooks = books))
+    }
+
+    fun searchBooks(query: String) {
+        if (query.isBlank()) {
+            _bookSearchState.value = BookSearchState.Idle
             return
         }
-
-        if (next.size >= step1MaxSelect) return
-
-        next.add(pref)
-        updateState(cur.copy(readingPreferences = next))
+        viewModelScope.launch {
+            _bookSearchState.value = BookSearchState.Loading
+            runCatching {
+                RetrofitClient.grpApi().searchBooks(query)
+            }.onSuccess { response ->
+                val body = response.body()
+                if (body?.isSuccess == true && body.result != null) {
+                    _bookSearchState.value = BookSearchState.Success(body.result.books)
+                } else {
+                    _bookSearchState.value =
+                        BookSearchState.Error(body?.message ?: "검색에 실패했습니다.")
+                }
+            }.onFailure { e ->
+                _bookSearchState.value =
+                    BookSearchState.Error(e.message ?: "네트워크 오류가 발생했습니다.")
+            }
+        }
     }
 
-    // Step2: 상단 4개 토글 (모름 켜져 있으면 자동 해제)
+    fun clearBookSearch() {
+        _bookSearchState.value = BookSearchState.Idle
+    }
+
+    // ── Step 3: 기록 방식 ──────────────────────────────────────────────────────
+
     fun toggleRecordMethod(method: RecordMethod) {
-        if (step2Unknown) step2Unknown = false
-
         val cur = currentState()
-        val next = cur.recordMethods.toMutableSet()
-
-        if (!next.add(method)) next.remove(method)
-
-        updateState(cur.copy(recordMethods = next))
-    }
-
-    // Step2: 전체선택 토글 (모름 켜져 있으면 자동 해제)
-    fun toggleAllRecordMethods() {
-        if (step2Unknown) step2Unknown = false
-
-        val cur = currentState()
-        val all = RecordMethod.entries.toSet()
-        val next = cur.recordMethods.toMutableSet()
-
-        if (next.containsAll(all)) {
-            next.removeAll(all)
+        if (method == RecordMethod.ANY) {
+            val wasSelected = RecordMethod.ANY in cur.recordMethods
+            updateState(cur.copy(
+                recordMethods = if (wasSelected) emptySet() else setOf(RecordMethod.ANY),
+                isUnknownMethod = false
+            ))
         } else {
-            next.addAll(all)
-        }
-
-        updateState(cur.copy(recordMethods = next))
-    }
-
-    // Step2: "아직 잘 모르겠어요" 토글 (단독)
-    fun toggleStep2Unknown() {
-        step2Unknown = !step2Unknown
-
-        val cur = currentState()
-        if (step2Unknown) {
-            updateState(cur.copy(recordMethods = emptySet()))
-        } else {
-            updateState(cur)
+            val next = cur.recordMethods.toMutableSet()
+            next.remove(RecordMethod.ANY)
+            if (!next.add(method)) next.remove(method)
+            updateState(cur.copy(recordMethods = next, isUnknownMethod = false))
         }
     }
 
-    fun isStep2Unknown(): Boolean = step2Unknown
-
-    fun isStep2AllSelected(): Boolean {
+    fun toggleUnknownMethod() {
         val cur = currentState()
-        val all = RecordMethod.entries.toSet()
-        return all.isNotEmpty() && cur.recordMethods.containsAll(all)
+        val wasUnknown = cur.isUnknownMethod
+        updateState(cur.copy(
+            isUnknownMethod = !wasUnknown,
+            recordMethods = if (!wasUnknown) emptySet() else cur.recordMethods
+        ))
     }
 
-    // Step3: 단일 선택
-    fun selectReadingPace(pace: ReadingPace) {
-        val cur = currentState()
-        updateState(cur.copy(readingPace = pace))
+    // ── Step 4: 한 문장 ────────────────────────────────────────────────────────
+
+    fun setSelfIntro(text: String) {
+        updateState(currentState().copy(selfIntro = text))
     }
 
-    fun clearReadingPace() {
-        val cur = currentState()
-        updateState(cur.copy(readingPace = null))
-    }
+    // ── 온보딩 제출 ────────────────────────────────────────────────────────────
 
-    // 버튼 활성화 조건들 (Activity에서 사용)
-    fun canGoStep2Next(): Boolean = currentState().readingPreferences.isNotEmpty()
-    fun canGoStep3Next(): Boolean = currentState().recordMethods.isNotEmpty() || step2Unknown
-    fun canFinish(): Boolean = currentState().readingPace != null
+    fun submitOnboarding() {
+        val state = currentState()
+        viewModelScope.launch {
+            _onboardingSubmitState.value = OnboardingSubmitState.Loading
+            runCatching {
+                RetrofitClient.userApi().postOnboarding(
+                    OnboardingRequest(
+                        name = state.nickname,
+                        gender = state.gender,
+                        birth = state.birthdate,
+                        tags = state.recordMethods.map { it.serverValue }.distinct(),
+                        s3Key = state.profileS3Key,
+                        userBooks = state.lifeBooks.filterNotNull().map { OnboardingBook(it.isbn13) },
+                        introduction = state.selfIntro
+                    )
+                )
+            }.onSuccess { response ->
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    _onboardingSubmitState.value = OnboardingSubmitState.Success
+                } else {
+                    _onboardingSubmitState.value =
+                        OnboardingSubmitState.Error(response.body()?.message ?: "오류가 발생했습니다.")
+                }
+            }.onFailure { e ->
+                _onboardingSubmitState.value =
+                    OnboardingSubmitState.Error(e.message ?: "네트워크 오류가 발생했습니다.")
+            }
+        }
+    }
 }
