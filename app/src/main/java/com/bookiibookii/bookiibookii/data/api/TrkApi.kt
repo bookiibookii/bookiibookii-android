@@ -5,7 +5,7 @@ import com.bookiibookii.bookiibookii.data.model.tracker.TrackerCompletionRespons
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDeliveryRequest
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDeliveryResponse
-import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerExtensionResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerImagePresignedUrlResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingRequest
@@ -27,10 +27,10 @@ interface TrkApi {
     @GET("/api/me/trackers")
     suspend fun getMyTrackers(): Response<ApiResponse<TrackerListResDTO>>
 
-    @GET("/api/groups/{groupId}/tracker")
+    @GET("/api/trackers/{groupId}/tracker")
     suspend fun getTrackerDetail(
         @Path("groupId") groupId: Long
-    ): ApiResponse<TrackerDetailResponse>
+    ): Response<ApiResponse<TrackerDetailResDTO>>
 
     @POST("/api/groups/{groupId}/tracker/delivery")
     suspend fun postTrackerShippingStart(
@@ -79,7 +79,7 @@ interface TrkApi {
     suspend fun makeMeeting(
         @Path("groupId") groupId: Long,
         @Body request: TrackerMeetingRequest
-    ): Response<TrackerDetailResponse>
+    ): Response<TrackerDetailResDTO>
 
     @GET("/api/groups/{groupId}/tracker/meetings")
     suspend fun getTrackerMeeting(
@@ -89,10 +89,10 @@ interface TrkApi {
     @PATCH("/api/groups/{groupId}/tracker/meetings/completion")
     suspend fun patchMeetingComplete(
         @Path("groupId") groupId: Long
-    ): Response<TrackerDetailResponse>
+    ): Response<TrackerDetailResDTO>
 
     @PATCH("/api/groups/{groupId}/tracker/reception/verification")
     suspend fun patchConfirmReception(
         @Path("groupId") groupId: Long
-    ): ApiResponse<TrackerDetailResponse>
+    ): ApiResponse<TrackerDetailResDTO>
 }

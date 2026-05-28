@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.tracker.ui.main
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 @Composable
 internal fun TrackerMainCard(
     card: TrackerCardModel,
+    onCardClick: () -> Unit,
     onPrimaryAction: () -> Unit,
     onSecondaryAction: () -> Unit,
     modifier: Modifier = Modifier,
@@ -39,6 +41,7 @@ internal fun TrackerMainCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(BookiiBookiiTheme.shape.round20)
+            .clickable(onClick = onCardClick)
             .background(BookiiBookiiTheme.colors.white)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -253,6 +256,7 @@ private fun TrackerMainCardPreview() {
                 primaryActionLabel = "진행률 기록",
                 secondaryActionLabel = "독서카드 작성",
             ),
+            onCardClick = {},
             onPrimaryAction = {},
             onSecondaryAction = {},
         )

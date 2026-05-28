@@ -1,23 +1,56 @@
 package com.bookiibookii.bookiibookii.tracker.ui.detail
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerDetailContent
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStep
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStepStatus
+import com.bookiibookii.bookiibookii.tracker.vm.TrackerDetailViewModel
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 @Composable
-fun TrackerDirectDetailScreen(
+fun TrackerDetailRoute(
+    groupId: Long,
+    onBackClick: () -> Unit,
+    viewModel: TrackerDetailViewModel = viewModel(
+        factory = TrackerDetailViewModel.factory(groupId)
+    ),
+) {
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+    TrackerDetailScreen(
+        groupName = uiState.groupName,
+        dDay = uiState.dDay,
+        statusLabel = uiState.statusLabel,
+        currentStepLabel = uiState.currentStepLabel,
+        myProfile = uiState.myProfile,
+        partnerProfile = uiState.partnerProfile,
+        exchangeLabel = uiState.exchangeLabel,
+        secondaryActionLabel = uiState.secondaryActionLabel,
+        primaryActionLabel = uiState.primaryActionLabel,
+        steps = uiState.steps,
+        onBackClick = onBackClick,
+        // TODO: 메시지/더보기/액션 API 연동 전까지 placeholder
+        onMessageClick = {},
+        onMoreClick = {},
+        onSecondaryActionClick = {},
+        onPrimaryActionClick = {},
+    )
+}
+
+@Composable
+fun TrackerDetailScreen(
     groupName: String,
     dDay: String,
-    bookTitle: String,
     statusLabel: String,
     currentStepLabel: String,
     myProfile: TrackerProfileItem,
     partnerProfile: TrackerProfileItem,
+    exchangeLabel: String,
     secondaryActionLabel: String,
     primaryActionLabel: String,
     steps: List<TrackerStep>,
@@ -31,12 +64,11 @@ fun TrackerDirectDetailScreen(
     TrackerDetailContent(
         groupName = groupName,
         dDay = dDay,
-        bookTitle = bookTitle,
         statusLabel = statusLabel,
         currentStepLabel = currentStepLabel,
         myProfile = myProfile,
         partnerProfile = partnerProfile,
-        exchangeLabel = "직접 교환",
+        exchangeLabel = exchangeLabel,
         secondaryActionLabel = secondaryActionLabel,
         primaryActionLabel = primaryActionLabel,
         steps = steps,
@@ -51,13 +83,12 @@ fun TrackerDirectDetailScreen(
 
 @Preview(showBackground = true, heightDp = 1000)
 @Composable
-private fun TrackerDirectDetailScreenPreview() {
+private fun TrackerDetailScreenPreview() {
     BookiiPreview {
-        TrackerDirectDetailScreen(
+        TrackerDetailScreen(
             groupName = "김영하 도장깨기 하실 분",
             dDay = "D-2",
-            bookTitle = "살인자의 기억법",
-            statusLabel = "후기 작성",
+            statusLabel = "살인자의 기억법 · 후기 작성",
             currentStepLabel = "내 책 읽기",
             myProfile = TrackerProfileItem(
                 nickname = "나",
@@ -75,6 +106,7 @@ private fun TrackerDirectDetailScreenPreview() {
                 progressPercent = 0,
                 isOwnerBook = false,
             ),
+            exchangeLabel = "직접 교환",
             secondaryActionLabel = "독서카드 작성",
             primaryActionLabel = "책 후기 작성",
             steps = listOf(

@@ -49,7 +49,6 @@ private val OuterCardPadding = 20.dp
 fun TrackerDetailContent(
     groupName: String,
     dDay: String,
-    bookTitle: String,
     statusLabel: String,
     currentStepLabel: String,
     myProfile: TrackerProfileItem,
@@ -91,7 +90,6 @@ fun TrackerDetailContent(
                 GroupInfoSection(
                     groupName = groupName,
                     dDay = dDay,
-                    bookTitle = bookTitle,
                     statusLabel = statusLabel,
                     currentStepLabel = currentStepLabel,
                 )
@@ -191,7 +189,6 @@ private fun IconCircleButton(
 private fun GroupInfoSection(
     groupName: String,
     dDay: String,
-    bookTitle: String,
     statusLabel: String,
     currentStepLabel: String,
 ) {
@@ -218,7 +215,7 @@ private fun GroupInfoSection(
                 ) {
                     DDayChip(text = dDay)
                     Text(
-                        text = "$bookTitle · $statusLabel",
+                        text = statusLabel,
                         style = BookiiBookiiTheme.typography.regular16,
                         color = BookiiBookiiTheme.colors.grey800,
                     )
@@ -466,8 +463,7 @@ private fun TrackerDetailContentPreview() {
         TrackerDetailContent(
             groupName = "김영하 도장깨기 하실 분",
             dDay = "D-2",
-            bookTitle = "살인자의 기억법",
-            statusLabel = "후기 작성",
+            statusLabel = "살인자의 기억법 · 후기 작성",
             currentStepLabel = "내 책 읽기",
             myProfile = TrackerProfileItem(
                 nickname = "나",

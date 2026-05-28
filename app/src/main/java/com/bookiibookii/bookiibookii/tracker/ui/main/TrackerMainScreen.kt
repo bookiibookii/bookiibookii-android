@@ -417,6 +417,7 @@ fun TrackerMainRoute(
     onProfileClick: () -> Unit,
     onAlertClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
+    onCardClick: (groupId: Long) -> Unit,
     onPrimaryAction: (groupId: Long) -> Unit,
     onSecondaryAction: (groupId: Long) -> Unit,
     viewModel: TrackerMainViewModel = viewModel(),
@@ -430,6 +431,7 @@ fun TrackerMainRoute(
         onProfileClick = onProfileClick,
         onAlertClick = onAlertClick,
         onCreateGroupClick = onCreateGroupClick,
+        onCardClick = onCardClick,
         onPrimaryAction = onPrimaryAction,
         onSecondaryAction = onSecondaryAction,
     )
@@ -443,6 +445,7 @@ fun TrackerMainScreen(
     onProfileClick: () -> Unit,
     onAlertClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
+    onCardClick: (groupId: Long) -> Unit,
     onPrimaryAction: (groupId: Long) -> Unit,
     onSecondaryAction: (groupId: Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -486,6 +489,7 @@ fun TrackerMainScreen(
                 uiState.cards.forEach { card ->
                     TrackerMainCard(
                         card = card,
+                        onCardClick = { onCardClick(card.groupId) },
                         onPrimaryAction = { onPrimaryAction(card.groupId) },
                         onSecondaryAction = { onSecondaryAction(card.groupId) },
                     )
@@ -506,6 +510,7 @@ private fun TrackerMainScreenEmptyPreview() {
             onProfileClick = {},
             onAlertClick = {},
             onCreateGroupClick = {},
+            onCardClick = {},
             onPrimaryAction = {},
             onSecondaryAction = {},
         )
@@ -634,6 +639,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
             onProfileClick = {},
             onAlertClick = {},
             onCreateGroupClick = {},
+            onCardClick = {},
             onPrimaryAction = {},
             onSecondaryAction = {},
         )

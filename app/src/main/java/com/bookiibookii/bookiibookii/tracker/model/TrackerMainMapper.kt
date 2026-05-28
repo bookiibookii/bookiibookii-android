@@ -17,7 +17,7 @@ private fun displayStatusToLabel(status: String?): String = when (status) {
     else -> ""
 }
 
-private fun BookInfo?.toProfile(): TrackerProfileItem = TrackerProfileItem(
+internal fun BookInfo?.toProfile(): TrackerProfileItem = TrackerProfileItem(
     nickname = this?.currentReaderNickname.orEmpty(),
     bookTitle = this?.title.orEmpty(),
     bookCoverUrl = this?.image,
