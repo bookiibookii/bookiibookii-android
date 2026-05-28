@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 
 @Composable
 fun ProfileShareDialog(
@@ -164,12 +165,7 @@ fun ProfileShareDialog(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(92.dp)
-                            .clip(RoundedCornerShape(28.dp))
-                            .background(BookiiBookiiTheme.colors.grey200),
-                    )
+                    ProfilePlaceholder(modifier = Modifier.size(92.dp))
                     Text(
                         text = name,
                         style = BookiiBookiiTheme.typography.semibold20,

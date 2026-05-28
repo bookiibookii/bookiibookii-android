@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -111,12 +112,7 @@ fun ProfileSettingScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Box(modifier = Modifier.size(128.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .size(128.dp)
-                            .clip(RoundedCornerShape(28.dp))
-                            .background(BookiiBookiiTheme.colors.grey200)
-                    )
+                    ProfilePlaceholder(modifier = Modifier.size(128.dp))
                     Box(
                         modifier = Modifier
                             .size(32.dp)

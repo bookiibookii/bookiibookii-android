@@ -18,8 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -236,7 +236,7 @@ private fun ReceivedReviewCard(review: ReceivedReviewItem) {
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(BookiiBookiiTheme.colors.grey200))
+                ProfilePlaceholder(modifier = Modifier.size(32.dp))
                 Text(review.nickname, style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey800)
             }
             ReviewTypeChip(isGood = review.isGood)

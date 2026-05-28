@@ -20,8 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -229,12 +229,7 @@ private fun ProfileSection(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(BookiiBookiiTheme.colors.grey200),
-            )
+            ProfilePlaceholder(modifier = Modifier.size(52.dp))
             Text(
                 text = "김스카이",
                 style = BookiiBookiiTheme.typography.semibold20,
@@ -760,12 +755,7 @@ private fun ReceivedReviewCard(review: MockReceivedReview) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(BookiiBookiiTheme.colors.grey200),
-                )
+                ProfilePlaceholder(modifier = Modifier.size(32.dp))
                 Text(
                     text = review.nickname,
                     style = BookiiBookiiTheme.typography.medium16,
