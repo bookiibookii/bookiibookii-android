@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.mypage
+package com.bookiibookii.bookiibookii.mypage.feat.setting
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,62 +8,51 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.mypage.ui.setting.SettingScreen
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
-import com.bookiibookii.bookiibookii.mypage.ui.main.MypageScreen
-import com.bookiibookii.bookiibookii.mypage.feat.main.ProfileSettingFragment
-import com.bookiibookii.bookiibookii.mypage.feat.main.AddressManagementFragment
-import com.bookiibookii.bookiibookii.mypage.feat.detail.MyBookshelfFragment
-import com.bookiibookii.bookiibookii.mypage.feat.detail.ReviewFragment
-import com.bookiibookii.bookiibookii.mypage.ui.detail.ReviewTab
-import com.bookiibookii.bookiibookii.mypage.feat.setting.SettingFragment
 
-class MypageFragment : Fragment() {
+class SettingFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             BookiiBookiiTheme {
-                MypageScreen(
+                SettingScreen(
                     onBackClick = { parentFragmentManager.popBackStack() },
-                    onSettingClick = {
+                    onNoticeClick = {
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, SettingFragment())
+                            .replace(R.id.fragmentContainer, NoticeFragment())
                             .addToBackStack(null)
                             .commit()
                     },
-                    onProfileSettingClick = {
+                    onQuestionClick = {
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, ProfileSettingFragment())
+                            .replace(R.id.fragmentContainer, FaqFragment())
                             .addToBackStack(null)
                             .commit()
                     },
-                    onAddressManagementClick = {
+                    onTermsClick = {
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, AddressManagementFragment())
+                            .replace(R.id.fragmentContainer, WebViewFragment.newInstance("서비스 이용 약관", "service_terms.html"))
                             .addToBackStack(null)
                             .commit()
                     },
-                    onBookshelfClick = {
+                    onPrivacyClick = {
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, MyBookshelfFragment())
+                            .replace(R.id.fragmentContainer, WebViewFragment.newInstance("개인정보 처리 방침", "privacy_policy.html"))
                             .addToBackStack(null)
                             .commit()
                     },
-                    onWrittenReviewClick = {
+                    onWithdrawClick = {
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, ReviewFragment.newInstance(ReviewTab.WRITTEN))
+                            .replace(R.id.fragmentContainer, WithdrawFragment())
                             .addToBackStack(null)
                             .commit()
                     },
-                    onReceivedReviewClick = {
-                        parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, ReviewFragment.newInstance(ReviewTab.RECEIVED))
-                            .addToBackStack(null)
-                            .commit()
-                    },
+                    onLogoutClick = { parentFragmentManager.popBackStack() },
                 )
             }
         }
