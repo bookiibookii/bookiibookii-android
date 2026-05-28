@@ -42,11 +42,11 @@ object TokenManager {
         }
     }
 
-    fun saveTokens(context: Context, access: String, refresh: String, userId: Int) {
+    fun saveTokens(context: Context, access: String, refresh: String, userId: Long) {
         prefs(context).edit().apply {
             putString(KEY_ACCESS, access)
             putString(KEY_REFRESH, refresh)
-            putInt(KEY_USER_ID, userId)
+            putLong(KEY_USER_ID, userId)
             apply()
         }
     }
@@ -82,8 +82,8 @@ object TokenManager {
     // 로그인된 사용자 id. 저장 안 됐으면 null.
     // (임시) 댓글 본인 여부 비교용. 백엔드가 isMe 필드 추가하면 제거 예정
     fun getUserId(context: Context): Long? {
-        val id = prefs(context).getInt(KEY_USER_ID, -1)
-        return if (id == -1) null else id.toLong()
+        val id = prefs(context).getLong(KEY_USER_ID, -1L)
+        return if (id == -1L) null else id
     }
 
     /**

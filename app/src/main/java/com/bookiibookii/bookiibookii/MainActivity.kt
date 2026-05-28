@@ -18,6 +18,7 @@ import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
+import com.bookiibookii.bookiibookii.tracker.TrackerFragment
 
 private enum class NavTab { HOME, TRACKER, LIBRARY }
 
@@ -86,6 +87,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private fun initBottomNav() {
         binding.bottomNav.itemGroup.setOnClickListener {
             selectTab(NavTab.HOME, HomeFragment())
+        }
+        binding.bottomNav.itemTracker.setOnClickListener {
+            selectTab(NavTab.TRACKER, TrackerFragment())
         }
     }
 

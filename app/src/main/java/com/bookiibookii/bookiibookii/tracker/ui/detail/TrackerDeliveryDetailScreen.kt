@@ -65,7 +65,7 @@ private fun TrackerDeliveryDetailScreenPreview() {
                 bookCoverUrl = null,
                 profileImageUrl = null,
                 progressPercent = 100,
-                isMine = true,
+                isOwnerBook = true,
             ),
             partnerProfile = TrackerProfileItem(
                 nickname = "noshel",
@@ -73,7 +73,7 @@ private fun TrackerDeliveryDetailScreenPreview() {
                 bookCoverUrl = null,
                 profileImageUrl = null,
                 progressPercent = 0,
-                isMine = false,
+                isOwnerBook = false,
             ),
             secondaryActionLabel = "독서카드 작성",
             primaryActionLabel = "책 후기 작성",

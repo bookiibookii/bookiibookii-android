@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
+import com.bookiibookii.bookiibookii.tracker.ui.component.TrackerBookCover
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -317,7 +318,10 @@ private fun ProfileColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            BookCover(isMine = profile.isMine)
+            TrackerBookCover(
+                modifier = Modifier.size(width = 80.dp, height = 104.dp),
+                isOwnerBook = profile.isOwnerBook,
+            )
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -363,33 +367,6 @@ private fun ProfileColumn(
             imageUrl = profile.profileImageUrl,
             innerStroke = true,
         )
-    }
-}
-
-@Composable
-private fun BookCover(isMine: Boolean) {
-    Box(
-        modifier = Modifier
-            .size(width = 80.dp, height = 104.dp)
-            .clip(BookiiBookiiTheme.shape.round8)
-            .background(BookiiBookiiTheme.colors.uiBg),
-        contentAlignment = Alignment.BottomEnd,
-    ) {
-        if (isMine) {
-            Box(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .clip(BookiiBookiiTheme.shape.round4)
-                    .background(Color.White.copy(alpha = 0.75f))
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
-            ) {
-                Text(
-                    text = "내 책",
-                    style = BookiiBookiiTheme.typography.regular10,
-                    color = BookiiBookiiTheme.colors.grey900,
-                )
-            }
-        }
     }
 }
 
@@ -498,7 +475,7 @@ private fun TrackerDetailContentPreview() {
                 bookCoverUrl = null,
                 profileImageUrl = null,
                 progressPercent = 100,
-                isMine = true,
+                isOwnerBook = true,
             ),
             partnerProfile = TrackerProfileItem(
                 nickname = "noshel",
@@ -506,7 +483,7 @@ private fun TrackerDetailContentPreview() {
                 bookCoverUrl = null,
                 profileImageUrl = null,
                 progressPercent = 0,
-                isMine = false,
+                isOwnerBook = false,
             ),
             exchangeLabel = "택배 교환",
             secondaryActionLabel = "독서카드 작성",
