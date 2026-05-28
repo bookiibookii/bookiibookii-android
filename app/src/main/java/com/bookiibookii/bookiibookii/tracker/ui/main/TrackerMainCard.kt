@@ -16,12 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
+import com.bookiibookii.bookiibookii.tracker.ui.component.TrackerBookCover
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -152,9 +152,10 @@ private fun TrackerProfileColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            BookCover(
-                bookCoverUrl = profile.bookCoverUrl,
-                isMine = profile.isMine,
+            TrackerBookCover(
+                modifier = Modifier.size(width = 100.dp, height = 132.dp),
+                imageUrl = profile.bookCoverUrl,
+                isOwnerBook = profile.isOwnerBook,
             )
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -205,36 +206,6 @@ private fun TrackerProfileColumn(
 }
 
 @Composable
-private fun BookCover(
-    bookCoverUrl: String?,
-    isMine: Boolean,
-) {
-    Box(
-        modifier = Modifier
-            .size(width = 100.dp, height = 132.dp)
-            .clip(BookiiBookiiTheme.shape.round8)
-            .background(BookiiBookiiTheme.colors.uiBg),
-        contentAlignment = Alignment.BottomEnd,
-    ) {
-        if (isMine) {
-            Box(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .clip(BookiiBookiiTheme.shape.round4)
-                    .background(Color.White.copy(alpha = 0.75f))
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
-            ) {
-                Text(
-                    text = "내 책",
-                    style = BookiiBookiiTheme.typography.regular10,
-                    color = BookiiBookiiTheme.colors.grey900,
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun TrackerProgressBar(percent: Int) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
@@ -258,6 +229,7 @@ private fun TrackerMainCardPreview() {
     BookiiPreview {
         TrackerMainCard(
             card = TrackerCardModel(
+                groupId = 0L,
                 groupName = "김영하 도장깨기 하실 분",
                 bookTitle = "살인자의 기억법",
                 progressLabel = "읽는 중",
@@ -268,7 +240,7 @@ private fun TrackerMainCardPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 48,
-                    isMine = true,
+                    isOwnerBook = true,
                 ),
                 right = TrackerProfileItem(
                     nickname = "noshel",
@@ -276,7 +248,7 @@ private fun TrackerMainCardPreview() {
                     bookCoverUrl = null,
                     profileImageUrl = null,
                     progressPercent = 48,
-                    isMine = false,
+                    isOwnerBook = false,
                 ),
                 primaryActionLabel = "진행률 기록",
                 secondaryActionLabel = "독서카드 작성",

@@ -7,5 +7,5 @@ data class TokenRefreshRequest(
 data class TokenRefreshResult(
     val accessToken: String,
     val refreshToken: String,
-    val userId: Int
+    val userId: Long
 )
