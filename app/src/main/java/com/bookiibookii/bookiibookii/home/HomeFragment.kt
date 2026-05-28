@@ -16,6 +16,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.databinding.FragmentHomeBinding
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
+import com.bookiibookii.bookiibookii.mypage.MypageFragment
 
 class HomeFragment : Fragment() {
 
@@ -106,7 +107,10 @@ class HomeFragment : Fragment() {
             // TODO: 알림 화면으로 이동
         }
         binding.btnProfile.setOnClickListener {
-            // TODO: 프로필/마이페이지로 이동
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, MypageFragment())
+                .addToBackStack(null)
+                .commit()
         }
     }
 
