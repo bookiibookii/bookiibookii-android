@@ -6,11 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.fragment.app.Fragment
+import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.mypage.ui.setting.WebViewScreen
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-class WebViewFragment : Fragment() {
+class WebViewFragment : BaseMypageFragment() {
 
     companion object {
         private const val ARG_TITLE = "title"

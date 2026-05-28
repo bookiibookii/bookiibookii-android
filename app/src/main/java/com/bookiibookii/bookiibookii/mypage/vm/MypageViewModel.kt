@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.bookData.viewModel
+package com.bookiibookii.bookiibookii.mypage.vm
 
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -6,8 +6,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.mypage.MypageResult
-import com.bookiibookii.bookiibookii.data.model.mypage.UserUpdateRequest
+import com.bookiibookii.bookiibookii.data.model.mypage.MypageReqDTO
+import com.bookiibookii.bookiibookii.data.model.mypage.UpdateIntroductionReqDTO
+import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
+import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -17,13 +19,16 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
-class MyPageViewModel : ViewModel() {
+class MypageViewModel : ViewModel() {
 
-    private val _profileData = MutableLiveData<MypageResult>()
-    val profileData: LiveData<MypageResult> get() = _profileData
+    private val _profileData = MutableLiveData<UserProfileResDTO>()
+    val profileData: LiveData<UserProfileResDTO> get() = _profileData
 
     private val _isNicknameChecked = MutableLiveData<Boolean>(true)
     val isNicknameChecked: LiveData<Boolean> get() = _isNicknameChecked
+
+    private val _nicknameCheckState = MutableLiveData<NicknameCheckState>(NicknameCheckState.Idle)
+    val nicknameCheckState: LiveData<NicknameCheckState> get() = _nicknameCheckState
 
     var confirmedNickname: String? = null
 
@@ -32,7 +37,6 @@ class MyPageViewModel : ViewModel() {
 
     sealed class Event {
         object NavigateBack : Event()
-        // ★ ShowToast에 성공 여부(isSuccess) 파라미터 추가
         data class ShowToast(val message: String, val isSuccess: Boolean = false) : Event()
         data class NicknameCheckResult(val isAvailable: Boolean, val message: String) : Event()
     }
@@ -54,7 +58,7 @@ class MyPageViewModel : ViewModel() {
                     _eventFlow.emit(Event.ShowToast("정보를 불러오지 못했습니다.", false))
                 }
             } catch (e: Exception) {
-                Log.e("MyPageViewModel", "fetch error", e)
+                Log.e("MypageViewModel", "fetch error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다.", false))
             }
         }
@@ -62,6 +66,7 @@ class MyPageViewModel : ViewModel() {
 
     fun checkNickname(nickname: String) {
         viewModelScope.launch {
+            _nicknameCheckState.value = NicknameCheckState.Loading
             try {
                 val response = RetrofitClient.userApi().postNicknameValidation(nickname)
                 val serverMsg = response.body()?.message ?: "확인 불가"
@@ -72,25 +77,47 @@ class MyPageViewModel : ViewModel() {
                     if (isAvailable) {
                         _isNicknameChecked.value = true
                         confirmedNickname = nickname
+                        _nicknameCheckState.value = NicknameCheckState.Available("사용 가능한 닉네임입니다.")
                         _eventFlow.emit(Event.NicknameCheckResult(true, "사용 가능한 닉네임입니다."))
                     } else {
                         _isNicknameChecked.value = false
+                        _nicknameCheckState.value = NicknameCheckState.Duplicated("이미 사용 중인 닉네임입니다.")
                         _eventFlow.emit(Event.NicknameCheckResult(false, "이미 사용 중인 닉네임입니다."))
                     }
                 } else {
                     _isNicknameChecked.value = false
+                    _nicknameCheckState.value = NicknameCheckState.Error(serverMsg)
                     _eventFlow.emit(Event.NicknameCheckResult(false, serverMsg))
                 }
             } catch (e: Exception) {
                 Log.e("NickCheck", "오류 발생", e)
+                _nicknameCheckState.value = NicknameCheckState.Error("네트워크 오류")
                 _eventFlow.emit(Event.ShowToast("네트워크 오류", false))
             }
         }
     }
 
+    fun resetNicknameCheckState() {
+        _nicknameCheckState.value = NicknameCheckState.Idle
+    }
+
+    fun updateIntroduction(introduction: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.mypApi()
+                    .updateIntroduction(UpdateIntroductionReqDTO(introduction.ifBlank { null }))
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    _profileData.value = _profileData.value?.copy(introduction = introduction.ifBlank { null })
+                }
+            } catch (e: Exception) {
+                Log.e("MypageViewModel", "updateIntroduction error", e)
+            }
+        }
+    }
+
     fun updateProfile(
-        request: UserUpdateRequest,
-        imageFile: File?
+        request: MypageReqDTO,
+        imageFile: File?,
     ) {
         viewModelScope.launch {
             try {

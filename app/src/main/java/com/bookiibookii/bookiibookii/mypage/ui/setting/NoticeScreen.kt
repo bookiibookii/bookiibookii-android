@@ -1,6 +1,8 @@
 package com.bookiibookii.bookiibookii.mypage.ui.setting
 
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.data.model.mypage.NoticeSummary
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,9 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
@@ -36,23 +36,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 
-private data class NoticeItem(
-    val title: String,
-    val content: String,
-    val date: String,
-    val isRead: Boolean = false,
-)
-
-private val mockNotices = listOf(
-    NoticeItem("12월 업데이트 안내", "새로운 기능이 추가되었습니다! 독서 카드 꾸미기 기능을 확인해보세요.", "5분 전", isRead = false),
-    NoticeItem("서비스 점검 안내", "11월 30일 오전 2시~4시 서비스 점검이 예정되어 있습니다.", "2024. 11. 29.", isRead = true),
-    NoticeItem("개인정보 처리방침 개정 안내", "개인정보 처리방침이 일부 변경되었습니다. 내용을 확인해주세요.", "2024. 11. 20.", isRead = true),
-)
-
 @Composable
 fun NoticeScreen(
+    notices: List<NoticeSummary> = emptyList(),
     onBackClick: () -> Unit = {},
-    onNoticeClick: (title: String) -> Unit = {},
+    onNoticeClick: (noticeId: Long, title: String) -> Unit = { _, _ -> },
 ) {
     Column(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.uiBg)) {
         NoticeTopBar(onBackClick = onBackClick)
@@ -63,11 +51,11 @@ fun NoticeScreen(
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(modifier = Modifier.height(20.dp))
-                if (mockNotices.isEmpty()) {
+            if (notices.isEmpty()) {
                 NoticeEmptyCard()
             } else {
-                mockNotices.forEach { notice ->
-                    NoticeItemCard(notice = notice, onClick = { onNoticeClick(notice.title) })
+                notices.forEach { notice ->
+                    NoticeItemCard(notice = notice, onClick = { onNoticeClick(notice.id, notice.title) })
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -135,7 +123,9 @@ private fun NoticeEmptyCard() {
 }
 
 @Composable
-private fun NoticeItemCard(notice: NoticeItem, onClick: () -> Unit) {
+private fun NoticeItemCard(notice: NoticeSummary, onClick: () -> Unit) {
+    val displayDate = DateUtils.formatDate(notice.createdAt)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -149,28 +139,14 @@ private fun NoticeItemCard(notice: NoticeItem, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
+            Text(
+                text = notice.title,
+                style = BookiiBookiiTheme.typography.semibold16,
+                color = BookiiBookiiTheme.colors.grey900,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = notice.title,
-                    style = BookiiBookiiTheme.typography.semibold16,
-                    color = BookiiBookiiTheme.colors.grey900,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (!notice.isRead) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(BookiiBookiiTheme.colors.uiMain),
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
+            )
             Icon(
                 painter = painterResource(R.drawable.ic_chevron),
                 contentDescription = null,
@@ -181,13 +157,13 @@ private fun NoticeItemCard(notice: NoticeItem, onClick: () -> Unit) {
             )
         }
         Text(
-            text = notice.content,
+            text = notice.summary,
             style = BookiiBookiiTheme.typography.regular14,
             color = BookiiBookiiTheme.colors.grey700,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(notice.date, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
+        Text(displayDate, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
     }
 }
 

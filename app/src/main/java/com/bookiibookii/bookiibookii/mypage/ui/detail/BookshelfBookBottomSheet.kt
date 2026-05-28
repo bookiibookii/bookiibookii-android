@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,25 +24,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-// BottomSheet for a book selected from the bookshelf list.
-// isRepresentative = false → "대표 도서로 등록" (Main orange)
-// isRepresentative = true  → "대표 도서 등록 해제" (PointRed)
 @Composable
 fun BookshelfBookBottomSheet(
     title: String = "괴테는 모든 것을 말했다",
     author: String = "스즈키 유이",
     genre: String = "소설",
-    isRepresentative: Boolean = false,
+    memberBookId: Long = 0L,
+    representativeUserBookId: Long? = null,
     onDismiss: () -> Unit = {},
     onReviewClick: () -> Unit = {},
-    onToggleRepresentativeClick: () -> Unit = {},
+    onAddRepresentativeClick: (Long) -> Unit = {},
+    onRemoveRepresentativeClick: (Long) -> Unit = {},
     onLibraryClick: () -> Unit = {},
     onAladinClick: () -> Unit = {},
 ) {
+    val isRepresentative = representativeUserBookId != null
     val sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Dimming background
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -51,7 +49,6 @@ fun BookshelfBookBottomSheet(
                 .clickable { onDismiss() },
         )
 
-        // Bottom sheet card
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -66,16 +63,11 @@ fun BookshelfBookBottomSheet(
                 .padding(horizontal = 16.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // Part 1: drag handle + book header
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                // Drag handle
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Box(
                         modifier = Modifier
                             .width(44.dp)
@@ -84,7 +76,6 @@ fun BookshelfBookBottomSheet(
                     )
                 }
 
-                // Book info with bottom divider
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -106,7 +97,6 @@ fun BookshelfBookBottomSheet(
                 }
             }
 
-            // Part 2: menu items
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -118,8 +108,14 @@ fun BookshelfBookBottomSheet(
                 )
                 BottomSheetMenuItem(
                     label = if (isRepresentative) "대표 도서 등록 해제" else "대표 도서 등록",
-                    color = if (isRepresentative) BookiiBookiiTheme.colors.uiPointRed else BookiiBookiiTheme.colors.uiMain,
-                    onClick = onToggleRepresentativeClick,
+                    color = if (isRepresentative) BookiiBookiiTheme.colors.uiPointRed else BookiiBookiiTheme.colors.grey800,
+                    onClick = {
+                        if (isRepresentative) {
+                            onRemoveRepresentativeClick(representativeUserBookId!!)
+                        } else {
+                            onAddRepresentativeClick(memberBookId)
+                        }
+                    },
                 )
                 BottomSheetMenuItem(
                     label = "서재로 이동",
@@ -155,5 +151,11 @@ private fun BottomSheetMenuItem(
 @Preview(showBackground = true)
 @Composable
 private fun BookshelfBookBottomSheetNotRepresentativePreview() {
-    BookshelfBookBottomSheet(isRepresentative = false)
+    BookshelfBookBottomSheet(representativeUserBookId = null)
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookshelfBookBottomSheetRepresentativePreview() {
+    BookshelfBookBottomSheet(representativeUserBookId = 1L)
 }

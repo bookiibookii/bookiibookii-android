@@ -4,6 +4,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,63 +42,57 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.mypage.CompletedBook
+import com.bookiibookii.bookiibookii.data.model.mypage.FavoriteBook
+import com.bookiibookii.bookiibookii.data.model.mypage.RepresentativeBook
+import com.bookiibookii.bookiibookii.mypage.vm.SortOrder
+import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
+import com.bookiibookii.bookiibookii.onboarding.steps.ui.component.LifeBookSearchDialog
 
 enum class BookViewMode { GRID, LIST }
-enum class SortOrder { LATEST, OLDEST, RATING, TITLE }
-
-data class MockBookItem(
-    val title: String,
-    val author: String,
-    val genre: String,
-    val rating: Int,
-    val isRepresentative: Boolean = false,
-    val date: String? = null,
-    val isOrange: Boolean = true,
-)
-
-data class MockSpineBook(
-    val title: String,
-    val isOrange: Boolean = true,
-)
-
-val mockBookItems = listOf(
-    MockBookItem("프로젝트 헤일메리", "앤디 위어", "(소설)", 4, true, "2026.04.05."),
-    MockBookItem("고쳐 쓰는 마음", "김연수", "(소설)", 3, true, "2026.04.05.", false),
-    MockBookItem("채식주의자", "한강", "(소설)", 5, true, "2026.04.05."),
-    MockBookItem("괴테는 모든 것을 말했다", "괴테", "(소설)", 4, true, "2026.04.05."),
-    MockBookItem("인생을 위한 생각", "김스카이", "(에세이)", 4, true, "2026.04.05.", false),
-    MockBookItem("모국어는 차라리 침묵", "김연수", "(소설)", 4, true, "2026.04.05."),
-    MockBookItem("어린 개가 왔다", "김연수", "(소설)", 3, true, "2026.04.05.")
-)
-
-val mockSpineBooks = listOf(
-    MockSpineBook("없어질 행성에서 씁니다", true),
-    MockSpineBook("어린 개가 왔다", true),
-    MockSpineBook("고쳐 쓰는 마음", false),
-    MockSpineBook("모국어는 차라리 침묵", true),
-    MockSpineBook("괴테는 모든 것을 말했다", true),
-    MockSpineBook("인생을 위한 최소한의 생각", false),
-    MockSpineBook("어린 개가 왔다", false),
-)
 
 @Composable
 fun MyBookshelfScreen(
+    sortedCompletedBooks: List<CompletedBook> = emptyList(),
+    favoriteBooks: List<FavoriteBook> = emptyList(),
+    representativeBooks: List<RepresentativeBook> = emptyList(),
+    representativeTitles: Set<String> = emptySet(),
+    sortOrder: SortOrder = SortOrder.LATEST,
+    bookSearchState: BookSearchState? = null,
     onBack: () -> Unit = {},
+    onSortOrderChange: (SortOrder) -> Unit = {},
+    onSearchBooks: (String) -> Unit = {},
+    onClearBookSearch: () -> Unit = {},
+    onDeleteRepresentativeBook: (Long) -> Unit = {},
+    onReorderRepresentativeBook: (Long, Int) -> Unit = { _, _ -> },
+    onAddFavoriteBook: (String) -> Unit = {},
+    onDeleteFavoriteBook: (Long) -> Unit = {},
+    onReplaceFavoriteBook: (Long, String) -> Unit = { _, _ -> },
+    onAddRepresentativeBook: (Long) -> Unit = {},
+    onRemoveRepresentativeBook: (Long) -> Unit = {},
 ) {
     var viewMode by remember { mutableStateOf(BookViewMode.GRID) }
-    var sortOrder by remember { mutableStateOf(SortOrder.LATEST) }
     var showEditBottomSheet by remember { mutableStateOf(false) }
-    var showBookSearchDialog by remember { mutableStateOf(false) }
     var showBookBottomSheet by remember { mutableStateOf(false) }
-    var selectedBook by remember { mutableStateOf<MockBookItem?>(null) }
+    var selectedBook by remember { mutableStateOf<CompletedBook?>(null) }
 
-    val representativeBooks = remember { mutableStateListOf(*mockBookItems.toTypedArray()) }
+    val editableRepresentativeBooks = remember { mutableStateListOf<RepresentativeBook>() }
+
+    LaunchedEffect(representativeBooks) {
+        if (!showEditBottomSheet) {
+            editableRepresentativeBooks.clear()
+            editableRepresentativeBooks.addAll(representativeBooks)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -118,39 +114,44 @@ fun MyBookshelfScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            RepresentativeBookSection(onEditClick = { showEditBottomSheet = true })
+            RepresentativeBookSection(
+                books = representativeBooks,
+                onEditClick = { showEditBottomSheet = true },
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             LifeBookSection(
-                onAddLifeBookClick = { showBookSearchDialog = true },
-                onEditClick = { showBookSearchDialog = true },
+                lifeBooks = favoriteBooks,
+                bookSearchState = bookSearchState,
+                onSearchBooks = onSearchBooks,
+                onClearSearch = onClearBookSearch,
+                onAddFavoriteBook = onAddFavoriteBook,
+                onDeleteFavoriteBook = onDeleteFavoriteBook,
+                onReplaceFavoriteBook = onReplaceFavoriteBook,
             )
 
             FilterBar(
                 viewMode = viewMode,
                 sortOrder = sortOrder,
+                totalCount = sortedCompletedBooks.size,
                 onViewModeToggle = {
                     viewMode = if (viewMode == BookViewMode.GRID) BookViewMode.LIST else BookViewMode.GRID
                 },
-                onSortOrderChange = { sortOrder = it },
+                onSortOrderChange = onSortOrderChange,
             )
 
             if (viewMode == BookViewMode.GRID) {
                 BookGridView(
-                    books = mockBookItems,
-                    onBookClick = { book ->
-                        selectedBook = book
-                        showBookBottomSheet = true
-                    },
+                    books = sortedCompletedBooks,
+                    representativeTitles = representativeTitles,
+                    onBookClick = { book -> selectedBook = book; showBookBottomSheet = true },
                 )
             } else {
                 BookListView(
-                    books = mockBookItems,
-                    onBookClick = { book ->
-                        selectedBook = book
-                        showBookBottomSheet = true
-                    },
+                    books = sortedCompletedBooks,
+                    representativeTitles = representativeTitles,
+                    onBookClick = { book -> selectedBook = book; showBookBottomSheet = true },
                 )
             }
 
@@ -161,33 +162,46 @@ fun MyBookshelfScreen(
 
     if (showEditBottomSheet) {
         RepresentativeEditBottomSheet(
-            bookList = representativeBooks,
-            onDismiss = { showEditBottomSheet = false },
-            onRemove = { bookToRemove ->
-                representativeBooks.remove(bookToRemove)
+            bookList = editableRepresentativeBooks,
+            onDismiss = {
+                showEditBottomSheet = false
+                editableRepresentativeBooks.clear()
+                editableRepresentativeBooks.addAll(representativeBooks)
+            },
+            onRemove = { book ->
+                editableRepresentativeBooks.remove(book)
+                onDeleteRepresentativeBook(book.userBookId)
             },
             onMove = { fromIndex, toIndex ->
-                val temp = representativeBooks[fromIndex]
-                representativeBooks[fromIndex] = representativeBooks[toIndex]
-                representativeBooks[toIndex] = temp
-            }
+                val temp = editableRepresentativeBooks[fromIndex]
+                editableRepresentativeBooks[fromIndex] = editableRepresentativeBooks[toIndex]
+                editableRepresentativeBooks[toIndex] = temp
+            },
+            onReorder = { userBookId, newOrder ->
+                onReorderRepresentativeBook(userBookId, newOrder)
+            },
         )
-    }
-
-    if (showBookSearchDialog) {
-        BookSearchBottomSheet(onDismiss = { showBookSearchDialog = false })
     }
 
     if (showBookBottomSheet && selectedBook != null) {
         val book = selectedBook!!
+        val repBook = representativeBooks.find { it.title == book.title }
         BookshelfBookBottomSheet(
             title = book.title,
-            author = book.author,
-            genre = book.genre.trim('(', ')'),
-            isRepresentative = book.isRepresentative,
+            author = book.author ?: "",
+            genre = book.category?.trim('(', ')') ?: "",
+            memberBookId = book.memberBookId,
+            representativeUserBookId = repBook?.userBookId,
             onDismiss = { showBookBottomSheet = false },
             onReviewClick = { showBookBottomSheet = false },
-            onToggleRepresentativeClick = { showBookBottomSheet = false },
+            onAddRepresentativeClick = { memberBookId ->
+                showBookBottomSheet = false
+                onAddRepresentativeBook(memberBookId)
+            },
+            onRemoveRepresentativeClick = { userBookId ->
+                showBookBottomSheet = false
+                onRemoveRepresentativeBook(userBookId)
+            },
             onLibraryClick = { showBookBottomSheet = false },
             onAladinClick = { showBookBottomSheet = false },
         )
@@ -205,10 +219,7 @@ private fun BookshelfTopBar(onBack: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.size(40.dp),
-            ) {
+            IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
                 Icon(
                     painter = painterResource(R.drawable.ic_back),
                     contentDescription = "뒤로 가기",
@@ -216,14 +227,12 @@ private fun BookshelfTopBar(onBack: () -> Unit) {
                     modifier = Modifier.size(32.dp),
                 )
             }
-
             Text(
                 text = "나의 책장",
                 style = BookiiBookiiTheme.typography.medium20,
                 color = BookiiBookiiTheme.colors.grey900,
                 textAlign = TextAlign.Center,
             )
-
             IconButton(onClick = { }, modifier = Modifier.size(40.dp)) {
                 Icon(
                     painter = painterResource(R.drawable.ic_search),
@@ -238,7 +247,10 @@ private fun BookshelfTopBar(onBack: () -> Unit) {
 }
 
 @Composable
-private fun RepresentativeBookSection(onEditClick: () -> Unit) {
+private fun RepresentativeBookSection(
+    books: List<RepresentativeBook>,
+    onEditClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -261,7 +273,7 @@ private fun RepresentativeBookSection(onEditClick: () -> Unit) {
                 color = BookiiBookiiTheme.colors.white,
             ) {
                 Text(
-                    text = "7/7권",
+                    text = "${books.size}/7권",
                     style = BookiiBookiiTheme.typography.regular11,
                     color = BookiiBookiiTheme.colors.grey700,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -271,7 +283,7 @@ private fun RepresentativeBookSection(onEditClick: () -> Unit) {
             Surface(
                 shape = RoundedCornerShape(50.dp),
                 color = BookiiBookiiTheme.colors.grey200,
-                modifier = Modifier.clickable { onEditClick() }
+                modifier = Modifier.clickable { onEditClick() },
             ) {
                 Text(
                     text = "수정",
@@ -282,20 +294,25 @@ private fun RepresentativeBookSection(onEditClick: () -> Unit) {
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            mockSpineBooks.forEach { book ->
-                BookSpineItemLocal(title = book.title, isOrange = book.isOrange)
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val gap = 8.dp
+            val itemWidth = (maxWidth - gap * 6) / 7
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(gap),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                books.forEach { book ->
+                    BookSpineItemLocal(title = book.title, isOrange = !book.isFavorite, width = itemWidth)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun BookSpineItemLocal(title: String, isOrange: Boolean) {
+private fun BookSpineItemLocal(title: String, isOrange: Boolean, width: Dp) {
     val bgColor = if (isOrange) BookiiBookiiTheme.colors.uiMain150 else BookiiBookiiTheme.colors.uiMainSubPale
     val textColor = if (isOrange) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.uiMainSub
     val archHeight = 15.dp
@@ -304,7 +321,7 @@ private fun BookSpineItemLocal(title: String, isOrange: Boolean) {
         Box(
             modifier = Modifier
                 .padding(top = archHeight / 2)
-                .width(42.dp)
+                .width(width)
                 .background(color = bgColor, shape = RoundedCornerShape(bottomStart = 5.dp, bottomEnd = 5.dp))
                 .padding(top = 24.dp, bottom = 16.dp),
             contentAlignment = Alignment.Center,
@@ -317,7 +334,7 @@ private fun BookSpineItemLocal(title: String, isOrange: Boolean) {
                 modifier = Modifier.verticalRotation(),
             )
         }
-        Canvas(modifier = Modifier.width(42.dp).height(archHeight)) {
+        Canvas(modifier = Modifier.width(width).height(archHeight)) {
             val path = Path().apply {
                 arcTo(
                     rect = Rect(0f, 0f, size.width, size.height),
@@ -336,9 +353,17 @@ private fun BookSpineItemLocal(title: String, isOrange: Boolean) {
 
 @Composable
 private fun LifeBookSection(
-    onAddLifeBookClick: () -> Unit = {},
-    onEditClick: () -> Unit = {},
+    lifeBooks: List<FavoriteBook>,
+    bookSearchState: BookSearchState?,
+    onSearchBooks: (String) -> Unit,
+    onClearSearch: () -> Unit,
+    onAddFavoriteBook: (String) -> Unit,
+    onDeleteFavoriteBook: (Long) -> Unit,
+    onReplaceFavoriteBook: (Long, String) -> Unit,
 ) {
+    var showSearchDialog by remember { mutableStateOf(false) }
+    var editingBook by remember { mutableStateOf<FavoriteBook?>(null) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -361,7 +386,7 @@ private fun LifeBookSection(
                 color = BookiiBookiiTheme.colors.white,
             ) {
                 Text(
-                    text = "1/3권",
+                    text = "${lifeBooks.size}/3권",
                     style = BookiiBookiiTheme.typography.regular11,
                     color = BookiiBookiiTheme.colors.grey700,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -374,107 +399,135 @@ private fun LifeBookSection(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            // 등록된 책
-            Column(modifier = Modifier.weight(1f)) {
-                Box(modifier = Modifier.fillMaxWidth().aspectRatio(119f / 170f)) {
-                    Box(
+            for (slotIndex in 0..2) {
+                val book = lifeBooks.getOrNull(slotIndex)
+                if (book != null) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Box(modifier = Modifier.fillMaxWidth().aspectRatio(119f / 170f)) {
+                            if (book.image != null) {
+                                AsyncImage(
+                                    model = book.image,
+                                    contentDescription = book.title,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clip(RoundedCornerShape(10.dp)),
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(BookiiBookiiTheme.colors.grey200),
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(6.dp)
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.9f))
+                                    .clickable {
+                                        if (lifeBooks.size == 1) {
+                                            editingBook = book
+                                            showSearchDialog = true
+                                        } else {
+                                            onDeleteFavoriteBook(book.userBookId)
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        if (lifeBooks.size == 1) R.drawable.ic_edit else R.drawable.ic_x
+                                    ),
+                                    contentDescription = if (lifeBooks.size == 1) "수정" else "삭제",
+                                    tint = BookiiBookiiTheme.colors.grey700,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .padding(top = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Text(
+                                text = book.title,
+                                style = BookiiBookiiTheme.typography.semibold14,
+                                color = BookiiBookiiTheme.colors.grey900,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = book.author ?: "",
+                                style = BookiiBookiiTheme.typography.regular14,
+                                color = BookiiBookiiTheme.colors.grey700,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                } else {
+                    Column(
                         modifier = Modifier
-                            .matchParentSize()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(BookiiBookiiTheme.colors.grey200),
-                    )
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(6.dp)
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.9f))
-                            .clickable { onEditClick() },
-                        contentAlignment = Alignment.Center,
+                            .weight(1f)
+                            .clickable { editingBook = null; showSearchDialog = true },
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_edit),
-                            contentDescription = "수정",
-                            tint = BookiiBookiiTheme.colors.grey700,
-                            modifier = Modifier.size(16.dp),
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(119f / 170f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(BookiiBookiiTheme.colors.grey100),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(BookiiBookiiTheme.colors.grey200),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_plus),
+                                    contentDescription = "추가",
+                                    tint = BookiiBookiiTheme.colors.white,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(52.dp))
                     }
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .padding(top = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    Text(text = "프로젝트 헤일메리", style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(text = "앤디 위어", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey700, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
-            // 빈 슬롯 1
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onAddLifeBookClick() },
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(119f / 170f)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(BookiiBookiiTheme.colors.grey100),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(BookiiBookiiTheme.colors.grey200),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_plus),
-                            contentDescription = "추가",
-                            tint = BookiiBookiiTheme.colors.white,
-                            modifier = Modifier.size(24.dp),
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(52.dp))
-            }
-            // 빈 슬롯 2
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onAddLifeBookClick() },
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(119f / 170f)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(BookiiBookiiTheme.colors.grey100),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(BookiiBookiiTheme.colors.grey300),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_plus),
-                            contentDescription = "추가",
-                            tint = BookiiBookiiTheme.colors.white,
-                            modifier = Modifier.size(24.dp),
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(52.dp))
             }
         }
+    }
+
+    if (showSearchDialog) {
+        LifeBookSearchDialog(
+            bookSearchState = bookSearchState,
+            onQueryChange = onSearchBooks,
+            onBookSelected = { selectedBook ->
+                val editing = editingBook
+                if (editing != null) {
+                    onReplaceFavoriteBook(editing.userBookId, selectedBook.isbn13)
+                } else {
+                    onAddFavoriteBook(selectedBook.isbn13)
+                }
+                showSearchDialog = false
+                editingBook = null
+                onClearSearch()
+            },
+            onDismiss = {
+                showSearchDialog = false
+                editingBook = null
+                onClearSearch()
+            },
+        )
     }
 }
 
@@ -482,6 +535,7 @@ private fun LifeBookSection(
 private fun FilterBar(
     viewMode: BookViewMode,
     sortOrder: SortOrder,
+    totalCount: Int,
     onViewModeToggle: () -> Unit,
     onSortOrderChange: (SortOrder) -> Unit,
 ) {
@@ -493,12 +547,22 @@ private fun FilterBar(
     ) {
         IconButton(onClick = onViewModeToggle, modifier = Modifier.size(24.dp)) {
             val iconRes = if (viewMode == BookViewMode.GRID) R.drawable.ic_album else R.drawable.ic_line
-            Icon(painter = painterResource(iconRes), contentDescription = "뷰 모드 전환", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(24.dp))
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = "뷰 모드 전환",
+                tint = BookiiBookiiTheme.colors.grey900,
+                modifier = Modifier.size(24.dp),
+            )
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "9권", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
+        Text(text = "${totalCount}권", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
         Spacer(modifier = Modifier.weight(1f))
-        val sortOptions = listOf(SortOrder.LATEST to "최신순", SortOrder.OLDEST to "과거순", SortOrder.RATING to "별점순", SortOrder.TITLE to "제목순")
+        val sortOptions = listOf(
+            SortOrder.LATEST to "최신순",
+            SortOrder.OLDEST to "과거순",
+            SortOrder.RATING to "별점순",
+            SortOrder.TITLE to "제목순",
+        )
         sortOptions.forEachIndexed { index, (order, label) ->
             if (index > 0) {
                 Text(text = " | ", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
@@ -515,7 +579,11 @@ private fun FilterBar(
 }
 
 @Composable
-private fun BookGridView(books: List<MockBookItem>, onBookClick: (MockBookItem) -> Unit = {}) {
+private fun BookGridView(
+    books: List<CompletedBook>,
+    representativeTitles: Set<String>,
+    onBookClick: (CompletedBook) -> Unit = {},
+) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -526,7 +594,12 @@ private fun BookGridView(books: List<MockBookItem>, onBookClick: (MockBookItem) 
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 rowItems.forEach { book ->
-                    BookGridItem(book = book, modifier = Modifier.weight(1f), onClick = { onBookClick(book) })
+                    BookGridItem(
+                        book = book,
+                        isRepresentative = book.title in representativeTitles,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onBookClick(book) },
+                    )
                 }
                 repeat(3 - rowItems.size) { Spacer(modifier = Modifier.weight(1f)) }
             }
@@ -535,11 +608,25 @@ private fun BookGridView(books: List<MockBookItem>, onBookClick: (MockBookItem) 
 }
 
 @Composable
-private fun BookGridItem(book: MockBookItem, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+private fun BookGridItem(
+    book: CompletedBook,
+    isRepresentative: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
+) {
     Column(modifier = modifier.clickable { onClick() }) {
         Box(modifier = Modifier.fillMaxWidth().aspectRatio(119f / 170f)) {
-            Box(modifier = Modifier.matchParentSize().clip(RoundedCornerShape(10.dp)).background(BookiiBookiiTheme.colors.grey200))
-            if (book.isRepresentative) {
+            if (book.image != null) {
+                AsyncImage(
+                    model = book.image,
+                    contentDescription = book.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize().clip(RoundedCornerShape(10.dp)),
+                )
+            } else {
+                Box(modifier = Modifier.matchParentSize().clip(RoundedCornerShape(10.dp)).background(BookiiBookiiTheme.colors.grey200))
+            }
+            if (isRepresentative) {
                 Box(
                     modifier = Modifier
                         .padding(6.dp)
@@ -553,28 +640,48 @@ private fun BookGridItem(book: MockBookItem, modifier: Modifier = Modifier, onCl
             }
         }
         Spacer(modifier = Modifier.height(6.dp))
-        if (book.date != null) {
-            Text(text = book.date, style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey700)
+        if (book.completedAt != null) {
+            Text(text = book.completedAt, style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey700)
         }
         Text(text = book.title, style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(text = "${book.author} ${book.genre}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey700, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            text = listOfNotNull(book.author, book.category).joinToString(" "),
+            style = BookiiBookiiTheme.typography.regular14,
+            color = BookiiBookiiTheme.colors.grey700,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
         Spacer(modifier = Modifier.height(4.dp))
-        StarRatingBookshelf(rating = book.rating)
+        StarRatingRow(rating = book.rating)
     }
 }
 
 @Composable
-private fun BookListView(books: List<MockBookItem>, onBookClick: (MockBookItem) -> Unit = {}) {
+private fun BookListView(
+    books: List<CompletedBook>,
+    representativeTitles: Set<String>,
+    onBookClick: (CompletedBook) -> Unit = {},
+) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        books.forEach { book -> BookListItem(book = book, onClick = { onBookClick(book) }) }
+        books.forEach { book ->
+            BookListItem(
+                book = book,
+                isRepresentative = book.title in representativeTitles,
+                onClick = { onBookClick(book) },
+            )
+        }
     }
 }
 
 @Composable
-private fun BookListItem(book: MockBookItem, onClick: () -> Unit = {}) {
+private fun BookListItem(
+    book: CompletedBook,
+    isRepresentative: Boolean,
+    onClick: () -> Unit = {},
+) {
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = BookiiBookiiTheme.colors.white,
@@ -582,9 +689,13 @@ private fun BookListItem(book: MockBookItem, onClick: () -> Unit = {}) {
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                    if (book.isRepresentative) {
+                    if (isRepresentative) {
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
@@ -595,15 +706,29 @@ private fun BookListItem(book: MockBookItem, onClick: () -> Unit = {}) {
                         }
                         Spacer(modifier = Modifier.width(6.dp))
                     }
-                    Text(text = book.title, style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        text = book.title,
+                        style = BookiiBookiiTheme.typography.semibold14,
+                        color = BookiiBookiiTheme.colors.grey900,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
-                StarRatingBookshelf(rating = book.rating)
+                StarRatingRow(rating = book.rating)
             }
             Spacer(modifier = Modifier.height(6.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "${book.author} ${book.genre}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey700)
-                if (book.date != null) {
-                    Text(text = book.date, style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey500)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = listOfNotNull(book.author, book.category).joinToString(" "),
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey700,
+                )
+                if (book.completedAt != null) {
+                    Text(text = book.completedAt, style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey500)
                 }
             }
         }
@@ -611,11 +736,45 @@ private fun BookListItem(book: MockBookItem, onClick: () -> Unit = {}) {
 }
 
 @Composable
-private fun StarRatingBookshelf(rating: Int) {
+private fun StarRatingRow(rating: Double) {
     Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
         for (i in 1..5) {
-            Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = if (i <= rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(16.dp))
+            val starValue = (rating - (i - 1)).coerceIn(0.0, 1.0)
+            StarIcon(starValue = starValue)
         }
+    }
+}
+
+@Composable
+private fun StarIcon(starValue: Double) {
+    val colors = BookiiBookiiTheme.colors
+    when {
+        starValue >= 0.75 -> Icon(
+            painter = painterResource(R.drawable.ic_star_fill),
+            contentDescription = null,
+            tint = colors.uiMainSub,
+            modifier = Modifier.size(16.dp),
+        )
+        starValue >= 0.25 -> Box(modifier = Modifier.size(16.dp)) {
+            Icon(
+                painter = painterResource(R.drawable.ic_star_fill),
+                contentDescription = null,
+                tint = colors.uiMainSub150,
+                modifier = Modifier.size(16.dp),
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_star),
+                contentDescription = null,
+                tint = colors.uiMainSub,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+        else -> Icon(
+            painter = painterResource(R.drawable.ic_star),
+            contentDescription = null,
+            tint = colors.grey200,
+            modifier = Modifier.size(16.dp),
+        )
     }
 }
 

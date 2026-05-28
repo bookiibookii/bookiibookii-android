@@ -1,9 +1,5 @@
 package com.bookiibookii.bookiibookii.mypage.ui.main
 
-import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
-
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,8 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.mypage.ui.common.DaumAddressWebView
+import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
 fun AddressSearchScreen(onBackClick: () -> Unit) {
@@ -35,7 +32,6 @@ fun AddressSearchScreen(onBackClick: () -> Unit) {
             .background(BookiiBookiiTheme.colors.white)
             .navigationBarsPadding()
     ) {
-        // Top Bar
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
@@ -59,21 +55,15 @@ fun AddressSearchScreen(onBackClick: () -> Unit) {
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
                 )
-                Spacer(modifier = Modifier.size(40.dp)) // 중앙 정렬용
+                Spacer(modifier = Modifier.size(40.dp))
             }
             HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
         }
 
-        // WebView
-        AndroidView(
+        DaumAddressWebView(
+            onResult = { _, _ -> },
+            onBack = onBackClick,
             modifier = Modifier.weight(1f),
-            factory = { context ->
-                WebView(context).apply {
-                    webViewClient = WebViewClient()
-                    settings.javaScriptEnabled = true
-                    // loadUrl("https://원하는_우편번호_검색_URL")
-                }
-            }
         )
     }
 }

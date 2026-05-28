@@ -1,91 +1,90 @@
 package com.bookiibookii.bookiibookii.data.model.mypage
 
-import com.google.gson.annotations.SerializedName
-
-// 전체 응답
-data class MypageResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: MypageResult
+// GET /api/mypage, GET /api/profiles/{nickname}
+data class UserProfileResDTO(
+    val userId: Long,
+    val profileImageUrl: String?,
+    val nickname: String,
+    val introduction: String?,
+    val userBooks: List<UserBookDto>?,
+    val bookReviewCount: Int,
+    val recentBookReviews: List<BookReviewSummaryDto>?,
+    val boomUpCount: Int,
+    val recentReceivedReviews: List<ReceivedMemberReviewDto>?,
 )
 
-// 메인 데이터
+data class UserBookDto(
+    val title: String,
+    val auth: String,
+    val image: String?,
+)
+
+data class BookReviewSummaryDto(
+    val bookTitle: String,
+    val bookAuthor: String,
+    val tradeType: String,
+    val rating: Double,
+    val comment: String?,
+    val reviewDate: String?,
+)
+
+data class ReceivedMemberReviewDto(
+    val reviewerNickname: String,
+    val reviewerProfileUrl: String?,
+    val reaction: String,
+    val comment: String?,
+    val createdAt: String?,
+)
+
+// PATCH /api/mypage
+data class MypageReqDTO(
+    val nickname: String,
+    val gender: String? = null,
+    val birth: String? = null,
+    val s3Key: String? = null,
+)
+
+// PATCH /api/mypage/introduction
+data class UpdateIntroductionReqDTO(
+    val introduction: String?,
+)
+
+// POST /api/users/me/withdrawal
+data class WithdrawalReqDTO(
+    val reason: String,
+    val customReason: String? = null,
+)
+
+// 하위 호환 유지용 (LoginActivity, user/Profile.kt에서 참조 중 — 해당 파일 담당팀 업데이트 전까지 유지)
 data class MypageResult(
     val userId: Int,
-    val profileImageUrl: String, // 프로필 이미지 등
+    val profileImageUrl: String?,
     val nickname: String,
     val manner: Double,
-    val topTags: List<String>,     // 획득한 후기
-    val completeBook: Int,         // 완독 수
+    val topTags: List<String>?,
+    val completeBook: Int,
     val relayGroup: Int,
     val togetherGroup: Int,
     val userBadges: List<UserBadge>?,
-    val groups: List<MypageGroup>?, // 주최한 그룹 (null 가능성 대비)
-    val books: List<MypageBook>?,   // 최근 읽은 책 (null 가능성 대비)
-
-    // ▼▼▼ [새로 추가된 필드: DTO 최상단으로 이동함] ▼▼▼
-    val receiverName: String?,  // 수령인 이름
-    val phone: String?,         // 전화번호
-    val zipCode: String?,       // 우편번호
-    val address: String?,       // 주소
-    val addressDetail: String?, // 상세주소
-    val region: String?,        // 활동 지역 (시/도 시/군/구)
-    val meetPlace: String?      // 교환 희망 장소
+    val groups: List<MypageGroup>?,
+    val books: List<MypageBook>?,
 )
 
-
-data class MypageUserDetail(
-    val id: Int,
-    @SerializedName("nickName") val nickName: String?, // 내부 닉네임 (JSON 키: nickName)
-    val meetPlace: String?, // 직접 교환 장소
-    val region: String?     // 희망 지역
-    // 현재 JSON에 phone, address, zipCode 등이 없음 -> 매핑 제외 (코드에서 null 처리)
-)
-
-// 그룹 정보
 data class MypageGroup(
     val groupId: Int,
     val bookTitle: String,
     val auth: String,
     val GENRE: String,
     val group_status: String,
-    val groupTags: List<String>
+    val groupTags: List<String>,
 )
 
-// 책 정보
 data class MypageBook(
     val bookTitle: String,
-    val rating: Double
+    val rating: Double,
 )
 
-//
 data class UserBadge(
-    val userBadge : String,
-    val count : Int
-)
-
-data class Review(
-    val content: String,
-    val count: Int
-)
-
-// 프로필 수정 요청
-data class UserUpdateRequest(
-    val nickname: String,
-    val receiverName: String,
-    val phone: String,
-    val zipCode: String,
-    val address: String,
-    val addressDetail: String,
-    val meetPlace: String,
-    val region: String,
-    val s3Key : String,
-)
-
-data class UserUpdateResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: String?
+    val userBadge: String,
+    val count: Int,
 )

@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.mypage.ui.setting
 
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.bookiibookii.bookiibookii.common.DateUtils
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -30,9 +31,12 @@ import com.bookiibookii.bookiibookii.R
 
 @Composable
 fun NoticeDetailScreen(
-    title: String = "12월 업데이트 안내",
+    title: String = "",
+    content: String = "",
+    createdAt: String = "",
     onBackClick: () -> Unit = {},
 ) {
+    val displayDate = DateUtils.formatDate(createdAt)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,13 +80,13 @@ fun NoticeDetailScreen(
                     .padding(top = 20.dp, start = 20.dp, end = 32.dp, bottom = 20.dp)
             ) {
                 Text(
-                    text = "2024. 12. 01. 16:00",
+                    text = displayDate,
                     style = BookiiBookiiTheme.typography.regular14,
                     color = BookiiBookiiTheme.colors.grey500
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "안녕하세요. 부키부키 팀입니다.\n\n새로운 기능들이 추가된 12월 업데이트를 안내해 드립니다. 보다 나은 서비스 이용을 위해 최선을 다하겠습니다.",
+                    text = content,
                     style = BookiiBookiiTheme.typography.regular14,
                     color = BookiiBookiiTheme.colors.grey700
                 )

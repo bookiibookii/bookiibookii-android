@@ -4,6 +4,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,58 +47,25 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.data.model.mypage.BookReviewSummaryDto
+import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedMemberReviewDto
+import com.bookiibookii.bookiibookii.data.model.mypage.UserBookDto
+import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.ui.component.ExchangeTypeChip
 import com.bookiibookii.bookiibookii.ui.component.ReviewTypeChip
 import com.bookiibookii.bookiibookii.mypage.ui.detail.verticalRotation
-// ── Mock data ─────────────────────────────────────────────────────────────────
-data class MockBook(val title: String, val isOrange: Boolean)
-
-data class MockWrittenReview(
-    val title: String,
-    val author: String,
-    val rating: Int,
-    val isTogether: Boolean,
-    val comment: String,
-    val date: String,
-)
-
-data class MockReceivedReview(
-    val nickname: String,
-    val isGood: Boolean,
-    val comment: String,
-    val date: String,
-)
-
-private val mockBooks = listOf(
-    MockBook("없어질 행성에서 씁니다", true),
-    MockBook("어린 개가 왔다", true),
-    MockBook("고쳐 쓰는 마음", false),
-    MockBook("모국어는 차라리 침묵", true),
-    MockBook("괴테는 모든 것을 말했다", true),
-    MockBook("인생을 위한 최소한의 생각", false),
-    MockBook("어린 개가 왔다", false),
-)
-
-private val mockWrittenReviews = listOf(
-    MockWrittenReview("채식주의자", "한강", 5, true,
-        "폭력과 욕망, 인간의 원초적 본성에 대한 날카로운 탐구. 영혜의 침묵은 어느 웅변보다 강렬하게 독자를 압도한다.", "2026. 04. 05."),
-    MockWrittenReview("프로젝트 헤일메리", "앤디 위어", 4, false,
-        "영화 볼 땐 그레이스랑 스트라트랑 가능?이라고 생각했는데 책 읽으니까 #죄송합니다 이렇게 됨... 거의 700페이지인데 이틀 만에 다 읽어버림", "2026. 04. 05."),
-)
-
-private val mockReceivedReviews = listOf(
-    MockReceivedReview("sayo", true, "글씨짱예쁘심..", "2026. 04. 05."),
-    MockReceivedReview("무스쨩", true, "덕분에 재밌게 완독했어요~ 감사합니다 다음에도 또 교환하고 싶어요", "2026. 04. 05."),
-    MockReceivedReview("Hailey", false, "책이 파손되어 있었어요", "2026. 04. 05."),
-)
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 @Composable
 fun MypageScreen(
+    profile: UserProfileResDTO? = null,
+    onSaveIntroduction: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
     onSettingClick: () -> Unit = {},
     onBookshelfClick: () -> Unit = {},
@@ -105,15 +73,14 @@ fun MypageScreen(
     onReceivedReviewClick: () -> Unit = {},
     onProfileSettingClick: () -> Unit = {},
     onAddressManagementClick: () -> Unit = {},
+    onInstagramShareClick: () -> Unit = {},
 ) {
     var isMottoEditing by remember { mutableStateOf(false) }
-    var mottoText by remember { mutableStateOf("역시나 누군가를 사랑하고 사랑해야 할 당신을 위해") }
-    var mottoInput by remember { mutableStateOf(mottoText) }
+    var mottoInput by remember(profile?.introduction) { mutableStateOf(profile?.introduction ?: "") }
     var showShareDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.uiBg)) {
-            // TopBar fixed — status bar inset handled here so it doesn't scroll away
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -122,13 +89,11 @@ fun MypageScreen(
                 MypTopBar(onBackClick = onBackClick, onSettingClick = onSettingClick)
             }
 
-            // Scrollable content below TopBar
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState()),
             ) {
-                // White card: profile + motto + books
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -137,38 +102,61 @@ fun MypageScreen(
                     verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
                     ProfileSection(
+                        nickname = profile?.nickname ?: "",
+                        profileImageUrl = profile?.profileImageUrl,
                         onProfileSettingClick = onProfileSettingClick,
                         onAddressManagementClick = onAddressManagementClick,
                         onProfileShareClick = { showShareDialog = true },
                     )
 
                     MottoSection(
-                        motto = mottoText,
+                        motto = profile?.introduction ?: "",
                         isEditing = isMottoEditing,
                         editText = mottoInput,
                         onEditTextChange = { mottoInput = it },
-                        onEditClick = { mottoInput = mottoText; isMottoEditing = true },
+                        onEditClick = { mottoInput = profile?.introduction ?: ""; isMottoEditing = true },
                         onCancelClick = { isMottoEditing = false },
-                        onSaveClick = { mottoText = mottoInput; isMottoEditing = false },
+                        onSaveClick = {
+                            onSaveIntroduction(mottoInput)
+                            isMottoEditing = false
+                        },
                     )
 
-                    RepresentativeBooksSection(books = mockBooks, onArrowClick = onBookshelfClick)
+                    RepresentativeBooksSection(
+                        books = profile?.userBooks ?: emptyList(),
+                        onArrowClick = onBookshelfClick,
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                WrittenReviewsSection(reviews = mockWrittenReviews, onArrowClick = onWrittenReviewClick)
+                WrittenReviewsSection(
+                    reviewCount = profile?.bookReviewCount ?: 0,
+                    reviews = profile?.recentBookReviews,
+                    onArrowClick = onWrittenReviewClick,
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                ReceivedReviewsSection(reviews = mockReceivedReviews, onArrowClick = onReceivedReviewClick)
+                ReceivedReviewsSection(
+                    boomUpCount = profile?.boomUpCount ?: 0,
+                    nickname = profile?.nickname ?: "",
+                    reviews = profile?.recentReceivedReviews,
+                    onArrowClick = onReceivedReviewClick,
+                )
 
-                // Bottom padding accounting for system navigation bar
                 Spacer(modifier = Modifier.height(24.dp))
                 Spacer(modifier = Modifier.navigationBarsPadding())
             }
         }
 
         if (showShareDialog) {
-            ProfileShareDialog(onDismiss = { showShareDialog = false })
+            ProfileShareDialog(
+                name = profile?.nickname ?: "",
+                motto = profile?.introduction ?: "",
+                imageUrl = profile?.profileImageUrl,
+                representativeBooks = profile?.userBooks ?: emptyList(),
+                onDismiss = { showShareDialog = false },
+                onInstagramClick = { showShareDialog = false; onInstagramShareClick() },
+            )
         }
     }
 }
@@ -214,6 +202,8 @@ private fun MypTopBar(onBackClick: () -> Unit, onSettingClick: () -> Unit) {
 // ── Profile section ───────────────────────────────────────────────────────────
 @Composable
 private fun ProfileSection(
+    nickname: String,
+    profileImageUrl: String? = null,
     onProfileSettingClick: () -> Unit = {},
     onAddressManagementClick: () -> Unit = {},
     onProfileShareClick: () -> Unit = {},
@@ -229,9 +219,9 @@ private fun ProfileSection(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            ProfilePlaceholder(modifier = Modifier.size(52.dp))
+            ProfilePlaceholder(modifier = Modifier.size(52.dp), imageUrl = profileImageUrl)
             Text(
-                text = "김스카이",
+                text = nickname,
                 style = BookiiBookiiTheme.typography.semibold20,
                 color = BookiiBookiiTheme.colors.grey900,
             )
@@ -417,18 +407,25 @@ private fun MottoSection(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                // ic_comma 아이콘 사용 (피그마: Icon/quote, 28dp)
                 Icon(
                     painter = painterResource(R.drawable.ic_quote),
                     contentDescription = null,
-                    tint = BookiiBookiiTheme.colors.uiMain,
+                    tint = if (motto.isBlank()) BookiiBookiiTheme.colors.grey300 else BookiiBookiiTheme.colors.uiMain,
                     modifier = Modifier.size(28.dp),
                 )
-                Text(
-                    text = motto,
-                    style = BookiiBookiiTheme.typography.medium15,
-                    color = BookiiBookiiTheme.colors.grey700,
-                )
+                if (motto.isBlank()) {
+                    Text(
+                        text = "나를 대표하는 문구가 없어요",
+                        style = BookiiBookiiTheme.typography.regular15,
+                        color = BookiiBookiiTheme.colors.grey400,
+                    )
+                } else {
+                    Text(
+                        text = motto,
+                        style = BookiiBookiiTheme.typography.medium15,
+                        color = BookiiBookiiTheme.colors.grey700,
+                    )
+                }
             }
         }
     }
@@ -436,7 +433,7 @@ private fun MottoSection(
 
 // ── Representative books ──────────────────────────────────────────────────────
 @Composable
-private fun RepresentativeBooksSection(books: List<MockBook>, onArrowClick: () -> Unit = {}) {
+private fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -464,7 +461,7 @@ private fun RepresentativeBooksSection(books: List<MockBook>, onArrowClick: () -
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(
-                        text = "${books.size}/${books.size}권",
+                        text = "${books.size}/7권",
                         style = BookiiBookiiTheme.typography.medium11,
                         color = BookiiBookiiTheme.colors.grey900,
                     )
@@ -481,20 +478,26 @@ private fun RepresentativeBooksSection(books: List<MockBook>, onArrowClick: () -
             )
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            // ✅ 추가: 책 높이가 제각각이어도 모두 바닥으로 정렬되게 맞춤
-            verticalAlignment = Alignment.Bottom
+        // 7권 기준 너비 a = (전체너비 - gap*6) / 7, 권수에 상관없이 각 아이템은 너비 a 고정
+        // 높이는 가장 긴 제목 기준으로 결정되며, 짧은 책은 영역 바닥에 정렬
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         ) {
-            books.forEach { book ->
-                BookSpineItem(
-                    title = book.title,
-                    isOrange = book.isOrange,
-                    modifier = Modifier.weight(1f),
-                )
+            val gap = 8.dp
+            val itemWidth = (maxWidth - gap * 6) / 7
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(gap),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                books.forEachIndexed { index, book ->
+                    BookSpineItem(
+                        title = book.title,
+                        isOrange = index % 2 == 0,
+                        modifier = Modifier.width(itemWidth),
+                    )
+                }
             }
         }
     }
@@ -511,7 +514,6 @@ private fun BookSpineItem(title: String, isOrange: Boolean, modifier: Modifier =
         modifier = modifier,
         contentAlignment = Alignment.TopCenter,
     ) {
-        // [1] 본문 사각형 (글자 포함) — arch 높이 절반만큼 아래로 내려 arch 하단이 덮이게 함
         Box(
             modifier = Modifier
                 .padding(top = archHeight / 2)
@@ -532,7 +534,6 @@ private fun BookSpineItem(title: String, isOrange: Boolean, modifier: Modifier =
             )
         }
 
-        // [2] 상단 half-ellipse arch — Canvas로 뾰족한 아치 그리기
         Canvas(modifier = Modifier.fillMaxWidth().height(archHeight)) {
             val path = Path().apply {
                 arcTo(
@@ -552,7 +553,11 @@ private fun BookSpineItem(title: String, isOrange: Boolean, modifier: Modifier =
 
 // ── Written reviews ───────────────────────────────────────────────────────────
 @Composable
-private fun WrittenReviewsSection(reviews: List<MockWrittenReview>, onArrowClick: () -> Unit = {}) {
+private fun WrittenReviewsSection(
+    reviewCount: Int,
+    reviews: List<BookReviewSummaryDto>?,
+    onArrowClick: () -> Unit = {},
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -597,7 +602,7 @@ private fun WrittenReviewsSection(reviews: List<MockWrittenReview>, onArrowClick
             )
             val bookCountText = buildAnnotatedString {
                 withStyle(BookiiBookiiTheme.typography.medium16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey900)) {
-                    append("45")
+                    append("$reviewCount")
                 }
                 withStyle(BookiiBookiiTheme.typography.regular16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey700)) {
                     append("권의 책에 후기를 남겼어요")
@@ -606,14 +611,32 @@ private fun WrittenReviewsSection(reviews: List<MockWrittenReview>, onArrowClick
             Text(text = bookCountText)
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            reviews.forEach { WrittenReviewCard(it) }
+        if (reviews.isNullOrEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(BookiiBookiiTheme.colors.white)
+                    .padding(vertical = 24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "작성한 후기가 없어요",
+                    style = BookiiBookiiTheme.typography.regular16,
+                    color = BookiiBookiiTheme.colors.grey600,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                reviews.forEach { WrittenReviewCard(it) }
+            }
         }
     }
 }
 
 @Composable
-private fun WrittenReviewCard(review: MockWrittenReview) {
+private fun WrittenReviewCard(review: BookReviewSummaryDto) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -633,7 +656,7 @@ private fun WrittenReviewCard(review: MockWrittenReview) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = review.title,
+                        text = review.bookTitle,
                         style = BookiiBookiiTheme.typography.semibold16,
                         color = BookiiBookiiTheme.colors.grey900,
                     )
@@ -644,23 +667,23 @@ private fun WrittenReviewCard(review: MockWrittenReview) {
                             .background(BookiiBookiiTheme.colors.grey200),
                     )
                     Text(
-                        text = review.author,
+                        text = review.bookAuthor,
                         style = BookiiBookiiTheme.typography.semibold16,
                         color = BookiiBookiiTheme.colors.grey900,
                     )
                 }
-                StarRating(rating = review.rating)
+                StarRating(rating = review.rating.toInt().coerceIn(0, 5))
             }
-            ExchangeTypeChip(isDelivery = review.isTogether)
+            ExchangeTypeChip(isDelivery = review.tradeType == "DELIVERY")
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200)
         Text(
-            text = review.comment,
+            text = review.comment ?: "",
             style = BookiiBookiiTheme.typography.regular16,
             color = BookiiBookiiTheme.colors.grey700,
         )
         Text(
-            text = review.date,
+            text = DateUtils.formatDate(review.reviewDate),
             style = BookiiBookiiTheme.typography.regular14,
             color = BookiiBookiiTheme.colors.grey500,
         )
@@ -669,7 +692,12 @@ private fun WrittenReviewCard(review: MockWrittenReview) {
 
 // ── Received reviews ──────────────────────────────────────────────────────────
 @Composable
-private fun ReceivedReviewsSection(reviews: List<MockReceivedReview>, onArrowClick: () -> Unit = {}) {
+private fun ReceivedReviewsSection(
+    boomUpCount: Int,
+    nickname: String,
+    reviews: List<ReceivedMemberReviewDto>?,
+    onArrowClick: () -> Unit = {},
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -712,16 +740,15 @@ private fun ReceivedReviewsSection(reviews: List<MockReceivedReview>, onArrowCli
                 tint = BookiiBookiiTheme.colors.uiMain,
                 modifier = Modifier.size(24.dp),
             )
-            // Single annotated string prevents awkward line breaking
             val summaryText = buildAnnotatedString {
                 withStyle(BookiiBookiiTheme.typography.medium16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey900)) {
-                    append("38")
+                    append("$boomUpCount")
                 }
                 withStyle(BookiiBookiiTheme.typography.regular16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey700)) {
                     append("명의 부키메이트가 ")
                 }
                 withStyle(BookiiBookiiTheme.typography.medium16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey900)) {
-                    append("김스카이")
+                    append(nickname)
                 }
                 withStyle(BookiiBookiiTheme.typography.regular16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey700)) {
                     append("님을 좋아합니다.")
@@ -730,14 +757,32 @@ private fun ReceivedReviewsSection(reviews: List<MockReceivedReview>, onArrowCli
             Text(text = summaryText, modifier = Modifier.weight(1f))
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            reviews.forEach { ReceivedReviewCard(it) }
+        if (reviews.isNullOrEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(BookiiBookiiTheme.colors.white)
+                    .padding(vertical = 24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "받은 후기가 없어요",
+                    style = BookiiBookiiTheme.typography.regular16,
+                    color = BookiiBookiiTheme.colors.grey600,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                reviews.forEach { ReceivedReviewCard(it) }
+            }
         }
     }
 }
 
 @Composable
-private fun ReceivedReviewCard(review: MockReceivedReview) {
+private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -757,20 +802,20 @@ private fun ReceivedReviewCard(review: MockReceivedReview) {
             ) {
                 ProfilePlaceholder(modifier = Modifier.size(32.dp))
                 Text(
-                    text = review.nickname,
+                    text = review.reviewerNickname,
                     style = BookiiBookiiTheme.typography.medium16,
                     color = BookiiBookiiTheme.colors.grey800,
                 )
             }
-            ReviewTypeChip(isGood = review.isGood, modifier = Modifier)
+            ReviewTypeChip(isGood = review.reaction == "BOOM_UP", modifier = Modifier)
         }
         Text(
-            text = review.comment,
+            text = review.comment ?: "",
             style = BookiiBookiiTheme.typography.regular16,
             color = BookiiBookiiTheme.colors.grey700,
         )
         Text(
-            text = review.date,
+            text = DateUtils.formatDate(review.createdAt),
             style = BookiiBookiiTheme.typography.regular14,
             color = BookiiBookiiTheme.colors.grey500,
         )
