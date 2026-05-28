@@ -4,14 +4,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.fragment.app.Fragment
-import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import androidx.fragment.app.activityViewModels
+import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.mypage.ui.detail.ReviewScreen
 import com.bookiibookii.bookiibookii.mypage.ui.detail.ReviewTab
+import com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel
+import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-class ReviewFragment : Fragment() {
+class ReviewFragment : BaseMypageFragment() {
 
     companion object {
         private const val ARG_INITIAL_TAB = "initial_tab"
@@ -25,6 +29,8 @@ class ReviewFragment : Fragment() {
         }
     }
 
+    private val mypageViewModel: MypageViewModel by activityViewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -35,9 +41,16 @@ class ReviewFragment : Fragment() {
         val initialTab = ReviewTab.valueOf(tabName)
         setContent {
             BookiiBookiiTheme {
+                val profile by mypageViewModel.profileData.observeAsState()
+
                 ReviewScreen(
                     initialTab = initialTab,
                     onBackClick = { parentFragmentManager.popBackStack() },
+                    bookReviewCount = profile?.bookReviewCount ?: 0,
+                    writtenReviews = profile?.recentBookReviews ?: emptyList(),
+                    boomUpCount = profile?.boomUpCount ?: 0,
+                    receivedReviews = profile?.recentReceivedReviews ?: emptyList(),
+                    nickname = profile?.nickname ?: "",
                 )
             }
         }

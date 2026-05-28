@@ -1,29 +1,144 @@
 package com.bookiibookii.bookiibookii.mypage.feat.main
 
+import android.content.ContentValues
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.fragment.app.Fragment
-import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.mypage.ui.main.ProfileSettingScreen
+import com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel
+import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import kotlinx.coroutines.launch
+import java.io.File
 
-class ProfileSettingFragment : Fragment() {
+class ProfileSettingFragment : BaseMypageFragment() {
+
+    private val viewModel: MypageViewModel by activityViewModels()
+
+    // Fragment 레벨 LiveData — Compose에서 observeAsState()로 관찰
+    private val selectedImageUri = MutableLiveData<Uri?>(null)
+    private var selectedImageFile: File? = null
+    private var cameraImageUri: Uri? = null
+
+    private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success) {
+            cameraImageUri?.let { uri ->
+                selectedImageUri.value = uri
+                selectedImageFile = createCompressedImageFile(uri)
+            }
+        }
+    }
+
+    private val pickMediaLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            selectedImageUri.value = it
+            selectedImageFile = createCompressedImageFile(it)
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             BookiiBookiiTheme {
+                val profile by viewModel.profileData.observeAsState()
+                val nicknameCheckState by viewModel.nicknameCheckState.observeAsState()
+                val imageUri by selectedImageUri.observeAsState()
+
                 ProfileSettingScreen(
+                    profile = profile,
+                    profileImageUri = imageUri,
+                    nicknameCheckState = nicknameCheckState,
                     onBackClick = { parentFragmentManager.popBackStack() },
-                    onSaveClick = { parentFragmentManager.popBackStack() },
+                    onOpenCamera = {
+                        val uri = createCameraUri()
+                        cameraImageUri = uri
+                        takePictureLauncher.launch(uri)
+                    },
+                    onOpenGallery = {
+                        pickMediaLauncher.launch("image/*")
+                    },
+                    onCheckNickname = { nickname -> viewModel.checkNickname(nickname) },
+                    onSaveClick = { request ->
+                        viewModel.updateProfile(request, selectedImageFile)
+                    },
                 )
             }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.resetNicknameCheckState()
+        collectEvents()
+    }
+
+    private fun collectEvents() {
+        lifecycleScope.launch {
+            viewModel.eventFlow.collect { event ->
+                when (event) {
+                    is MypageViewModel.Event.NavigateBack -> parentFragmentManager.popBackStack()
+                    is MypageViewModel.Event.ShowToast -> Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    private fun createCameraUri(): Uri {
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "profile_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        }
+        return requireContext().contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
+    }
+
+    private fun createCompressedImageFile(uri: Uri): File? {
+        return try {
+            val bitmap = requireContext().contentResolver.openInputStream(uri)?.use { stream ->
+                BitmapFactory.decodeStream(stream)
+            } ?: return null
+
+            val maxPx = 1600
+            val scaled = if (bitmap.width > maxPx || bitmap.height > maxPx) {
+                val ratio = maxPx.toFloat() / maxOf(bitmap.width, bitmap.height)
+                val w = (bitmap.width * ratio).toInt()
+                val h = (bitmap.height * ratio).toInt()
+                Bitmap.createScaledBitmap(bitmap, w, h, true).also { bitmap.recycle() }
+            } else {
+                bitmap
+            }
+
+            val tempFile = File.createTempFile("profile_", ".jpg", requireContext().cacheDir)
+            var quality = 80
+            do {
+                tempFile.outputStream().use { out ->
+                    scaled.compress(Bitmap.CompressFormat.JPEG, quality, out)
+                }
+                quality -= 10
+            } while (tempFile.length() > 1_048_576L && quality > 20)
+
+            scaled.recycle()
+            tempFile
+        } catch (e: Exception) {
+            null
         }
     }
 }

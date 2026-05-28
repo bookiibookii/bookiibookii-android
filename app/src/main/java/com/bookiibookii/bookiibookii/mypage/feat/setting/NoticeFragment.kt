@@ -4,14 +4,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.mypage.ui.setting.NoticeScreen
+import com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import kotlinx.coroutines.launch
 
-class NoticeFragment : Fragment() {
+class NoticeFragment : BaseMypageFragment() {
+
+    private val viewModel: SettingViewModel by viewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -20,15 +30,36 @@ class NoticeFragment : Fragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             BookiiBookiiTheme {
+                val notices by viewModel.notices.observeAsState(emptyList())
+
                 NoticeScreen(
+                    notices = notices,
                     onBackClick = { parentFragmentManager.popBackStack() },
-                    onNoticeClick = { title ->
+                    onNoticeClick = { noticeId, title ->
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, NoticeDetailFragment.newInstance(title))
+                            .replace(R.id.fragmentContainer, NoticeDetailFragment.newInstance(noticeId, title))
                             .addToBackStack(null)
                             .commit()
                     },
                 )
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.fetchNotices()
+        collectEvents()
+    }
+
+    private fun collectEvents() {
+        lifecycleScope.launch {
+            viewModel.eventFlow.collect { event ->
+                when (event) {
+                    is SettingViewModel.Event.ShowToast ->
+                        Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                    else -> Unit
+                }
             }
         }
     }

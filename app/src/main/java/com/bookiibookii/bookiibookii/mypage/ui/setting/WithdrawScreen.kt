@@ -59,12 +59,13 @@ private val withdrawOptions = listOf(
 fun WithdrawScreen(
     userName: String = "noshel",
     onBackClick: () -> Unit = {},
-    onWithdrawSuccess: () -> Unit = {},
+    onWithdraw: (reason: String, customReason: String?) -> Unit = { _, _ -> },
+    showWithdrawFailedDialog: Boolean = false,
+    onFailureDialogDismiss: () -> Unit = {},
 ) {
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
     var customInput by remember { mutableStateOf("") }
     var showConfirmDialog by remember { mutableStateOf(false) }
-    var showFailureDialog by remember { mutableStateOf(false) }
 
     val isCustomInputSelected = selectedIndex == withdrawOptions.lastIndex
     val isNextEnabled = when {
@@ -134,6 +135,10 @@ fun WithdrawScreen(
     }
 
     if (showConfirmDialog) {
+        val isCustom = selectedIndex == withdrawOptions.lastIndex
+        val reason = selectedIndex?.let { withdrawOptions[it] } ?: ""
+        val customReason = if (isCustom) customInput.trim() else null
+
         BookiiDialog(
             title = "회원 탈퇴",
             body = "탈퇴 후에는 계정 정보 및 활동 내역이\n모두 삭제됩니다. 정말 탈퇴하시겠어요?",
@@ -141,20 +146,20 @@ fun WithdrawScreen(
             confirmColor = BookiiBookiiTheme.colors.uiPointRed,
             onConfirm = {
                 showConfirmDialog = false
-                onWithdrawSuccess()
+                onWithdraw(reason, customReason)
             },
             cancelText = "취소",
             onDismiss = { showConfirmDialog = false },
         )
     }
-    if (showFailureDialog) {
+    if (showWithdrawFailedDialog) {
         BookiiDialog(
             title = "탈퇴 불가",
             body = "진행 중인 그룹이 모두 종료되어야\n탈퇴 가능합니다.",
             confirmText = "닫기",
             confirmColor = BookiiBookiiTheme.colors.grey900,
-            onConfirm = { showFailureDialog = false },
-            onDismiss = { showFailureDialog = false },
+            onConfirm = { onFailureDialogDismiss() },
+            onDismiss = { onFailureDialogDismiss() },
         )
     }
 }

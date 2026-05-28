@@ -4,13 +4,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.mypage.ui.setting.FaqScreen
+import com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import kotlinx.coroutines.launch
 
-class FaqFragment : Fragment() {
+class FaqFragment : BaseMypageFragment() {
+
+    private val viewModel: SettingViewModel by viewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -21,9 +29,27 @@ class FaqFragment : Fragment() {
             BookiiBookiiTheme {
                 FaqScreen(
                     onBackClick = { parentFragmentManager.popBackStack() },
-                    onQuestionClick = { },
-                    onReportClick = { },
+                    onPostInquiry = { title, content -> viewModel.postInquiry(title, content) },
                 )
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        collectEvents()
+    }
+
+    private fun collectEvents() {
+        lifecycleScope.launch {
+            viewModel.eventFlow.collect { event ->
+                when (event) {
+                    is SettingViewModel.Event.ShowToast ->
+                        Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                    is SettingViewModel.Event.InquirySuccess ->
+                        Toast.makeText(requireContext(), "문의가 접수되었습니다.", Toast.LENGTH_SHORT).show()
+                    else -> Unit
+                }
             }
         }
     }

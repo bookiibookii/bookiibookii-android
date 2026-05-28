@@ -19,11 +19,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -33,7 +36,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import android.view.ViewGroup
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,36 +47,51 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.location.DeliveryAddress
+import com.bookiibookii.bookiibookii.mypage.ui.common.DaumAddressWebView
+import com.bookiibookii.bookiibookii.data.model.location.DeliveryAddressRequest
+import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddress
+import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddressRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddressManagementScreen(
+    deliveries: List<DeliveryAddress> = emptyList(),
+    exchanges: List<ExchangeAddress> = emptyList(),
     onBackClick: () -> Unit = {},
+    onFetchDeliveries: () -> Unit = {},
+    onFetchExchanges: () -> Unit = {},
+    onAddDelivery: (DeliveryAddressRequest, () -> Unit) -> Unit = { _, _ -> },
+    onUpdateDelivery: (Long, DeliveryAddressRequest, () -> Unit) -> Unit = { _, _, _ -> },
+    onDeleteDelivery: (Long) -> Unit = {},
+    onAddExchange: (ExchangeAddressRequest, () -> Unit) -> Unit = { _, _ -> },
+    onUpdateExchange: (Long, ExchangeAddressRequest, () -> Unit) -> Unit = { _, _, _ -> },
+    onDeleteExchange: (Long) -> Unit = {},
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    var showDeliveryAddSheet by remember { mutableStateOf(false) }
-    var showExchangeAddSheet by remember { mutableStateOf(false) }
+    var showDeliverySheet by remember { mutableStateOf(false) }
+    var showExchangeSheet by remember { mutableStateOf(false) }
+    var editDelivery by remember { mutableStateOf<DeliveryAddress?>(null) }
+    var editExchange by remember { mutableStateOf<ExchangeAddress?>(null) }
+    var expandedDeliveryId by remember { mutableStateOf<Long?>(null) }
+    var expandedExchangeId by remember { mutableStateOf<Long?>(null) }
 
-    val deliveryAddresses = remember {
-        mutableStateOf(
-            listOf(
-                DeliveryAddress(nickname = "집", recipientName = "김스카이", phone = "010-1234-5678", address = "서울 동작구 사당로 50", detail = "101동 1234호", isPrimary = true),
-            )
-        )
+    LaunchedEffect(selectedTabIndex) {
+        if (selectedTabIndex == 0) onFetchDeliveries() else onFetchExchanges()
     }
-    val exchangePlaces = remember { mutableStateOf(emptyList<ExchangePlace>()) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BookiiBookiiTheme.colors.uiBg)
-        ) {
+        Column(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.uiBg)) {
             Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
                 Row(
                     modifier = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 16.dp),
@@ -102,6 +123,7 @@ fun AddressManagementScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             ) {
+                // 탭
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -133,22 +155,54 @@ fun AddressManagementScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (selectedTabIndex == 0) {
-                    if (deliveryAddresses.value.isEmpty()) {
-                        AddressEmptyState(message = "등록된 배송지가 없습니다\n배송 교환을 하려면 배송지를 등록하세요")
+                    if (deliveries.isEmpty()) {
+                        AddressEmptyState("등록된 주소가 없습니다.\n택배 교환 그룹에 참여하려면 배송지를 등록하세요")
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            deliveryAddresses.value.forEach { address ->
-                                DeliveryAddressCard(address = address)
+                            deliveries.forEach { address ->
+                                DeliveryAddressCard(
+                                    address = address,
+                                    isMenuExpanded = expandedDeliveryId == address.id,
+                                    onMenuClick = {
+                                        expandedDeliveryId = if (expandedDeliveryId == address.id) null else address.id
+                                    },
+                                    onMenuDismiss = { expandedDeliveryId = null },
+                                    onEditClick = {
+                                        expandedDeliveryId = null
+                                        editDelivery = address
+                                        showDeliverySheet = true
+                                    },
+                                    onDeleteClick = {
+                                        expandedDeliveryId = null
+                                        onDeleteDelivery(address.id)
+                                    },
+                                )
                             }
                         }
                     }
                 } else {
-                    if (exchangePlaces.value.isEmpty()) {
-                        AddressEmptyState(message = "등록된 주소가 없습니다\n직접 교환 그룹에 참여하려면 장소를 등록하세요")
+                    if (exchanges.isEmpty()) {
+                        AddressEmptyState("등록된 주소가 없습니다.\n직접 교환 그룹에 참여하려면 장소를 등록하세요")
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            exchangePlaces.value.forEach { place ->
-                                ExchangePlaceCard(place = place)
+                            exchanges.forEach { place ->
+                                ExchangePlaceCard(
+                                    place = place,
+                                    isMenuExpanded = expandedExchangeId == place.id,
+                                    onMenuClick = {
+                                        expandedExchangeId = if (expandedExchangeId == place.id) null else place.id
+                                    },
+                                    onMenuDismiss = { expandedExchangeId = null },
+                                    onEditClick = {
+                                        expandedExchangeId = null
+                                        editExchange = place
+                                        showExchangeSheet = true
+                                    },
+                                    onDeleteClick = {
+                                        expandedExchangeId = null
+                                        onDeleteExchange(place.id)
+                                    },
+                                )
                             }
                         }
                     }
@@ -160,8 +214,13 @@ fun AddressManagementScreen(
             FooterButton(
                 text = "추가하기",
                 onClick = {
-                    if (selectedTabIndex == 0) showDeliveryAddSheet = true
-                    else showExchangeAddSheet = true
+                    if (selectedTabIndex == 0) {
+                        editDelivery = null
+                        showDeliverySheet = true
+                    } else {
+                        editExchange = null
+                        showExchangeSheet = true
+                    }
                 },
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 16.dp)
@@ -169,17 +228,33 @@ fun AddressManagementScreen(
             )
         }
 
-        if (showDeliveryAddSheet) {
-            AddDeliveryBottomSheet(
-                onDismiss = { showDeliveryAddSheet = false },
-                onSave = { showDeliveryAddSheet = false },
+        if (showDeliverySheet) {
+            DeliveryBottomSheet(
+                editTarget = editDelivery,
+                onDismiss = { showDeliverySheet = false; editDelivery = null },
+                onSave = { req ->
+                    val target = editDelivery
+                    if (target == null) {
+                        onAddDelivery(req) { showDeliverySheet = false }
+                    } else {
+                        onUpdateDelivery(target.id, req) { showDeliverySheet = false; editDelivery = null }
+                    }
+                },
             )
         }
 
-        if (showExchangeAddSheet) {
-            AddExchangePlaceBottomSheet(
-                onDismiss = { showExchangeAddSheet = false },
-                onSave = { showExchangeAddSheet = false },
+        if (showExchangeSheet) {
+            ExchangePlaceBottomSheet(
+                editTarget = editExchange,
+                onDismiss = { showExchangeSheet = false; editExchange = null },
+                onSave = { req ->
+                    val target = editExchange
+                    if (target == null) {
+                        onAddExchange(req) { showExchangeSheet = false }
+                    } else {
+                        onUpdateExchange(target.id, req) { showExchangeSheet = false; editExchange = null }
+                    }
+                },
             )
         }
     }
@@ -192,7 +267,7 @@ private fun AddressEmptyState(message: String) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(BookiiBookiiTheme.colors.white)
-            .padding(vertical = 40.dp, horizontal = 16.dp),
+            .padding(24.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -205,7 +280,14 @@ private fun AddressEmptyState(message: String) {
 }
 
 @Composable
-private fun DeliveryAddressCard(address: DeliveryAddress) {
+private fun DeliveryAddressCard(
+    address: DeliveryAddress,
+    isMenuExpanded: Boolean,
+    onMenuClick: () -> Unit,
+    onMenuDismiss: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -218,7 +300,7 @@ private fun DeliveryAddressCard(address: DeliveryAddress) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (address.isPrimary) {
+            if (address.isDefault) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -230,26 +312,47 @@ private fun DeliveryAddressCard(address: DeliveryAddress) {
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Text(
-                text = address.nickname,
+                text = address.placeName,
                 style = BookiiBookiiTheme.typography.semibold16,
                 color = BookiiBookiiTheme.colors.grey900,
                 modifier = Modifier.weight(1f),
             )
-            Icon(
-                painter = painterResource(R.drawable.ic_meetball),
-                contentDescription = "더보기",
-                tint = BookiiBookiiTheme.colors.grey400,
-                modifier = Modifier.size(24.dp),
-            )
+            Box {
+                Icon(
+                    painter = painterResource(R.drawable.ic_meetball),
+                    contentDescription = "더보기",
+                    tint = BookiiBookiiTheme.colors.grey400,
+                    modifier = Modifier.size(24.dp).clickable { onMenuClick() },
+                )
+                DropdownMenu(
+                    expanded = isMenuExpanded,
+                    onDismissRequest = onMenuDismiss,
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("수정하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900) },
+                        trailingIcon = {
+                            Icon(painterResource(R.drawable.ic_edit), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(20.dp))
+                        },
+                        onClick = onEditClick,
+                    )
+                    DropdownMenuItem(
+                        text = { Text("삭제하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900) },
+                        trailingIcon = {
+                            Icon(painterResource(R.drawable.ic_trash), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(20.dp))
+                        },
+                        onClick = onDeleteClick,
+                    )
+                }
+            }
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(text = address.address, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
-            if (address.detail.isNotEmpty()) {
-                Text(text = address.detail, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
+            if (address.addressDetail.isNotEmpty()) {
+                Text(text = address.addressDetail, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = address.recipientName, style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
+            Text(text = address.receiverName, style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
             Spacer(modifier = Modifier.width(4.dp))
             Box(modifier = Modifier.width(1.dp).height(15.dp).background(BookiiBookiiTheme.colors.grey300))
             Spacer(modifier = Modifier.width(4.dp))
@@ -259,7 +362,14 @@ private fun DeliveryAddressCard(address: DeliveryAddress) {
 }
 
 @Composable
-private fun ExchangePlaceCard(place: ExchangePlace) {
+private fun ExchangePlaceCard(
+    place: ExchangeAddress,
+    isMenuExpanded: Boolean,
+    onMenuClick: () -> Unit,
+    onMenuDismiss: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -272,7 +382,7 @@ private fun ExchangePlaceCard(place: ExchangePlace) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (place.isPrimary) {
+            if (place.isDefault) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -284,38 +394,62 @@ private fun ExchangePlaceCard(place: ExchangePlace) {
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Text(
-                text = place.nickname,
+                text = place.placeName,
                 style = BookiiBookiiTheme.typography.semibold16,
                 color = BookiiBookiiTheme.colors.grey900,
                 modifier = Modifier.weight(1f),
             )
-            Icon(
-                painter = painterResource(R.drawable.ic_meetball),
-                contentDescription = "더보기",
-                tint = BookiiBookiiTheme.colors.grey400,
-                modifier = Modifier.size(24.dp),
-            )
+            Box {
+                Icon(
+                    painter = painterResource(R.drawable.ic_meetball),
+                    contentDescription = "더보기",
+                    tint = BookiiBookiiTheme.colors.grey400,
+                    modifier = Modifier.size(24.dp).clickable { onMenuClick() },
+                )
+                DropdownMenu(
+                    expanded = isMenuExpanded,
+                    onDismissRequest = onMenuDismiss,
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("수정하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900) },
+                        trailingIcon = {
+                            Icon(painterResource(R.drawable.ic_edit), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(20.dp))
+                        },
+                        onClick = onEditClick,
+                    )
+                    DropdownMenuItem(
+                        text = { Text("삭제하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900) },
+                        trailingIcon = {
+                            Icon(painterResource(R.drawable.ic_trash), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(20.dp))
+                        },
+                        onClick = onDeleteClick,
+                    )
+                }
+            }
         }
         Text(text = place.address, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
-        if (place.detail.isNotEmpty()) {
-            Text(text = place.detail, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
+        if (place.addressDetail.isNotEmpty()) {
+            Text(text = place.addressDetail, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddDeliveryBottomSheet(
+private fun DeliveryBottomSheet(
+    editTarget: DeliveryAddress?,
     onDismiss: () -> Unit,
-    onSave: () -> Unit,
+    onSave: (DeliveryAddressRequest) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var nickname by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var detail by remember { mutableStateOf("") }
-    var recipientName by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var isPrimary by remember { mutableStateOf(false) }
+    var nickname by remember(editTarget) { mutableStateOf(editTarget?.placeName ?: "") }
+    var address by remember(editTarget) { mutableStateOf(editTarget?.address ?: "") }
+    var zipCode by remember(editTarget) { mutableStateOf(editTarget?.zipCode ?: "") }
+    var detail by remember(editTarget) { mutableStateOf(editTarget?.addressDetail ?: "") }
+    var recipientName by remember(editTarget) { mutableStateOf(editTarget?.receiverName ?: "") }
+    var phone by remember(editTarget) { mutableStateOf(editTarget?.phone ?: "") }
+    var isPrimary by remember(editTarget) { mutableStateOf(editTarget?.isDefault ?: false) }
+    var showAddressSearch by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -330,7 +464,7 @@ private fun AddDeliveryBottomSheet(
                 .navigationBarsPadding(),
         ) {
             Text(
-                text = "배송지 추가",
+                text = if (editTarget == null) "배송지 추가" else "배송지 수정",
                 style = BookiiBookiiTheme.typography.semibold20,
                 color = BookiiBookiiTheme.colors.grey900,
             )
@@ -338,13 +472,26 @@ private fun AddDeliveryBottomSheet(
 
             AddressFormField(label = "별명", isRequired = false, value = nickname, placeholder = "별명을 입력하세요", onValueChange = { nickname = it })
             Spacer(modifier = Modifier.height(16.dp))
-            AddressSearchField(label = "주소", isRequired = true, value = address, placeholder = "주소 검색", onClick = { address = "서울 동작구 사당로 50" })
+            AddressSearchField(
+                label = "주소",
+                isRequired = true,
+                value = address,
+                placeholder = "주소 검색",
+                onClick = { showAddressSearch = true },
+            )
             Spacer(modifier = Modifier.height(16.dp))
             AddressFormField(label = "상세 주소", isRequired = false, value = detail, placeholder = "상세 주소를 입력하세요", onValueChange = { detail = it })
             Spacer(modifier = Modifier.height(16.dp))
             AddressFormField(label = "수령인", isRequired = true, value = recipientName, placeholder = "수령인 이름", onValueChange = { recipientName = it })
             Spacer(modifier = Modifier.height(16.dp))
-            AddressFormField(label = "전화번호", isRequired = true, value = phone, placeholder = "010-0000-0000", onValueChange = { phone = it })
+            AddressFormField(label = "전화번호", isRequired = true, value = phone, placeholder = "010-0000-0000", onValueChange = { raw ->
+                val digits = raw.filter { it.isDigit() }.take(11)
+                phone = when {
+                    digits.length <= 3 -> digits
+                    digits.length <= 7 -> "${digits.substring(0, 3)}-${digits.substring(3)}"
+                    else -> "${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}"
+                }
+            })
             Spacer(modifier = Modifier.height(20.dp))
 
             Row(
@@ -371,35 +518,53 @@ private fun AddDeliveryBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                BottomSheetTwoBtnShort(
-                    text = "취소",
-                    style = BottomSheetBtnStyle.White,
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                )
+                BottomSheetTwoBtnShort(text = "취소", style = BottomSheetBtnStyle.White, onClick = onDismiss, modifier = Modifier.weight(1f))
                 BottomSheetTwoBtnShort(
                     text = "저장",
                     style = BottomSheetBtnStyle.Dark,
-                    onClick = onSave,
+                    onClick = {
+                        onSave(DeliveryAddressRequest(
+                            placeName = nickname,
+                            address = address,
+                            zipCode = zipCode,
+                            addressDetail = detail.ifBlank { null },
+                            receiverName = recipientName,
+                            phone = phone,
+                        ))
+                    },
                     modifier = Modifier.weight(1f),
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+
+    if (showAddressSearch) {
+        AddressSearchDialog(
+            onResult = { addr, zip ->
+                address = addr
+                zipCode = zip
+                showAddressSearch = false
+            },
+            onDismiss = { showAddressSearch = false },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddExchangePlaceBottomSheet(
+private fun ExchangePlaceBottomSheet(
+    editTarget: ExchangeAddress?,
     onDismiss: () -> Unit,
-    onSave: () -> Unit,
+    onSave: (ExchangeAddressRequest) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var nickname by remember { mutableStateOf("") }
-    var placeAddress by remember { mutableStateOf("") }
-    var detail by remember { mutableStateOf("") }
-    var isPrimary by remember { mutableStateOf(false) }
+    var nickname by remember(editTarget) { mutableStateOf(editTarget?.placeName ?: "") }
+    var placeAddress by remember(editTarget) { mutableStateOf(editTarget?.address ?: "") }
+    var zipCode by remember(editTarget) { mutableStateOf(editTarget?.zipCode ?: "") }
+    var detail by remember(editTarget) { mutableStateOf(editTarget?.addressDetail ?: "") }
+    var isPrimary by remember(editTarget) { mutableStateOf(editTarget?.isDefault ?: false) }
+    var showAddressSearch by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -414,7 +579,7 @@ private fun AddExchangePlaceBottomSheet(
                 .navigationBarsPadding(),
         ) {
             Text(
-                text = "희망 교환 장소 추가",
+                text = if (editTarget == null) "희망 교환 장소 추가" else "희망 교환 장소 수정",
                 style = BookiiBookiiTheme.typography.semibold20,
                 color = BookiiBookiiTheme.colors.grey900,
             )
@@ -422,7 +587,13 @@ private fun AddExchangePlaceBottomSheet(
 
             AddressFormField(label = "별명", isRequired = false, value = nickname, placeholder = "별명을 입력하세요", onValueChange = { nickname = it })
             Spacer(modifier = Modifier.height(16.dp))
-            AddressSearchField(label = "장소", isRequired = true, value = placeAddress, placeholder = "장소 검색", onClick = { placeAddress = "서울 동작구 사당로 50" })
+            AddressSearchField(
+                label = "장소",
+                isRequired = true,
+                value = placeAddress,
+                placeholder = "장소 검색",
+                onClick = { showAddressSearch = true },
+            )
             Spacer(modifier = Modifier.height(16.dp))
             AddressFormField(label = "상세 안내", isRequired = false, value = detail, placeholder = "상세 안내를 입력하세요", onValueChange = { detail = it })
             Spacer(modifier = Modifier.height(20.dp))
@@ -451,20 +622,91 @@ private fun AddExchangePlaceBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                BottomSheetTwoBtnShort(
-                    text = "취소",
-                    style = BottomSheetBtnStyle.White,
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                )
+                BottomSheetTwoBtnShort(text = "취소", style = BottomSheetBtnStyle.White, onClick = onDismiss, modifier = Modifier.weight(1f))
                 BottomSheetTwoBtnShort(
                     text = "저장",
                     style = BottomSheetBtnStyle.Dark,
-                    onClick = onSave,
+                    onClick = {
+                        onSave(ExchangeAddressRequest(
+                            placeName = nickname,
+                            address = placeAddress,
+                            zipCode = zipCode,
+                            addressDetail = detail.ifBlank { null },
+                        ))
+                    },
                     modifier = Modifier.weight(1f),
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+
+    if (showAddressSearch) {
+        AddressSearchDialog(
+            onResult = { addr, zip ->
+                placeAddress = addr
+                zipCode = zip
+                showAddressSearch = false
+            },
+            onDismiss = { showAddressSearch = false },
+        )
+    }
+}
+
+@Composable
+private fun AddressSearchDialog(
+    onResult: (address: String, zipCode: String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        // Dialog 윈도우를 MATCH_PARENT로 강제 설정 — 이렇게 해야 fillMaxSize()가 풀스크린으로 동작
+        val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
+        SideEffect {
+            dialogWindowProvider?.window?.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BookiiBookiiTheme.colors.white)
+                .systemBarsPadding(),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onDismiss, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_back),
+                        contentDescription = "뒤로가기",
+                        tint = BookiiBookiiTheme.colors.grey900,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+                Text(
+                    text = "주소 검색",
+                    style = BookiiBookiiTheme.typography.semibold18,
+                    color = BookiiBookiiTheme.colors.grey900,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.size(40.dp))
+            }
+            HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
+            DaumAddressWebView(
+                onResult = onResult,
+                onBack = onDismiss,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
@@ -554,22 +796,6 @@ private fun AddressSearchField(
         }
     }
 }
-
-private data class DeliveryAddress(
-    val nickname: String,
-    val recipientName: String,
-    val phone: String,
-    val address: String,
-    val detail: String,
-    val isPrimary: Boolean,
-)
-
-private data class ExchangePlace(
-    val nickname: String,
-    val address: String,
-    val detail: String,
-    val isPrimary: Boolean,
-)
 
 @Preview(showBackground = true, widthDp = 412)
 @Composable

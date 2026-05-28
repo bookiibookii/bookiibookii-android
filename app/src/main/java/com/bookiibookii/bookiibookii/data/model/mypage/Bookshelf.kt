@@ -1,13 +1,6 @@
 package com.bookiibookii.bookiibookii.data.model.mypage
 
-// ── GET /api/mypage/bookshelf ─────────────────────────────────────────────────
-data class BookshelfResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: BookshelfResult?,
-)
-
+// GET /api/mypage/bookshelf
 data class BookshelfResult(
     val completedBooks: List<CompletedBook>?,
     val favoriteBooks: List<FavoriteBook>?,
@@ -15,7 +8,7 @@ data class BookshelfResult(
 )
 
 data class CompletedBook(
-    val groupBookId: Long,
+    val memberBookId: Long,
     val title: String,
     val author: String?,
     val image: String?,
@@ -39,18 +32,18 @@ data class RepresentativeBook(
     val isFavorite: Boolean,
 )
 
-// ── POST /api/mypage/bookshelf/favorites ─────────────────────────────────────
+// POST /api/mypage/bookshelf/favorites
 data class AddFavoriteBookRequest(
     val isbn13: String,
 )
 
-// ── POST /api/mypage/bookshelf/representatives ───────────────────────────────
+// POST /api/mypage/bookshelf/representatives
 data class AddRepresentativeBookRequest(
     val userBookId: Long? = null,
-    val groupBookId: Long? = null,
+    val memberBookId: Long? = null,
 )
 
-// ── PATCH /api/mypage/bookshelf/representatives/order ────────────────────────
+// PATCH /api/mypage/bookshelf/representatives/order
 data class UpdateRepresentativeOrderRequest(
     val userBookId: Long,
     val targetOrder: Int,

@@ -1,17 +1,20 @@
 package com.bookiibookii.bookiibookii.mypage.feat.setting
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.fragment.app.Fragment
+import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.mypage.ui.setting.SettingScreen
+import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-class SettingFragment : Fragment() {
+class SettingFragment : BaseMypageFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -52,7 +55,13 @@ class SettingFragment : Fragment() {
                             .addToBackStack(null)
                             .commit()
                     },
-                    onLogoutClick = { parentFragmentManager.popBackStack() },
+                    onLogoutClick = {
+                        TokenManager.clear(requireContext())
+                        val intent = Intent(requireContext(), LoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                        startActivity(intent)
+                    },
                 )
             }
         }
