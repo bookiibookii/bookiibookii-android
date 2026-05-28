@@ -37,26 +37,3 @@ fun TrackerListItemResDTO.toCardModel(): TrackerCardModel = TrackerCardModel(
     primaryActionLabel = "진행률 기록",
     secondaryActionLabel = "독서카드 작성",
 )
-
-// Count board 카운트 규칙
-// 전체   = items.size
-// 읽는 중 = READING
-// 후기   = REVIEW_WRITING, EXCHANGE_REVIEW_WRITING
-// 교환 중 = 나머지 전부
-data class TrackerCounts(
-    val total: Int,
-    val reading: Int,
-    val exchanging: Int,
-    val review: Int,
-)
-
-fun List<TrackerListItemResDTO>.toCounts(): TrackerCounts {
-    val reading = count { it.displayStatus == "READING" }
-    val review = count { it.displayStatus == "REVIEW_WRITING" || it.displayStatus == "EXCHANGE_REVIEW_WRITING" }
-    return TrackerCounts(
-        total = size,
-        reading = reading,
-        review = review,
-        exchanging = size - reading - review,
-    )
-}

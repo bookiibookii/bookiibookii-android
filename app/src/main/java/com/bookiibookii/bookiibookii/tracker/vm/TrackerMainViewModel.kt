@@ -6,7 +6,6 @@ import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
 import com.bookiibookii.bookiibookii.tracker.model.toCardModel
-import com.bookiibookii.bookiibookii.tracker.model.toCounts
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -29,15 +28,16 @@ class TrackerMainViewModel(
             try {
                 val res = repository.fetchMyTrackers()
                 if (res.isSuccessful && res.body()?.isSuccess == true) {
-                    val items = res.body()?.result.orEmpty()
-                    val counts = items.toCounts()
+                    val result = res.body()?.result
+                    val items = result?.items.orEmpty()
+                    val summary = result?.summary
                     _state.update {
                         it.copy(
                             cards = items.map { dto -> dto.toCardModel() },
-                            totalCount = counts.total,
-                            readingCount = counts.reading,
-                            exchangingCount = counts.exchanging,
-                            reviewCount = counts.review,
+                            totalCount = summary?.totalCount ?: 0,
+                            readingCount = summary?.readingCount ?: 0,
+                            exchangingCount = summary?.exchangingCount ?: 0,
+                            reviewCount = summary?.reviewCount ?: 0,
                             loading = false,
                         )
                     }

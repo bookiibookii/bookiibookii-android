@@ -2,7 +2,7 @@ package com.bookiibookii.bookiibookii.data.api
 
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerCompletionResponse
-import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListItemResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDeliveryRequest
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDeliveryResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResponse
@@ -25,7 +25,7 @@ import retrofit2.http.Query
 
 interface TrkApi {
     @GET("/api/me/trackers")
-    suspend fun getMyTrackers(): Response<ApiResponse<List<TrackerListItemResDTO>>>
+    suspend fun getMyTrackers(): Response<ApiResponse<TrackerListResDTO>>
 
     @GET("/api/groups/{groupId}/tracker")
     suspend fun getTrackerDetail(
