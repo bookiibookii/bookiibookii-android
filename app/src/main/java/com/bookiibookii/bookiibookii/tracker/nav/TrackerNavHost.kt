@@ -9,6 +9,7 @@ import com.bookiibookii.bookiibookii.tracker.ui.main.TrackerMainRoute
 
 @Composable
 fun TrackerNavHost(
+    onCreateGroupClick: () -> Unit,
     modifier: Modifier = Modifier,
     startDestination: String = TrackerDestinations.MAIN,
 ) {
@@ -22,7 +23,7 @@ fun TrackerNavHost(
             TrackerMainRoute(
                 onProfileClick = {},
                 onAlertClick = {},
-                onCreateGroupClick = {},
+                onCreateGroupClick = onCreateGroupClick,
                 onPrimaryAction = {},
                 onSecondaryAction = {},
             )
