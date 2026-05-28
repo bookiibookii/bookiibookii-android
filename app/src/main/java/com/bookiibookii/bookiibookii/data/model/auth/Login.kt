@@ -10,6 +10,7 @@ data class LoginRequest(
 data class LoginResult(
     val accessToken: String,
     val refreshToken: String,
-    val userId: Int,
-    val onboardingDone: Boolean
+    val userId: Long,
+    val onboardingStatus: String,
+    val role: String
 )

@@ -197,7 +197,12 @@ class LoginActivity : AppCompatActivity() {
                             result.refreshToken,
                             result.userId
                         )
-                        TokenManager.saveOnboardingDone(this@LoginActivity, result.onboardingDone)
+                        TokenManager.saveOnboardingDone(
+                            // TODO: 이거 확인해서 수정해야함
+                            this@LoginActivity,
+                            result.onboardingStatus == "COMPLETED" ||
+                                result.onboardingStatus == "SPLASH_DONE",
+                        )
 
                         onLoginSuccess()
                     } else {

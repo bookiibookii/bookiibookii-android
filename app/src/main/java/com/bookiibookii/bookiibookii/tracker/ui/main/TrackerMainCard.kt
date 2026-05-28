@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -17,14 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
+import com.bookiibookii.bookiibookii.tracker.ui.component.TrackerBookCover
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -155,8 +152,9 @@ private fun TrackerProfileColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            BookCover(
-                bookCoverUrl = profile.bookCoverUrl,
+            TrackerBookCover(
+                modifier = Modifier.size(width = 100.dp, height = 132.dp),
+                imageUrl = profile.bookCoverUrl,
                 isOwnerBook = profile.isOwnerBook,
             )
             Column(
@@ -204,44 +202,6 @@ private fun TrackerProfileColumn(
             imageUrl = profile.profileImageUrl,
             innerStroke = true,
         )
-    }
-}
-
-@Composable
-private fun BookCover(
-    bookCoverUrl: String?,
-    isOwnerBook: Boolean,
-) {
-    Box(
-        modifier = Modifier
-            .size(width = 100.dp, height = 132.dp)
-            .clip(BookiiBookiiTheme.shape.round8)
-            .background(BookiiBookiiTheme.colors.uiBg),
-        contentAlignment = Alignment.BottomEnd,
-    ) {
-        if (!bookCoverUrl.isNullOrBlank()) {
-            AsyncImage(
-                model = bookCoverUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-        if (isOwnerBook) {
-            Box(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .clip(BookiiBookiiTheme.shape.round4)
-                    .background(Color.White.copy(alpha = 0.75f))
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
-            ) {
-                Text(
-                    text = "내 책",
-                    style = BookiiBookiiTheme.typography.regular10,
-                    color = BookiiBookiiTheme.colors.grey900,
-                )
-            }
-        }
     }
 }
 
