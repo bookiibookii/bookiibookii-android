@@ -1,24 +1,28 @@
 package com.bookiibookii.bookiibookii.tracker.vm
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
-import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
-import com.bookiibookii.bookiibookii.tracker.model.toCardModel
+import com.bookiibookii.bookiibookii.tracker.model.TrackerDetailUiState
+import com.bookiibookii.bookiibookii.tracker.model.toUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class TrackerMainViewModel(
+class TrackerDetailViewModel(
+    private val groupId: Long,
     private val repository: TrackerRepository = TrackerRepository(RetrofitClient.trkApi())
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(TrackerMainUiState())
-    val state: StateFlow<TrackerMainUiState> = _state
+    private val _state = MutableStateFlow(TrackerDetailUiState())
+    val state: StateFlow<TrackerDetailUiState> = _state
 
     private val _deliveryAddress = MutableStateFlow<DeliveryAddressResDTO?>(null)
     val deliveryAddress: StateFlow<DeliveryAddressResDTO?> = _deliveryAddress
@@ -27,7 +31,7 @@ class TrackerMainViewModel(
         load()
     }
 
-    fun loadDeliveryAddress(groupId: Long, onLoaded: () -> Unit) {
+    fun loadDeliveryAddress(onLoaded: () -> Unit) {
         viewModelScope.launch {
             try {
                 val res = repository.fetchDeliveryAddress(groupId)
@@ -47,7 +51,6 @@ class TrackerMainViewModel(
     }
 
     fun updateMyDeliveryAddress(
-        groupId: Long,
         request: DeliveryAddressUpdateReqDTO,
         onSuccess: () -> Unit,
     ) {
@@ -64,7 +67,7 @@ class TrackerMainViewModel(
         }
     }
 
-    fun registerDelivery(groupId: Long, deliveryCompany: String, trackingNumber: String) {
+    fun registerDelivery(deliveryCompany: String, trackingNumber: String) {
         viewModelScope.launch {
             try {
                 val res = repository.registerDelivery(groupId, deliveryCompany, trackingNumber)
@@ -72,12 +75,12 @@ class TrackerMainViewModel(
                     load()
                 }
             } catch (_: Exception) {
-                // 실패 시 무시
+                // 실패 시 무시 (다음 단계에서 에러 표시)
             }
         }
     }
 
-    fun recordProgress(groupId: Long, currentPage: Int) {
+    fun recordProgress(currentPage: Int) {
         viewModelScope.launch {
             try {
                 val res = repository.recordReadingProgress(groupId, currentPage)
@@ -94,26 +97,28 @@ class TrackerMainViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             try {
-                val res = repository.fetchMyTrackers()
-                if (res.isSuccessful && res.body()?.isSuccess == true) {
-                    val result = res.body()?.result
-                    val items = result?.items.orEmpty()
-                    val summary = result?.summary
-                    _state.update {
-                        it.copy(
-                            cards = items.map { dto -> dto.toCardModel() },
-                            totalCount = summary?.totalCount ?: 0,
-                            readingCount = summary?.readingCount ?: 0,
-                            exchangingCount = summary?.exchangingCount ?: 0,
-                            reviewCount = summary?.reviewCount ?: 0,
-                            loading = false,
-                        )
+                val res = repository.fetchTrackerDetail(groupId)
+                val body = res.body()
+                if (res.isSuccessful && body?.isSuccess == true) {
+                    val dto = body.result
+                    if (dto != null) {
+                        _state.value = dto.toUiState()
+                    } else {
+                        _state.update { it.copy(error = "트래커를 불러오지 못했어요", loading = false) }
                     }
                 } else {
-                    _state.update { it.copy(error = "트래커를 불러오지 못했어요", loading = false) }
+                    _state.update { it.copy(error = body?.message ?: "트래커를 불러오지 못했어요", loading = false) }
                 }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message, loading = false) }
+            }
+        }
+    }
+
+    companion object {
+        fun factory(groupId: Long): ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                TrackerDetailViewModel(groupId)
             }
         }
     }

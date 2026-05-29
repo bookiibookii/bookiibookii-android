@@ -2,12 +2,19 @@ package com.bookiibookii.bookiibookii.data.api
 
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerCompletionResponse
-import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListItemResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDeliveryRequest
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDeliveryResponse
-import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerExtensionResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerImagePresignedUrlResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryRegisterReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingRequest
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerReadingResponse
@@ -25,12 +32,41 @@ import retrofit2.http.Query
 
 interface TrkApi {
     @GET("/api/me/trackers")
-    suspend fun getMyTrackers(): Response<ApiResponse<List<TrackerListItemResDTO>>>
+    suspend fun getMyTrackers(): Response<ApiResponse<TrackerListResDTO>>
 
-    @GET("/api/groups/{groupId}/tracker")
+    @GET("/api/trackers/{groupId}/tracker")
     suspend fun getTrackerDetail(
         @Path("groupId") groupId: Long
-    ): ApiResponse<TrackerDetailResponse>
+    ): Response<ApiResponse<TrackerDetailResDTO>>
+
+    @PATCH("/api/trackers/{groupId}/reading-progress")
+    suspend fun patchReadingProgress(
+        @Path("groupId") groupId: Long,
+        @Body request: ReadingProgressReqDTO,
+    ): Response<ApiResponse<ReadingProgressResDTO>>
+
+    @POST("/api/groups/{groupId}/reviews")
+    suspend fun postBookReview(
+        @Path("groupId") groupId: Long,
+        @Body request: BookReviewReqDTO,
+    ): Response<ApiResponse<BookReviewResDTO>>
+
+    @POST("/api/groups/{groupId}/deliveries")
+    suspend fun postDeliveryRegister(
+        @Path("groupId") groupId: Long,
+        @Body request: DeliveryRegisterReqDTO,
+    ): Response<ApiResponse<String>>
+
+    @GET("/api/groups/{groupId}/deliveries/address")
+    suspend fun getDeliveryAddress(
+        @Path("groupId") groupId: Long,
+    ): Response<ApiResponse<DeliveryAddressResDTO>>
+
+    @PATCH("/api/groups/{groupId}/deliveries/address/me")
+    suspend fun patchMyDeliveryAddress(
+        @Path("groupId") groupId: Long,
+        @Body request: DeliveryAddressUpdateReqDTO,
+    ): Response<ApiResponse<String>>
 
     @POST("/api/groups/{groupId}/tracker/delivery")
     suspend fun postTrackerShippingStart(
@@ -79,7 +115,7 @@ interface TrkApi {
     suspend fun makeMeeting(
         @Path("groupId") groupId: Long,
         @Body request: TrackerMeetingRequest
-    ): Response<TrackerDetailResponse>
+    ): Response<TrackerDetailResDTO>
 
     @GET("/api/groups/{groupId}/tracker/meetings")
     suspend fun getTrackerMeeting(
@@ -89,10 +125,10 @@ interface TrkApi {
     @PATCH("/api/groups/{groupId}/tracker/meetings/completion")
     suspend fun patchMeetingComplete(
         @Path("groupId") groupId: Long
-    ): Response<TrackerDetailResponse>
+    ): Response<TrackerDetailResDTO>
 
     @PATCH("/api/groups/{groupId}/tracker/reception/verification")
     suspend fun patchConfirmReception(
         @Path("groupId") groupId: Long
-    ): ApiResponse<TrackerDetailResponse>
+    ): ApiResponse<TrackerDetailResDTO>
 }

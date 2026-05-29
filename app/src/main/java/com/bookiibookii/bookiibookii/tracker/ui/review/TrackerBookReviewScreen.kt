@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.tracker.ui.review
 
+import android.app.Activity
+import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,10 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -31,7 +37,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.tracker.vm.TrackerBookReviewViewModel
+import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -64,18 +74,56 @@ private fun nextScoreAfterClick(score: Int, index: Int): Int {
 }
 
 @Composable
-fun TrackerBookReviewScreen(
-    onBackClick: () -> Unit = {},
-    onSubmit: () -> Unit = {},
+fun TrackerBookReviewRoute(
+    groupId: Long,
+    onBackClick: () -> Unit,
+    viewModel: TrackerBookReviewViewModel = viewModel(
+        factory = TrackerBookReviewViewModel.factory(groupId)
+    ),
 ) {
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+
+    // 후기 화면 진입 시 바텀 네비 숨김 / 나갈 때 복구
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
+        bottomNav?.visibility = View.GONE
+        onDispose {
+            bottomNav?.visibility = View.VISIBLE
+        }
+    }
+
+    TrackerBookReviewScreen(
+        bookTitle = uiState.bookTitle,
+        bookImageUrl = uiState.bookImageUrl,
+        onBackClick = onBackClick,
+        onSubmit = { star, comment ->
+            viewModel.submitReview(star, comment, onSuccess = onBackClick)
+        },
+    )
+}
+
+@Composable
+fun TrackerBookReviewScreen(
+    bookTitle: String,
+    bookImageUrl: String?,
+    onBackClick: () -> Unit,
+    onSubmit: (star: Double, comment: String?) -> Unit,
+) {
+    // rating: 0~10 (별 5개 × 2단계 — half=1, full=2)
     var rating by remember { mutableStateOf(0) }
+    var commentInput by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = { TrackerBookReviewHeader(onBackClick = onBackClick) },
         bottomBar = {
             TrackerBookReviewFooter(
                 enabled = rating > 0,
-                onSubmit = onSubmit,
+                onSubmit = {
+                    val star = rating / 2.0
+                    val comment = commentInput.takeIf { it.isNotBlank() }
+                    onSubmit(star, comment)
+                },
             )
         },
         containerColor = BookiiBookiiTheme.colors.uiBg,
@@ -87,8 +135,12 @@ fun TrackerBookReviewScreen(
                 .padding(16.dp),
         ) {
             TrackerBookReviewCard(
+                bookTitle = bookTitle,
+                bookImageUrl = bookImageUrl,
                 rating = rating,
                 onRatingChange = { rating = it },
+                comment = commentInput,
+                onCommentChange = { commentInput = it.take(500) },
             )
         }
     }
@@ -96,8 +148,12 @@ fun TrackerBookReviewScreen(
 
 @Composable
 private fun TrackerBookReviewCard(
+    bookTitle: String,
+    bookImageUrl: String?,
     rating: Int,
     onRatingChange: (Int) -> Unit,
+    comment: String,
+    onCommentChange: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -110,18 +166,14 @@ private fun TrackerBookReviewCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(width = 122.dp, height = 180.dp)
-                .background(
-                    color = BookiiBookiiTheme.colors.grey200,
-                    shape = BookiiBookiiTheme.shape.round10,
-                ),
+        BookCover(
+            modifier = Modifier.size(width = 122.dp, height = 180.dp),
+            imageUrl = bookImageUrl,
         )
         Text(
             text = buildAnnotatedString {
                 withStyle(SpanStyle(color = BookiiBookiiTheme.colors.uiMain)) {
-                    append("살인자의 기억법")
+                    append(bookTitle)
                 }
                 withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) {
                     append("에 대한 평가를 남겨주세요!")
@@ -156,10 +208,21 @@ private fun TrackerBookReviewCard(
                 .padding(20.dp),
             contentAlignment = Alignment.TopStart,
         ) {
-            Text(
-                text = "감상평을 자유롭게 남겨주세요.",
-                style = BookiiBookiiTheme.typography.medium16,
-                color = BookiiBookiiTheme.colors.grey500,
+            if (comment.isEmpty()) {
+                Text(
+                    text = "감상평을 자유롭게 남겨주세요.",
+                    style = BookiiBookiiTheme.typography.medium16,
+                    color = BookiiBookiiTheme.colors.grey500,
+                )
+            }
+            BasicTextField(
+                value = comment,
+                onValueChange = onCommentChange,
+                modifier = Modifier.fillMaxSize(),
+                textStyle = BookiiBookiiTheme.typography.medium16.copy(
+                    color = BookiiBookiiTheme.colors.grey900,
+                ),
+                cursorBrush = SolidColor(BookiiBookiiTheme.colors.uiMain),
             )
         }
     }
@@ -276,6 +339,11 @@ private fun TrackerBookReviewFooter(
 @Composable
 private fun TrackerBookReviewScreenPreview() {
     BookiiPreview {
-        TrackerBookReviewScreen()
+        TrackerBookReviewScreen(
+            bookTitle = "살인자의 기억법",
+            bookImageUrl = null,
+            onBackClick = {},
+            onSubmit = { _, _ -> },
+        )
     }
 }

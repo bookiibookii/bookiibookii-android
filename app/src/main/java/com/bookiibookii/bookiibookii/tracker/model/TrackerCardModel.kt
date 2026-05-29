@@ -8,8 +8,8 @@ data class TrackerCardModel(
     val dDay: String,
     val left: TrackerProfileItem,
     val right: TrackerProfileItem,
-    val primaryActionLabel: String,
-    val secondaryActionLabel: String,
+    val primaryAction: TrackerAction = TrackerAction.None,
+    val secondaryAction: TrackerAction = TrackerAction.None,
 )
 
 data class TrackerProfileItem(
@@ -19,4 +19,5 @@ data class TrackerProfileItem(
     val profileImageUrl: String?,
     val progressPercent: Int,
     val isOwnerBook: Boolean,
+    val totalPages: Int = 0,
 )

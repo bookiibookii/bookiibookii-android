@@ -1,15 +1,21 @@
 package com.bookiibookii.bookiibookii.data.model.tracker
 
-data class TrackerDetailResponse(
-    val bookTitle: String?,
-    val partnerNickname: String?,
-    val trackerStatus: String?,
-    val startDate: String?,
-    val endDate: String?,
-    val extensionCount: Int?,
-    val extensionDays: Int?,
-    val readingPeriod: Int?,
-    val trackerId: Long?,
-    val deliveryInfo: DeliveryInfo?,
-    val meetingInfo: MeetingInfo?
+data class TrackerDetailResDTO(
+    val groupId: Long,
+    val groupName: String?,
+    val tradeType: String?,
+    val myRole: String?,
+    val displayStatus: String?,
+    val displayStatusText: String?,
+    val dDay: Int?,
+    val myBook: BookInfo?,
+    val partnerBook: BookInfo?,
+    val steps: List<TrackerStepDTO>?
+)
+
+data class TrackerStepDTO(
+    val status: String?,
+    val title: String?,
+    val description: String?,
+    val completed: Boolean?
 )

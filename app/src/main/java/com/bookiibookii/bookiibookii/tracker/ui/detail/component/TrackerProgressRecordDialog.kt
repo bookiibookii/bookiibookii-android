@@ -2,11 +2,14 @@ package com.bookiibookii.bookiibookii.tracker.ui.detail.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,6 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -25,26 +30,34 @@ import com.bookiibookii.bookiibookii.ui.component.CloseButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// 진행률 기록 다이얼로그 (택배/직접교환 공통)
 @Composable
 fun TrackerProgressRecordDialog(
+    totalPages: Int,
     onDismiss: () -> Unit,
+    onConfirm: (currentPage: Int) -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        TrackerProgressRecordDialogContent(onDismiss = onDismiss)
+        TrackerProgressRecordDialogContent(
+            totalPages = totalPages,
+            onDismiss = onDismiss,
+            onConfirm = onConfirm,
+        )
     }
 }
 
 @Composable
 private fun TrackerProgressRecordDialogContent(
+    totalPages: Int,
     onDismiss: () -> Unit,
+    onConfirm: (currentPage: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var pageInput by remember { mutableStateOf("") }
-    var isAllRead by remember { mutableStateOf(false) }
+    val pageInt = pageInput.toIntOrNull() ?: 0
+    val isAllRead = totalPages > 0 && pageInt >= totalPages
 
     Column(
         modifier = modifier
@@ -101,15 +114,33 @@ private fun TrackerProgressRecordDialogContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(
-                    text = if (pageInput.isEmpty()) "숫자만 입력해주세요" else pageInput,
-                    style = BookiiBookiiTheme.typography.medium16,
-                    color = if (pageInput.isEmpty()) {
-                        BookiiBookiiTheme.colors.grey500
-                    } else {
-                        BookiiBookiiTheme.colors.grey900
-                    },
-                )
+                Box(modifier = Modifier.weight(1f)) {
+                    if (pageInput.isEmpty()) {
+                        Text(
+                            text = "숫자만 입력해주세요",
+                            style = BookiiBookiiTheme.typography.medium16,
+                            color = BookiiBookiiTheme.colors.grey500,
+                        )
+                    }
+                    BasicTextField(
+                        value = pageInput,
+                        onValueChange = { raw ->
+                            val digits = raw.filter { it.isDigit() }
+                            val asInt = digits.toIntOrNull()
+                            pageInput = when {
+                                digits.isEmpty() -> ""
+                                totalPages > 0 && asInt != null && asInt > totalPages -> totalPages.toString()
+                                else -> digits
+                            }
+                        },
+                        textStyle = BookiiBookiiTheme.typography.medium16.copy(
+                            color = BookiiBookiiTheme.colors.grey900,
+                        ),
+                        cursorBrush = SolidColor(BookiiBookiiTheme.colors.uiMain),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                    )
+                }
                 if (isAllRead) {
                     Text(
                         text = "다 읽었어요!",
@@ -127,13 +158,18 @@ private fun TrackerProgressRecordDialogContent(
             CardButton(
                 text = "다 읽었어요",
                 style = if (isAllRead) CardButtonStyle.Grey else CardButtonStyle.White,
-                onClick = { isAllRead = !isAllRead },
+                onClick = {
+                    pageInput = if (isAllRead) "" else totalPages.toString()
+                },
                 modifier = Modifier.weight(1f),
             )
             CardButton(
                 text = "완료",
                 style = CardButtonStyle.Main,
-                onClick = {},
+                onClick = {
+                    onConfirm(pageInt)
+                    onDismiss()
+                },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -144,6 +180,10 @@ private fun TrackerProgressRecordDialogContent(
 @Composable
 private fun TrackerProgressRecordDialogPreview() {
     BookiiPreview {
-        TrackerProgressRecordDialogContent(onDismiss = {})
+        TrackerProgressRecordDialogContent(
+            totalPages = 400,
+            onDismiss = {},
+            onConfirm = {},
+        )
     }
 }

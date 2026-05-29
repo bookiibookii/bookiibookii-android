@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -36,8 +37,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
+import com.bookiibookii.bookiibookii.tracker.model.toDisplay
+import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
 import com.bookiibookii.bookiibookii.tracker.model.TrackerNotificationItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerMainViewModel
@@ -411,17 +422,22 @@ private fun TrackerEmptyCardPreview() {
     }
 }
 
-// stateful: VM 주입 + state 수집
+// stateful: VM 주입 + state 수집 + 카드 버튼 액션 분기
 @Composable
 fun TrackerMainRoute(
     onProfileClick: () -> Unit,
     onAlertClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
-    onPrimaryAction: (groupId: Long) -> Unit,
-    onSecondaryAction: (groupId: Long) -> Unit,
+    onCardClick: (groupId: Long) -> Unit,
+    onNavigateBookReview: (groupId: Long) -> Unit,
     viewModel: TrackerMainViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var deliveryInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var deliveryEditDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
     TrackerMainScreen(
         uiState = uiState,
         // TODO: 닉네임 / 알림 API 연동 전까지 placeholder
@@ -430,9 +446,121 @@ fun TrackerMainRoute(
         onProfileClick = onProfileClick,
         onAlertClick = onAlertClick,
         onCreateGroupClick = onCreateGroupClick,
-        onPrimaryAction = onPrimaryAction,
-        onSecondaryAction = onSecondaryAction,
+        onCardClick = onCardClick,
+        onPrimaryAction = { groupId ->
+            val action = uiState.cards.firstOrNull { it.groupId == groupId }?.primaryAction
+            dispatchAction(
+                action = action,
+                onRecordProgress = { progressDialogGroupId = groupId },
+                onWriteBookReview = { onNavigateBookReview(groupId) },
+                onRegisterTrackingNumber = { trackingDialogGroupId = groupId },
+                onCheckDeliveryInfo = {
+                    viewModel.loadDeliveryAddress(groupId) {
+                        deliveryInfoDialogGroupId = groupId
+                    }
+                },
+            )
+        },
+        onSecondaryAction = { groupId ->
+            val action = uiState.cards.firstOrNull { it.groupId == groupId }?.secondaryAction
+            dispatchAction(
+                action = action,
+                onRecordProgress = { progressDialogGroupId = groupId },
+                onWriteBookReview = { onNavigateBookReview(groupId) },
+                onRegisterTrackingNumber = { trackingDialogGroupId = groupId },
+                onCheckDeliveryInfo = {
+                    viewModel.loadDeliveryAddress(groupId) {
+                        deliveryInfoDialogGroupId = groupId
+                    }
+                },
+            )
+        },
     )
+    val openedGroupId = progressDialogGroupId
+    if (openedGroupId != null) {
+        val card = uiState.cards.firstOrNull { it.groupId == openedGroupId }
+        TrackerProgressRecordDialog(
+            totalPages = card?.left?.totalPages ?: 0,
+            onDismiss = { progressDialogGroupId = null },
+            onConfirm = { currentPage -> viewModel.recordProgress(openedGroupId, currentPage) },
+        )
+    }
+    val trackingGroupId = trackingDialogGroupId
+    if (trackingGroupId != null) {
+        TrackerDeliveryTrackingNumberDialog(
+            onDismiss = { trackingDialogGroupId = null },
+            onConfirm = { company, number ->
+                viewModel.registerDelivery(trackingGroupId, company, number)
+            },
+        )
+    }
+    val infoGroupId = deliveryInfoDialogGroupId
+    val addressData = deliveryAddress
+    if (infoGroupId != null && addressData != null) {
+        val card = uiState.cards.firstOrNull { it.groupId == infoGroupId }
+        TrackerDeliveryInfoDialog(
+            partnerNickname = card?.right?.nickname.orEmpty(),
+            myAddress = addressData.myAddress.toDisplay(),
+            partnerAddress = addressData.partnerAddress.toDisplay(),
+            canEditMyAddress = addressData.canEditMyAddress == true,
+            onDismiss = {
+                deliveryInfoDialogGroupId = null
+                viewModel.clearDeliveryAddress()
+            },
+            onEditClick = {
+                deliveryInfoDialogGroupId = null
+                deliveryEditDialogGroupId = infoGroupId
+            },
+            onConfirmClick = {
+                deliveryInfoDialogGroupId = null
+                viewModel.clearDeliveryAddress()
+            },
+        )
+    }
+    val editGroupId = deliveryEditDialogGroupId
+    if (editGroupId != null) {
+        val myAddress = deliveryAddress?.myAddress
+        TrackerDeliveryAddressEditDialog(
+            initialAddress = myAddress?.address.orEmpty(),
+            initialAddressDetail = myAddress?.addressDetail.orEmpty(),
+            onDismiss = {
+                deliveryEditDialogGroupId = null
+                viewModel.clearDeliveryAddress()
+            },
+            onConfirm = { newAddress, newDetail ->
+                viewModel.updateMyDeliveryAddress(
+                    groupId = editGroupId,
+                    request = DeliveryAddressUpdateReqDTO(
+                        receiverName = myAddress?.receiverName.orEmpty(),
+                        phoneNumber = myAddress?.phoneNumber.orEmpty(),
+                        address = newAddress,
+                        addressDetail = newDetail,
+                        zipCode = myAddress?.zipCode.orEmpty(),
+                    ),
+                ) {
+                    deliveryEditDialogGroupId = null
+                    viewModel.clearDeliveryAddress()
+                }
+            },
+        )
+    }
+}
+
+private inline fun dispatchAction(
+    action: TrackerAction?,
+    onRecordProgress: () -> Unit,
+    onWriteBookReview: () -> Unit,
+    onRegisterTrackingNumber: () -> Unit,
+    onCheckDeliveryInfo: () -> Unit,
+) {
+    when (action) {
+        TrackerAction.RecordProgress -> onRecordProgress()
+        TrackerAction.WriteBookReview -> onWriteBookReview()
+        TrackerAction.RegisterTrackingNumber -> onRegisterTrackingNumber()
+        TrackerAction.CheckDeliveryInfo -> onCheckDeliveryInfo()
+        TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
+        TrackerAction.None, null -> Unit
+    }
 }
 
 @Composable
@@ -443,6 +571,7 @@ fun TrackerMainScreen(
     onProfileClick: () -> Unit,
     onAlertClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
+    onCardClick: (groupId: Long) -> Unit,
     onPrimaryAction: (groupId: Long) -> Unit,
     onSecondaryAction: (groupId: Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -486,11 +615,13 @@ fun TrackerMainScreen(
                 uiState.cards.forEach { card ->
                     TrackerMainCard(
                         card = card,
+                        onCardClick = { onCardClick(card.groupId) },
                         onPrimaryAction = { onPrimaryAction(card.groupId) },
                         onSecondaryAction = { onSecondaryAction(card.groupId) },
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(192.dp))
         }
     }
 }
@@ -506,6 +637,7 @@ private fun TrackerMainScreenEmptyPreview() {
             onProfileClick = {},
             onAlertClick = {},
             onCreateGroupClick = {},
+            onCardClick = {},
             onPrimaryAction = {},
             onSecondaryAction = {},
         )
@@ -567,8 +699,8 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     progressPercent = 48,
                     isOwnerBook = false,
                 ),
-                primaryActionLabel = "진행률 기록",
-                secondaryActionLabel = "독서카드 작성",
+                primaryAction = TrackerAction.RecordProgress,
+                secondaryAction = TrackerAction.WriteReadingCard,
             ),
             TrackerCardModel(
                 groupId = 2L,
@@ -592,8 +724,8 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     progressPercent = 100,
                     isOwnerBook = false,
                 ),
-                primaryActionLabel = "진행률 기록",
-                secondaryActionLabel = "독서카드 작성",
+                primaryAction = TrackerAction.RecordProgress,
+                secondaryAction = TrackerAction.WriteReadingCard,
             ),
             TrackerCardModel(
                 groupId = 3L,
@@ -617,8 +749,8 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     progressPercent = 35,
                     isOwnerBook = false,
                 ),
-                primaryActionLabel = "진행률 기록",
-                secondaryActionLabel = "독서카드 작성",
+                primaryAction = TrackerAction.RecordProgress,
+                secondaryAction = TrackerAction.WriteReadingCard,
             ),
         )
         TrackerMainScreen(
@@ -634,6 +766,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
             onProfileClick = {},
             onAlertClick = {},
             onCreateGroupClick = {},
+            onCardClick = {},
             onPrimaryAction = {},
             onSecondaryAction = {},
         )
