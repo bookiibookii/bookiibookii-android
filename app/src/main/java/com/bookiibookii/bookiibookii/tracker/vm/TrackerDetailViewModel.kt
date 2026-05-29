@@ -26,6 +26,19 @@ class TrackerDetailViewModel(
         load()
     }
 
+    fun registerDelivery(deliveryCompany: String, trackingNumber: String) {
+        viewModelScope.launch {
+            try {
+                val res = repository.registerDelivery(groupId, deliveryCompany, trackingNumber)
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    load()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시 (다음 단계에서 에러 표시)
+            }
+        }
+    }
+
     fun recordProgress(currentPage: Int) {
         viewModelScope.launch {
             try {

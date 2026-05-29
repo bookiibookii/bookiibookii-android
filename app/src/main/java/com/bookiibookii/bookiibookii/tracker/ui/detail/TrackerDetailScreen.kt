@@ -20,6 +20,7 @@ import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerDetailContent
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStep
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStepStatus
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerDetailViewModel
@@ -36,6 +37,7 @@ fun TrackerDetailRoute(
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     var showProgressDialog by rememberSaveable { mutableStateOf(false) }
+    var showTrackingDialog by rememberSaveable { mutableStateOf(false) }
 
     // 상세 진입 시 바텀 네비 숨김 / 나갈 때 복구
     val context = LocalContext.current
@@ -67,6 +69,7 @@ fun TrackerDetailRoute(
                 action = uiState.secondaryAction,
                 onRecordProgress = { showProgressDialog = true },
                 onWriteBookReview = onNavigateBookReview,
+                onRegisterTrackingNumber = { showTrackingDialog = true },
             )
         },
         onPrimaryActionClick = {
@@ -74,6 +77,7 @@ fun TrackerDetailRoute(
                 action = uiState.primaryAction,
                 onRecordProgress = { showProgressDialog = true },
                 onWriteBookReview = onNavigateBookReview,
+                onRegisterTrackingNumber = { showTrackingDialog = true },
             )
         },
     )
@@ -84,17 +88,26 @@ fun TrackerDetailRoute(
             onConfirm = { currentPage -> viewModel.recordProgress(currentPage) },
         )
     }
+    if (showTrackingDialog) {
+        TrackerDeliveryTrackingNumberDialog(
+            onDismiss = { showTrackingDialog = false },
+            onConfirm = { company, number -> viewModel.registerDelivery(company, number) },
+        )
+    }
 }
 
 private inline fun dispatchAction(
     action: TrackerAction,
     onRecordProgress: () -> Unit,
     onWriteBookReview: () -> Unit,
+    onRegisterTrackingNumber: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
         TrackerAction.WriteBookReview -> onWriteBookReview()
+        TrackerAction.RegisterTrackingNumber -> onRegisterTrackingNumber()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
+        TrackerAction.CheckDeliveryInfo -> Unit // TODO: 배송 정보 확인 동작 미정
         TrackerAction.None -> Unit
     }
 }

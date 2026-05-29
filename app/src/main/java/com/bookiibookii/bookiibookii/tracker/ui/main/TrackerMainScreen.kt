@@ -44,6 +44,7 @@ import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
 import com.bookiibookii.bookiibookii.tracker.model.TrackerNotificationItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerMainViewModel
@@ -429,6 +430,7 @@ fun TrackerMainRoute(
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     TrackerMainScreen(
         uiState = uiState,
         // TODO: 닉네임 / 알림 API 연동 전까지 placeholder
@@ -444,6 +446,7 @@ fun TrackerMainRoute(
                 action = action,
                 onRecordProgress = { progressDialogGroupId = groupId },
                 onWriteBookReview = { onNavigateBookReview(groupId) },
+                onRegisterTrackingNumber = { trackingDialogGroupId = groupId },
             )
         },
         onSecondaryAction = { groupId ->
@@ -452,6 +455,7 @@ fun TrackerMainRoute(
                 action = action,
                 onRecordProgress = { progressDialogGroupId = groupId },
                 onWriteBookReview = { onNavigateBookReview(groupId) },
+                onRegisterTrackingNumber = { trackingDialogGroupId = groupId },
             )
         },
     )
@@ -464,17 +468,29 @@ fun TrackerMainRoute(
             onConfirm = { currentPage -> viewModel.recordProgress(openedGroupId, currentPage) },
         )
     }
+    val trackingGroupId = trackingDialogGroupId
+    if (trackingGroupId != null) {
+        TrackerDeliveryTrackingNumberDialog(
+            onDismiss = { trackingDialogGroupId = null },
+            onConfirm = { company, number ->
+                viewModel.registerDelivery(trackingGroupId, company, number)
+            },
+        )
+    }
 }
 
 private inline fun dispatchAction(
     action: TrackerAction?,
     onRecordProgress: () -> Unit,
     onWriteBookReview: () -> Unit,
+    onRegisterTrackingNumber: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
         TrackerAction.WriteBookReview -> onWriteBookReview()
+        TrackerAction.RegisterTrackingNumber -> onRegisterTrackingNumber()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
+        TrackerAction.CheckDeliveryInfo -> Unit // TODO: 배송 정보 확인 동작 미정
         TrackerAction.None, null -> Unit
     }
 }

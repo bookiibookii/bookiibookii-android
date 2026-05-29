@@ -4,6 +4,7 @@ import com.bookiibookii.bookiibookii.data.api.TrkApi
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
@@ -34,5 +35,16 @@ class TrackerRepository(
         comment: String?,
     ): Response<ApiResponse<BookReviewResDTO>> {
         return api.postBookReview(groupId, BookReviewReqDTO(star, comment))
+    }
+
+    suspend fun registerDelivery(
+        groupId: Long,
+        deliveryCompany: String,
+        trackingNumber: String,
+    ): Response<ApiResponse<String>> {
+        return api.postDeliveryRegister(
+            groupId,
+            DeliveryRegisterReqDTO(deliveryCompany, trackingNumber),
+        )
     }
 }
