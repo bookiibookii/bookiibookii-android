@@ -78,6 +78,21 @@ class TrackerMainViewModel(
         _meetingInfo.value = null
     }
 
+    // 직접 교환 완료 확인
+    fun completeMeeting(groupId: Long, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = repository.completeMeeting(groupId)
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    onSuccess()
+                    load()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
+    }
+
     fun registerMeeting(
         groupId: Long,
         locationId: Long,

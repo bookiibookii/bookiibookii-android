@@ -25,6 +25,8 @@ import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgress
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectExchangeConfirmDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectExchangeFailDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingConfirmDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingPlaceDialog
@@ -57,6 +59,10 @@ fun TrackerDetailRoute(
     var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
     // 약속 확인(조회) 다이얼로그 표시 여부
     var showMeetingInfoDialog by rememberSaveable { mutableStateOf(false) }
+    // 교환 확인 다이얼로그 표시 여부
+    var showExchangeConfirmDialog by rememberSaveable { mutableStateOf(false) }
+    // 교환 실패 안내 다이얼로그 표시 여부
+    var showExchangeFailDialog by rememberSaveable { mutableStateOf(false) }
 
     // 상세 진입 시 바텀 네비 숨김 / 나갈 때 복구
     val context = LocalContext.current
@@ -98,6 +104,7 @@ fun TrackerDetailRoute(
                 onCheckMeeting = {
                     viewModel.loadMeeting { showMeetingInfoDialog = true }
                 },
+                onConfirmExchange = { showExchangeConfirmDialog = true },
             )
         },
         onPrimaryActionClick = {
@@ -114,6 +121,7 @@ fun TrackerDetailRoute(
                 onCheckMeeting = {
                     viewModel.loadMeeting { showMeetingInfoDialog = true }
                 },
+                onConfirmExchange = { showExchangeConfirmDialog = true },
             )
         },
     )
@@ -243,6 +251,27 @@ fun TrackerDetailRoute(
             },
         )
     }
+    // 교환 확인 → "교환했어요"면 완료 PATCH, "못했어요"면 실패 안내
+    if (showExchangeConfirmDialog) {
+        TrackerDirectExchangeConfirmDialog(
+            onDismiss = { showExchangeConfirmDialog = false },
+            onNotYetClick = {
+                showExchangeConfirmDialog = false
+                showExchangeFailDialog = true
+            },
+            onConfirmClick = {
+                viewModel.completeMeeting { showExchangeConfirmDialog = false }
+            },
+        )
+    }
+    // 교환 실패 안내
+    if (showExchangeFailDialog) {
+        TrackerDirectExchangeFailDialog(
+            onDismiss = { showExchangeFailDialog = false },
+            onReportClick = {}, // TODO: 신고하기 이동 로직 보류
+            onGoToCommentsClick = {}, // TODO: 댓글 바로가기 이동 로직 보류
+        )
+    }
 }
 
 private inline fun dispatchAction(
@@ -254,6 +283,7 @@ private inline fun dispatchAction(
     onRegisterMeeting: () -> Unit,
     onGoToComments: () -> Unit,
     onCheckMeeting: () -> Unit,
+    onConfirmExchange: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
@@ -263,8 +293,8 @@ private inline fun dispatchAction(
         TrackerAction.RegisterMeeting -> onRegisterMeeting()
         TrackerAction.GoToComments -> onGoToComments()
         TrackerAction.CheckMeeting -> onCheckMeeting()
+        TrackerAction.ConfirmExchange -> onConfirmExchange()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
-        TrackerAction.ConfirmExchange -> Unit // TODO: 교환 확인 동작 연결 보류
         TrackerAction.None -> Unit
     }
 }

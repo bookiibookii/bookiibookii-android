@@ -70,6 +70,11 @@ interface TrkApi {
         @Path("groupId") groupId: Long,
     ): Response<ApiResponse<MeetingResDTO>>
 
+    @PATCH("/api/groups/{groupId}/meetings/completion")
+    suspend fun patchMeetingCompletion(
+        @Path("groupId") groupId: Long,
+    ): Response<ApiResponse<MeetingResDTO>>
+
     @GET("/api/groups/{groupId}/deliveries/address")
     suspend fun getDeliveryAddress(
         @Path("groupId") groupId: Long,

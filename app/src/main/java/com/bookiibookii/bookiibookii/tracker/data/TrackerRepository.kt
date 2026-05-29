@@ -65,6 +65,12 @@ class TrackerRepository(
         return api.getMeeting(groupId)
     }
 
+    suspend fun completeMeeting(
+        groupId: Long,
+    ): Response<ApiResponse<MeetingResDTO>> {
+        return api.patchMeetingCompletion(groupId)
+    }
+
     suspend fun fetchDeliveryAddress(
         groupId: Long,
     ): Response<ApiResponse<DeliveryAddressResDTO>> {

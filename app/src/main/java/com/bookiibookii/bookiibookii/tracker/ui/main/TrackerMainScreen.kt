@@ -49,6 +49,8 @@ import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgress
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectExchangeConfirmDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectExchangeFailDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingConfirmDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingPlaceDialog
@@ -448,6 +450,10 @@ fun TrackerMainRoute(
     var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
     // 약속 확인(조회) 다이얼로그
     var meetingInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    // 교환 확인 다이얼로그: 어느 카드인지(null=닫힘)
+    var exchangeConfirmGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    // 교환 실패 안내 다이얼로그: 어느 카드인지(null=닫힘)
+    var exchangeFailGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
@@ -480,6 +486,7 @@ fun TrackerMainRoute(
                 onCheckMeeting = {
                     viewModel.loadMeeting(groupId) { meetingInfoDialogGroupId = groupId }
                 },
+                onConfirmExchange = { exchangeConfirmGroupId = groupId },
             )
         },
         onSecondaryAction = { groupId ->
@@ -502,6 +509,7 @@ fun TrackerMainRoute(
                 onCheckMeeting = {
                     viewModel.loadMeeting(groupId) { meetingInfoDialogGroupId = groupId }
                 },
+                onConfirmExchange = { exchangeConfirmGroupId = groupId },
             )
         },
     )
@@ -644,6 +652,28 @@ fun TrackerMainRoute(
             },
         )
     }
+    // 교환 확인 → "교환했어요"면 완료 PATCH, "못했어요"면 실패 안내
+    val exchangeGid = exchangeConfirmGroupId
+    if (exchangeGid != null) {
+        TrackerDirectExchangeConfirmDialog(
+            onDismiss = { exchangeConfirmGroupId = null },
+            onNotYetClick = {
+                exchangeConfirmGroupId = null
+                exchangeFailGroupId = exchangeGid
+            },
+            onConfirmClick = {
+                viewModel.completeMeeting(exchangeGid) { exchangeConfirmGroupId = null }
+            },
+        )
+    }
+    // 교환 실패 안내
+    if (exchangeFailGroupId != null) {
+        TrackerDirectExchangeFailDialog(
+            onDismiss = { exchangeFailGroupId = null },
+            onReportClick = {}, // TODO: 신고하기 이동 로직 보류
+            onGoToCommentsClick = {}, // TODO: 댓글 바로가기 이동 로직 보류
+        )
+    }
 }
 
 private inline fun dispatchAction(
@@ -655,6 +685,7 @@ private inline fun dispatchAction(
     onRegisterMeeting: () -> Unit,
     onGoToComments: () -> Unit,
     onCheckMeeting: () -> Unit,
+    onConfirmExchange: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
@@ -664,8 +695,8 @@ private inline fun dispatchAction(
         TrackerAction.RegisterMeeting -> onRegisterMeeting()
         TrackerAction.GoToComments -> onGoToComments()
         TrackerAction.CheckMeeting -> onCheckMeeting()
+        TrackerAction.ConfirmExchange -> onConfirmExchange()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
-        TrackerAction.ConfirmExchange -> Unit // TODO: 교환 확인 동작 연결 보류
         TrackerAction.None, null -> Unit
     }
 }
