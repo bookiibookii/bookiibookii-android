@@ -424,6 +424,7 @@ fun TrackerMainRoute(
     onAlertClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
     onCardClick: (groupId: Long) -> Unit,
+    onNavigateBookReview: (groupId: Long) -> Unit,
     viewModel: TrackerMainViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -439,11 +440,19 @@ fun TrackerMainRoute(
         onCardClick = onCardClick,
         onPrimaryAction = { groupId ->
             val action = uiState.cards.firstOrNull { it.groupId == groupId }?.primaryAction
-            dispatchAction(action) { progressDialogGroupId = groupId }
+            dispatchAction(
+                action = action,
+                onRecordProgress = { progressDialogGroupId = groupId },
+                onWriteBookReview = { onNavigateBookReview(groupId) },
+            )
         },
         onSecondaryAction = { groupId ->
             val action = uiState.cards.firstOrNull { it.groupId == groupId }?.secondaryAction
-            dispatchAction(action) { progressDialogGroupId = groupId }
+            dispatchAction(
+                action = action,
+                onRecordProgress = { progressDialogGroupId = groupId },
+                onWriteBookReview = { onNavigateBookReview(groupId) },
+            )
         },
     )
     val openedGroupId = progressDialogGroupId
@@ -460,9 +469,11 @@ fun TrackerMainRoute(
 private inline fun dispatchAction(
     action: TrackerAction?,
     onRecordProgress: () -> Unit,
+    onWriteBookReview: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
+        TrackerAction.WriteBookReview -> onWriteBookReview()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
         TrackerAction.None, null -> Unit
     }

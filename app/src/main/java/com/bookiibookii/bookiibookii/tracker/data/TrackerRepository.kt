@@ -2,6 +2,8 @@ package com.bookiibookii.bookiibookii.tracker.data
 
 import com.bookiibookii.bookiibookii.data.api.TrkApi
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
@@ -24,5 +26,13 @@ class TrackerRepository(
         currentPage: Int,
     ): Response<ApiResponse<ReadingProgressResDTO>> {
         return api.patchReadingProgress(groupId, ReadingProgressReqDTO(currentPage))
+    }
+
+    suspend fun submitBookReview(
+        groupId: Long,
+        star: Double,
+        comment: String?,
+    ): Response<ApiResponse<BookReviewResDTO>> {
+        return api.postBookReview(groupId, BookReviewReqDTO(star, comment))
     }
 }

@@ -29,6 +29,7 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 fun TrackerDetailRoute(
     groupId: Long,
     onBackClick: () -> Unit,
+    onNavigateBookReview: () -> Unit,
     viewModel: TrackerDetailViewModel = viewModel(
         factory = TrackerDetailViewModel.factory(groupId)
     ),
@@ -61,8 +62,20 @@ fun TrackerDetailRoute(
         // TODO: 메시지/더보기 placeholder
         onMessageClick = {},
         onMoreClick = {},
-        onSecondaryActionClick = { dispatchAction(uiState.secondaryAction) { showProgressDialog = true } },
-        onPrimaryActionClick = { dispatchAction(uiState.primaryAction) { showProgressDialog = true } },
+        onSecondaryActionClick = {
+            dispatchAction(
+                action = uiState.secondaryAction,
+                onRecordProgress = { showProgressDialog = true },
+                onWriteBookReview = onNavigateBookReview,
+            )
+        },
+        onPrimaryActionClick = {
+            dispatchAction(
+                action = uiState.primaryAction,
+                onRecordProgress = { showProgressDialog = true },
+                onWriteBookReview = onNavigateBookReview,
+            )
+        },
     )
     if (showProgressDialog) {
         TrackerProgressRecordDialog(
@@ -76,9 +89,11 @@ fun TrackerDetailRoute(
 private inline fun dispatchAction(
     action: TrackerAction,
     onRecordProgress: () -> Unit,
+    onWriteBookReview: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
+        TrackerAction.WriteBookReview -> onWriteBookReview()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
         TrackerAction.None -> Unit
     }

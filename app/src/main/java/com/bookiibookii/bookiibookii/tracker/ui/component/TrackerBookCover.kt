@@ -29,7 +29,7 @@ fun TrackerBookCover(
                 modifier = Modifier
                     .padding(4.dp)
                     .clip(BookiiBookiiTheme.shape.round4)
-                    .background(Color.White.copy(alpha = 0.75f))
+                    .background(BookiiBookiiTheme.colors.grey200.copy(alpha = 0.75f))
                     .padding(horizontal = 4.dp, vertical = 2.dp),
             ) {
                 Text(

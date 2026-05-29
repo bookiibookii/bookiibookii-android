@@ -8,6 +8,8 @@ import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDeliveryResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerExtensionResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerImagePresignedUrlResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingRequest
@@ -39,6 +41,12 @@ interface TrkApi {
         @Path("groupId") groupId: Long,
         @Body request: ReadingProgressReqDTO,
     ): Response<ApiResponse<ReadingProgressResDTO>>
+
+    @POST("/api/groups/{groupId}/reviews")
+    suspend fun postBookReview(
+        @Path("groupId") groupId: Long,
+        @Body request: BookReviewReqDTO,
+    ): Response<ApiResponse<BookReviewResDTO>>
 
     @POST("/api/groups/{groupId}/tracker/delivery")
     suspend fun postTrackerShippingStart(

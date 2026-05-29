@@ -24,7 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -275,10 +274,8 @@ private fun BookColumn(
                 if (isMyBook) {
                     Box(
                         modifier = Modifier
-                            .background(
-                                color = Color(0xBFFEFEFE),
-                                shape = BookiiBookiiTheme.shape.round4,
-                            )
+                            .clip(BookiiBookiiTheme.shape.round4)
+                            .background(BookiiBookiiTheme.colors.grey200.copy(alpha = 0.75f))
                             .padding(horizontal = 4.dp, vertical = 2.dp),
                     ) {
                         Text(

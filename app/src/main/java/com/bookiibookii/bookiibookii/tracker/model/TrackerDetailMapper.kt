@@ -18,10 +18,18 @@ fun TrackerDetailResDTO.toUiState(): TrackerDetailUiState {
         currentStepLabelStyle = currentStepStatus.toPhaseStyle(),
         myProfile = myBook.toProfile(),
         partnerProfile = partnerBook.toProfile(),
+        exchangeLabel = tradeType.toExchangeLabel(),
         primaryAction = primary,
         secondaryAction = secondary,
         steps = safeSteps.toUiSteps(dDayChip),
     )
+}
+
+// tradeType → 교환 방식 라벨
+private fun String?.toExchangeLabel(): String = when (this) {
+    "DIRECT" -> "직접 교환"
+    "DELIVERY" -> "택배 교환"
+    else -> ""
 }
 
 // 8개 step.status → 4개 phase 라벨
@@ -41,6 +49,7 @@ private fun String?.toPhaseStyle(): TrackerStepLabelStyle = when (this) {
 }
 
 // completed=true는 보여주고 나머지 false는 숨김
+// 화면에는 최신 단계가 위로 오도록 역순 표시
 private fun List<TrackerStepDTO>.toUiSteps(dDayChipText: String): List<TrackerStep> {
     val firstPendingIdx = indexOfFirst { it.completed != true }
     return mapIndexedNotNull { index, step ->
@@ -57,5 +66,5 @@ private fun List<TrackerStepDTO>.toUiSteps(dDayChipText: String): List<TrackerSt
             )
             else -> null
         }
-    }
+    }.reversed()
 }

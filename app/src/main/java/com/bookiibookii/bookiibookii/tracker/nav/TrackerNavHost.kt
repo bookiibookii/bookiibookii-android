@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bookiibookii.bookiibookii.tracker.ui.detail.TrackerDetailRoute
 import com.bookiibookii.bookiibookii.tracker.ui.main.TrackerMainRoute
+import com.bookiibookii.bookiibookii.tracker.ui.review.TrackerBookReviewRoute
 
 @Composable
 fun TrackerNavHost(
@@ -30,6 +31,9 @@ fun TrackerNavHost(
                 onCardClick = { groupId ->
                     navController.navigate(TrackerDestinations.detail(groupId))
                 },
+                onNavigateBookReview = { groupId ->
+                    navController.navigate(TrackerDestinations.bookReview(groupId))
+                },
             )
         }
         composable(
@@ -43,6 +47,24 @@ fun TrackerNavHost(
             val groupId = backStackEntry.arguments
                 ?.getLong(TrackerDestinations.DETAIL_ARG_GROUP_ID) ?: return@composable
             TrackerDetailRoute(
+                groupId = groupId,
+                onBackClick = { navController.popBackStack() },
+                onNavigateBookReview = {
+                    navController.navigate(TrackerDestinations.bookReview(groupId))
+                },
+            )
+        }
+        composable(
+            route = TrackerDestinations.BOOK_REVIEW_ROUTE,
+            arguments = listOf(
+                navArgument(TrackerDestinations.BOOK_REVIEW_ARG_GROUP_ID) {
+                    type = NavType.LongType
+                },
+            ),
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments
+                ?.getLong(TrackerDestinations.BOOK_REVIEW_ARG_GROUP_ID) ?: return@composable
+            TrackerBookReviewRoute(
                 groupId = groupId,
                 onBackClick = { navController.popBackStack() },
             )

@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.data.model.tracker
 data class TrackerDetailResDTO(
     val groupId: Long,
     val groupName: String?,
+    val tradeType: String?,
     val myRole: String?,
     val displayStatus: String?,
     val displayStatusText: String?,
