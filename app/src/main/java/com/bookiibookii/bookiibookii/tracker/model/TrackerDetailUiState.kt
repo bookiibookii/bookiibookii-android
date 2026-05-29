@@ -11,16 +11,19 @@ private val EmptyProfile = TrackerProfileItem(
     isOwnerBook = false,
 )
 
+enum class TrackerStepLabelStyle { Main, Sub }
+
 data class TrackerDetailUiState(
     val groupName: String = "",
     val dDay: String = "",
     val statusLabel: String = "",
     val currentStepLabel: String = "",
+    val currentStepLabelStyle: TrackerStepLabelStyle = TrackerStepLabelStyle.Main,
     val myProfile: TrackerProfileItem = EmptyProfile,
     val partnerProfile: TrackerProfileItem = EmptyProfile,
     val exchangeLabel: String = "",
-    val primaryActionLabel: String = "",
-    val secondaryActionLabel: String = "",
+    val primaryAction: TrackerAction = TrackerAction.None,
+    val secondaryAction: TrackerAction = TrackerAction.None,
     val steps: List<TrackerStep> = emptyList(),
     val loading: Boolean = false,
     val error: String? = null,

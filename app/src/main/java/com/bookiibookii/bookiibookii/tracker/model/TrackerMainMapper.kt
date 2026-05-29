@@ -24,16 +24,20 @@ internal fun BookInfo?.toProfile(): TrackerProfileItem = TrackerProfileItem(
     profileImageUrl = this?.currentReaderProfileImageUrl,
     progressPercent = this?.currentReadingRate ?: 0,
     isOwnerBook = this?.isOwnerBook ?: false,
+    totalPages = this?.totalPages ?: 0,
 )
 
-fun TrackerListItemResDTO.toCardModel(): TrackerCardModel = TrackerCardModel(
-    groupId = groupId,
-    groupName = groupName.orEmpty(),
-    bookTitle = myCurrentBook?.title.orEmpty(),
-    progressLabel = displayStatusToLabel(displayStatus),
-    dDay = "D-${(remainingDays ?: 0).coerceAtLeast(0)}",
-    left = myCurrentBook.toProfile(),
-    right = partnerCurrentBook.toProfile(),
-    primaryActionLabel = "진행률 기록",
-    secondaryActionLabel = "독서카드 작성",
-)
+fun TrackerListItemResDTO.toCardModel(): TrackerCardModel {
+    val (primary, secondary) = actionsForStatus(displayStatus)
+    return TrackerCardModel(
+        groupId = groupId,
+        groupName = groupName.orEmpty(),
+        bookTitle = myCurrentBook?.title.orEmpty(),
+        progressLabel = displayStatusToLabel(displayStatus),
+        dDay = "D-${(remainingDays ?: 0).coerceAtLeast(0)}",
+        left = myCurrentBook.toProfile(),
+        right = partnerCurrentBook.toProfile(),
+        primaryAction = primary,
+        secondaryAction = secondary,
+    )
+}

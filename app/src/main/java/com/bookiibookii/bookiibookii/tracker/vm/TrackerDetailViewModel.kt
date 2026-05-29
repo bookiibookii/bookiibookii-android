@@ -26,6 +26,19 @@ class TrackerDetailViewModel(
         load()
     }
 
+    fun recordProgress(currentPage: Int) {
+        viewModelScope.launch {
+            try {
+                val res = repository.recordReadingProgress(groupId, currentPage)
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    load()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시 (다음 단계에서 에러 표시 추가)
+            }
+        }
+    }
+
     fun load() {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }

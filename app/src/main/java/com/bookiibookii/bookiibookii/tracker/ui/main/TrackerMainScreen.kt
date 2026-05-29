@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -36,8 +37,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
+import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
 import com.bookiibookii.bookiibookii.tracker.model.TrackerNotificationItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerMainViewModel
@@ -411,18 +417,17 @@ private fun TrackerEmptyCardPreview() {
     }
 }
 
-// stateful: VM 주입 + state 수집
+// stateful: VM 주입 + state 수집 + 카드 버튼 액션 분기
 @Composable
 fun TrackerMainRoute(
     onProfileClick: () -> Unit,
     onAlertClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
     onCardClick: (groupId: Long) -> Unit,
-    onPrimaryAction: (groupId: Long) -> Unit,
-    onSecondaryAction: (groupId: Long) -> Unit,
     viewModel: TrackerMainViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     TrackerMainScreen(
         uiState = uiState,
         // TODO: 닉네임 / 알림 API 연동 전까지 placeholder
@@ -432,9 +437,35 @@ fun TrackerMainRoute(
         onAlertClick = onAlertClick,
         onCreateGroupClick = onCreateGroupClick,
         onCardClick = onCardClick,
-        onPrimaryAction = onPrimaryAction,
-        onSecondaryAction = onSecondaryAction,
+        onPrimaryAction = { groupId ->
+            val action = uiState.cards.firstOrNull { it.groupId == groupId }?.primaryAction
+            dispatchAction(action) { progressDialogGroupId = groupId }
+        },
+        onSecondaryAction = { groupId ->
+            val action = uiState.cards.firstOrNull { it.groupId == groupId }?.secondaryAction
+            dispatchAction(action) { progressDialogGroupId = groupId }
+        },
     )
+    val openedGroupId = progressDialogGroupId
+    if (openedGroupId != null) {
+        val card = uiState.cards.firstOrNull { it.groupId == openedGroupId }
+        TrackerProgressRecordDialog(
+            totalPages = card?.left?.totalPages ?: 0,
+            onDismiss = { progressDialogGroupId = null },
+            onConfirm = { currentPage -> viewModel.recordProgress(openedGroupId, currentPage) },
+        )
+    }
+}
+
+private inline fun dispatchAction(
+    action: TrackerAction?,
+    onRecordProgress: () -> Unit,
+) {
+    when (action) {
+        TrackerAction.RecordProgress -> onRecordProgress()
+        TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
+        TrackerAction.None, null -> Unit
+    }
 }
 
 @Composable
@@ -495,6 +526,7 @@ fun TrackerMainScreen(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(192.dp))
         }
     }
 }
@@ -572,8 +604,8 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     progressPercent = 48,
                     isOwnerBook = false,
                 ),
-                primaryActionLabel = "진행률 기록",
-                secondaryActionLabel = "독서카드 작성",
+                primaryAction = TrackerAction.RecordProgress,
+                secondaryAction = TrackerAction.WriteReadingCard,
             ),
             TrackerCardModel(
                 groupId = 2L,
@@ -597,8 +629,8 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     progressPercent = 100,
                     isOwnerBook = false,
                 ),
-                primaryActionLabel = "진행률 기록",
-                secondaryActionLabel = "독서카드 작성",
+                primaryAction = TrackerAction.RecordProgress,
+                secondaryAction = TrackerAction.WriteReadingCard,
             ),
             TrackerCardModel(
                 groupId = 3L,
@@ -622,8 +654,8 @@ private fun TrackerMainScreenWithGroupsPreview() {
                     progressPercent = 35,
                     isOwnerBook = false,
                 ),
-                primaryActionLabel = "진행률 기록",
-                secondaryActionLabel = "독서카드 작성",
+                primaryAction = TrackerAction.RecordProgress,
+                secondaryAction = TrackerAction.WriteReadingCard,
             ),
         )
         TrackerMainScreen(

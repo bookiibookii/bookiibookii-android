@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
+import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
 import com.bookiibookii.bookiibookii.tracker.ui.component.TrackerBookCover
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
@@ -51,6 +53,7 @@ fun TrackerDetailContent(
     dDay: String,
     statusLabel: String,
     currentStepLabel: String,
+    currentStepLabelStyle: TrackerStepLabelStyle,
     myProfile: TrackerProfileItem,
     partnerProfile: TrackerProfileItem,
     exchangeLabel: String,
@@ -92,6 +95,7 @@ fun TrackerDetailContent(
                     dDay = dDay,
                     statusLabel = statusLabel,
                     currentStepLabel = currentStepLabel,
+                    currentStepLabelStyle = currentStepLabelStyle,
                 )
                 TwoProfileSection(
                     myProfile = myProfile,
@@ -191,6 +195,7 @@ private fun GroupInfoSection(
     dDay: String,
     statusLabel: String,
     currentStepLabel: String,
+    currentStepLabelStyle: TrackerStepLabelStyle,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -220,7 +225,10 @@ private fun GroupInfoSection(
                         color = BookiiBookiiTheme.colors.grey800,
                     )
                 }
-                StatusProgressBar(currentStepLabel = currentStepLabel)
+                StatusProgressBar(
+                    currentStepLabel = currentStepLabel,
+                    style = currentStepLabelStyle,
+                )
             }
             HorizontalDivider(
                 thickness = 0.8.dp,
@@ -249,23 +257,31 @@ private fun DDayChip(text: String) {
 }
 
 @Composable
-private fun StatusProgressBar(currentStepLabel: String) {
+private fun StatusProgressBar(
+    currentStepLabel: String,
+    style: TrackerStepLabelStyle,
+) {
+    val bg = when (style) {
+        TrackerStepLabelStyle.Main -> BookiiBookiiTheme.colors.uiMainPale
+        TrackerStepLabelStyle.Sub -> BookiiBookiiTheme.colors.uiMainSubPale
+    }
+    val fg = when (style) {
+        TrackerStepLabelStyle.Main -> BookiiBookiiTheme.colors.uiMain
+        TrackerStepLabelStyle.Sub -> BookiiBookiiTheme.colors.uiMainSub
+    }
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .background(
-                    color = BookiiBookiiTheme.colors.uiMainPale,
-                    shape = BookiiBookiiTheme.shape.round8,
-                )
+                .background(color = bg, shape = BookiiBookiiTheme.shape.round8)
                 .padding(horizontal = 6.dp, vertical = 2.dp),
         ) {
             Text(
                 text = currentStepLabel,
                 style = BookiiBookiiTheme.typography.regular10,
-                color = BookiiBookiiTheme.colors.uiMain,
+                color = fg,
             )
         }
         repeat(3) {
@@ -317,6 +333,7 @@ private fun ProfileColumn(
         ) {
             TrackerBookCover(
                 modifier = Modifier.size(width = 80.dp, height = 104.dp),
+                imageUrl = profile.bookCoverUrl,
                 isOwnerBook = profile.isOwnerBook,
             )
             Column(
@@ -369,17 +386,17 @@ private fun ProfileColumn(
 
 @Composable
 private fun TrackerProgressBar(percent: Int) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(BookiiBookiiTheme.colors.grey200),
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(6.dp)
+            .clip(BookiiBookiiTheme.shape.round4)
+            .background(BookiiBookiiTheme.colors.grey200),
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(fraction = (percent / 100f).coerceIn(0f, 1f))
-                .height(3.dp)
+                .fillMaxHeight()
                 .background(BookiiBookiiTheme.colors.grey800),
         )
     }
@@ -465,6 +482,7 @@ private fun TrackerDetailContentPreview() {
             dDay = "D-2",
             statusLabel = "살인자의 기억법 · 후기 작성",
             currentStepLabel = "내 책 읽기",
+            currentStepLabelStyle = TrackerStepLabelStyle.Main,
             myProfile = TrackerProfileItem(
                 nickname = "나",
                 bookTitle = "살인자의 기억법",

@@ -1,13 +1,25 @@
 package com.bookiibookii.bookiibookii.tracker.ui.detail
 
+import android.app.Activity
+import android.view.View
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
+import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerDetailContent
+import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStep
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStepStatus
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerDetailViewModel
@@ -22,24 +34,54 @@ fun TrackerDetailRoute(
     ),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    var showProgressDialog by rememberSaveable { mutableStateOf(false) }
+
+    // 상세 진입 시 바텀 네비 숨김 / 나갈 때 복구
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
+        bottomNav?.visibility = View.GONE
+        onDispose {
+            bottomNav?.visibility = View.VISIBLE
+        }
+    }
     TrackerDetailScreen(
         groupName = uiState.groupName,
         dDay = uiState.dDay,
         statusLabel = uiState.statusLabel,
         currentStepLabel = uiState.currentStepLabel,
+        currentStepLabelStyle = uiState.currentStepLabelStyle,
         myProfile = uiState.myProfile,
         partnerProfile = uiState.partnerProfile,
         exchangeLabel = uiState.exchangeLabel,
-        secondaryActionLabel = uiState.secondaryActionLabel,
-        primaryActionLabel = uiState.primaryActionLabel,
+        secondaryActionLabel = uiState.secondaryAction.label,
+        primaryActionLabel = uiState.primaryAction.label,
         steps = uiState.steps,
         onBackClick = onBackClick,
-        // TODO: 메시지/더보기/액션 API 연동 전까지 placeholder
+        // TODO: 메시지/더보기 placeholder
         onMessageClick = {},
         onMoreClick = {},
-        onSecondaryActionClick = {},
-        onPrimaryActionClick = {},
+        onSecondaryActionClick = { dispatchAction(uiState.secondaryAction) { showProgressDialog = true } },
+        onPrimaryActionClick = { dispatchAction(uiState.primaryAction) { showProgressDialog = true } },
     )
+    if (showProgressDialog) {
+        TrackerProgressRecordDialog(
+            totalPages = uiState.myProfile.totalPages,
+            onDismiss = { showProgressDialog = false },
+            onConfirm = { currentPage -> viewModel.recordProgress(currentPage) },
+        )
+    }
+}
+
+private inline fun dispatchAction(
+    action: TrackerAction,
+    onRecordProgress: () -> Unit,
+) {
+    when (action) {
+        TrackerAction.RecordProgress -> onRecordProgress()
+        TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
+        TrackerAction.None -> Unit
+    }
 }
 
 @Composable
@@ -48,6 +90,7 @@ fun TrackerDetailScreen(
     dDay: String,
     statusLabel: String,
     currentStepLabel: String,
+    currentStepLabelStyle: TrackerStepLabelStyle,
     myProfile: TrackerProfileItem,
     partnerProfile: TrackerProfileItem,
     exchangeLabel: String,
@@ -66,6 +109,7 @@ fun TrackerDetailScreen(
         dDay = dDay,
         statusLabel = statusLabel,
         currentStepLabel = currentStepLabel,
+        currentStepLabelStyle = currentStepLabelStyle,
         myProfile = myProfile,
         partnerProfile = partnerProfile,
         exchangeLabel = exchangeLabel,
@@ -90,6 +134,7 @@ private fun TrackerDetailScreenPreview() {
             dDay = "D-2",
             statusLabel = "살인자의 기억법 · 후기 작성",
             currentStepLabel = "내 책 읽기",
+            currentStepLabelStyle = TrackerStepLabelStyle.Main,
             myProfile = TrackerProfileItem(
                 nickname = "나",
                 bookTitle = "살인자의 기억법",

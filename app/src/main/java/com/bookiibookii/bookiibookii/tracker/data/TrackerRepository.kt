@@ -2,6 +2,8 @@ package com.bookiibookii.bookiibookii.tracker.data
 
 import com.bookiibookii.bookiibookii.data.api.TrkApi
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
+import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListResDTO
 import retrofit2.Response
@@ -15,5 +17,12 @@ class TrackerRepository(
 
     suspend fun fetchTrackerDetail(groupId: Long): Response<ApiResponse<TrackerDetailResDTO>> {
         return api.getTrackerDetail(groupId)
+    }
+
+    suspend fun recordReadingProgress(
+        groupId: Long,
+        currentPage: Int,
+    ): Response<ApiResponse<ReadingProgressResDTO>> {
+        return api.patchReadingProgress(groupId, ReadingProgressReqDTO(currentPage))
     }
 }

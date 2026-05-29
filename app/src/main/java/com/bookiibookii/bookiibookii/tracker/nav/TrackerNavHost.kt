@@ -30,8 +30,6 @@ fun TrackerNavHost(
                 onCardClick = { groupId ->
                     navController.navigate(TrackerDestinations.detail(groupId))
                 },
-                onPrimaryAction = {},
-                onSecondaryAction = {},
             )
         }
         composable(

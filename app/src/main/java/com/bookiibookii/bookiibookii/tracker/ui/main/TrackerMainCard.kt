@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.ui.component.TrackerBookCover
@@ -65,13 +67,13 @@ internal fun TrackerMainCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             BottomSheetTwoBtnShort(
-                text = card.secondaryActionLabel,
+                text = card.secondaryAction.label,
                 style = BottomSheetBtnStyle.White,
                 onClick = onSecondaryAction,
                 modifier = Modifier.weight(1f),
             )
             BottomSheetTwoBtnShort(
-                text = card.primaryActionLabel,
+                text = card.primaryAction.label,
                 style = BottomSheetBtnStyle.Orange,
                 onClick = onPrimaryAction,
                 modifier = Modifier.weight(1f),
@@ -210,17 +212,17 @@ private fun TrackerProfileColumn(
 
 @Composable
 private fun TrackerProgressBar(percent: Int) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(BookiiBookiiTheme.colors.grey200),
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(6.dp)
+            .clip(BookiiBookiiTheme.shape.round4)
+            .background(BookiiBookiiTheme.colors.grey200),
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(fraction = (percent / 100f).coerceIn(0f, 1f))
-                .height(3.dp)
+                .fillMaxHeight()
                 .background(BookiiBookiiTheme.colors.grey800),
         )
     }
@@ -253,8 +255,8 @@ private fun TrackerMainCardPreview() {
                     progressPercent = 48,
                     isOwnerBook = false,
                 ),
-                primaryActionLabel = "진행률 기록",
-                secondaryActionLabel = "독서카드 작성",
+                primaryAction = TrackerAction.RecordProgress,
+                secondaryAction = TrackerAction.WriteReadingCard,
             ),
             onCardClick = {},
             onPrimaryAction = {},
