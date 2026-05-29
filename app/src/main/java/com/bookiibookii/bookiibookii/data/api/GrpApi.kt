@@ -15,6 +15,8 @@ import com.bookiibookii.bookiibookii.data.model.group.GroupCreateRequest
 import com.bookiibookii.bookiibookii.data.model.group.GroupCreateResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupDeleteResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
+import com.bookiibookii.bookiibookii.data.model.group.GroupItem
+import com.bookiibookii.bookiibookii.data.model.group.HomeGroupsResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupListResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupModifyRequest
 import com.bookiibookii.bookiibookii.data.model.group.GroupModifyResponse
@@ -54,6 +56,14 @@ interface GrpApi {
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<ApiResponse<GroupListResponse>>
+
+    // 홈 그룹 조회 (추천 탭)
+    @GET("api/groups/home")
+    suspend fun getHomeGroups(): Response<ApiResponse<HomeGroupsResponse>>
+
+    // 내가 신청한 그룹 목록 조회 (신청한 그룹 탭)
+    @GET("api/groups/apply/me")
+    suspend fun getAppliedGroups(): Response<ApiResponse<List<GroupItem>>>
 
     // 인기 검색어
     @GET("api/groups/popular-keywords")

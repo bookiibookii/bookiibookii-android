@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="334dp"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="4dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- 책 정보 행 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:orientation="horizontal">
+
+            <!-- 책 표지 72x100dp -->
+            <ImageView
+                android:id="@+id/ivBookCover"
+                android:layout_width="72dp"
+                android:layout_height="100dp"
+                android:background="@drawable/bg_ui_bg_r8"
+                android:scaleType="centerCrop"
+                android:contentDescription="@null" />
+
+            <Space android:layout_width="16dp" android:layout_height="match_parent" />
+
+            <!-- 그룹 정보 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- 상단: 교환방식 칩 + 책제목 -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvTradeType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_main_pale_r8"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
+                        android:text="택배"
+                        android:textSize="11sp"
+                        android:textColor="@color/ui_main"
+                        android:fontFamily="@font/pretendard_medium" />
+
+                    <Space android:layout_width="6dp" android:layout_height="match_parent" />
+
+                    <TextView
+                        android:id="@+id/tvBookTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="책 제목"
+                        android:textSize="16sp"
+                        android:textColor="@color/grey_900"
+                        android:fontFamily="@font/pretendard_medium"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+
+                </LinearLayout>
+
+                <!-- 저자 (장르) -->
+                <TextView
+                    android:id="@+id/tvAuthorGenre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="저자 (장르)"
+                    android:textSize="14sp"
+                    android:textColor="@color/grey_500"
+                    android:fontFamily="@font/pretendard_regular" />
+
+                <!-- 공간 -->
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- 예상 독서 기간 -->
+                <TextView
+                    android:id="@+id/tvReadingPeriod"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="예상 독서 기간 7일"
+                    android:textSize="14sp"
+                    android:textColor="@color/grey_700"
+                    android:fontFamily="@font/pretendard_regular" />
+
+                <!-- 호스트 정보 -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp">
+
+                    <ImageView
+                        android:id="@+id/ivHostProfile"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:background="@drawable/bg_grey300_circle"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="@null" />
+
+                    <Space android:layout_width="4dp" android:layout_height="match_parent" />
+
+                    <TextView
+                        android:id="@+id/tvHostNickname"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="15sp"
+                        android:textColor="@color/grey_700"
+                        android:fontFamily="@font/pretendard_regular" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" · "
+                        android:textSize="15sp"
+                        android:textColor="@color/grey_700"
+                        android:fontFamily="@font/pretendard_regular" />
+
+                    <TextView
+                        android:id="@+id/tvGroupName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="15sp"
+                        android:textColor="@color/grey_500"
+                        android:fontFamily="@font/pretendard_regular"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <Space android:layout_width="match_parent" android:layout_height="16dp" />
+
+        <!-- 자세히 보기 버튼 -->
+        <TextView
+            android:id="@+id/btnViewDetail"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_main_pale_r16"
+            android:gravity="center"
+            android:text="자세히 보기"
+            android:textSize="15sp"
+            android:textColor="@color/ui_main"
+            android:fontFamily="@font/pretendard_regular" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="119dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- 책 표지 119x168dp -->
+    <ImageView
+        android:id="@+id/ivBookCover"
+        android:layout_width="match_parent"
+        android:layout_height="168dp"
+        android:background="@drawable/bg_ui_bg_r8"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null" />
+
+    <!-- 책 제목 -->
+    <TextView
+        android:id="@+id/tvBookTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textSize="14sp"
+        android:textColor="@color/grey_900"
+        android:fontFamily="@font/pretendard_regular"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <!-- 저자 -->
+    <TextView
+        android:id="@+id/tvAuthor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="@color/grey_500"
+        android:fontFamily="@font/pretendard_regular"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+</LinearLayout>
