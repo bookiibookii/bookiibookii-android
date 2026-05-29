@@ -62,22 +62,32 @@ internal fun TrackerMainCard(
                 modifier = Modifier.weight(1f),
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            BottomSheetTwoBtnShort(
-                text = card.secondaryAction.label,
-                style = BottomSheetBtnStyle.White,
-                onClick = onSecondaryAction,
-                modifier = Modifier.weight(1f),
-            )
+        // secondary가 없으면 primary 단일 풀폭 버튼 (예: 교환독서 후기 작성)
+        if (card.secondaryAction.label.isBlank()) {
             BottomSheetTwoBtnShort(
                 text = card.primaryAction.label,
                 style = BottomSheetBtnStyle.Orange,
                 onClick = onPrimaryAction,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
             )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                BottomSheetTwoBtnShort(
+                    text = card.secondaryAction.label,
+                    style = BottomSheetBtnStyle.White,
+                    onClick = onSecondaryAction,
+                    modifier = Modifier.weight(1f),
+                )
+                BottomSheetTwoBtnShort(
+                    text = card.primaryAction.label,
+                    style = BottomSheetBtnStyle.Orange,
+                    onClick = onPrimaryAction,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }

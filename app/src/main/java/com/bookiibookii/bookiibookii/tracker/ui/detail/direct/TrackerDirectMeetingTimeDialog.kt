@@ -71,8 +71,8 @@ private fun TrackerDirectMeetingTimeDialogContent(
     onNextClick: (scheduledAt: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val today = LocalDate.of(2026, 5, 23)
-    var displayMonth by remember { mutableStateOf(YearMonth.of(2026, 5)) }
+    val today = remember { LocalDate.now() }
+    var displayMonth by remember { mutableStateOf(YearMonth.from(today)) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var isAm by remember { mutableStateOf(true) }
     var hour by remember { mutableStateOf(6) }

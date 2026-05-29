@@ -436,6 +436,7 @@ fun TrackerMainRoute(
     onCreateGroupClick: () -> Unit,
     onCardClick: (groupId: Long) -> Unit,
     onNavigateBookReview: (groupId: Long) -> Unit,
+    onNavigatePartnerReview: (groupId: Long) -> Unit,
     viewModel: TrackerMainViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -487,6 +488,7 @@ fun TrackerMainRoute(
                     viewModel.loadMeeting(groupId) { meetingInfoDialogGroupId = groupId }
                 },
                 onConfirmExchange = { exchangeConfirmGroupId = groupId },
+                onWritePartnerReview = { onNavigatePartnerReview(groupId) },
             )
         },
         onSecondaryAction = { groupId ->
@@ -510,6 +512,7 @@ fun TrackerMainRoute(
                     viewModel.loadMeeting(groupId) { meetingInfoDialogGroupId = groupId }
                 },
                 onConfirmExchange = { exchangeConfirmGroupId = groupId },
+                onWritePartnerReview = { onNavigatePartnerReview(groupId) },
             )
         },
     )
@@ -686,6 +689,7 @@ private inline fun dispatchAction(
     onGoToComments: () -> Unit,
     onCheckMeeting: () -> Unit,
     onConfirmExchange: () -> Unit,
+    onWritePartnerReview: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
@@ -696,6 +700,7 @@ private inline fun dispatchAction(
         TrackerAction.GoToComments -> onGoToComments()
         TrackerAction.CheckMeeting -> onCheckMeeting()
         TrackerAction.ConfirmExchange -> onConfirmExchange()
+        TrackerAction.WritePartnerReview -> onWritePartnerReview()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
         TrackerAction.None, null -> Unit
     }

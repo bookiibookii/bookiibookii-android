@@ -41,6 +41,7 @@ fun TrackerDetailRoute(
     groupId: Long,
     onBackClick: () -> Unit,
     onNavigateBookReview: () -> Unit,
+    onNavigatePartnerReview: () -> Unit,
     viewModel: TrackerDetailViewModel = viewModel(
         factory = TrackerDetailViewModel.factory(groupId)
     ),
@@ -105,6 +106,7 @@ fun TrackerDetailRoute(
                     viewModel.loadMeeting { showMeetingInfoDialog = true }
                 },
                 onConfirmExchange = { showExchangeConfirmDialog = true },
+                onWritePartnerReview = onNavigatePartnerReview,
             )
         },
         onPrimaryActionClick = {
@@ -122,6 +124,7 @@ fun TrackerDetailRoute(
                     viewModel.loadMeeting { showMeetingInfoDialog = true }
                 },
                 onConfirmExchange = { showExchangeConfirmDialog = true },
+                onWritePartnerReview = onNavigatePartnerReview,
             )
         },
     )
@@ -284,6 +287,7 @@ private inline fun dispatchAction(
     onGoToComments: () -> Unit,
     onCheckMeeting: () -> Unit,
     onConfirmExchange: () -> Unit,
+    onWritePartnerReview: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
@@ -294,6 +298,7 @@ private inline fun dispatchAction(
         TrackerAction.GoToComments -> onGoToComments()
         TrackerAction.CheckMeeting -> onCheckMeeting()
         TrackerAction.ConfirmExchange -> onConfirmExchange()
+        TrackerAction.WritePartnerReview -> onWritePartnerReview()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
         TrackerAction.None -> Unit
     }
