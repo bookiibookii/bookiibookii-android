@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -164,13 +165,16 @@ fun LibraryDetailScreen(
                 enter = fadeIn() + slideInVertically { it / 2 },
                 exit = fadeOut() + slideOutVertically { it / 2 },
             ) {
+                // width(IntrinsicSize.Max): 두 항목 중 넓은 쪽 기준으로 통일
                 Column(
+                    modifier = Modifier.width(IntrinsicSize.Max),
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     // 이미지 카드 → 위쪽
                     FabMenuItem(
                         label = "이미지 카드 추가하기",
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             showFabMenu = false
                             onAddPhotoCard()
@@ -187,6 +191,7 @@ fun LibraryDetailScreen(
                     // 인용구 카드 → 아래쪽
                     FabMenuItem(
                         label = "인용구 카드 추가하기",
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             showFabMenu = false
                             onAddTextCard()
@@ -251,9 +256,10 @@ private fun FabMenuItem(
     label: String,
     icon: @Composable () -> Unit,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(50.dp))
             .background(BookiiBookiiTheme.colors.grey900)
             .clickable { onClick() }

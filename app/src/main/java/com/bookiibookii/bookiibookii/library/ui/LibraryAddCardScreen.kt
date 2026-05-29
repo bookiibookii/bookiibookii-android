@@ -60,8 +60,6 @@ private const val PHOTO_MEMO_MAX = 150
 @Composable
 fun LibraryAddCardScreen(
     mode: AddCardMode = AddCardMode.TEXT,
-    bookTitle: String = "나는 당신을 편애합니다",
-    username: String = "foryxxng",
     onBackClick: () -> Unit = {},
     onSubmit: () -> Unit = {},
 ) {
@@ -278,8 +276,6 @@ fun LibraryAddCardScreen(
     if (showPreview) {
         LibraryCardPreviewDialog(
             mode = mode,
-            bookTitle = bookTitle,
-            username = username,
             quote = quote,
             memo = memo,
             onDismiss = { showPreview = false },
