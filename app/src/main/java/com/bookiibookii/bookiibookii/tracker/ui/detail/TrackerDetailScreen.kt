@@ -26,6 +26,7 @@ import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryA
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingConfirmDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingPlaceDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingTimeDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStep
@@ -45,6 +46,7 @@ fun TrackerDetailRoute(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
+    val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
     var showProgressDialog by rememberSaveable { mutableStateOf(false) }
     var showTrackingDialog by rememberSaveable { mutableStateOf(false) }
     var showDeliveryInfoDialog by rememberSaveable { mutableStateOf(false) }
@@ -53,6 +55,8 @@ fun TrackerDetailRoute(
     var meetingStep by rememberSaveable { mutableStateOf(0) }
     // 1/3에서 고른 약속 일시 (raw ISO, 예: 2026-05-20T14:30:00)
     var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
+    // 약속 확인(조회) 다이얼로그 표시 여부
+    var showMeetingInfoDialog by rememberSaveable { mutableStateOf(false) }
 
     // 상세 진입 시 바텀 네비 숨김 / 나갈 때 복구
     val context = LocalContext.current
@@ -91,6 +95,9 @@ fun TrackerDetailRoute(
                 },
                 onRegisterMeeting = { meetingStep = 1 },
                 onGoToComments = {}, // TODO: 댓글 화면 연결 보류
+                onCheckMeeting = {
+                    viewModel.loadMeeting { showMeetingInfoDialog = true }
+                },
             )
         },
         onPrimaryActionClick = {
@@ -104,6 +111,9 @@ fun TrackerDetailRoute(
                 },
                 onRegisterMeeting = { meetingStep = 1 },
                 onGoToComments = {}, // TODO: 댓글 화면 연결 보류
+                onCheckMeeting = {
+                    viewModel.loadMeeting { showMeetingInfoDialog = true }
+                },
             )
         },
     )
@@ -212,6 +222,27 @@ fun TrackerDetailRoute(
             },
         )
     }
+    // 약속 확인(조회)
+    val meeting = meetingInfo
+    if (showMeetingInfoDialog && meeting != null) {
+        TrackerDirectMeetingInfoDialog(
+            scheduledAt = meeting.scheduledAt.orEmpty(),
+            address = meeting.location?.address.orEmpty(),
+            addressDetail = meeting.location?.addressDetail.orEmpty(),
+            onDismiss = {
+                showMeetingInfoDialog = false
+                viewModel.clearMeeting()
+            },
+            onPreviousClick = {
+                showMeetingInfoDialog = false
+                viewModel.clearMeeting()
+            },
+            onConfirmClick = {
+                showMeetingInfoDialog = false
+                viewModel.clearMeeting()
+            },
+        )
+    }
 }
 
 private inline fun dispatchAction(
@@ -222,6 +253,7 @@ private inline fun dispatchAction(
     onCheckDeliveryInfo: () -> Unit,
     onRegisterMeeting: () -> Unit,
     onGoToComments: () -> Unit,
+    onCheckMeeting: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
@@ -230,8 +262,8 @@ private inline fun dispatchAction(
         TrackerAction.CheckDeliveryInfo -> onCheckDeliveryInfo()
         TrackerAction.RegisterMeeting -> onRegisterMeeting()
         TrackerAction.GoToComments -> onGoToComments()
+        TrackerAction.CheckMeeting -> onCheckMeeting()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
-        TrackerAction.CheckMeeting -> Unit // TODO: 약속 확인 동작 연결 보류
         TrackerAction.ConfirmExchange -> Unit // TODO: 교환 확인 동작 연결 보류
         TrackerAction.None -> Unit
     }

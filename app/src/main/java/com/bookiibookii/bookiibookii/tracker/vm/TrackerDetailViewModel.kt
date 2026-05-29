@@ -10,6 +10,7 @@ import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddress
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
 import com.bookiibookii.bookiibookii.tracker.model.TrackerDetailUiState
 import com.bookiibookii.bookiibookii.tracker.model.toUiState
@@ -32,6 +33,10 @@ class TrackerDetailViewModel(
     // 약속 장소: "나의 희망교환장소 불러오기"로 채워지는 대표 장소
     private val _meetingPlace = MutableStateFlow<ExchangeAddress?>(null)
     val meetingPlace: StateFlow<ExchangeAddress?> = _meetingPlace
+
+    // 등록된 약속 정보 (약속 확인 조회)
+    private val _meetingInfo = MutableStateFlow<MeetingResDTO?>(null)
+    val meetingInfo: StateFlow<MeetingResDTO?> = _meetingInfo
 
     init {
         load()
@@ -104,6 +109,26 @@ class TrackerDetailViewModel(
 
     fun clearMeetingPlace() {
         _meetingPlace.value = null
+    }
+
+    // 등록된 약속 조회 후 다이얼로그 표시
+    fun loadMeeting(onLoaded: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = repository.fetchMeeting(groupId)
+                val body = res.body()
+                if (res.isSuccessful && body?.isSuccess == true) {
+                    _meetingInfo.value = body.result
+                    onLoaded()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
+    }
+
+    fun clearMeeting() {
+        _meetingInfo.value = null
     }
 
     fun registerMeeting(

@@ -7,12 +7,11 @@ data class MeetingRegisterReqDTO(
     val scheduledAt: String, // ISO date-time (예: "2026-05-20T14:30:00")
 )
 
-// 약속 등록 성공(201) 응답
-data class MeetingRegisterResDTO(
+// MeetingResponseDTO - 약속 등록(POST 201) / 조회(GET 200) 공용 응답
+data class MeetingResDTO(
     val meetingId: Long?,
     val exchangeRound: String?, // FIRST_EXCHANGE | RETURN_EXCHANGE
     val location: MeetingLocationDTO?,
-    val addressDetail: String?,
     val scheduledAt: String?,
     val createdBy: MeetingCreatedByDTO?,
 )
@@ -22,6 +21,7 @@ data class MeetingLocationDTO(
     val placeName: String?,
     val address: String?,
     val zipCode: String?,
+    val addressDetail: String?,
 )
 
 data class MeetingCreatedByDTO(

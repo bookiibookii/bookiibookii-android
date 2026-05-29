@@ -50,6 +50,7 @@ import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryA
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingConfirmDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingPlaceDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingTimeDialog
 import com.bookiibookii.bookiibookii.tracker.model.TrackerNotificationItem
@@ -440,13 +441,16 @@ fun TrackerMainRoute(
     var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var deliveryInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var deliveryEditDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
-    // 약속 잡기: 어느 카드인지(null=닫힘) + 단계(1=일시, 2=장소, 3=확인)
+    // 약속 잡기(1=일시, 2=장소, 3=확인)
     var meetingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var meetingStep by rememberSaveable { mutableStateOf(1) }
     // 1/3에서 고른 약속 일시 (raw ISO, 예: 2026-05-20T14:30:00)
     var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
+    // 약속 확인(조회) 다이얼로그
+    var meetingInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
+    val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
     TrackerMainScreen(
         uiState = uiState,
         // TODO: 닉네임 / 알림 API 연동 전까지 placeholder
@@ -473,6 +477,9 @@ fun TrackerMainRoute(
                     meetingDialogGroupId = groupId
                 },
                 onGoToComments = {}, // TODO: 댓글 화면 연결 보류
+                onCheckMeeting = {
+                    viewModel.loadMeeting(groupId) { meetingInfoDialogGroupId = groupId }
+                },
             )
         },
         onSecondaryAction = { groupId ->
@@ -492,6 +499,9 @@ fun TrackerMainRoute(
                     meetingDialogGroupId = groupId
                 },
                 onGoToComments = {}, // TODO: 댓글 화면 연결 보류
+                onCheckMeeting = {
+                    viewModel.loadMeeting(groupId) { meetingInfoDialogGroupId = groupId }
+                },
             )
         },
     )
@@ -613,6 +623,27 @@ fun TrackerMainRoute(
             )
         }
     }
+    // 약속 확인(조회)
+    val meeting = meetingInfo
+    if (meetingInfoDialogGroupId != null && meeting != null) {
+        TrackerDirectMeetingInfoDialog(
+            scheduledAt = meeting.scheduledAt.orEmpty(),
+            address = meeting.location?.address.orEmpty(),
+            addressDetail = meeting.location?.addressDetail.orEmpty(),
+            onDismiss = {
+                meetingInfoDialogGroupId = null
+                viewModel.clearMeeting()
+            },
+            onPreviousClick = {
+                meetingInfoDialogGroupId = null
+                viewModel.clearMeeting()
+            },
+            onConfirmClick = {
+                meetingInfoDialogGroupId = null
+                viewModel.clearMeeting()
+            },
+        )
+    }
 }
 
 private inline fun dispatchAction(
@@ -623,6 +654,7 @@ private inline fun dispatchAction(
     onCheckDeliveryInfo: () -> Unit,
     onRegisterMeeting: () -> Unit,
     onGoToComments: () -> Unit,
+    onCheckMeeting: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
@@ -631,8 +663,8 @@ private inline fun dispatchAction(
         TrackerAction.CheckDeliveryInfo -> onCheckDeliveryInfo()
         TrackerAction.RegisterMeeting -> onRegisterMeeting()
         TrackerAction.GoToComments -> onGoToComments()
+        TrackerAction.CheckMeeting -> onCheckMeeting()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
-        TrackerAction.CheckMeeting -> Unit // TODO: 약속 확인 동작 연결 보류
         TrackerAction.ConfirmExchange -> Unit // TODO: 교환 확인 동작 연결 보류
         TrackerAction.None, null -> Unit
     }
