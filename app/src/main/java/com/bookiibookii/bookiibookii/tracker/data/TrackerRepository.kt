@@ -4,6 +4,8 @@ import com.bookiibookii.bookiibookii.data.api.TrkApi
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
@@ -46,5 +48,18 @@ class TrackerRepository(
             groupId,
             DeliveryRegisterReqDTO(deliveryCompany, trackingNumber),
         )
+    }
+
+    suspend fun fetchDeliveryAddress(
+        groupId: Long,
+    ): Response<ApiResponse<DeliveryAddressResDTO>> {
+        return api.getDeliveryAddress(groupId)
+    }
+
+    suspend fun updateMyDeliveryAddress(
+        groupId: Long,
+        request: DeliveryAddressUpdateReqDTO,
+    ): Response<ApiResponse<String>> {
+        return api.patchMyDeliveryAddress(groupId, request)
     }
 }

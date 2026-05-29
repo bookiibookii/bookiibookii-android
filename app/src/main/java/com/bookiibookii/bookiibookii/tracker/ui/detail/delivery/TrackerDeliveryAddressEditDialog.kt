@@ -9,15 +9,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -39,27 +41,35 @@ private val DUMMY_ADDRESSES = listOf(
 // 택배 배송 정보 수정 다이얼로그 (택배교환 전용)
 @Composable
 fun TrackerDeliveryAddressEditDialog(
+    initialAddress: String,
+    initialAddressDetail: String,
     onDismiss: () -> Unit,
-    onConfirmClick: () -> Unit,
+    onConfirm: (address: String, addressDetail: String) -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         TrackerDeliveryAddressEditDialogContent(
+            initialAddress = initialAddress,
+            initialAddressDetail = initialAddressDetail,
             onDismiss = onDismiss,
-            onConfirmClick = onConfirmClick,
+            onConfirm = onConfirm,
         )
     }
 }
 
 @Composable
 private fun TrackerDeliveryAddressEditDialogContent(
+    initialAddress: String,
+    initialAddressDetail: String,
     onDismiss: () -> Unit,
-    onConfirmClick: () -> Unit,
+    onConfirm: (address: String, addressDetail: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedIndex by remember { mutableIntStateOf(0) }
+    var addressInput by remember { mutableStateOf(initialAddress) }
+    var detailInput by remember { mutableStateOf(initialAddressDetail) }
 
     Column(
         modifier = modifier
@@ -119,9 +129,17 @@ private fun TrackerDeliveryAddressEditDialogContent(
                     style = BookiiBookiiTheme.typography.regular16,
                     color = BookiiBookiiTheme.colors.grey900,
                 )
-                AddressInputBox(placeholder = "건물명, 도로명, 지번으로 검색")
+                AddressInputBox(
+                    value = addressInput,
+                    onValueChange = { addressInput = it },
+                    placeholder = "건물명, 도로명, 지번으로 검색",
+                )
             }
-            AddressInputBox(placeholder = "상세 주소")
+            AddressInputBox(
+                value = detailInput,
+                onValueChange = { detailInput = it },
+                placeholder = "상세 주소",
+            )
         }
 
         Row(
@@ -137,7 +155,7 @@ private fun TrackerDeliveryAddressEditDialogContent(
             CardButton(
                 text = "확인",
                 style = CardButtonStyle.Main,
-                onClick = onConfirmClick,
+                onClick = { onConfirm(addressInput, detailInput) },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -145,7 +163,11 @@ private fun TrackerDeliveryAddressEditDialogContent(
 }
 
 @Composable
-private fun AddressInputBox(placeholder: String) {
+private fun AddressInputBox(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -161,10 +183,22 @@ private fun AddressInputBox(placeholder: String) {
             .padding(16.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
-        Text(
-            text = placeholder,
-            style = BookiiBookiiTheme.typography.regular16,
-            color = BookiiBookiiTheme.colors.grey500,
+        if (value.isEmpty()) {
+            Text(
+                text = placeholder,
+                style = BookiiBookiiTheme.typography.regular16,
+                color = BookiiBookiiTheme.colors.grey500,
+            )
+        }
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = BookiiBookiiTheme.typography.regular16.copy(
+                color = BookiiBookiiTheme.colors.grey900,
+            ),
+            cursorBrush = SolidColor(BookiiBookiiTheme.colors.uiMain),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -174,8 +208,10 @@ private fun AddressInputBox(placeholder: String) {
 private fun TrackerDeliveryAddressEditDialogPreview() {
     BookiiPreview {
         TrackerDeliveryAddressEditDialogContent(
+            initialAddress = "서울 용산구 한강로2가 426",
+            initialAddressDetail = "101동 202호",
             onDismiss = {},
-            onConfirmClick = {},
+            onConfirm = { _, _ -> },
         )
     }
 }

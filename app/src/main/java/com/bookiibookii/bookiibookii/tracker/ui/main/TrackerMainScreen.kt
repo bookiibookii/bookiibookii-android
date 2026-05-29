@@ -40,10 +40,14 @@ import com.bookiibookii.bookiibookii.R
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
+import com.bookiibookii.bookiibookii.tracker.model.toDisplay
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
 import com.bookiibookii.bookiibookii.tracker.model.TrackerNotificationItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
@@ -431,6 +435,9 @@ fun TrackerMainRoute(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var deliveryInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var deliveryEditDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
     TrackerMainScreen(
         uiState = uiState,
         // TODO: 닉네임 / 알림 API 연동 전까지 placeholder
@@ -447,6 +454,11 @@ fun TrackerMainRoute(
                 onRecordProgress = { progressDialogGroupId = groupId },
                 onWriteBookReview = { onNavigateBookReview(groupId) },
                 onRegisterTrackingNumber = { trackingDialogGroupId = groupId },
+                onCheckDeliveryInfo = {
+                    viewModel.loadDeliveryAddress(groupId) {
+                        deliveryInfoDialogGroupId = groupId
+                    }
+                },
             )
         },
         onSecondaryAction = { groupId ->
@@ -456,6 +468,11 @@ fun TrackerMainRoute(
                 onRecordProgress = { progressDialogGroupId = groupId },
                 onWriteBookReview = { onNavigateBookReview(groupId) },
                 onRegisterTrackingNumber = { trackingDialogGroupId = groupId },
+                onCheckDeliveryInfo = {
+                    viewModel.loadDeliveryAddress(groupId) {
+                        deliveryInfoDialogGroupId = groupId
+                    }
+                },
             )
         },
     )
@@ -477,6 +494,56 @@ fun TrackerMainRoute(
             },
         )
     }
+    val infoGroupId = deliveryInfoDialogGroupId
+    val addressData = deliveryAddress
+    if (infoGroupId != null && addressData != null) {
+        val card = uiState.cards.firstOrNull { it.groupId == infoGroupId }
+        TrackerDeliveryInfoDialog(
+            partnerNickname = card?.right?.nickname.orEmpty(),
+            myAddress = addressData.myAddress.toDisplay(),
+            partnerAddress = addressData.partnerAddress.toDisplay(),
+            canEditMyAddress = addressData.canEditMyAddress == true,
+            onDismiss = {
+                deliveryInfoDialogGroupId = null
+                viewModel.clearDeliveryAddress()
+            },
+            onEditClick = {
+                deliveryInfoDialogGroupId = null
+                deliveryEditDialogGroupId = infoGroupId
+            },
+            onConfirmClick = {
+                deliveryInfoDialogGroupId = null
+                viewModel.clearDeliveryAddress()
+            },
+        )
+    }
+    val editGroupId = deliveryEditDialogGroupId
+    if (editGroupId != null) {
+        val myAddress = deliveryAddress?.myAddress
+        TrackerDeliveryAddressEditDialog(
+            initialAddress = myAddress?.address.orEmpty(),
+            initialAddressDetail = myAddress?.addressDetail.orEmpty(),
+            onDismiss = {
+                deliveryEditDialogGroupId = null
+                viewModel.clearDeliveryAddress()
+            },
+            onConfirm = { newAddress, newDetail ->
+                viewModel.updateMyDeliveryAddress(
+                    groupId = editGroupId,
+                    request = DeliveryAddressUpdateReqDTO(
+                        receiverName = myAddress?.receiverName.orEmpty(),
+                        phoneNumber = myAddress?.phoneNumber.orEmpty(),
+                        address = newAddress,
+                        addressDetail = newDetail,
+                        zipCode = myAddress?.zipCode.orEmpty(),
+                    ),
+                ) {
+                    deliveryEditDialogGroupId = null
+                    viewModel.clearDeliveryAddress()
+                }
+            },
+        )
+    }
 }
 
 private inline fun dispatchAction(
@@ -484,13 +551,14 @@ private inline fun dispatchAction(
     onRecordProgress: () -> Unit,
     onWriteBookReview: () -> Unit,
     onRegisterTrackingNumber: () -> Unit,
+    onCheckDeliveryInfo: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
         TrackerAction.WriteBookReview -> onWriteBookReview()
         TrackerAction.RegisterTrackingNumber -> onRegisterTrackingNumber()
+        TrackerAction.CheckDeliveryInfo -> onCheckDeliveryInfo()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
-        TrackerAction.CheckDeliveryInfo -> Unit // TODO: 배송 정보 확인 동작 미정
         TrackerAction.None, null -> Unit
     }
 }

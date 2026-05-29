@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
 import com.bookiibookii.bookiibookii.tracker.model.TrackerDetailUiState
 import com.bookiibookii.bookiibookii.tracker.model.toUiState
@@ -22,8 +24,47 @@ class TrackerDetailViewModel(
     private val _state = MutableStateFlow(TrackerDetailUiState())
     val state: StateFlow<TrackerDetailUiState> = _state
 
+    private val _deliveryAddress = MutableStateFlow<DeliveryAddressResDTO?>(null)
+    val deliveryAddress: StateFlow<DeliveryAddressResDTO?> = _deliveryAddress
+
     init {
         load()
+    }
+
+    fun loadDeliveryAddress(onLoaded: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = repository.fetchDeliveryAddress(groupId)
+                val body = res.body()
+                if (res.isSuccessful && body?.isSuccess == true) {
+                    _deliveryAddress.value = body.result
+                    onLoaded()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
+    }
+
+    fun clearDeliveryAddress() {
+        _deliveryAddress.value = null
+    }
+
+    fun updateMyDeliveryAddress(
+        request: DeliveryAddressUpdateReqDTO,
+        onSuccess: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            try {
+                val res = repository.updateMyDeliveryAddress(groupId, request)
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    onSuccess()
+                    load()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
     }
 
     fun registerDelivery(deliveryCompany: String, trackingNumber: String) {

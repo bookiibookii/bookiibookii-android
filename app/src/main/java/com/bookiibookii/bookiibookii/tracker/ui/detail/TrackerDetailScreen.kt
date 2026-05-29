@@ -15,11 +15,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
+import com.bookiibookii.bookiibookii.tracker.model.toDisplay
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerDetailContent
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStep
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStepStatus
@@ -36,8 +40,11 @@ fun TrackerDetailRoute(
     ),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
     var showProgressDialog by rememberSaveable { mutableStateOf(false) }
     var showTrackingDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeliveryInfoDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeliveryEditDialog by rememberSaveable { mutableStateOf(false) }
 
     // 상세 진입 시 바텀 네비 숨김 / 나갈 때 복구
     val context = LocalContext.current
@@ -54,6 +61,7 @@ fun TrackerDetailRoute(
         statusLabel = uiState.statusLabel,
         currentStepLabel = uiState.currentStepLabel,
         currentStepLabelStyle = uiState.currentStepLabelStyle,
+        currentStepPosition = uiState.currentStepPosition,
         myProfile = uiState.myProfile,
         partnerProfile = uiState.partnerProfile,
         exchangeLabel = uiState.exchangeLabel,
@@ -70,6 +78,9 @@ fun TrackerDetailRoute(
                 onRecordProgress = { showProgressDialog = true },
                 onWriteBookReview = onNavigateBookReview,
                 onRegisterTrackingNumber = { showTrackingDialog = true },
+                onCheckDeliveryInfo = {
+                    viewModel.loadDeliveryAddress { showDeliveryInfoDialog = true }
+                },
             )
         },
         onPrimaryActionClick = {
@@ -78,6 +89,9 @@ fun TrackerDetailRoute(
                 onRecordProgress = { showProgressDialog = true },
                 onWriteBookReview = onNavigateBookReview,
                 onRegisterTrackingNumber = { showTrackingDialog = true },
+                onCheckDeliveryInfo = {
+                    viewModel.loadDeliveryAddress { showDeliveryInfoDialog = true }
+                },
             )
         },
     )
@@ -94,6 +108,52 @@ fun TrackerDetailRoute(
             onConfirm = { company, number -> viewModel.registerDelivery(company, number) },
         )
     }
+    val addressData = deliveryAddress
+    if (showDeliveryInfoDialog && addressData != null) {
+        TrackerDeliveryInfoDialog(
+            partnerNickname = uiState.partnerProfile.nickname,
+            myAddress = addressData.myAddress.toDisplay(),
+            partnerAddress = addressData.partnerAddress.toDisplay(),
+            canEditMyAddress = addressData.canEditMyAddress == true,
+            onDismiss = {
+                showDeliveryInfoDialog = false
+                viewModel.clearDeliveryAddress()
+            },
+            onEditClick = {
+                showDeliveryInfoDialog = false
+                showDeliveryEditDialog = true
+            },
+            onConfirmClick = {
+                showDeliveryInfoDialog = false
+                viewModel.clearDeliveryAddress()
+            },
+        )
+    }
+    if (showDeliveryEditDialog) {
+        val myAddress = deliveryAddress?.myAddress
+        TrackerDeliveryAddressEditDialog(
+            initialAddress = myAddress?.address.orEmpty(),
+            initialAddressDetail = myAddress?.addressDetail.orEmpty(),
+            onDismiss = {
+                showDeliveryEditDialog = false
+                viewModel.clearDeliveryAddress()
+            },
+            onConfirm = { newAddress, newDetail ->
+                viewModel.updateMyDeliveryAddress(
+                    DeliveryAddressUpdateReqDTO(
+                        receiverName = myAddress?.receiverName.orEmpty(),
+                        phoneNumber = myAddress?.phoneNumber.orEmpty(),
+                        address = newAddress,
+                        addressDetail = newDetail,
+                        zipCode = myAddress?.zipCode.orEmpty(),
+                    ),
+                ) {
+                    showDeliveryEditDialog = false
+                    viewModel.clearDeliveryAddress()
+                }
+            },
+        )
+    }
 }
 
 private inline fun dispatchAction(
@@ -101,13 +161,14 @@ private inline fun dispatchAction(
     onRecordProgress: () -> Unit,
     onWriteBookReview: () -> Unit,
     onRegisterTrackingNumber: () -> Unit,
+    onCheckDeliveryInfo: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
         TrackerAction.WriteBookReview -> onWriteBookReview()
         TrackerAction.RegisterTrackingNumber -> onRegisterTrackingNumber()
+        TrackerAction.CheckDeliveryInfo -> onCheckDeliveryInfo()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
-        TrackerAction.CheckDeliveryInfo -> Unit // TODO: 배송 정보 확인 동작 미정
         TrackerAction.None -> Unit
     }
 }
@@ -119,6 +180,7 @@ fun TrackerDetailScreen(
     statusLabel: String,
     currentStepLabel: String,
     currentStepLabelStyle: TrackerStepLabelStyle,
+    currentStepPosition: Int,
     myProfile: TrackerProfileItem,
     partnerProfile: TrackerProfileItem,
     exchangeLabel: String,
@@ -138,6 +200,7 @@ fun TrackerDetailScreen(
         statusLabel = statusLabel,
         currentStepLabel = currentStepLabel,
         currentStepLabelStyle = currentStepLabelStyle,
+        currentStepPosition = currentStepPosition,
         myProfile = myProfile,
         partnerProfile = partnerProfile,
         exchangeLabel = exchangeLabel,
@@ -163,6 +226,7 @@ private fun TrackerDetailScreenPreview() {
             statusLabel = "살인자의 기억법 · 후기 작성",
             currentStepLabel = "내 책 읽기",
             currentStepLabelStyle = TrackerStepLabelStyle.Main,
+            currentStepPosition = 1,
             myProfile = TrackerProfileItem(
                 nickname = "나",
                 bookTitle = "살인자의 기억법",

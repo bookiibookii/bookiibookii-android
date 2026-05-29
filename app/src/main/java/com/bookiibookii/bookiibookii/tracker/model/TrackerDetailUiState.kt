@@ -19,6 +19,8 @@ data class TrackerDetailUiState(
     val statusLabel: String = "",
     val currentStepLabel: String = "",
     val currentStepLabelStyle: TrackerStepLabelStyle = TrackerStepLabelStyle.Main,
+    val currentStepPosition: Int = 1, // 1..4 — StatusProgressBar 칩 위치
+
     val myProfile: TrackerProfileItem = EmptyProfile,
     val partnerProfile: TrackerProfileItem = EmptyProfile,
     val exchangeLabel: String = "",

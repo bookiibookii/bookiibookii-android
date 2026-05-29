@@ -16,6 +16,7 @@ fun TrackerDetailResDTO.toUiState(): TrackerDetailUiState {
         statusLabel = displayStatusText.orEmpty(),
         currentStepLabel = currentStepStatus.toPhaseLabel(),
         currentStepLabelStyle = currentStepStatus.toPhaseStyle(),
+        currentStepPosition = currentStepStatus.toPhasePosition(),
         myProfile = myBook.toProfile(),
         partnerProfile = partnerBook.toProfile(),
         exchangeLabel = tradeType.toExchangeLabel(),
@@ -46,6 +47,14 @@ private fun String?.toPhaseStyle(): TrackerStepLabelStyle = when (this) {
     "MY_BOOK_READING", "MY_BOOK_REVIEWING",
     "EXCHANGING", "EXCHANGED" -> TrackerStepLabelStyle.Main
     else -> TrackerStepLabelStyle.Sub
+}
+
+// 4단계 phase 중 현재 위치 (1: 내 책 읽기, 2: 교환, 3: 파트너 책 읽기, 4: 반납)
+private fun String?.toPhasePosition(): Int = when (this) {
+    "MY_BOOK_READING", "MY_BOOK_REVIEWING" -> 1
+    "EXCHANGING", "EXCHANGED" -> 2
+    "PARTNER_BOOK_READING", "PARTNER_BOOK_REVIEWING" -> 3
+    else -> 4 // RETURNING, COMPLETED, null
 }
 
 // completed=true는 보여주고 나머지 false는 숨김

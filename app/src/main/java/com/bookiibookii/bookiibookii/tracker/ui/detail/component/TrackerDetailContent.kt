@@ -54,6 +54,7 @@ fun TrackerDetailContent(
     statusLabel: String,
     currentStepLabel: String,
     currentStepLabelStyle: TrackerStepLabelStyle,
+    currentStepPosition: Int,
     myProfile: TrackerProfileItem,
     partnerProfile: TrackerProfileItem,
     exchangeLabel: String,
@@ -96,6 +97,7 @@ fun TrackerDetailContent(
                     statusLabel = statusLabel,
                     currentStepLabel = currentStepLabel,
                     currentStepLabelStyle = currentStepLabelStyle,
+                    currentStepPosition = currentStepPosition,
                 )
                 TwoProfileSection(
                     myProfile = myProfile,
@@ -196,6 +198,7 @@ private fun GroupInfoSection(
     statusLabel: String,
     currentStepLabel: String,
     currentStepLabelStyle: TrackerStepLabelStyle,
+    currentStepPosition: Int,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -228,6 +231,7 @@ private fun GroupInfoSection(
                 StatusProgressBar(
                     currentStepLabel = currentStepLabel,
                     style = currentStepLabelStyle,
+                    position = currentStepPosition,
                 )
             }
             HorizontalDivider(
@@ -260,6 +264,7 @@ private fun DDayChip(text: String) {
 private fun StatusProgressBar(
     currentStepLabel: String,
     style: TrackerStepLabelStyle,
+    position: Int,
 ) {
     val bg = when (style) {
         TrackerStepLabelStyle.Main -> BookiiBookiiTheme.colors.uiMainPale
@@ -269,10 +274,15 @@ private fun StatusProgressBar(
         TrackerStepLabelStyle.Main -> BookiiBookiiTheme.colors.uiMain
         TrackerStepLabelStyle.Sub -> BookiiBookiiTheme.colors.uiMainSub
     }
+    val safePos = position.coerceIn(1, 4)
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // 칩 앞 dot 개수 = position - 1
+        repeat(safePos - 1) {
+            ProgressDot()
+        }
         Box(
             modifier = Modifier
                 .background(color = bg, shape = BookiiBookiiTheme.shape.round8)
@@ -284,15 +294,21 @@ private fun StatusProgressBar(
                 color = fg,
             )
         }
-        repeat(3) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(BookiiBookiiTheme.colors.grey100),
-            )
+        // 칩 뒤 dot 개수 = 4 - position
+        repeat(4 - safePos) {
+            ProgressDot()
         }
     }
+}
+
+@Composable
+private fun ProgressDot() {
+    Box(
+        modifier = Modifier
+            .size(8.dp)
+            .clip(CircleShape)
+            .background(BookiiBookiiTheme.colors.grey100),
+    )
 }
 
 @Composable
@@ -483,6 +499,7 @@ private fun TrackerDetailContentPreview() {
             statusLabel = "살인자의 기억법 · 후기 작성",
             currentStepLabel = "내 책 읽기",
             currentStepLabelStyle = TrackerStepLabelStyle.Main,
+            currentStepPosition = 1,
             myProfile = TrackerProfileItem(
                 nickname = "나",
                 bookTitle = "살인자의 기억법",

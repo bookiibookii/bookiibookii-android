@@ -10,6 +10,8 @@ import com.bookiibookii.bookiibookii.data.model.tracker.TrackerExtensionResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerImagePresignedUrlResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
@@ -53,6 +55,17 @@ interface TrkApi {
     suspend fun postDeliveryRegister(
         @Path("groupId") groupId: Long,
         @Body request: DeliveryRegisterReqDTO,
+    ): Response<ApiResponse<String>>
+
+    @GET("/api/groups/{groupId}/deliveries/address")
+    suspend fun getDeliveryAddress(
+        @Path("groupId") groupId: Long,
+    ): Response<ApiResponse<DeliveryAddressResDTO>>
+
+    @PATCH("/api/groups/{groupId}/deliveries/address/me")
+    suspend fun patchMyDeliveryAddress(
+        @Path("groupId") groupId: Long,
+        @Body request: DeliveryAddressUpdateReqDTO,
     ): Response<ApiResponse<String>>
 
     @POST("/api/groups/{groupId}/tracker/delivery")

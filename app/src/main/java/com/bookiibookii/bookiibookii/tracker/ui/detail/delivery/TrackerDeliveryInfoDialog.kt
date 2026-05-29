@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.Color
@@ -32,9 +33,20 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 택배 배송 정보 확인 다이얼로그
+// 표시용 주소 데이터
+data class TrackerDeliveryAddressDisplay(
+    val receiverName: String = "",
+    val phoneNumber: String = "",
+    val address: String = "",
+    val addressDetail: String = "",
+)
+
 @Composable
 fun TrackerDeliveryInfoDialog(
     partnerNickname: String,
+    myAddress: TrackerDeliveryAddressDisplay,
+    partnerAddress: TrackerDeliveryAddressDisplay,
+    canEditMyAddress: Boolean,
     onDismiss: () -> Unit,
     onEditClick: () -> Unit,
     onConfirmClick: () -> Unit,
@@ -45,6 +57,9 @@ fun TrackerDeliveryInfoDialog(
     ) {
         TrackerDeliveryInfoDialogContent(
             partnerNickname = partnerNickname,
+            myAddress = myAddress,
+            partnerAddress = partnerAddress,
+            canEditMyAddress = canEditMyAddress,
             onDismiss = onDismiss,
             onEditClick = onEditClick,
             onConfirmClick = onConfirmClick,
@@ -55,12 +70,18 @@ fun TrackerDeliveryInfoDialog(
 @Composable
 private fun TrackerDeliveryInfoDialogContent(
     partnerNickname: String,
+    myAddress: TrackerDeliveryAddressDisplay,
+    partnerAddress: TrackerDeliveryAddressDisplay,
+    canEditMyAddress: Boolean,
     onDismiss: () -> Unit,
     onEditClick: () -> Unit,
     onConfirmClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
+    val current = if (selectedTabIndex == 0) myAddress else partnerAddress
+    // "나" 탭이면서 canEditMyAddress=true 일 때만 수정 가능
+    val editEnabled = selectedTabIndex == 0 && canEditMyAddress
 
     Column(
         modifier = modifier
@@ -103,9 +124,10 @@ private fun TrackerDeliveryInfoDialogContent(
             )
         }
 
-        InfoField(label = "수령인", value = "장우영")
-        InfoField(label = "연락처", value = "010-1111-1111")
-        InfoField(label = "주소", value = "서울 용산구 한강로2가 426 101동 202호")
+        InfoField(label = "수령인", value = current.receiverName)
+        InfoField(label = "연락처", value = current.phoneNumber)
+        InfoField(label = "주소", value = current.address)
+        InfoField(label = "상세주소", value = current.addressDetail)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -113,8 +135,8 @@ private fun TrackerDeliveryInfoDialogContent(
         ) {
             CardButton(
                 text = "수정",
-                style = CardButtonStyle.White,
-                onClick = onEditClick,
+                style = if (editEnabled) CardButtonStyle.White else CardButtonStyle.Grey,
+                onClick = { if (editEnabled) onEditClick() },
                 modifier = Modifier.weight(1f),
             )
             CardButton(
@@ -174,7 +196,7 @@ private fun InfoField(label: String, value: String) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
+                .heightIn(min = 48.dp)
                 .background(
                     color = BookiiBookiiTheme.colors.grey100,
                     shape = BookiiBookiiTheme.shape.round20,
@@ -191,7 +213,6 @@ private fun InfoField(label: String, value: String) {
                 text = value,
                 style = BookiiBookiiTheme.typography.medium16,
                 color = BookiiBookiiTheme.colors.grey900,
-                maxLines = 1,
             )
         }
     }
@@ -203,6 +224,19 @@ private fun TrackerDeliveryInfoDialogPreview() {
     BookiiPreview {
         TrackerDeliveryInfoDialogContent(
             partnerNickname = "noshel",
+            myAddress = TrackerDeliveryAddressDisplay(
+                receiverName = "장우영",
+                phoneNumber = "010-1111-1111",
+                address = "서울 용산구 한강로2가 426",
+                addressDetail = "101동 202호",
+            ),
+            partnerAddress = TrackerDeliveryAddressDisplay(
+                receiverName = "noshel",
+                phoneNumber = "010-2222-2222",
+                address = "서울 강남구 테헤란로 123",
+                addressDetail = "10층",
+            ),
+            canEditMyAddress = true,
             onDismiss = {},
             onEditClick = {},
             onConfirmClick = {},
