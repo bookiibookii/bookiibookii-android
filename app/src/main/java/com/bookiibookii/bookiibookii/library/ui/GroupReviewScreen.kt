@@ -63,37 +63,9 @@ data class GroupReviewData(
     val bookReviews: List<BookReviewItem>,
 )
 
-private val mockMessages = listOf(
-    ExchangeMessage("noshel", "스카이님 진짜 귀여우시네요 저 어때요?", reaction = true, isMine = false),
-    ExchangeMessage("김스카이", "좋아요><", reaction = true, isMine = true),
-)
-
-private val mockBookReviews = listOf(
-    BookReviewItem(
-        bookTitle = "나는 나를 파괴할 권리가 있다",
-        bookAuthor = "김영하",
-        bookGenre = "",
-        myRating = 4,
-        myReview = "작가는 우리 삶의 민낯을 얼마나 깊게, 대체 어느 정도까지 보여주고 싶었던 것일까?",
-        myDate = "2026. 04. 15.",
-        partnerRating = 4,
-        partnerReview = "작가는 우리 삶의 민낯을 얼마나 깊게, 대체 어느 정도까지 보여주고 싶었던 것일까?",
-        partnerDate = "2026. 04. 05.",
-    ),
-)
-
-private val mockGroupReview = GroupReviewData(
-    groupName = "김영하 도장깨기 하실 분",
-    dateRange = "2026. 04. 29. – 2026. 05. 06.",
-    myUsername = "김스카이",
-    partnerUsername = "noshel",
-    messages = mockMessages,
-    bookReviews = mockBookReviews,
-)
-
 @Composable
 fun GroupReviewScreen(
-    data: GroupReviewData = mockGroupReview,
+    data: GroupReviewData? = null,
     onBackClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
 ) {
@@ -131,6 +103,8 @@ fun GroupReviewScreen(
                 )
             }
         }
+
+        if (data == null) return@Column
 
         Column(
             modifier = Modifier

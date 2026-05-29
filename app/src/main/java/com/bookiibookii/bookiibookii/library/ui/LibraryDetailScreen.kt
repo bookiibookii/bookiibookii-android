@@ -75,29 +75,10 @@ data class LibraryDetailBook(
     val endDate: String,
 )
 
-private val mockDetailBook = LibraryDetailBook(
-    groupName = "[헤일리와 함께해요]",
-    title = "프로젝트 헤일메리",
-    author = "앤디 위어",
-    genre = "소설",
-    rating = 4,
-    startDate = "2025. 12. 18.",
-    endDate = "2026. 01. 12.",
-)
-
-val mockReadingCards = listOf(
-    ReadingCard("nue_sway", "책을 쓰지 않고 한 우물만 팠다면, 나는 그들이 원하는 자리에 앉아 행복했을까. 나는 오히려 우물을 나와서 많이 느낀다.", "p.97", ReadingCardType.PHOTO, true, "2026. 04. 05."),
-    ReadingCard("nue_sway", "책을 쓰지 않고 한 우물만 팠다면, 나는 그들이 원하는 자리에 앉아 행복했을까. 나는 오히려 우물을 나와서 많이 느낀다.", "p.112", ReadingCardType.QUOTE, true, "2026. 04. 06."),
-    ReadingCard("sayo", "세상의 다양성을, 내가 보고 느낄 수 있는 것들의 가치를. 그것이 내가 우물 밖으로 나온 이유다.", "p.134", ReadingCardType.QUOTE, false, "2026. 04. 07."),
-    ReadingCard("sayo", "책을 쓰지 않고 한 우물만 팠다면, 나는 그들이 원하는 자리에 앉아 행복했을까.", "p.58", ReadingCardType.PHOTO, false, "2026. 04. 08."),
-    ReadingCard("nue_sway", "나는 오히려 우물을 나와서 많이 느낀다. 세상의 다양성을.", "p.97", ReadingCardType.PHOTO, true, "2026. 04. 09."),
-    ReadingCard("sayo", "태어나려는 자는 한 세계를 파괴해야 한다.", "p.200", ReadingCardType.QUOTE, false, "2026. 04. 10."),
-)
-
 @Composable
 fun LibraryDetailScreen(
-    book: LibraryDetailBook = mockDetailBook,
-    cards: List<ReadingCard> = mockReadingCards,
+    book: LibraryDetailBook? = null,
+    cards: List<ReadingCard> = emptyList(),
     onBackClick: () -> Unit = {},
     onAddTextCard: () -> Unit = {},
     onAddPhotoCard: () -> Unit = {},
@@ -131,9 +112,11 @@ fun LibraryDetailScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 104.dp),
         ) {
-            DetailHeader(title = book.title, onBackClick = onBackClick, onMenuClick = { showBookSheet = true })
+            DetailHeader(title = book?.title ?: "", onBackClick = onBackClick, onMenuClick = { showBookSheet = true })
             Spacer(modifier = Modifier.height(16.dp))
-            BookInfoCard(book = book, modifier = Modifier.padding(horizontal = 16.dp))
+            if (book != null) {
+                BookInfoCard(book = book, modifier = Modifier.padding(horizontal = 16.dp))
+            }
             Spacer(modifier = Modifier.height(16.dp))
             FilterRow(
                 myCardsOnly = myCardsOnly,
@@ -228,7 +211,7 @@ fun LibraryDetailScreen(
             }
         }
 
-        if (showBookSheet) {
+        if (showBookSheet && book != null) {
             LibraryBookBottomSheet(
                 title = book.title,
                 author = book.author,

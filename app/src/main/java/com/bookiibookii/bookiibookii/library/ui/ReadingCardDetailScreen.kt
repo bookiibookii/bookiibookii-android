@@ -106,7 +106,7 @@ private data class Particle(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReadingCardDetailScreen(
-    cards: List<ReadingCard> = mockReadingCards,
+    cards: List<ReadingCard> = emptyList(),
     initialIndex: Int = 0,
     sortByLatest: Boolean = true,
     bookTitle: String = "나는 당신을 편애합니다",

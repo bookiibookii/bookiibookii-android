@@ -60,14 +60,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         handleNavigationIntent(intent)
     }
 
-    // 컨테이너에 들어온 Fragment 종류에 따라 BottomNav 표시 여부 토글
-    // 우선 GroupFragment만 추가
+    // 탑레벨 Fragment(홈·트래커·서재 메인)일 때만 BottomNav 표시
     private fun observeFragmentChanges() {
         supportFragmentManager.addOnBackStackChangedListener {
             val current = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
-            binding.bottomNav.root.visibility =
-                if (current is GroupFragment) View.GONE else View.VISIBLE
-            // 서재/탭 선택 동기화
+            val isTopLevel = current is HomeFragment
+                    || current is TrackerFragment
+                    || current is LibraryFragment
+            binding.bottomNav.root.visibility = if (isTopLevel) View.VISIBLE else View.GONE
             updateBottomNavSelection(current)
         }
     }

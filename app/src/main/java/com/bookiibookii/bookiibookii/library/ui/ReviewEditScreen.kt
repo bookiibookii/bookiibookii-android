@@ -45,26 +45,18 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 private val reviewInputBg = Color(0xFFF4F3F1)
 
-private data class ReviewBookInfo(val title: String, val author: String, val genre: String)
-
-private val mockGroupName = "[헤일리와 함께해요]"
-private val mockDateRange = "2025. 12. 18. ~ 2026. 01. 12."
-private val mockPartnerName = "sayo"
-private val mockReviewBooks = listOf(
-    ReviewBookInfo("프로젝트 헤일메리", "앤디 위어", "소설"),
-    ReviewBookInfo("나는 당신을 편애합니다", "이기주", "에세이"),
-)
+data class ReviewBookInfo(val title: String, val author: String, val genre: String)
 
 @Composable
 fun ReviewEditScreen(
+    groupName: String = "",
+    dateRange: String = "",
+    partnerName: String = "",
+    books: List<ReviewBookInfo> = emptyList(),
     onBackClick: () -> Unit = {},
     onSubmit: () -> Unit = {},
 ) {
-    val groupName = mockGroupName
-    val dateRange = mockDateRange
-    val partnerName = mockPartnerName
-    val books = mockReviewBooks
-    val ratings = remember { mutableStateListOf(*IntArray(books.size) { 0 }.toTypedArray()) }
+    val ratings = remember(books) { mutableStateListOf(*IntArray(books.size) { 0 }.toTypedArray()) }
     val bookComments = remember { mutableStateListOf(*Array(books.size) { "" }) }
     var isPartnerGood by remember { mutableStateOf<Boolean?>(null) }
     var partnerComment by remember { mutableStateOf("") }
