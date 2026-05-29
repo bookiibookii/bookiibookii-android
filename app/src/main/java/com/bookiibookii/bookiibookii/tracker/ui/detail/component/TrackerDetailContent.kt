@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
+import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
 import com.bookiibookii.bookiibookii.tracker.ui.component.TrackerBookCover
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
@@ -49,9 +51,10 @@ private val OuterCardPadding = 20.dp
 fun TrackerDetailContent(
     groupName: String,
     dDay: String,
-    bookTitle: String,
     statusLabel: String,
     currentStepLabel: String,
+    currentStepLabelStyle: TrackerStepLabelStyle,
+    currentStepPosition: Int,
     myProfile: TrackerProfileItem,
     partnerProfile: TrackerProfileItem,
     exchangeLabel: String,
@@ -91,9 +94,10 @@ fun TrackerDetailContent(
                 GroupInfoSection(
                     groupName = groupName,
                     dDay = dDay,
-                    bookTitle = bookTitle,
                     statusLabel = statusLabel,
                     currentStepLabel = currentStepLabel,
+                    currentStepLabelStyle = currentStepLabelStyle,
+                    currentStepPosition = currentStepPosition,
                 )
                 TwoProfileSection(
                     myProfile = myProfile,
@@ -191,9 +195,10 @@ private fun IconCircleButton(
 private fun GroupInfoSection(
     groupName: String,
     dDay: String,
-    bookTitle: String,
     statusLabel: String,
     currentStepLabel: String,
+    currentStepLabelStyle: TrackerStepLabelStyle,
+    currentStepPosition: Int,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -218,12 +223,16 @@ private fun GroupInfoSection(
                 ) {
                     DDayChip(text = dDay)
                     Text(
-                        text = "$bookTitle · $statusLabel",
+                        text = statusLabel,
                         style = BookiiBookiiTheme.typography.regular16,
                         color = BookiiBookiiTheme.colors.grey800,
                     )
                 }
-                StatusProgressBar(currentStepLabel = currentStepLabel)
+                StatusProgressBar(
+                    currentStepLabel = currentStepLabel,
+                    style = currentStepLabelStyle,
+                    position = currentStepPosition,
+                )
             }
             HorizontalDivider(
                 thickness = 0.8.dp,
@@ -252,34 +261,54 @@ private fun DDayChip(text: String) {
 }
 
 @Composable
-private fun StatusProgressBar(currentStepLabel: String) {
+private fun StatusProgressBar(
+    currentStepLabel: String,
+    style: TrackerStepLabelStyle,
+    position: Int,
+) {
+    val bg = when (style) {
+        TrackerStepLabelStyle.Main -> BookiiBookiiTheme.colors.uiMainPale
+        TrackerStepLabelStyle.Sub -> BookiiBookiiTheme.colors.uiMainSubPale
+    }
+    val fg = when (style) {
+        TrackerStepLabelStyle.Main -> BookiiBookiiTheme.colors.uiMain
+        TrackerStepLabelStyle.Sub -> BookiiBookiiTheme.colors.uiMainSub
+    }
+    val safePos = position.coerceIn(1, 4)
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // 칩 앞 dot 개수 = position - 1
+        repeat(safePos - 1) {
+            ProgressDot()
+        }
         Box(
             modifier = Modifier
-                .background(
-                    color = BookiiBookiiTheme.colors.uiMainPale,
-                    shape = BookiiBookiiTheme.shape.round8,
-                )
+                .background(color = bg, shape = BookiiBookiiTheme.shape.round8)
                 .padding(horizontal = 6.dp, vertical = 2.dp),
         ) {
             Text(
                 text = currentStepLabel,
                 style = BookiiBookiiTheme.typography.regular10,
-                color = BookiiBookiiTheme.colors.uiMain,
+                color = fg,
             )
         }
-        repeat(3) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(BookiiBookiiTheme.colors.grey100),
-            )
+        // 칩 뒤 dot 개수 = 4 - position
+        repeat(4 - safePos) {
+            ProgressDot()
         }
     }
+}
+
+@Composable
+private fun ProgressDot() {
+    Box(
+        modifier = Modifier
+            .size(8.dp)
+            .clip(CircleShape)
+            .background(BookiiBookiiTheme.colors.grey100),
+    )
 }
 
 @Composable
@@ -320,6 +349,7 @@ private fun ProfileColumn(
         ) {
             TrackerBookCover(
                 modifier = Modifier.size(width = 80.dp, height = 104.dp),
+                imageUrl = profile.bookCoverUrl,
                 isOwnerBook = profile.isOwnerBook,
             )
             Column(
@@ -372,17 +402,17 @@ private fun ProfileColumn(
 
 @Composable
 private fun TrackerProgressBar(percent: Int) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(BookiiBookiiTheme.colors.grey200),
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(6.dp)
+            .clip(BookiiBookiiTheme.shape.round4)
+            .background(BookiiBookiiTheme.colors.grey200),
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(fraction = (percent / 100f).coerceIn(0f, 1f))
-                .height(3.dp)
+                .fillMaxHeight()
                 .background(BookiiBookiiTheme.colors.grey800),
         )
     }
@@ -466,9 +496,10 @@ private fun TrackerDetailContentPreview() {
         TrackerDetailContent(
             groupName = "김영하 도장깨기 하실 분",
             dDay = "D-2",
-            bookTitle = "살인자의 기억법",
-            statusLabel = "후기 작성",
+            statusLabel = "살인자의 기억법 · 후기 작성",
             currentStepLabel = "내 책 읽기",
+            currentStepLabelStyle = TrackerStepLabelStyle.Main,
+            currentStepPosition = 1,
             myProfile = TrackerProfileItem(
                 nickname = "나",
                 bookTitle = "살인자의 기억법",

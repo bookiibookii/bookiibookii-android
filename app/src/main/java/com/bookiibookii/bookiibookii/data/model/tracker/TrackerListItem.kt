@@ -1,5 +1,17 @@
 package com.bookiibookii.bookiibookii.data.model.tracker
 
+data class TrackerListResDTO(
+    val summary: TrackerSummaryDTO,
+    val items: List<TrackerListItemResDTO>
+)
+
+data class TrackerSummaryDTO(
+    val totalCount: Int,
+    val readingCount: Int,
+    val exchangingCount: Int,
+    val reviewCount: Int,
+)
+
 data class TrackerListItemResDTO(
     val groupId: Long,
     val groupName: String?,
