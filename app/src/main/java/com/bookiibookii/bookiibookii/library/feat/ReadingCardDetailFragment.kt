@@ -10,7 +10,6 @@ import com.bookiibookii.bookiibookii.library.BaseLibraryFragment
 import com.bookiibookii.bookiibookii.library.ui.ReadingCard
 import com.bookiibookii.bookiibookii.library.ui.ReadingCardDetailScreen
 import com.bookiibookii.bookiibookii.library.ui.ReadingCardType
-import com.bookiibookii.bookiibookii.library.ui.mockReadingCards
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 class ReadingCardDetailFragment : BaseLibraryFragment() {
@@ -21,13 +20,13 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
     // Bundle에서 카드 목록 복원 (직렬화: usernames, contents, pages, types, bookmarks, dates)
     private val cards: List<ReadingCard>
         get() {
-            val args = arguments ?: return mockReadingCards
-            val usernames  = args.getStringArray(ARG_USERNAMES)  ?: return mockReadingCards
-            val contents   = args.getStringArray(ARG_CONTENTS)   ?: return mockReadingCards
-            val pages      = args.getStringArray(ARG_PAGES)       ?: return mockReadingCards
-            val types      = args.getIntArray(ARG_TYPES)          ?: return mockReadingCards
-            val bookmarks  = args.getBooleanArray(ARG_BOOKMARKS)  ?: return mockReadingCards
-            val dates      = args.getStringArray(ARG_DATES)       ?: return mockReadingCards
+            val args = arguments ?: return emptyList()
+            val usernames  = args.getStringArray(ARG_USERNAMES)  ?: return emptyList()
+            val contents   = args.getStringArray(ARG_CONTENTS)   ?: return emptyList()
+            val pages      = args.getStringArray(ARG_PAGES)       ?: return emptyList()
+            val types      = args.getIntArray(ARG_TYPES)          ?: return emptyList()
+            val bookmarks  = args.getBooleanArray(ARG_BOOKMARKS)  ?: return emptyList()
+            val dates      = args.getStringArray(ARG_DATES)       ?: return emptyList()
             return usernames.indices.map { i ->
                 ReadingCard(
                     username    = usernames[i],

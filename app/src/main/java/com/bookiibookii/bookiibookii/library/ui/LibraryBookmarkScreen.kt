@@ -44,7 +44,7 @@ private enum class BookmarkSortType { RECENT, OLDEST }
 
 @Composable
 fun LibraryBookmarkScreen(
-    cards: List<ReadingCard> = mockReadingCards,
+    cards: List<ReadingCard> = emptyList(),
     onBackClick: () -> Unit = {},
     onCardClick: (index: Int, bookmarkedCards: List<ReadingCard>) -> Unit = { _, _ -> },
 ) {

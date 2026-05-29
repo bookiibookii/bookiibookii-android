@@ -53,23 +53,10 @@ data class LibraryBook(
     val rating: Int? = null,
 )
 
-private val mockReadingBooks = listOf(
-    LibraryBook("[헤일리와 함께해요]", "프로젝트 헤일메리", progress = 0.48f),
-    LibraryBook("[사요와 함께해요]", "프로젝트 헤일메리", progress = 0.48f),
-    LibraryBook("[무스와 함께해요]", "프로젝트 헤일메리", progress = 0.48f),
-)
-
-private val mockDoneBooks = listOf(
-    LibraryBook("[그룹명]", "도서명", rating = 4),
-    LibraryBook("[그룹명]", "도서명", rating = 4),
-    LibraryBook("[그룹명]", "도서명", rating = 4),
-    LibraryBook("[그룹명]", "도서명", rating = 4),
-    LibraryBook("[그룹명]", "도서명", rating = 4),
-    LibraryBook("[그룹명]", "도서명", rating = 4),
-)
-
 @Composable
 fun LibraryScreen(
+    readingBooks: List<LibraryBook> = emptyList(),
+    doneBooks: List<LibraryBook> = emptyList(),
     onProfileClick: () -> Unit = {},
     onBookmarkClick: () -> Unit = {},
     onBookClick: (LibraryBook) -> Unit = {},
@@ -77,6 +64,7 @@ fun LibraryScreen(
     var searchQuery by remember { mutableStateOf("") }
     var sortType by remember { mutableStateOf(LibrarySortType.RECENT) }
     var viewType by remember { mutableStateOf(LibraryViewType.GRID) }
+    val allBooks = readingBooks + doneBooks
     val isSearchActive = searchQuery.isNotEmpty()
 
     Column(
@@ -97,13 +85,13 @@ fun LibraryScreen(
 
         if (isSearchActive) {
             LibrarySearchResults(
-                books = mockReadingBooks + mockDoneBooks,
+                books = allBooks,
                 viewType = viewType,
                 onBookClick = onBookClick,
             )
         } else {
             LibraryFilterBar(
-                bookCount = 35,
+                bookCount = allBooks.size,
                 sortType = sortType,
                 viewType = viewType,
                 onSortChange = { sortType = it },
@@ -111,19 +99,23 @@ fun LibraryScreen(
                     viewType = if (viewType == LibraryViewType.GRID) LibraryViewType.LIST else LibraryViewType.GRID
                 },
             )
-            LibraryBookSection(
-                title = "읽는 중",
-                books = mockReadingBooks,
-                viewType = viewType,
-                onBookClick = onBookClick,
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            LibraryBookSection(
-                title = "다 읽었어요",
-                books = mockDoneBooks,
-                viewType = viewType,
-                onBookClick = onBookClick,
-            )
+            if (readingBooks.isNotEmpty()) {
+                LibraryBookSection(
+                    title = "읽는 중",
+                    books = readingBooks,
+                    viewType = viewType,
+                    onBookClick = onBookClick,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+            if (doneBooks.isNotEmpty()) {
+                LibraryBookSection(
+                    title = "다 읽었어요",
+                    books = doneBooks,
+                    viewType = viewType,
+                    onBookClick = onBookClick,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
