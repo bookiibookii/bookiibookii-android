@@ -16,6 +16,7 @@ import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
+import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.tracker.TrackerFragment
@@ -66,6 +67,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             val current = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
             binding.bottomNav.root.visibility =
                 if (current is GroupFragment) View.GONE else View.VISIBLE
+            // 서재/탭 선택 동기화
+            updateBottomNavSelection(current)
         }
     }
 
@@ -91,6 +94,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.bottomNav.itemTracker.setOnClickListener {
             selectTab(NavTab.TRACKER, TrackerFragment())
         }
+        binding.bottomNav.itemLibrary.setOnClickListener {
+            selectTab(NavTab.LIBRARY, LibraryFragment())
+        }
     }
 
     private fun selectTab(tab: NavTab, fragment: Fragment) {
@@ -100,6 +106,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     fun moveToGroupTab() {
         selectTab(NavTab.HOME, HomeFragment())
+    }
+
+    private fun updateBottomNavSelection(current: Fragment?) {
+        when (current) {
+            is HomeFragment -> setBottomNavSelected(NavTab.HOME)
+            is TrackerFragment -> setBottomNavSelected(NavTab.TRACKER)
+            is LibraryFragment -> setBottomNavSelected(NavTab.LIBRARY)
+        }
     }
 
     private fun replaceFragment(fragment: Fragment) {

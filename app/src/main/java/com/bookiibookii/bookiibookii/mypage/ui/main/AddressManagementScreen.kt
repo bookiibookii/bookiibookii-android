@@ -486,10 +486,10 @@ private fun DeliveryBottomSheet(
             Spacer(modifier = Modifier.height(16.dp))
             AddressFormField(label = "전화번호", isRequired = true, value = phone, placeholder = "010-0000-0000", onValueChange = { raw ->
                 val digits = raw.filter { it.isDigit() }.take(11)
-                phone = when {
-                    digits.length <= 3 -> digits
-                    digits.length <= 7 -> "${digits.substring(0, 3)}-${digits.substring(3)}"
-                    else -> "${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}"
+                phone = if (digits.length == 11) {
+                    "${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}"
+                } else {
+                    digits
                 }
             })
             Spacer(modifier = Modifier.height(20.dp))

@@ -1,0 +1,370 @@
+package com.bookiibookii.bookiibookii.library.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+
+enum class LibrarySortType { RECENT, OLDEST, RATING, TITLE }
+private enum class LibraryViewType { GRID, LIST }
+
+// 검색바 radius: 좌20/우30 비대칭 (피그마 스펙)
+private val searchBarShape = RoundedCornerShape(
+    topStart = 20.dp, topEnd = 30.dp,
+    bottomStart = 20.dp, bottomEnd = 30.dp,
+)
+
+data class LibraryBook(
+    val groupName: String,
+    val title: String,
+    val coverUrl: String? = null,
+    val progress: Float? = null,
+    val rating: Int? = null,
+)
+
+private val mockReadingBooks = listOf(
+    LibraryBook("[헤일리와 함께해요]", "프로젝트 헤일메리", progress = 0.48f),
+    LibraryBook("[사요와 함께해요]", "프로젝트 헤일메리", progress = 0.48f),
+    LibraryBook("[무스와 함께해요]", "프로젝트 헤일메리", progress = 0.48f),
+)
+
+private val mockDoneBooks = listOf(
+    LibraryBook("[그룹명]", "도서명", rating = 4),
+    LibraryBook("[그룹명]", "도서명", rating = 4),
+    LibraryBook("[그룹명]", "도서명", rating = 4),
+    LibraryBook("[그룹명]", "도서명", rating = 4),
+    LibraryBook("[그룹명]", "도서명", rating = 4),
+    LibraryBook("[그룹명]", "도서명", rating = 4),
+)
+
+@Composable
+fun LibraryScreen(
+    onProfileClick: () -> Unit = {},
+    onBookmarkClick: () -> Unit = {},
+    onBookClick: (LibraryBook) -> Unit = {},
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var sortType by remember { mutableStateOf(LibrarySortType.RECENT) }
+    var viewType by remember { mutableStateOf(LibraryViewType.GRID) }
+    val isSearchActive = searchQuery.isNotEmpty()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BookiiBookiiTheme.colors.uiBg)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        LibraryHeader(onProfileClick = onProfileClick, onBookmarkClick = onBookmarkClick)
+
+        LibrarySearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp),
+        )
+
+        if (isSearchActive) {
+            LibrarySearchResults(
+                books = mockReadingBooks + mockDoneBooks,
+                viewType = viewType,
+                onBookClick = onBookClick,
+            )
+        } else {
+            LibraryFilterBar(
+                bookCount = 35,
+                sortType = sortType,
+                viewType = viewType,
+                onSortChange = { sortType = it },
+                onViewToggle = {
+                    viewType = if (viewType == LibraryViewType.GRID) LibraryViewType.LIST else LibraryViewType.GRID
+                },
+            )
+            LibraryBookSection(
+                title = "읽는 중",
+                books = mockReadingBooks,
+                viewType = viewType,
+                onBookClick = onBookClick,
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            LibraryBookSection(
+                title = "다 읽었어요",
+                books = mockDoneBooks,
+                viewType = viewType,
+                onBookClick = onBookClick,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun LibraryHeader(
+    onProfileClick: () -> Unit,
+    onBookmarkClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(BookiiBookiiTheme.colors.white),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(68.dp)
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            // 아이콘 버튼 40dp, 아이콘 자체 32dp (피그마 스펙)
+            IconButton(onClick = onProfileClick, modifier = Modifier.size(40.dp)) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_person_fill),
+                    contentDescription = "프로필",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+            Text(
+                text = "서재",
+                style = BookiiBookiiTheme.typography.medium20,
+                color = BookiiBookiiTheme.colors.grey900,
+            )
+            IconButton(onClick = onBookmarkClick, modifier = Modifier.size(40.dp)) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_bookmark),
+                    contentDescription = "북마크",
+                    tint = BookiiBookiiTheme.colors.grey900,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibrarySearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // 높이 56dp, 테두리 Grey100, 비대칭 radius (피그마 스펙)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(searchBarShape)
+            .background(BookiiBookiiTheme.colors.white)
+            .border(1.dp, BookiiBookiiTheme.colors.grey100, searchBarShape)
+            .padding(start = 16.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                textStyle = BookiiBookiiTheme.typography.medium16.copy(color = BookiiBookiiTheme.colors.grey900),
+                modifier = Modifier.weight(1f),
+                decorationBox = { inner ->
+                    if (query.isEmpty()) {
+                        Text(
+                            text = "그룹명, 도서명, 저자명으로 검색",
+                            style = BookiiBookiiTheme.typography.regular16,
+                            color = BookiiBookiiTheme.colors.grey500,
+                        )
+                    }
+                    inner()
+                },
+            )
+            // 검색 아이콘 컨테이너: 44dp, Grey300, radius 30dp (피그마 스펙)
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(30.dp))
+                    .background(BookiiBookiiTheme.colors.grey300),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_search),
+                    contentDescription = null,
+                    tint = BookiiBookiiTheme.colors.grey500,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibraryFilterBar(
+    bookCount: Int,
+    sortType: LibrarySortType,
+    viewType: LibraryViewType,
+    onSortChange: (LibrarySortType) -> Unit,
+    onViewToggle: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.clickable { onViewToggle() },
+        ) {
+            Icon(
+                painter = painterResource(if (viewType == LibraryViewType.GRID) R.drawable.ic_album else R.drawable.ic_line),
+                contentDescription = "뷰 전환",
+                tint = BookiiBookiiTheme.colors.grey900,
+                modifier = Modifier.size(24.dp),
+            )
+            Text(text = "$bookCount", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
+            Text(text = "권", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900)
+        }
+
+        // 정렬 옵션: 각 Text 사이에 "|" 를 별도 Text로 구분 (피그마 스펙)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            val sortOptions = listOf(
+                LibrarySortType.RECENT to "최신순",
+                LibrarySortType.OLDEST to "과거순",
+                LibrarySortType.RATING to "별점순",
+                LibrarySortType.TITLE to "제목순",
+            )
+            sortOptions.forEachIndexed { index, (type, label) ->
+                Text(
+                    text = label,
+                    style = if (sortType == type) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
+                    color = if (sortType == type) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey500,
+                    modifier = Modifier.clickable { onSortChange(type) },
+                )
+                if (index < sortOptions.size - 1) {
+                    Text(
+                        text = "|",
+                        style = BookiiBookiiTheme.typography.regular14,
+                        color = BookiiBookiiTheme.colors.grey500,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibraryBookSection(
+    title: String,
+    books: List<LibraryBook>,
+    viewType: LibraryViewType,
+    onBookClick: (LibraryBook) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Text(
+            text = title,
+            style = BookiiBookiiTheme.typography.semibold20,
+            color = BookiiBookiiTheme.colors.grey900,
+            modifier = Modifier.padding(vertical = 16.dp),
+        )
+        if (viewType == LibraryViewType.GRID) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                books.chunked(3).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        row.forEach { book ->
+                            LibraryBookGridItem(book = book, modifier = Modifier.weight(1f).clickable { onBookClick(book) })
+                        }
+                        repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+                    }
+                }
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                books.forEach { book ->
+                    LibraryBookListItem(book = book, onClick = { onBookClick(book) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibrarySearchResults(
+    books: List<LibraryBook>,
+    viewType: LibraryViewType,
+    onBookClick: (LibraryBook) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text(text = "${books.size}권", style = BookiiBookiiTheme.typography.regular15, color = BookiiBookiiTheme.colors.grey900)
+        if (viewType == LibraryViewType.GRID) {
+            books.chunked(3).forEach { row ->
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    row.forEach { book ->
+                        LibraryBookGridItem(book = book, modifier = Modifier.weight(1f).clickable { onBookClick(book) })
+                    }
+                    repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+                }
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                books.forEach { book -> LibraryBookListItem(book = book, onClick = { onBookClick(book) }) }
+            }
+        }
+    }
+}
+
+// LibraryBookGridItem, LibraryBookListItem → LibraryBookItem.kt
+
+@Preview(showBackground = true)
+@Composable
+private fun LibraryScreenPreview() {
+    LibraryScreen()
+}
