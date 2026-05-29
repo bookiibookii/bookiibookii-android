@@ -7,6 +7,8 @@ import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryRegisterReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
@@ -48,6 +50,13 @@ class TrackerRepository(
             groupId,
             DeliveryRegisterReqDTO(deliveryCompany, trackingNumber),
         )
+    }
+
+    suspend fun registerMeeting(
+        groupId: Long,
+        request: MeetingRegisterReqDTO,
+    ): Response<ApiResponse<MeetingRegisterResDTO>> {
+        return api.postMeetingRegister(groupId, request)
     }
 
     suspend fun fetchDeliveryAddress(

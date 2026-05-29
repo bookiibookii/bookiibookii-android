@@ -49,6 +49,9 @@ import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgress
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingConfirmDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingPlaceDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeetingTimeDialog
 import com.bookiibookii.bookiibookii.tracker.model.TrackerNotificationItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerMainViewModel
@@ -437,7 +440,13 @@ fun TrackerMainRoute(
     var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var deliveryInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var deliveryEditDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    // 약속 잡기: 어느 카드인지(null=닫힘) + 단계(1=일시, 2=장소, 3=확인)
+    var meetingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var meetingStep by rememberSaveable { mutableStateOf(1) }
+    // 1/3에서 고른 약속 일시 (raw ISO, 예: 2026-05-20T14:30:00)
+    var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
+    val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     TrackerMainScreen(
         uiState = uiState,
         // TODO: 닉네임 / 알림 API 연동 전까지 placeholder
@@ -459,6 +468,11 @@ fun TrackerMainRoute(
                         deliveryInfoDialogGroupId = groupId
                     }
                 },
+                onRegisterMeeting = {
+                    meetingStep = 1
+                    meetingDialogGroupId = groupId
+                },
+                onGoToComments = {}, // TODO: 댓글 화면 연결 보류
             )
         },
         onSecondaryAction = { groupId ->
@@ -473,6 +487,11 @@ fun TrackerMainRoute(
                         deliveryInfoDialogGroupId = groupId
                     }
                 },
+                onRegisterMeeting = {
+                    meetingStep = 1
+                    meetingDialogGroupId = groupId
+                },
+                onGoToComments = {}, // TODO: 댓글 화면 연결 보류
             )
         },
     )
@@ -544,6 +563,56 @@ fun TrackerMainRoute(
             },
         )
     }
+    // 약속 잡기 1/3 → 2/3 → 3/3
+    if (meetingDialogGroupId != null) {
+        when (meetingStep) {
+            1 -> TrackerDirectMeetingTimeDialog(
+                onDismiss = {
+                    meetingDialogGroupId = null
+                    viewModel.clearMeetingPlace()
+                },
+                onNextClick = { scheduledAt ->
+                    meetingScheduledAt = scheduledAt
+                    meetingStep = 2
+                },
+            )
+            2 -> TrackerDirectMeetingPlaceDialog(
+                address = meetingPlace?.address.orEmpty(),
+                addressDetail = meetingPlace?.addressDetail.orEmpty(),
+                onLoadMyPlaceClick = { viewModel.loadMyExchangePlace() },
+                onDismiss = {
+                    meetingDialogGroupId = null
+                    viewModel.clearMeetingPlace()
+                },
+                onPreviousClick = { meetingStep = 1 },
+                onNextClick = { meetingStep = 3 },
+            )
+            3 -> TrackerDirectMeetingConfirmDialog(
+                scheduledAt = meetingScheduledAt,
+                address = meetingPlace?.address.orEmpty(),
+                addressDetail = meetingPlace?.addressDetail.orEmpty(),
+                onDismiss = {
+                    meetingDialogGroupId = null
+                    viewModel.clearMeetingPlace()
+                },
+                onConfirmClick = {
+                    val gid = meetingDialogGroupId
+                    val place = meetingPlace
+                    if (gid != null && place != null) {
+                        viewModel.registerMeeting(
+                            groupId = gid,
+                            locationId = place.id,
+                            addressDetail = place.addressDetail,
+                            scheduledAt = meetingScheduledAt,
+                        ) {
+                            meetingDialogGroupId = null
+                            viewModel.clearMeetingPlace()
+                        }
+                    }
+                },
+            )
+        }
+    }
 }
 
 private inline fun dispatchAction(
@@ -552,13 +621,19 @@ private inline fun dispatchAction(
     onWriteBookReview: () -> Unit,
     onRegisterTrackingNumber: () -> Unit,
     onCheckDeliveryInfo: () -> Unit,
+    onRegisterMeeting: () -> Unit,
+    onGoToComments: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
         TrackerAction.WriteBookReview -> onWriteBookReview()
         TrackerAction.RegisterTrackingNumber -> onRegisterTrackingNumber()
         TrackerAction.CheckDeliveryInfo -> onCheckDeliveryInfo()
+        TrackerAction.RegisterMeeting -> onRegisterMeeting()
+        TrackerAction.GoToComments -> onGoToComments()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
+        TrackerAction.CheckMeeting -> Unit // TODO: 약속 확인 동작 연결 보류
+        TrackerAction.ConfirmExchange -> Unit // TODO: 교환 확인 동작 연결 보류
         TrackerAction.None, null -> Unit
     }
 }

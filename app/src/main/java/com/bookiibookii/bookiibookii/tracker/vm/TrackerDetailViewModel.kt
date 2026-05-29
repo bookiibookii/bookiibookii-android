@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddress
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
 import com.bookiibookii.bookiibookii.tracker.model.TrackerDetailUiState
 import com.bookiibookii.bookiibookii.tracker.model.toUiState
@@ -26,6 +28,10 @@ class TrackerDetailViewModel(
 
     private val _deliveryAddress = MutableStateFlow<DeliveryAddressResDTO?>(null)
     val deliveryAddress: StateFlow<DeliveryAddressResDTO?> = _deliveryAddress
+
+    // 약속 장소: "나의 희망교환장소 불러오기"로 채워지는 대표 장소
+    private val _meetingPlace = MutableStateFlow<ExchangeAddress?>(null)
+    val meetingPlace: StateFlow<ExchangeAddress?> = _meetingPlace
 
     init {
         load()
@@ -76,6 +82,52 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시 (다음 단계에서 에러 표시)
+            }
+        }
+    }
+
+    // 대표(희망) 교환 장소를 불러와 약속 장소로 채운다. isDefault 우선, 없으면 첫 항목.
+    fun loadMyExchangePlace() {
+        viewModelScope.launch {
+            try {
+                val res = RetrofitClient.locationApi().getExchanges()
+                val body = res.body()
+                if (res.isSuccessful && body?.isSuccess == true) {
+                    val list = body.result.orEmpty()
+                    _meetingPlace.value = list.firstOrNull { it.isDefault } ?: list.firstOrNull()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
+    }
+
+    fun clearMeetingPlace() {
+        _meetingPlace.value = null
+    }
+
+    fun registerMeeting(
+        locationId: Long,
+        addressDetail: String?,
+        scheduledAt: String,
+        onSuccess: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            try {
+                val res = repository.registerMeeting(
+                    groupId,
+                    MeetingRegisterReqDTO(
+                        locationId = locationId,
+                        addressDetail = addressDetail,
+                        scheduledAt = scheduledAt,
+                    ),
+                )
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    onSuccess()
+                    load()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
             }
         }
     }

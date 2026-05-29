@@ -22,10 +22,15 @@ import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.component.CloseButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 // 직접교환 약속 잡기 3/3 - 약속 확인
 @Composable
 fun TrackerDirectMeetingConfirmDialog(
+    scheduledAt: String,   // raw ISO date-time, 예: 2026-05-20T14:30:00
+    address: String,
+    addressDetail: String,
     onDismiss: () -> Unit,
     onConfirmClick: () -> Unit,
 ) {
@@ -34,6 +39,9 @@ fun TrackerDirectMeetingConfirmDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         TrackerDirectMeetingConfirmDialogContent(
+            scheduledAt = scheduledAt,
+            address = address,
+            addressDetail = addressDetail,
             onDismiss = onDismiss,
             onConfirmClick = onConfirmClick,
         )
@@ -42,6 +50,9 @@ fun TrackerDirectMeetingConfirmDialog(
 
 @Composable
 private fun TrackerDirectMeetingConfirmDialogContent(
+    scheduledAt: String,
+    address: String,
+    addressDetail: String,
     onDismiss: () -> Unit,
     onConfirmClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -78,8 +89,11 @@ private fun TrackerDirectMeetingConfirmDialogContent(
             CloseButton(onClick = onDismiss)
         }
 
-        ReadOnlyField(label = "일시", value = "2026. 01. 19. 14:00")
-        ReadOnlyField(label = "장소", value = "메가MGC커피 역삼초교교차로점 문 앞")
+        ReadOnlyField(label = "일시", value = formatScheduledAt(scheduledAt))
+        ReadOnlyField(
+            label = "장소",
+            value = if (addressDetail.isBlank()) address else "$address $addressDetail",
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -100,6 +114,14 @@ private fun TrackerDirectMeetingConfirmDialogContent(
         }
     }
 }
+
+private val MEETING_DISPLAY_FORMATTER = DateTimeFormatter.ofPattern("yyyy. MM. dd. HH:mm")
+
+// "2026-05-20T14:30:00" → "2026. 05. 20. 14:30" (파싱 실패 시 원본 그대로)
+private fun formatScheduledAt(scheduledAt: String): String =
+    runCatching {
+        LocalDateTime.parse(scheduledAt).format(MEETING_DISPLAY_FORMATTER)
+    }.getOrDefault(scheduledAt)
 
 @Composable
 private fun StepChip(text: String) {
@@ -162,6 +184,9 @@ private fun ReadOnlyField(label: String, value: String) {
 private fun TrackerDirectMeetingConfirmDialogPreview() {
     BookiiPreview {
         TrackerDirectMeetingConfirmDialogContent(
+            scheduledAt = "2026-05-20T14:30:00",
+            address = "서울특별시 강남구 강남대로 396",
+            addressDetail = "2층 창가 자리",
             onDismiss = {},
             onConfirmClick = {},
         )

@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.mypage.ui.common
+package com.bookiibookii.bookiibookii.ui.component
 
 import android.annotation.SuppressLint
 import android.os.Handler

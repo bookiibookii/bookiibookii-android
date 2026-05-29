@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -50,7 +52,7 @@ private data class DayCell(
 @Composable
 fun TrackerDirectMeetingTimeDialog(
     onDismiss: () -> Unit,
-    onNextClick: () -> Unit,
+    onNextClick: (scheduledAt: String) -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -66,13 +68,15 @@ fun TrackerDirectMeetingTimeDialog(
 @Composable
 private fun TrackerDirectMeetingTimeDialogContent(
     onDismiss: () -> Unit,
-    onNextClick: () -> Unit,
+    onNextClick: (scheduledAt: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val today = LocalDate.of(2026, 5, 23)
     var displayMonth by remember { mutableStateOf(YearMonth.of(2026, 5)) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var isAm by remember { mutableStateOf(true) }
+    var hour by remember { mutableStateOf(6) }
+    var minute by remember { mutableStateOf(0) }
 
     Column(
         modifier = modifier
@@ -194,8 +198,10 @@ private fun TrackerDirectMeetingTimeDialogContent(
             TimePickerRow(
                 isAm = isAm,
                 onAmPmChange = { isAm = it },
-                hour = "06",
-                minute = "00",
+                hour = hour,
+                minute = minute,
+                onHourChange = { hour = it },
+                onMinuteChange = { minute = it },
             )
         }
 
@@ -209,14 +215,31 @@ private fun TrackerDirectMeetingTimeDialogContent(
                 onClick = onDismiss,
                 modifier = Modifier.weight(1f),
             )
+            val date = selectedDate
             CardButton(
                 text = "다음",
-                style = if (selectedDate != null) CardButtonStyle.Main else CardButtonStyle.Grey,
-                onClick = if (selectedDate != null) onNextClick else {{}},
+                style = if (date != null) CardButtonStyle.Main else CardButtonStyle.Grey,
+                onClick = if (date != null) {
+                    { onNextClick(buildScheduledAt(date, isAm, hour, minute)) }
+                } else {
+                    {}
+                },
                 modifier = Modifier.weight(1f),
             )
         }
     }
+}
+
+// 선택값(날짜 + 오전/오후 + 12시간제 시 + 분)을 ISO date-time 문자열로 조립
+private fun buildScheduledAt(date: LocalDate, isAm: Boolean, hour12: Int, minute: Int): String {
+    val hour24 = when {
+        isAm && hour12 == 12 -> 0        // 오전 12시 → 00시
+        !isAm && hour12 != 12 -> hour12 + 12 // 오후 1~11시 → 13~23시
+        else -> hour12                   // 오전 1~11시, 오후 12시
+    }
+    return "%04d-%02d-%02dT%02d:%02d:00".format(
+        date.year, date.monthValue, date.dayOfMonth, hour24, minute,
+    )
 }
 
 @Composable
@@ -243,12 +266,17 @@ private fun StepChip(text: String) {
     }
 }
 
+private val HOUR_OPTIONS = (1..12).toList()
+private val MINUTE_OPTIONS = (0..55 step 5).toList()
+
 @Composable
 private fun TimePickerRow(
     isAm: Boolean,
     onAmPmChange: (Boolean) -> Unit,
-    hour: String,
-    minute: String,
+    hour: Int,
+    minute: Int,
+    onHourChange: (Int) -> Unit,
+    onMinuteChange: (Int) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.uiBg)
@@ -260,8 +288,18 @@ private fun TimePickerRow(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             AmPmToggle(isAm = isAm, onChange = onAmPmChange)
-            TimeBox(value = hour, suffix = "시")
-            TimeBox(value = minute, suffix = "분")
+            TimeBox(
+                value = hour,
+                suffix = "시",
+                options = HOUR_OPTIONS,
+                onSelect = onHourChange,
+            )
+            TimeBox(
+                value = minute,
+                suffix = "분",
+                options = MINUTE_OPTIONS,
+                onSelect = onMinuteChange,
+            )
         }
         HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.uiBg)
     }
@@ -315,27 +353,56 @@ private fun AmPmChip(
 }
 
 @Composable
-private fun TimeBox(value: String, suffix: String) {
+private fun TimeBox(
+    value: Int,
+    suffix: String,
+    options: List<Int>,
+    onSelect: (Int) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .width(80.dp)
-                .border(
-                    width = 1.dp,
-                    color = BookiiBookiiTheme.colors.grey200,
-                    shape = BookiiBookiiTheme.shape.round12,
+        Box {
+            Box(
+                modifier = Modifier
+                    .width(80.dp)
+                    .border(
+                        width = 1.dp,
+                        color = BookiiBookiiTheme.colors.grey200,
+                        shape = BookiiBookiiTheme.shape.round12,
+                    )
+                    .clickable { expanded = true }
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "%02d".format(value),
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey900,
                 )
-                .padding(4.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = value,
-                style = BookiiBookiiTheme.typography.regular14,
-                color = BookiiBookiiTheme.colors.grey900,
-            )
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = "%02d".format(option),
+                                style = BookiiBookiiTheme.typography.regular14,
+                                color = BookiiBookiiTheme.colors.grey900,
+                            )
+                        },
+                        onClick = {
+                            onSelect(option)
+                            expanded = false
+                        },
+                    )
+                }
+            }
         }
         Text(
             text = suffix,
