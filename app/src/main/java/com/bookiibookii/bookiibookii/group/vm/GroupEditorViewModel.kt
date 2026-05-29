@@ -307,5 +307,5 @@ private fun DeliveryAddress.toSelectablePlace() = SelectablePlace(
 )
 
 // 주소 + 상세주소 한 줄로 합침
-private fun joinAddress(address: String, detail: String): String =
-    listOf(address, detail).filter { it.isNotBlank() }.joinToString(" ")
+private fun joinAddress(address: String, detail: String?): String =
+    listOfNotNull(address, detail?.takeIf { it.isNotBlank() }).joinToString(" ")

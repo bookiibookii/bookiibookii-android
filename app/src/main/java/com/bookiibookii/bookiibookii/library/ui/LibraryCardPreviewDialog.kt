@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,9 +37,11 @@ internal fun LibraryCardPreviewDialog(
     onDismiss: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
+        // 320×520 비율 고정
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .width(320.dp)
+                .height(520.dp)
                 .clip(RoundedCornerShape(20.dp))
                 .background(BookiiBookiiTheme.colors.white),
         ) {

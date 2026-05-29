@@ -342,12 +342,10 @@ private fun PhotoCardFadedBg(
     particles: List<Particle>,
     onParticleEnd: (Particle) -> Unit,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        // 사진 영역 (회색 placeholder)
-        Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300))
-
-        if (cardVersion == 1) {
-            // v1: 위쪽 흰색 페이드 + 텍스트, 아래쪽 사진
+    if (cardVersion == 1) {
+        // v1: 위쪽 흰색 페이드 + 텍스트, 아래쪽 사진
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300))
             Box(
                 modifier = Modifier.fillMaxSize().background(
                     Brush.verticalGradient(0.00f to Color.White, 0.22f to Color.White.copy(alpha = 0.9f), 0.54f to Color.Transparent)
@@ -356,27 +354,42 @@ private fun PhotoCardFadedBg(
             Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
                 Text(text = card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, modifier = Modifier.fillMaxWidth())
             }
-        } else {
-            // v2: 사진 전체 + 텍스트는 하단 그라데이션 위에
-            Box(
-                modifier = Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(0.54f to Color.Transparent, 0.78f to Color(0xCC000000), 1f to Color.Black)
-                ),
+            ReactionOverlay(
+                particles = particles,
+                onParticleEnd = onParticleEnd,
+                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 120.dp, start = 24.dp),
             )
-            Box(
-                modifier = Modifier.align(Alignment.BottomStart).padding(20.dp),
-            ) {
-                Text(text = card.content, style = BookiiBookiiTheme.typography.regular16, color = Color.White, modifier = Modifier.fillMaxWidth())
-            }
         }
-
-        ReactionOverlay(
-            particles = particles,
-            onParticleEnd = onParticleEnd,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(bottom = if (cardVersion == 1) 120.dp else 72.dp, start = 24.dp),
-        )
+    } else {
+        // v2: 상단 사진 + 하단 흰색 영역에 텍스트 (QuoteCard 하단 텍스트와 동일 구조)
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(336f / 464f)
+                        .background(BookiiBookiiTheme.colors.grey300),
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(128f / 464f)
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                ) {
+                    Text(
+                        text = card.content,
+                        style = BookiiBookiiTheme.typography.regular16,
+                        color = BookiiBookiiTheme.colors.grey800,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            ReactionOverlay(
+                particles = particles,
+                onParticleEnd = onParticleEnd,
+                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 120.dp, start = 24.dp),
+            )
+        }
     }
 }
 

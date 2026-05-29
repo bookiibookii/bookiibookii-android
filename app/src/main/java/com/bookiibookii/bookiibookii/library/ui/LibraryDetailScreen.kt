@@ -46,7 +46,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -165,20 +168,37 @@ fun LibraryDetailScreen(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    // 이미지 카드 → 위쪽
+                    FabMenuItem(
+                        label = "이미지 카드 추가하기",
+                        onClick = {
+                            showFabMenu = false
+                            onAddPhotoCard()
+                        },
+                        icon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_image),
+                                contentDescription = null,
+                                tint = BookiiBookiiTheme.colors.white,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        },
+                    )
+                    // 인용구 카드 → 아래쪽
                     FabMenuItem(
                         label = "인용구 카드 추가하기",
-                        iconRes = R.drawable.ic_quote,
                         onClick = {
                             showFabMenu = false
                             onAddTextCard()
                         },
-                    )
-                    FabMenuItem(
-                        label = "이미지 카드 추가하기",
-                        iconRes = R.drawable.ic_upload,
-                        onClick = {
-                            showFabMenu = false
-                            onAddPhotoCard()
+                        icon = {
+                            Text(
+                                text = "T",
+                                color = BookiiBookiiTheme.colors.white,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Serif,
+                            )
                         },
                     )
                 }
@@ -225,43 +245,28 @@ fun LibraryDetailScreen(
     }
 }
 
+// 아이콘과 글씨가 검정 원형(pill) 배경에 함께 둘러싸인 FAB 메뉴 아이템
 @Composable
 private fun FabMenuItem(
     label: String,
-    iconRes: Int,
+    icon: @Composable () -> Unit,
     onClick: () -> Unit,
 ) {
     Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50.dp))
+            .background(BookiiBookiiTheme.colors.grey900)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.clickable { onClick() },
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .background(BookiiBookiiTheme.colors.white)
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-        ) {
-            Text(
-                text = label,
-                style = BookiiBookiiTheme.typography.medium14,
-                color = BookiiBookiiTheme.colors.grey900,
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(BookiiBookiiTheme.colors.grey900),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = null,
-                tint = BookiiBookiiTheme.colors.white,
-                modifier = Modifier.size(22.dp),
-            )
-        }
+        icon()
+        Text(
+            text = label,
+            style = BookiiBookiiTheme.typography.medium14,
+            color = BookiiBookiiTheme.colors.white,
+        )
     }
 }
 
