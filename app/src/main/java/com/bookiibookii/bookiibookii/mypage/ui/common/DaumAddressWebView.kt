@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.ui.common
 
+import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
 import android.webkit.JavascriptInterface
@@ -47,6 +48,7 @@ private val DAUM_POSTCODE_HTML = """
 </html>
 """.trimIndent()
 
+@SuppressLint("JavascriptInterface")
 @Composable
 fun DaumAddressWebView(
     onResult: (address: String, zipCode: String) -> Unit,

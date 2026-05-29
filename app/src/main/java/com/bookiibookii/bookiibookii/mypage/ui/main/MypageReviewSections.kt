@@ -1,0 +1,214 @@
+package com.bookiibookii.bookiibookii.mypage.ui.main
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.DateUtils
+import com.bookiibookii.bookiibookii.data.model.mypage.BookReviewSummaryDto
+import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedMemberReviewDto
+import com.bookiibookii.bookiibookii.ui.component.ExchangeTypeChip
+import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
+import com.bookiibookii.bookiibookii.ui.component.ReviewTypeChip
+import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+
+@Composable
+internal fun WrittenReviewsSection(
+    reviewCount: Int,
+    reviews: List<BookReviewSummaryDto>?,
+    onArrowClick: () -> Unit = {},
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(text = "작성한 후기", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron),
+                contentDescription = null,
+                tint = BookiiBookiiTheme.colors.grey900,
+                modifier = Modifier.size(24.dp).graphicsLayer { scaleX = -1f }.clickable { onArrowClick() },
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(BookiiBookiiTheme.colors.white)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(painter = painterResource(R.drawable.ic_book), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMain, modifier = Modifier.size(24.dp))
+            val bookCountText = buildAnnotatedString {
+                withStyle(BookiiBookiiTheme.typography.medium16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey900)) { append("$reviewCount") }
+                withStyle(BookiiBookiiTheme.typography.regular16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey700)) { append("권의 책에 후기를 남겼어요") }
+            }
+            Text(text = bookCountText)
+        }
+
+        if (reviews.isNullOrEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(BookiiBookiiTheme.colors.white).padding(vertical = 24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(text = "작성한 후기가 없어요", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey600, textAlign = TextAlign.Center)
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                reviews.forEach { WrittenReviewCard(it) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WrittenReviewCard(review: BookReviewSummaryDto) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(BookiiBookiiTheme.colors.white)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(text = review.bookTitle, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
+                    Box(modifier = Modifier.width(1.dp).height(15.dp).background(BookiiBookiiTheme.colors.grey200))
+                    Text(text = review.bookAuthor, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
+                }
+                MypageStarRating(rating = review.rating.toInt().coerceIn(0, 5))
+            }
+            ExchangeTypeChip(isDelivery = review.tradeType == "DELIVERY")
+        }
+        HorizontalDivider(color = BookiiBookiiTheme.colors.grey200)
+        Text(text = review.comment ?: "", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
+        Text(text = DateUtils.formatDate(review.reviewDate), style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
+    }
+}
+
+@Composable
+internal fun ReceivedReviewsSection(
+    boomUpCount: Int,
+    nickname: String,
+    reviews: List<ReceivedMemberReviewDto>?,
+    onArrowClick: () -> Unit = {},
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(text = "받은 후기", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron),
+                contentDescription = null,
+                tint = BookiiBookiiTheme.colors.grey900,
+                modifier = Modifier.size(24.dp).graphicsLayer { scaleX = -1f }.clickable { onArrowClick() },
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(BookiiBookiiTheme.colors.white)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(painter = painterResource(R.drawable.ic_hand_thumbs_up), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMain, modifier = Modifier.size(24.dp))
+            val summaryText = buildAnnotatedString {
+                withStyle(BookiiBookiiTheme.typography.medium16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey900)) { append("$boomUpCount") }
+                withStyle(BookiiBookiiTheme.typography.regular16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey700)) { append("명의 부키메이트가 ") }
+                withStyle(BookiiBookiiTheme.typography.medium16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey900)) { append(nickname) }
+                withStyle(BookiiBookiiTheme.typography.regular16.toSpanStyle().copy(color = BookiiBookiiTheme.colors.grey700)) { append("님을 좋아합니다.") }
+            }
+            Text(text = summaryText, modifier = Modifier.weight(1f))
+        }
+
+        if (reviews.isNullOrEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(BookiiBookiiTheme.colors.white).padding(vertical = 24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(text = "받은 후기가 없어요", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey600, textAlign = TextAlign.Center)
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                reviews.forEach { ReceivedReviewCard(it) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(BookiiBookiiTheme.colors.white)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ProfilePlaceholder(modifier = Modifier.size(32.dp))
+                Text(text = review.reviewerNickname, style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey800)
+            }
+            ReviewTypeChip(isGood = review.reaction == "BOOM_UP", modifier = Modifier)
+        }
+        Text(text = review.comment ?: "", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
+        Text(text = DateUtils.formatDate(review.createdAt), style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
+    }
+}
+
+@Composable
+private fun MypageStarRating(rating: Int) {
+    Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
+        repeat(5) { index ->
+            Icon(
+                painter = painterResource(R.drawable.ic_star),
+                contentDescription = null,
+                tint = if (index < rating) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+    }
+}

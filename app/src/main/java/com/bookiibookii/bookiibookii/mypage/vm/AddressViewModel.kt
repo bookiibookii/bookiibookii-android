@@ -32,14 +32,22 @@ class AddressViewModel : ViewModel() {
     fun fetchDeliveries() {
         viewModelScope.launch {
             try {
+                Log.d("AddressViewModel", "[fetchDeliveries] 배송지 목록 요청 시작")
                 val response = RetrofitClient.locationApi().getDeliveries()
+                Log.d("AddressViewModel", "[fetchDeliveries] 응답 code=${response.code()} isSuccess=${response.body()?.isSuccess}")
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    _deliveries.value = response.body()?.result ?: emptyList()
+                    val list = response.body()?.result ?: emptyList()
+                    Log.d("AddressViewModel", "[fetchDeliveries] 배송지 ${list.size}개 수신")
+                    list.forEachIndexed { i, d ->
+                        Log.d("AddressViewModel", "  [$i] id=${d.id} placeName=${d.placeName} addressDetail=${d.addressDetail}")
+                    }
+                    _deliveries.value = list
                 } else {
+                    Log.w("AddressViewModel", "[fetchDeliveries] 실패: ${response.body()?.message}")
                     _eventFlow.emit(Event.ShowToast("배송지 목록을 불러오지 못했습니다."))
                 }
             } catch (e: Exception) {
-                Log.e("AddressViewModel", "fetchDeliveries error", e)
+                Log.e("AddressViewModel", "[fetchDeliveries] 예외 발생", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
             }
         }
@@ -48,14 +56,22 @@ class AddressViewModel : ViewModel() {
     fun fetchExchanges() {
         viewModelScope.launch {
             try {
+                Log.d("AddressViewModel", "[fetchExchanges] 교환 장소 목록 요청 시작")
                 val response = RetrofitClient.locationApi().getExchanges()
+                Log.d("AddressViewModel", "[fetchExchanges] 응답 code=${response.code()} isSuccess=${response.body()?.isSuccess}")
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    _exchanges.value = response.body()?.result ?: emptyList()
+                    val list = response.body()?.result ?: emptyList()
+                    Log.d("AddressViewModel", "[fetchExchanges] 교환 장소 ${list.size}개 수신")
+                    list.forEachIndexed { i, e ->
+                        Log.d("AddressViewModel", "  [$i] id=${e.id} placeName=${e.placeName} addressDetail=${e.addressDetail}")
+                    }
+                    _exchanges.value = list
                 } else {
+                    Log.w("AddressViewModel", "[fetchExchanges] 실패: ${response.body()?.message}")
                     _eventFlow.emit(Event.ShowToast("교환 장소 목록을 불러오지 못했습니다."))
                 }
             } catch (e: Exception) {
-                Log.e("AddressViewModel", "fetchExchanges error", e)
+                Log.e("AddressViewModel", "[fetchExchanges] 예외 발생", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
             }
         }

@@ -8,7 +8,7 @@ data class DeliveryAddress(
     val placeName: String,
     val address: String,
     val zipCode: String,
-    val addressDetail: String,
+    val addressDetail: String?,   // 서버가 null 반환 가능
     val receiverName: String,
     val phone: String,
     val isDefault: Boolean,

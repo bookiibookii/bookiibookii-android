@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -324,30 +323,44 @@ private fun DeliveryAddressCard(
                     tint = BookiiBookiiTheme.colors.grey400,
                     modifier = Modifier.size(24.dp).clickable { onMenuClick() },
                 )
+                // 총 160×88, 각 항목 44 높이, 좌우 패딩 16, 아이콘 24
                 DropdownMenu(
                     expanded = isMenuExpanded,
                     onDismissRequest = onMenuDismiss,
+                    modifier = Modifier
+                        .width(160.dp)
+                        .background(BookiiBookiiTheme.colors.white),
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("수정하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900) },
-                        trailingIcon = {
-                            Icon(painterResource(R.drawable.ic_edit), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(20.dp))
-                        },
-                        onClick = onEditClick,
-                    )
-                    DropdownMenuItem(
-                        text = { Text("삭제하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900) },
-                        trailingIcon = {
-                            Icon(painterResource(R.drawable.ic_trash), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(20.dp))
-                        },
-                        onClick = onDeleteClick,
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .clickable { onEditClick() }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text("수정하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900)
+                        Icon(painterResource(R.drawable.ic_edit), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(24.dp))
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .clickable { onDeleteClick() }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text("삭제하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900)
+                        Icon(painterResource(R.drawable.ic_trash), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(24.dp))
+                    }
                 }
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(text = address.address, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
-            if (address.addressDetail.isNotEmpty()) {
+            if (!address.addressDetail.isNullOrEmpty()) {
                 Text(text = address.addressDetail, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
             }
         }
@@ -406,29 +419,43 @@ private fun ExchangePlaceCard(
                     tint = BookiiBookiiTheme.colors.grey400,
                     modifier = Modifier.size(24.dp).clickable { onMenuClick() },
                 )
+                // 총 160×88, 각 항목 44 높이, 좌우 패딩 16, 아이콘 24
                 DropdownMenu(
                     expanded = isMenuExpanded,
                     onDismissRequest = onMenuDismiss,
+                    modifier = Modifier
+                        .width(160.dp)
+                        .background(BookiiBookiiTheme.colors.white),
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("수정하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900) },
-                        trailingIcon = {
-                            Icon(painterResource(R.drawable.ic_edit), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(20.dp))
-                        },
-                        onClick = onEditClick,
-                    )
-                    DropdownMenuItem(
-                        text = { Text("삭제하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900) },
-                        trailingIcon = {
-                            Icon(painterResource(R.drawable.ic_trash), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(20.dp))
-                        },
-                        onClick = onDeleteClick,
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .clickable { onEditClick() }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text("수정하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900)
+                        Icon(painterResource(R.drawable.ic_edit), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(24.dp))
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .clickable { onDeleteClick() }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text("삭제하기", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900)
+                        Icon(painterResource(R.drawable.ic_trash), null, tint = BookiiBookiiTheme.colors.grey600, modifier = Modifier.size(24.dp))
+                    }
                 }
             }
         }
         Text(text = place.address, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
-        if (place.addressDetail.isNotEmpty()) {
+        if (!place.addressDetail.isNullOrEmpty()) {
             Text(text = place.addressDetail, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
         }
     }
@@ -486,10 +513,10 @@ private fun DeliveryBottomSheet(
             Spacer(modifier = Modifier.height(16.dp))
             AddressFormField(label = "전화번호", isRequired = true, value = phone, placeholder = "010-0000-0000", onValueChange = { raw ->
                 val digits = raw.filter { it.isDigit() }.take(11)
-                phone = when {
-                    digits.length <= 3 -> digits
-                    digits.length <= 7 -> "${digits.substring(0, 3)}-${digits.substring(3)}"
-                    else -> "${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}"
+                phone = if (digits.length == 11) {
+                    "${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}"
+                } else {
+                    digits
                 }
             })
             Spacer(modifier = Modifier.height(20.dp))
@@ -527,7 +554,7 @@ private fun DeliveryBottomSheet(
                             placeName = nickname,
                             address = address,
                             zipCode = zipCode,
-                            addressDetail = detail.ifBlank { null },
+                            addressDetail = detail.ifBlank { "" },
                             receiverName = recipientName,
                             phone = phone,
                         ))
@@ -631,7 +658,7 @@ private fun ExchangePlaceBottomSheet(
                             placeName = nickname,
                             address = placeAddress,
                             zipCode = zipCode,
-                            addressDetail = detail.ifBlank { null },
+                            addressDetail = detail.ifBlank { "" },
                         ))
                     },
                     modifier = Modifier.weight(1f),
