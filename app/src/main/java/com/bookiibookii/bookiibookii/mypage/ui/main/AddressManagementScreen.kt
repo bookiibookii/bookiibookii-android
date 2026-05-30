@@ -57,7 +57,7 @@ import androidx.compose.ui.window.DialogWindowProvider
 
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.location.DeliveryAddress
-import com.bookiibookii.bookiibookii.mypage.ui.common.DaumAddressWebView
+import com.bookiibookii.bookiibookii.ui.component.DaumAddressWebView
 import com.bookiibookii.bookiibookii.data.model.location.DeliveryAddressRequest
 import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddress
 import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddressRequest

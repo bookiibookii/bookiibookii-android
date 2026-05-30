@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.tracker.ui.detail.direct
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,9 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 // 직접교환 약속 잡기 2/3 - 장소 선택
 @Composable
 fun TrackerDirectMeetingPlaceDialog(
+    address: String,
+    addressDetail: String,
+    onLoadMyPlaceClick: () -> Unit,
     onDismiss: () -> Unit,
     onPreviousClick: () -> Unit,
     onNextClick: () -> Unit,
@@ -39,6 +43,9 @@ fun TrackerDirectMeetingPlaceDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         TrackerDirectMeetingPlaceDialogContent(
+            address = address,
+            addressDetail = addressDetail,
+            onLoadMyPlaceClick = onLoadMyPlaceClick,
             onDismiss = onDismiss,
             onPreviousClick = onPreviousClick,
             onNextClick = onNextClick,
@@ -48,6 +55,9 @@ fun TrackerDirectMeetingPlaceDialog(
 
 @Composable
 private fun TrackerDirectMeetingPlaceDialogContent(
+    address: String,
+    addressDetail: String,
+    onLoadMyPlaceClick: () -> Unit,
     onDismiss: () -> Unit,
     onPreviousClick: () -> Unit,
     onNextClick: () -> Unit,
@@ -95,11 +105,14 @@ private fun TrackerDirectMeetingPlaceDialogContent(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                PlaceField(value = "메가MGC커피 역삼초교교차로점")
-                DetailAddressField(placeholder = "상세주소를 입력해주세요")
+                PlaceField(value = address, placeholder = "교환 장소를 선택해주세요")
+                DetailAddressField(value = addressDetail, placeholder = "상세주소를 입력해주세요")
             }
 
-            LoadMyPlacesButton(text = "나의 희망교환장소 불러오기")
+            LoadMyPlacesButton(
+                text = "나의 희망교환장소 불러오기",
+                onClick = onLoadMyPlaceClick,
+            )
         }
 
         Row(
@@ -180,7 +193,8 @@ private fun SearchInput(placeholder: String) {
 }
 
 @Composable
-private fun PlaceField(value: String) {
+private fun PlaceField(value: String, placeholder: String) {
+    val isEmpty = value.isBlank()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -199,9 +213,13 @@ private fun PlaceField(value: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = value,
+            text = value.ifBlank { placeholder },
             style = BookiiBookiiTheme.typography.medium16,
-            color = BookiiBookiiTheme.colors.grey900,
+            color = if (isEmpty) {
+                BookiiBookiiTheme.colors.grey500
+            } else {
+                BookiiBookiiTheme.colors.grey900
+            },
             maxLines = 1,
         )
         Box(modifier = Modifier.size(24.dp))
@@ -209,7 +227,8 @@ private fun PlaceField(value: String) {
 }
 
 @Composable
-private fun DetailAddressField(placeholder: String) {
+private fun DetailAddressField(value: String, placeholder: String) {
+    val isEmpty = value.isBlank()
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -222,15 +241,19 @@ private fun DetailAddressField(placeholder: String) {
         contentAlignment = Alignment.CenterStart,
     ) {
         Text(
-            text = placeholder,
+            text = value.ifBlank { placeholder },
             style = BookiiBookiiTheme.typography.medium16,
-            color = BookiiBookiiTheme.colors.grey500,
+            color = if (isEmpty) {
+                BookiiBookiiTheme.colors.grey500
+            } else {
+                BookiiBookiiTheme.colors.grey900
+            },
         )
     }
 }
 
 @Composable
-private fun LoadMyPlacesButton(text: String) {
+private fun LoadMyPlacesButton(text: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -244,6 +267,7 @@ private fun LoadMyPlacesButton(text: String) {
                 color = BookiiBookiiTheme.colors.uiMain150,
                 shape = BookiiBookiiTheme.shape.round16,
             )
+            .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -260,6 +284,9 @@ private fun LoadMyPlacesButton(text: String) {
 private fun TrackerDirectMeetingPlaceDialogPreview() {
     BookiiPreview {
         TrackerDirectMeetingPlaceDialogContent(
+            address = "서울특별시 강남구 강남대로 396",
+            addressDetail = "",
+            onLoadMyPlaceClick = {},
             onDismiss = {},
             onPreviousClick = {},
             onNextClick = {},

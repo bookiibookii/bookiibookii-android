@@ -7,6 +7,10 @@ import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryRegisterReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewCreateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
@@ -39,6 +43,14 @@ class TrackerRepository(
         return api.postBookReview(groupId, BookReviewReqDTO(star, comment))
     }
 
+    suspend fun submitMemberReview(
+        groupId: Long,
+        reaction: String?,
+        comment: String,
+    ): Response<ApiResponse<MemberReviewResDTO>> {
+        return api.postMemberReview(groupId, MemberReviewCreateReqDTO(reaction, comment))
+    }
+
     suspend fun registerDelivery(
         groupId: Long,
         deliveryCompany: String,
@@ -48,6 +60,25 @@ class TrackerRepository(
             groupId,
             DeliveryRegisterReqDTO(deliveryCompany, trackingNumber),
         )
+    }
+
+    suspend fun registerMeeting(
+        groupId: Long,
+        request: MeetingRegisterReqDTO,
+    ): Response<ApiResponse<MeetingResDTO>> {
+        return api.postMeetingRegister(groupId, request)
+    }
+
+    suspend fun fetchMeeting(
+        groupId: Long,
+    ): Response<ApiResponse<MeetingResDTO>> {
+        return api.getMeeting(groupId)
+    }
+
+    suspend fun completeMeeting(
+        groupId: Long,
+    ): Response<ApiResponse<MeetingResDTO>> {
+        return api.patchMeetingCompletion(groupId)
     }
 
     suspend fun fetchDeliveryAddress(

@@ -21,7 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.mypage.ui.common.DaumAddressWebView
+import com.bookiibookii.bookiibookii.ui.component.DaumAddressWebView
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable

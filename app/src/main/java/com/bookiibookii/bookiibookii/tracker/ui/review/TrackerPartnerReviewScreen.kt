@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.tracker.ui.review
 
+import android.app.Activity
+import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,10 +15,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,29 +28,77 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.tracker.vm.TrackerPartnerReviewViewModel
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
+private const val COMMENT_MAX_LENGTH = 20
+
+@Composable
+fun TrackerPartnerReviewRoute(
+    groupId: Long,
+    onBackClick: () -> Unit,
+    viewModel: TrackerPartnerReviewViewModel = viewModel(
+        factory = TrackerPartnerReviewViewModel.factory(groupId)
+    ),
+) {
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+
+    // 후기 화면 진입 시 바텀 네비 숨김 / 나갈 때 복구
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
+        bottomNav?.visibility = View.GONE
+        onDispose {
+            bottomNav?.visibility = View.VISIBLE
+        }
+    }
+
+    TrackerPartnerReviewScreen(
+        groupName = uiState.groupName,
+        myNickname = uiState.myNickname,
+        myBookTitle = uiState.myBookTitle,
+        partnerNickname = uiState.partnerNickname,
+        partnerBookTitle = uiState.partnerBookTitle,
+        onBackClick = onBackClick,
+        onSubmit = { reaction, comment ->
+            viewModel.submitReview(reaction, comment, onSuccess = onBackClick)
+        },
+    )
+}
+
 @Composable
 fun TrackerPartnerReviewScreen(
-    onBackClick: () -> Unit = {},
-    onSubmit: () -> Unit = {},
+    groupName: String,
+    myNickname: String,
+    myBookTitle: String,
+    partnerNickname: String,
+    partnerBookTitle: String,
+    onBackClick: () -> Unit,
+    onSubmit: (reaction: String?, comment: String) -> Unit,
 ) {
+    var rating by remember { mutableStateOf(PartnerRating.NONE) }
+    var commentInput by remember { mutableStateOf("") }
+
     Scaffold(
         topBar = { TrackerPartnerReviewHeader(onBackClick = onBackClick) },
         bottomBar = {
             TrackerPartnerReviewFooter(
-                enabled = false,
-                onSubmit = onSubmit,
+                enabled = commentInput.isNotBlank(),
+                onSubmit = { onSubmit(rating.toReaction(), commentInput) },
             )
         },
         containerColor = BookiiBookiiTheme.colors.uiBg,
@@ -58,13 +110,32 @@ fun TrackerPartnerReviewScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            TrackerCard()
-            ReviewCard(partnerNickname = "noshel")
+            TrackerCard(
+                groupName = groupName,
+                myNickname = myNickname,
+                myBookTitle = myBookTitle,
+                partnerNickname = partnerNickname,
+                partnerBookTitle = partnerBookTitle,
+            )
+            ReviewCard(
+                partnerNickname = partnerNickname,
+                rating = rating,
+                onRatingChange = { rating = it },
+                comment = commentInput,
+                onCommentChange = { commentInput = it.take(COMMENT_MAX_LENGTH) },
+            )
         }
     }
 }
 
 private enum class PartnerRating { NONE, GOOD, BAD }
+
+// reaction: 좋았어요 → BOOM_UP, 별로였어요 → BOOM_DOWN, 미선택 → null
+private fun PartnerRating.toReaction(): String? = when (this) {
+    PartnerRating.GOOD -> "BOOM_UP"
+    PartnerRating.BAD -> "BOOM_DOWN"
+    PartnerRating.NONE -> null
+}
 
 @Composable
 private fun RatingButton(
@@ -119,6 +190,10 @@ private fun RatingButton(
 @Composable
 private fun ReviewCard(
     partnerNickname: String,
+    rating: PartnerRating,
+    onRatingChange: (PartnerRating) -> Unit,
+    comment: String,
+    onCommentChange: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -149,7 +224,6 @@ private fun ReviewCard(
                 style = BookiiBookiiTheme.typography.medium16,
             )
         }
-        var rating by remember { mutableStateOf(PartnerRating.NONE) }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -159,7 +233,7 @@ private fun ReviewCard(
                 iconRes = R.drawable.ic_hand_thumbs_up,
                 isSelected = rating == PartnerRating.GOOD,
                 isPositive = true,
-                onClick = { rating = PartnerRating.GOOD },
+                onClick = { onRatingChange(PartnerRating.GOOD) },
                 modifier = Modifier.weight(1f),
             )
             RatingButton(
@@ -167,7 +241,7 @@ private fun ReviewCard(
                 iconRes = R.drawable.ic_hand_thumbs_down,
                 isSelected = rating == PartnerRating.BAD,
                 isPositive = false,
-                onClick = { rating = PartnerRating.BAD },
+                onClick = { onRatingChange(PartnerRating.BAD) },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -182,17 +256,34 @@ private fun ReviewCard(
                 .padding(20.dp),
             contentAlignment = Alignment.TopStart,
         ) {
-            Text(
-                text = "후기를 자유롭게 남겨주세요.",
-                style = BookiiBookiiTheme.typography.regular16,
-                color = BookiiBookiiTheme.colors.grey500,
+            if (comment.isEmpty()) {
+                Text(
+                    text = "후기를 자유롭게 남겨주세요.",
+                    style = BookiiBookiiTheme.typography.regular16,
+                    color = BookiiBookiiTheme.colors.grey500,
+                )
+            }
+            BasicTextField(
+                value = comment,
+                onValueChange = onCommentChange,
+                modifier = Modifier.fillMaxSize(),
+                textStyle = BookiiBookiiTheme.typography.regular16.copy(
+                    color = BookiiBookiiTheme.colors.grey900,
+                ),
+                cursorBrush = SolidColor(BookiiBookiiTheme.colors.uiMain),
             )
         }
     }
 }
 
 @Composable
-private fun TrackerCard() {
+private fun TrackerCard(
+    groupName: String,
+    myNickname: String,
+    myBookTitle: String,
+    partnerNickname: String,
+    partnerBookTitle: String,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -209,7 +300,7 @@ private fun TrackerCard() {
                 .padding(bottom = 8.dp),
         ) {
             Text(
-                text = "김영하 도장깨기 하실 분",
+                text = groupName,
                 style = BookiiBookiiTheme.typography.medium16,
                 color = BookiiBookiiTheme.colors.grey800,
                 modifier = Modifier.align(Alignment.CenterStart),
@@ -228,14 +319,14 @@ private fun TrackerCard() {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             BookColumn(
-                nickname = "나",
-                bookTitle = "살인자의 기억법",
+                nickname = myNickname,
+                bookTitle = myBookTitle,
                 isMyBook = true,
                 modifier = Modifier.weight(1f),
             )
             BookColumn(
-                nickname = "noshel",
-                bookTitle = "작별인사",
+                nickname = partnerNickname,
+                bookTitle = partnerBookTitle,
                 isMyBook = false,
                 modifier = Modifier.weight(1f),
             )
@@ -373,6 +464,14 @@ private fun TrackerPartnerReviewFooter(
 @Composable
 private fun TrackerPartnerReviewScreenPreview() {
     BookiiPreview {
-        TrackerPartnerReviewScreen()
+        TrackerPartnerReviewScreen(
+            groupName = "김영하 도장깨기 하실 분",
+            myNickname = "나",
+            myBookTitle = "살인자의 기억법",
+            partnerNickname = "noshel",
+            partnerBookTitle = "작별인사",
+            onBackClick = {},
+            onSubmit = { _, _ -> },
+        )
     }
 }

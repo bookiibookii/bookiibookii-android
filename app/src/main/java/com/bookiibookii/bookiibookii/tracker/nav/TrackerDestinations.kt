@@ -10,4 +10,8 @@ object TrackerDestinations {
     const val BOOK_REVIEW_ARG_GROUP_ID = "groupId"
     const val BOOK_REVIEW_ROUTE = "bookReview/{$BOOK_REVIEW_ARG_GROUP_ID}"
     fun bookReview(groupId: Long): String = "bookReview/$groupId"
+
+    const val PARTNER_REVIEW_ARG_GROUP_ID = "groupId"
+    const val PARTNER_REVIEW_ROUTE = "partnerReview/{$PARTNER_REVIEW_ARG_GROUP_ID}"
+    fun partnerReview(groupId: Long): String = "partnerReview/$groupId"
 }
