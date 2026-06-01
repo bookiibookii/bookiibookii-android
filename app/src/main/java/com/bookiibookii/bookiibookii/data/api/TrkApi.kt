@@ -13,6 +13,10 @@ import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryRegisterReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewCreateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingRequest
@@ -51,11 +55,33 @@ interface TrkApi {
         @Body request: BookReviewReqDTO,
     ): Response<ApiResponse<BookReviewResDTO>>
 
+    @POST("/api/groups/{groupId}/member-reviews")
+    suspend fun postMemberReview(
+        @Path("groupId") groupId: Long,
+        @Body request: MemberReviewCreateReqDTO,
+    ): Response<ApiResponse<MemberReviewResDTO>>
+
     @POST("/api/groups/{groupId}/deliveries")
     suspend fun postDeliveryRegister(
         @Path("groupId") groupId: Long,
         @Body request: DeliveryRegisterReqDTO,
     ): Response<ApiResponse<String>>
+
+    @POST("/api/groups/{groupId}/meetings")
+    suspend fun postMeetingRegister(
+        @Path("groupId") groupId: Long,
+        @Body request: MeetingRegisterReqDTO,
+    ): Response<ApiResponse<MeetingResDTO>>
+
+    @GET("/api/groups/{groupId}/meetings")
+    suspend fun getMeeting(
+        @Path("groupId") groupId: Long,
+    ): Response<ApiResponse<MeetingResDTO>>
+
+    @PATCH("/api/groups/{groupId}/meetings/completion")
+    suspend fun patchMeetingCompletion(
+        @Path("groupId") groupId: Long,
+    ): Response<ApiResponse<MeetingResDTO>>
 
     @GET("/api/groups/{groupId}/deliveries/address")
     suspend fun getDeliveryAddress(

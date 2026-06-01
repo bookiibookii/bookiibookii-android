@@ -470,6 +470,16 @@ private fun ActionButtonsRow(
     onSecondaryClick: () -> Unit,
     onPrimaryClick: () -> Unit,
 ) {
+    // secondary가 없으면 primary 단일 풀폭 버튼 (예: 교환독서 후기 작성)
+    if (secondaryLabel.isBlank()) {
+        BottomSheetTwoBtnShort(
+            text = primaryLabel,
+            style = BottomSheetBtnStyle.Orange,
+            onClick = onPrimaryClick,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        return
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
