@@ -1,12 +1,20 @@
 package com.bookiibookii.bookiibookii.tracker.nav
 
+import android.app.Activity
+import android.view.View
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.tracker.ui.comment.TrackerCommentRoute
 import com.bookiibookii.bookiibookii.tracker.ui.detail.TrackerDetailRoute
 import com.bookiibookii.bookiibookii.tracker.ui.main.TrackerMainRoute
 import com.bookiibookii.bookiibookii.tracker.ui.review.TrackerBookReviewRoute
@@ -19,6 +27,17 @@ fun TrackerNavHost(
     startDestination: String = TrackerDestinations.MAIN,
 ) {
     val navController = rememberNavController()
+
+    // 바텀 네비 표시는 여기서만 제어
+    // 현재 라우트 기준으로만 판단하여 dispose 순서와 무관하게 결정 — MAIN에서만 표시
+    val context = LocalContext.current
+    val currentRoute by navController.currentBackStackEntryAsState()
+    LaunchedEffect(currentRoute) {
+        val route = currentRoute?.destination?.route ?: return@LaunchedEffect
+        val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
+        bottomNav?.visibility = if (route == TrackerDestinations.MAIN) View.VISIBLE else View.GONE
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -59,6 +78,9 @@ fun TrackerNavHost(
                 onNavigatePartnerReview = {
                     navController.navigate(TrackerDestinations.partnerReview(groupId))
                 },
+                onNavigateComment = { title ->
+                    navController.navigate(TrackerDestinations.comment(groupId, title))
+                },
             )
         }
         composable(
@@ -88,6 +110,28 @@ fun TrackerNavHost(
                 ?.getLong(TrackerDestinations.PARTNER_REVIEW_ARG_GROUP_ID) ?: return@composable
             TrackerPartnerReviewRoute(
                 groupId = groupId,
+                onBackClick = { navController.popBackStack() },
+            )
+        }
+        composable(
+            route = TrackerDestinations.COMMENT_ROUTE,
+            arguments = listOf(
+                navArgument(TrackerDestinations.COMMENT_ARG_GROUP_ID) {
+                    type = NavType.LongType
+                },
+                navArgument(TrackerDestinations.COMMENT_ARG_TITLE) {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+            ),
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments
+                ?.getLong(TrackerDestinations.COMMENT_ARG_GROUP_ID) ?: return@composable
+            val title = backStackEntry.arguments
+                ?.getString(TrackerDestinations.COMMENT_ARG_TITLE).orEmpty()
+            TrackerCommentRoute(
+                groupId = groupId,
+                title = title,
                 onBackClick = { navController.popBackStack() },
             )
         }

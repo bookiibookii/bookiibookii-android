@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -33,6 +35,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 fun TrackerDirectMeetingPlaceDialog(
     address: String,
     addressDetail: String,
+    onAddressDetailChange: (String) -> Unit,
     onLoadMyPlaceClick: () -> Unit,
     onDismiss: () -> Unit,
     onPreviousClick: () -> Unit,
@@ -45,6 +48,7 @@ fun TrackerDirectMeetingPlaceDialog(
         TrackerDirectMeetingPlaceDialogContent(
             address = address,
             addressDetail = addressDetail,
+            onAddressDetailChange = onAddressDetailChange,
             onLoadMyPlaceClick = onLoadMyPlaceClick,
             onDismiss = onDismiss,
             onPreviousClick = onPreviousClick,
@@ -57,6 +61,7 @@ fun TrackerDirectMeetingPlaceDialog(
 private fun TrackerDirectMeetingPlaceDialogContent(
     address: String,
     addressDetail: String,
+    onAddressDetailChange: (String) -> Unit,
     onLoadMyPlaceClick: () -> Unit,
     onDismiss: () -> Unit,
     onPreviousClick: () -> Unit,
@@ -106,7 +111,11 @@ private fun TrackerDirectMeetingPlaceDialogContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 PlaceField(value = address, placeholder = "교환 장소를 선택해주세요")
-                DetailAddressField(value = addressDetail, placeholder = "상세주소를 입력해주세요")
+                DetailAddressField(
+                    value = addressDetail,
+                    onValueChange = onAddressDetailChange,
+                    placeholder = "상세주소를 입력해주세요",
+                )
             }
 
             LoadMyPlacesButton(
@@ -227,8 +236,11 @@ private fun PlaceField(value: String, placeholder: String) {
 }
 
 @Composable
-private fun DetailAddressField(value: String, placeholder: String) {
-    val isEmpty = value.isBlank()
+private fun DetailAddressField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -240,14 +252,22 @@ private fun DetailAddressField(value: String, placeholder: String) {
             .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
-        Text(
-            text = value.ifBlank { placeholder },
-            style = BookiiBookiiTheme.typography.medium16,
-            color = if (isEmpty) {
-                BookiiBookiiTheme.colors.grey500
-            } else {
-                BookiiBookiiTheme.colors.grey900
-            },
+        if (value.isEmpty()) {
+            Text(
+                text = placeholder,
+                style = BookiiBookiiTheme.typography.medium16,
+                color = BookiiBookiiTheme.colors.grey500,
+            )
+        }
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = BookiiBookiiTheme.typography.medium16.copy(
+                color = BookiiBookiiTheme.colors.grey900,
+            ),
+            cursorBrush = SolidColor(BookiiBookiiTheme.colors.uiMain),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -286,6 +306,7 @@ private fun TrackerDirectMeetingPlaceDialogPreview() {
         TrackerDirectMeetingPlaceDialogContent(
             address = "서울특별시 강남구 강남대로 396",
             addressDetail = "",
+            onAddressDetailChange = {},
             onLoadMyPlaceClick = {},
             onDismiss = {},
             onPreviousClick = {},

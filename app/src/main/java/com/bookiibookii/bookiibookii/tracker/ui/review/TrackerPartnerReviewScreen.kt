@@ -1,7 +1,5 @@
 package com.bookiibookii.bookiibookii.tracker.ui.review
 
-import android.app.Activity
-import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -57,16 +53,7 @@ fun TrackerPartnerReviewRoute(
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
 
-    // 후기 화면 진입 시 바텀 네비 숨김 / 나갈 때 복구
-    val context = LocalContext.current
-    DisposableEffect(Unit) {
-        val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = View.GONE
-        onDispose {
-            bottomNav?.visibility = View.VISIBLE
-        }
-    }
-
+    // 바텀 네비 표시는 TrackerNavHost에서 현재 라우트 기준으로 일괄 제어 (여기서 토글하지 않음)
     TrackerPartnerReviewScreen(
         groupName = uiState.groupName,
         myNickname = uiState.myNickname,

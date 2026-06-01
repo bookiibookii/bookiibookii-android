@@ -129,7 +129,7 @@ fun GroupCommentBottomSheetRoute(
 // 그룹 상세 화면의 댓글 바텀시트
 // - expanded == false → drag handle + 헤더 + 입력 필드만 보임
 // - expanded == true → drag handle + 헤더 + 댓글 리스트 + 입력 필드
-// - 입력 필드는 Box.align(BottomCenter) + imePadding으로 키보드 위에 항상 떠 있음 (댓글 위에 오버레이)
+// - 입력 필드는 키보드 위에 항상 떠 있음 (댓글 위에 오버레이)
 @Composable
 fun GroupCommentBottomSheetContent(
     uiState: GroupCommentUiState,
