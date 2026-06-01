@@ -20,6 +20,8 @@ import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerDetailCo
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryReceiveConfirmDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryShippingConfirmDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectExchangeConfirmDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectExchangeFailDialog
@@ -45,12 +47,16 @@ fun TrackerDetailRoute(
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
+    val partnerDelivery by viewModel.partnerDelivery.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
     var showProgressDialog by rememberSaveable { mutableStateOf(false) }
     var showTrackingDialog by rememberSaveable { mutableStateOf(false) }
     var showDeliveryInfoDialog by rememberSaveable { mutableStateOf(false) }
     var showDeliveryEditDialog by rememberSaveable { mutableStateOf(false) }
+    // 운송장 정보 확인 다이얼로그(상대방 운송장) / 책 수령 확인 다이얼로그
+    var showShippingConfirmDialog by rememberSaveable { mutableStateOf(false) }
+    var showReceiveConfirmDialog by rememberSaveable { mutableStateOf(false) }
     // 약속 잡기 단계: 0=없음, 1=일시(1/3), 2=장소(2/3), 3=확인(3/3)
     var meetingStep by rememberSaveable { mutableStateOf(0) }
     // 1/3에서 고른 약속 일시 (raw ISO, 예: 2026-05-20T14:30:00)
@@ -92,12 +98,16 @@ fun TrackerDetailRoute(
                     viewModel.loadDeliveryAddress { showDeliveryInfoDialog = true }
                 },
                 onRegisterMeeting = { meetingStep = 1 },
-                onGoToComments = {}, // TODO: 댓글 화면 연결 보류
+                onGoToComments = { onNavigateComment(uiState.groupName) },
                 onCheckMeeting = {
                     viewModel.loadMeeting { showMeetingInfoDialog = true }
                 },
                 onConfirmExchange = { showExchangeConfirmDialog = true },
                 onWritePartnerReview = onNavigatePartnerReview,
+                onCheckShippingInfo = {
+                    viewModel.loadPartnerDelivery { showShippingConfirmDialog = true }
+                },
+                onConfirmReceive = { showReceiveConfirmDialog = true },
             )
         },
         onPrimaryActionClick = {
@@ -110,12 +120,16 @@ fun TrackerDetailRoute(
                     viewModel.loadDeliveryAddress { showDeliveryInfoDialog = true }
                 },
                 onRegisterMeeting = { meetingStep = 1 },
-                onGoToComments = {}, // TODO: 댓글 화면 연결 보류
+                onGoToComments = { onNavigateComment(uiState.groupName) },
                 onCheckMeeting = {
                     viewModel.loadMeeting { showMeetingInfoDialog = true }
                 },
                 onConfirmExchange = { showExchangeConfirmDialog = true },
                 onWritePartnerReview = onNavigatePartnerReview,
+                onCheckShippingInfo = {
+                    viewModel.loadPartnerDelivery { showShippingConfirmDialog = true }
+                },
+                onConfirmReceive = { showReceiveConfirmDialog = true },
             )
         },
     )
@@ -175,6 +189,32 @@ fun TrackerDetailRoute(
                     showDeliveryEditDialog = false
                     viewModel.clearDeliveryAddress()
                 }
+            },
+        )
+    }
+    // 운송장 정보 확인 (상대방 운송장)
+    val partner = partnerDelivery
+    if (showShippingConfirmDialog && partner != null) {
+        TrackerDeliveryShippingConfirmDialog(
+            companyName = partner.deliveryCompanyName.orEmpty(),
+            trackingNumber = partner.trackingNumber.orEmpty(),
+            onDismiss = {
+                showShippingConfirmDialog = false
+                viewModel.clearPartnerDelivery()
+            },
+            onTrackingSearchClick = {}, // TODO: 배송 조회 이동 로직 보류
+            onConfirmClick = {
+                showShippingConfirmDialog = false
+                viewModel.clearPartnerDelivery()
+            },
+        )
+    }
+    // 책 수령 확인 -> PATCH 수령 확인
+    if (showReceiveConfirmDialog) {
+        TrackerDeliveryReceiveConfirmDialog(
+            onDismiss = { showReceiveConfirmDialog = false },
+            onConfirmClick = {
+                viewModel.confirmReceive { showReceiveConfirmDialog = false }
             },
         )
     }
@@ -284,6 +324,8 @@ private inline fun dispatchAction(
     onCheckMeeting: () -> Unit,
     onConfirmExchange: () -> Unit,
     onWritePartnerReview: () -> Unit,
+    onCheckShippingInfo: () -> Unit,
+    onConfirmReceive: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
@@ -295,6 +337,8 @@ private inline fun dispatchAction(
         TrackerAction.CheckMeeting -> onCheckMeeting()
         TrackerAction.ConfirmExchange -> onConfirmExchange()
         TrackerAction.WritePartnerReview -> onWritePartnerReview()
+        TrackerAction.CheckShippingInfo -> onCheckShippingInfo()
+        TrackerAction.ConfirmReceive -> onConfirmReceive()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
         TrackerAction.None -> Unit
     }
