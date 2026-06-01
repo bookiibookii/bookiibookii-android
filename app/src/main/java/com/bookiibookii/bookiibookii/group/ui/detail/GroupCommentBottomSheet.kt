@@ -75,6 +75,7 @@ import com.bookiibookii.bookiibookii.group.model.GroupCommentUiState
 import com.bookiibookii.bookiibookii.group.vm.GroupCommentViewModel
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.ui.component.DeletePopover
+import com.bookiibookii.bookiibookii.ui.component.bottomSheetTopShadow
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -158,10 +159,12 @@ fun GroupCommentBottomSheetContent(
         }
     }
 
+    val sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .bottomSheetTopShadow(cornerRadius = 20.dp)
+            .clip(sheetShape)
             .background(BookiiBookiiTheme.colors.white),
     ) {
         Column(
