@@ -449,6 +449,8 @@ fun TrackerMainRoute(
     var meetingStep by rememberSaveable { mutableStateOf(1) }
     // 1/3에서 고른 약속 일시 (raw ISO, 예: 2026-05-20T14:30:00)
     var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
+    // 2/3에서 입력한 상세주소 (사용자 직접 입력, 빈칸 시작)
+    var meetingAddressDetail by rememberSaveable { mutableStateOf("") }
     // 약속 확인(조회) 다이얼로그
     var meetingInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     // 교환 확인 다이얼로그: 어느 카드인지(null=닫힘)
@@ -590,6 +592,7 @@ fun TrackerMainRoute(
             1 -> TrackerDirectMeetingTimeDialog(
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
                 onNextClick = { scheduledAt ->
@@ -599,10 +602,12 @@ fun TrackerMainRoute(
             )
             2 -> TrackerDirectMeetingPlaceDialog(
                 address = meetingPlace?.address.orEmpty(),
-                addressDetail = meetingPlace?.addressDetail.orEmpty(),
+                addressDetail = meetingAddressDetail,
+                onAddressDetailChange = { meetingAddressDetail = it },
                 onLoadMyPlaceClick = { viewModel.loadMyExchangePlace() },
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
                 onPreviousClick = { meetingStep = 1 },
@@ -611,9 +616,10 @@ fun TrackerMainRoute(
             3 -> TrackerDirectMeetingConfirmDialog(
                 scheduledAt = meetingScheduledAt,
                 address = meetingPlace?.address.orEmpty(),
-                addressDetail = meetingPlace?.addressDetail.orEmpty(),
+                addressDetail = meetingAddressDetail,
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
                 onConfirmClick = {
@@ -623,10 +629,11 @@ fun TrackerMainRoute(
                         viewModel.registerMeeting(
                             groupId = gid,
                             locationId = place.id,
-                            addressDetail = place.addressDetail,
+                            addressDetail = meetingAddressDetail.ifBlank { null },
                             scheduledAt = meetingScheduledAt,
                         ) {
                             meetingDialogGroupId = null
+                            meetingAddressDetail = ""
                             viewModel.clearMeetingPlace()
                         }
                     }

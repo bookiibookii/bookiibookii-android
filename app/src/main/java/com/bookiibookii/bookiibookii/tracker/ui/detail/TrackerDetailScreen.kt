@@ -1,16 +1,12 @@
 package com.bookiibookii.bookiibookii.tracker.ui.detail
 
-import android.app.Activity
-import android.view.View
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,6 +38,7 @@ fun TrackerDetailRoute(
     onBackClick: () -> Unit,
     onNavigateBookReview: () -> Unit,
     onNavigatePartnerReview: () -> Unit,
+    onNavigateComment: (title: String) -> Unit = {},
     viewModel: TrackerDetailViewModel = viewModel(
         factory = TrackerDetailViewModel.factory(groupId)
     ),
@@ -58,6 +55,8 @@ fun TrackerDetailRoute(
     var meetingStep by rememberSaveable { mutableStateOf(0) }
     // 1/3에서 고른 약속 일시 (raw ISO, 예: 2026-05-20T14:30:00)
     var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
+    // 2/3에서 입력한 상세주소 (사용자 직접 입력, 빈칸 시작)
+    var meetingAddressDetail by rememberSaveable { mutableStateOf("") }
     // 약속 확인(조회) 다이얼로그 표시 여부
     var showMeetingInfoDialog by rememberSaveable { mutableStateOf(false) }
     // 교환 확인 다이얼로그 표시 여부
@@ -65,15 +64,7 @@ fun TrackerDetailRoute(
     // 교환 실패 안내 다이얼로그 표시 여부
     var showExchangeFailDialog by rememberSaveable { mutableStateOf(false) }
 
-    // 상세 진입 시 바텀 네비 숨김 / 나갈 때 복구
-    val context = LocalContext.current
-    DisposableEffect(Unit) {
-        val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = View.GONE
-        onDispose {
-            bottomNav?.visibility = View.VISIBLE
-        }
-    }
+    // 바텀 네비 표시는 TrackerNavHost에서 현재 라우트 기준으로 일괄 제어 (여기서 토글하지 않음)
     TrackerDetailScreen(
         groupName = uiState.groupName,
         dDay = uiState.dDay,
@@ -88,8 +79,8 @@ fun TrackerDetailRoute(
         primaryActionLabel = uiState.primaryAction.label,
         steps = uiState.steps,
         onBackClick = onBackClick,
-        // TODO: 메시지/더보기 placeholder
-        onMessageClick = {},
+        onMessageClick = { onNavigateComment(uiState.groupName) },
+        // TODO: 더보기 placeholder
         onMoreClick = {},
         onSecondaryActionClick = {
             dispatchAction(
@@ -192,6 +183,7 @@ fun TrackerDetailRoute(
         1 -> TrackerDirectMeetingTimeDialog(
             onDismiss = {
                 meetingStep = 0
+                meetingAddressDetail = ""
                 viewModel.clearMeetingPlace()
             },
             onNextClick = { scheduledAt ->
@@ -201,10 +193,12 @@ fun TrackerDetailRoute(
         )
         2 -> TrackerDirectMeetingPlaceDialog(
             address = meetingPlace?.address.orEmpty(),
-            addressDetail = meetingPlace?.addressDetail.orEmpty(),
+            addressDetail = meetingAddressDetail,
+            onAddressDetailChange = { meetingAddressDetail = it },
             onLoadMyPlaceClick = { viewModel.loadMyExchangePlace() },
             onDismiss = {
                 meetingStep = 0
+                meetingAddressDetail = ""
                 viewModel.clearMeetingPlace()
             },
             onPreviousClick = { meetingStep = 1 },
@@ -213,9 +207,10 @@ fun TrackerDetailRoute(
         3 -> TrackerDirectMeetingConfirmDialog(
             scheduledAt = meetingScheduledAt,
             address = meetingPlace?.address.orEmpty(),
-            addressDetail = meetingPlace?.addressDetail.orEmpty(),
+            addressDetail = meetingAddressDetail,
             onDismiss = {
                 meetingStep = 0
+                meetingAddressDetail = ""
                 viewModel.clearMeetingPlace()
             },
             onConfirmClick = {
@@ -223,10 +218,11 @@ fun TrackerDetailRoute(
                 if (place != null) {
                     viewModel.registerMeeting(
                         locationId = place.id,
-                        addressDetail = place.addressDetail,
+                        addressDetail = meetingAddressDetail.ifBlank { null },
                         scheduledAt = meetingScheduledAt,
                     ) {
                         meetingStep = 0
+                        meetingAddressDetail = ""
                         viewModel.clearMeetingPlace()
                     }
                 }
