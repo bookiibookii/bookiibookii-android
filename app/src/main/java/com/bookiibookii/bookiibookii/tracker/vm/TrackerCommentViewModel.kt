@@ -60,6 +60,27 @@ class TrackerCommentViewModel(
 
     fun retry() = load()
 
+    // 바텀 pull-up 새로고침 — 같은 조회 API 재호출. 진행 표시는 isRefreshing으로만(전체 로딩 X)
+    fun refresh() {
+        if (_state.value.isRefreshing) return
+        viewModelScope.launch {
+            _state.update { it.copy(isRefreshing = true) }
+            try {
+                val res = RetrofitClient.grpApi().getComments(groupId)
+                val list = res.body()?.result
+                if (res.isSuccessful && res.body()?.isSuccess == true && list != null) {
+                    _state.update { it.copy(comments = list, isRefreshing = false, error = null) }
+                } else {
+                    _eventFlow.emit(Event.ShowError("댓글을 불러오지 못했어요"))
+                    _state.update { it.copy(isRefreshing = false) }
+                }
+            } catch (e: Exception) {
+                _eventFlow.emit(Event.ShowError("네트워크 오류가 발생했어요"))
+                _state.update { it.copy(isRefreshing = false) }
+            }
+        }
+    }
+
     // -- 입력 필드 (250자, 멘션 없음) --
 
     fun onDraftChange(text: String) {

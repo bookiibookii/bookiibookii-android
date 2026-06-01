@@ -1,5 +1,10 @@
 package com.bookiibookii.bookiibookii.tracker.ui.comment
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,16 +39,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -54,6 +66,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -72,8 +85,11 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import kotlinx.coroutines.launch
 
+// 바텀 pull-up 당김 저항 계수
+private const val PULL_RESISTANCE = 0.5f
+
 // 트래커 댓글 화면 — VM 주입/상태 수집/이벤트 구독 (stateful)
-// - groupId: 그룹 댓글과 동일 API라 groupId 기반. 트래커 상세에서 전달
+// - groupId: 그룹 댓글과 동일 API groupId 기반. 트래커 상세에서 전달
 // - title: 헤더 타이틀을 네비 인자로 전달받아 그대로 내림
 // - currentUserId: TokenManager에서 받아 본인 댓글 판별에 사용
 @Composable
@@ -106,10 +122,12 @@ fun TrackerCommentRoute(
         currentUserId = currentUserId,
         draft = uiState.draft,
         submitting = uiState.submitting,
+        isRefreshing = uiState.isRefreshing,
         onBackClick = onBackClick,
         onDraftChange = viewModel::onDraftChange,
         onSubmit = viewModel::submit,
         onDelete = viewModel::delete,
+        onRefresh = viewModel::refresh,
     )
 }
 
@@ -124,14 +142,76 @@ fun TrackerCommentScreen(
     currentUserId: Long?,
     draft: String,
     submitting: Boolean,
+    isRefreshing: Boolean,
     onBackClick: () -> Unit,
     onDraftChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onDelete: (commentId: Long) -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+
+    // 바텀 pull-up 새로고침
+    // 임계치 넘겨 손 떼면 onRefresh
+    val density = LocalDensity.current
+    val refreshThresholdPx = with(density) { 72.dp.toPx() }
+    // 새로고침 중 유지할 하단 빈 공간 높이 / 당기는 동안 빈 공간 최대치
+    val refreshingGapPx = with(density) { 64.dp.toPx() }
+    val maxPullPx = with(density) { 96.dp.toPx() }
+    var pullPx by remember { mutableFloatStateOf(0f) }
+    val refreshingState = rememberUpdatedState(isRefreshing)
+    val onRefreshState = rememberUpdatedState(onRefresh)
+
+    // 새로고침 시작 시 pullPx 정리(gap은 refreshingGapPx가 담당), 완료(true→false) 시 맨 아래로 스크롤
+    var wasRefreshing by remember { mutableStateOf(false) }
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            pullPx = 0f
+        } else if (wasRefreshing && comments.isNotEmpty()) {
+            listState.animateScrollToItem(comments.lastIndex)
+        }
+        wasRefreshing = isRefreshing
+    }
+
+    val pullConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (refreshingState.value) return Offset.Zero
+                if (available.y > 0f && pullPx > 0f) {
+                    val consumed = minOf(available.y, pullPx)
+                    pullPx -= consumed
+                    return Offset(0f, consumed)
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                if (refreshingState.value) return Offset.Zero
+                if (source == NestedScrollSource.UserInput && available.y < 0f) {
+                    pullPx += -available.y * PULL_RESISTANCE
+                    return available
+                }
+                return Offset.Zero
+            }
+
+            // 손을 떼는 순간: 임계치 넘었으면 새로고침 트리거.
+            // 트리거 시 pullPx는 그대로 둬서 gap 유지 → isRefreshing이 켜지며 LaunchedEffect가 0으로 정리(깜빡임 방지)
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                if (!refreshingState.value && pullPx >= refreshThresholdPx) {
+                    onRefreshState.value()
+                } else {
+                    pullPx = 0f
+                }
+                return Velocity.Zero
+            }
+        }
+    }
 
     Scaffold(
         topBar = { TrackerCommentHeader(title = title, onBackClick = onBackClick) },
@@ -149,14 +229,20 @@ fun TrackerCommentScreen(
         },
         containerColor = BookiiBookiiTheme.colors.white,
     ) { innerPadding ->
+        // 당김량만큼 리스트를 위로 밀어 하단에 빈 공간(gap)을 만든다. 그 공간에 reload 아이콘 배치
+        val gapPx = if (isRefreshing) refreshingGapPx else pullPx.coerceAtMost(maxPullPx)
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .clipToBounds()
+                .nestedScroll(pullConnection),
         ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { translationY = -gapPx },
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             ) {
@@ -168,7 +254,7 @@ fun TrackerCommentScreen(
                     )
                 }
             }
-            // 우측 플로팅 스크롤 버튼 — 맨 위로 / 맨 아래로
+
             if (comments.isNotEmpty()) {
                 Column(
                     modifier = Modifier
@@ -184,7 +270,52 @@ fun TrackerCommentScreen(
                     }
                 }
             }
+            // 하단 빈 공간(gap) 안에 reload 아이콘 — 리스트가 위로 밀린 만큼의 영역에 중앙 배치
+            BottomReloadIndicator(
+                gapPx = gapPx,
+                pullFraction = (pullPx / refreshThresholdPx).coerceIn(0f, 1f),
+                isRefreshing = isRefreshing,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
+    }
+}
+
+// 하단 빈 공간 안의 새로고침 인디케이터 — 리스트가 밀린 높이(gapPx)만큼의 영역을 차지하고 그 안에 ic_reload 중앙 배치
+// 당기는 동안 진행률만큼 회전, 새로고침 중엔 무한 회전
+@Composable
+private fun BottomReloadIndicator(
+    gapPx: Float,
+    pullFraction: Float,
+    isRefreshing: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val transition = rememberInfiniteTransition(label = "reload")
+    val spin by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(durationMillis = 900, easing = LinearEasing)),
+        label = "reloadAngle",
+    )
+    if (gapPx <= 0f) return
+
+    val rotation = if (isRefreshing) spin else pullFraction * 360f
+    val density = LocalDensity.current
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(with(density) { gapPx.toDp() }),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_reload),
+            contentDescription = "새로고침",
+            tint = BookiiBookiiTheme.colors.grey400,
+            modifier = Modifier
+                .size(32.dp)
+                .graphicsLayer { rotationZ = rotation },
+        )
     }
 }
 
@@ -517,10 +648,12 @@ private fun TrackerCommentScreenPreview() {
             currentUserId = 2L,
             draft = "",
             submitting = false,
+            isRefreshing = false,
             onBackClick = {},
             onDraftChange = {},
             onSubmit = {},
             onDelete = {},
+            onRefresh = {},
         )
     }
 }
