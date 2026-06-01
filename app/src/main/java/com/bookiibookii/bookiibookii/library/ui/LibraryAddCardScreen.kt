@@ -60,8 +60,10 @@ private const val PHOTO_MEMO_MAX = 150
 @Composable
 fun LibraryAddCardScreen(
     mode: AddCardMode = AddCardMode.TEXT,
+    selectedImageUri: android.net.Uri? = null,
+    onImagePick: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    onSubmit: () -> Unit = {},
+    onSubmit: (page: Int, quotation: String, memo: String) -> Unit = { _, _, _ -> },
 ) {
     var quote by remember { mutableStateOf("") }
     var page by remember { mutableStateOf("") }
@@ -259,7 +261,7 @@ fun LibraryAddCardScreen(
                             pageError = true
                             valid = false
                         }
-                        if (valid) onSubmit()
+                        if (valid) onSubmit(page.toIntOrNull() ?: 0, quote, memo)
                     },
                 contentAlignment = Alignment.Center,
             ) {

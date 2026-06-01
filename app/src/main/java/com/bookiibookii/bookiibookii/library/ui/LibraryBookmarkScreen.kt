@@ -45,11 +45,13 @@ private enum class BookmarkSortType { RECENT, OLDEST }
 @Composable
 fun LibraryBookmarkScreen(
     cards: List<ReadingCard> = emptyList(),
+    isLoading: Boolean = false,
+    onSortChange: (isLatest: Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onCardClick: (index: Int, bookmarkedCards: List<ReadingCard>) -> Unit = { _, _ -> },
 ) {
     var sortType by remember { mutableStateOf(BookmarkSortType.RECENT) }
-    val bookmarkedCards = cards.filter { it.isBookmarked }
+    val bookmarkedCards = cards  // 이미 서버에서 필터된 북마크 카드
 
     Column(
         modifier = Modifier
@@ -104,14 +106,14 @@ fun LibraryBookmarkScreen(
                     text = "최신순",
                     style = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
                     color = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
-                    modifier = Modifier.clickable { sortType = BookmarkSortType.RECENT },
+                    modifier = Modifier.clickable { sortType = BookmarkSortType.RECENT; onSortChange(true) },
                 )
                 Text(text = " | ", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey300)
                 Text(
                     text = "과거순",
                     style = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
                     color = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
-                    modifier = Modifier.clickable { sortType = BookmarkSortType.OLDEST },
+                    modifier = Modifier.clickable { sortType = BookmarkSortType.OLDEST; onSortChange(false) },
                 )
             }
         }

@@ -57,20 +57,29 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 enum class ReadingCardType { PHOTO, QUOTE }
 
 data class ReadingCard(
+    val cardId: Long = 0L,
     val username: String,
     val content: String,
     val page: String,
     val type: ReadingCardType,
     val isBookmarked: Boolean = false,
     val date: String = "",
+    val bookTitle: String = "",
+    val quotation: String = "",
+    val imageUrl: String? = null,
+    val myReactions: List<String> = emptyList(),
+    val creatorProfileImageUrl: String? = null,
+    val isMine: Boolean = false,
 )
 
 data class LibraryDetailBook(
+    val groupId: Int = 0,
+    val memberBookId: Int = 0,
     val groupName: String,
     val title: String,
     val author: String,
     val genre: String,
-    val rating: Int,
+    val rating: Double = 0.0,
     val startDate: String,
     val endDate: String,
 )
@@ -79,20 +88,28 @@ data class LibraryDetailBook(
 fun LibraryDetailScreen(
     book: LibraryDetailBook? = null,
     cards: List<ReadingCard> = emptyList(),
+    isRepresentative: Boolean = false,
     onBackClick: () -> Unit = {},
     onAddTextCard: () -> Unit = {},
     onAddPhotoCard: () -> Unit = {},
     onCardClick: (initialIndex: Int, sortedCards: List<ReadingCard>, sortByLatest: Boolean) -> Unit = { _, _, _ -> },
     onReviewClick: () -> Unit = {},
+    onRepresentativeAdd: () -> Unit = {},
+    onRepresentativeRemove: () -> Unit = {},
+    onAladinClick: (title: String) -> Unit = {},
+    onDeleteBook: () -> Unit = {},
 ) {
-    var myCardsOnly by remember { mutableStateOf(true) }
+    var myCardsOnly by remember { mutableStateOf(false) }
     var sortByLatest by remember { mutableStateOf(true) }
     var showBookSheet by remember { mutableStateOf(false) }
-    var isRepresentative by remember { mutableStateOf(false) }
     var showFabMenu by remember { mutableStateOf(false) }
 
-    val displayedCards = if (myCardsOnly) cards else cards
-    val sortedCards = if (sortByLatest) displayedCards else displayedCards.reversed()
+    val displayedCards = if (myCardsOnly) cards.filter { it.isMine } else cards
+    val sortedCards = if (sortByLatest) {
+        displayedCards.sortedByDescending { it.date }
+    } else {
+        displayedCards.sortedBy { it.page.toIntOrNull() ?: 0 }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // 배경 딤 (FAB 메뉴 열렸을 때)
@@ -223,11 +240,17 @@ fun LibraryDetailScreen(
                     onReviewClick()
                 },
                 onToggleRepresentativeClick = {
-                    isRepresentative = !isRepresentative
                     showBookSheet = false
+                    if (isRepresentative) onRepresentativeRemove() else onRepresentativeAdd()
                 },
-                onAladinClick = { showBookSheet = false },
-                onDeleteClick = { showBookSheet = false },
+                onAladinClick = {
+                    showBookSheet = false
+                    onAladinClick(book.title)
+                },
+                onDeleteClick = {
+                    showBookSheet = false
+                    onDeleteBook()
+                },
             )
         }
     }
@@ -305,10 +328,9 @@ private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier)
                     Text(text = book.author, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey900)
                     Text(text = "(${book.genre})", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey900)
                 }
-                // 별점 아이콘 크기: 20dp (피그마 스펙)
                 Row {
                     for (i in 1..5) {
-                        Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = if (i <= book.rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(20.dp))
+                        Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = if (i.toDouble() <= book.rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(20.dp))
                     }
                 }
             }
