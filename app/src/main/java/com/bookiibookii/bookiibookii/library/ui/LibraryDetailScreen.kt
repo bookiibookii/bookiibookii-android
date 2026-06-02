@@ -3,6 +3,9 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import com.bookiibookii.bookiibookii.common.DateUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -67,9 +71,20 @@ data class ReadingCard(
     val bookTitle: String = "",
     val quotation: String = "",
     val imageUrl: String? = null,
-    val myReactions: List<String> = emptyList(),
+    val myReactions: List<String> = emptyList(),      // 내가 누른 리액션 API key 목록
+    val reactionCounts: Map<String, Int> = emptyMap(), // API key → 전체 인원 수
     val creatorProfileImageUrl: String? = null,
     val isMine: Boolean = false,
+)
+
+// 서재 상세 카드 아이템에서 사용 (리액션 API key → 아이콘 drawable)
+internal val reactionIconByApiKey: Map<String, Int> = mapOf(
+    "LIKE"    to R.drawable.ic_heart_empty,
+    "SAD"     to R.drawable.ic_star,
+    "CHEERUP" to R.drawable.ic_shine,
+    "FEELYOU" to R.drawable.ic_book,
+    "AWESOME" to R.drawable.ic_hand_thumbs_up,
+    "FUN"     to R.drawable.ic_smile,
 )
 
 data class LibraryDetailBook(
@@ -78,10 +93,13 @@ data class LibraryDetailBook(
     val groupName: String,
     val title: String,
     val author: String,
-    val genre: String,
-    val rating: Double = 0.0,
-    val startDate: String,
-    val endDate: String,
+    val genre: String = "",         // 서재 API 미제공 — 향후 그룹 상세 API 연동 시
+    val coverUrl: String? = null,
+    val isDone: Boolean = false,    // true: 완료(별점), false: 읽는 중(프로그래스바)
+    val progressRate: Int = 0,      // 0-100 (isDone=false 일 때 사용)
+    val rating: Double = 0.0,       // 0-5 (isDone=true 일 때 사용)
+    val startDate: String = "",
+    val endDate: String? = null,    // 완료됐을 때만 값 존재
 )
 
 @Composable
@@ -155,6 +173,7 @@ fun LibraryDetailScreen(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(end = 20.dp, bottom = 20.dp),
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -311,6 +330,13 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
 
 @Composable
 private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier) {
+    val startFmt = DateUtils.formatDate(book.startDate)
+    val dateText = if (book.isDone && !book.endDate.isNullOrBlank()) {
+        "$startFmt ~ ${DateUtils.formatDate(book.endDate)}"
+    } else {
+        "$startFmt ~"
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -319,22 +345,62 @@ private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier)
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Box(modifier = Modifier.width(102.dp).height(146.dp).clip(RoundedCornerShape(10.dp)).background(BookiiBookiiTheme.colors.grey200))
+        // 책 표지
+        Box(
+            modifier = Modifier
+                .width(102.dp)
+                .height(146.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(BookiiBookiiTheme.colors.grey200),
+        ) {
+            if (!book.coverUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = book.coverUrl,
+                    contentDescription = book.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize(),
+                )
+            }
+        }
+
         Column(modifier = Modifier.weight(1f).height(146.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(text = book.groupName, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey600, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = "[${book.groupName}]", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey600, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(text = book.title, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(text = book.author, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey900)
-                    Text(text = "(${book.genre})", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey900)
-                }
-                Row {
-                    for (i in 1..5) {
-                        Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = if (i.toDouble() <= book.rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(20.dp))
+                // 장르가 오면 "(장르)" 추가, 현재 API 미제공으로 저자명만 표시
+                Text(
+                    text = if (book.genre.isBlank()) book.author else "${book.author} (${book.genre})",
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey900,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (book.isDone) {
+                    // 완료: 별점 표시
+                    Row {
+                        for (i in 1..5) {
+                            Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = if (i.toDouble() <= book.rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                } else {
+                    // 읽는 중: 프로그래스바 표시
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(50.dp)).background(BookiiBookiiTheme.colors.grey200),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(book.progressRate / 100f)
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(50.dp))
+                                    .background(BookiiBookiiTheme.colors.grey800),
+                            )
+                        }
+                        Text(text = "${book.progressRate}%", style = BookiiBookiiTheme.typography.semibold12, color = BookiiBookiiTheme.colors.grey800)
                     }
                 }
             }
-            Text(text = "${book.startDate} ~ ${book.endDate}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
+            Text(text = dateText, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
         }
     }
 }
@@ -390,7 +456,7 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
         ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ProfilePlaceholder(modifier = Modifier.size(24.dp))
+                    ProfilePlaceholder(imageUrl = card.creatorProfileImageUrl, modifier = Modifier.size(24.dp))
                     Text(text = card.username, style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey800)
                 }
                 if (card.isBookmarked) {
@@ -404,13 +470,43 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
             }
             Text(text = card.content, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey800, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth().weight(1f))
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Icon(painter = painterResource(R.drawable.ic_heart_fill), contentDescription = null, tint = BookiiBookiiTheme.colors.uiPointRed, modifier = Modifier.size(20.dp))
-                Text(text = card.page, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400)
+                // 리액션 아이콘
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+                    card.reactionCounts
+                        .filter { it.value > 0 }
+                        .keys
+                        .forEach { apiKey ->
+                            reactionIconByApiKey[apiKey]?.let { iconRes ->
+                                Icon(
+                                    painter = painterResource(iconRes),
+                                    contentDescription = null,
+                                    tint = BookiiBookiiTheme.colors.uiMain,
+                                    modifier = Modifier.size(13.dp),
+                                )
+                            }
+                        }
+                }
+                Text(
+                    text = if (card.page.isNotBlank() && card.page != "0") "p.${card.page}" else "",
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey400,
+                )
             }
         }
 
         when (card.type) {
-            ReadingCardType.PHOTO -> Box(modifier = Modifier.fillMaxWidth().weight(1f).background(BookiiBookiiTheme.colors.grey200))
+            ReadingCardType.PHOTO -> Box(
+                modifier = Modifier.fillMaxWidth().weight(1f).background(BookiiBookiiTheme.colors.grey200),
+            ) {
+                if (!card.imageUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model              = card.imageUrl,
+                        contentDescription = null,
+                        contentScale       = ContentScale.Crop,
+                        modifier           = Modifier.matchParentSize(),
+                    )
+                }
+            }
             ReadingCardType.QUOTE -> Box(
                 modifier = Modifier.fillMaxWidth().weight(1f).background(
                     Brush.linearGradient(

@@ -66,7 +66,7 @@ class LibraryMainViewModel : ViewModel() {
     private fun sort(books: List<LibraryBook>, type: LibrarySortType): List<LibraryBook> = when (type) {
         LibrarySortType.RECENT -> books.sortedByDescending { it.memberBookId }
         LibrarySortType.OLDEST -> books.sortedBy { it.memberBookId }
-        LibrarySortType.RATING -> books.sortedByDescending { it.rating ?: 0.0 }
+        LibrarySortType.RATING -> books.sortedByDescending { it.rating ?: 0 }
         LibrarySortType.TITLE  -> books.sortedBy { it.title }
     }
 }

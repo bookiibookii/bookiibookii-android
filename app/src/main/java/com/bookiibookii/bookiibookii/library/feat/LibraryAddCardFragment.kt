@@ -38,6 +38,14 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
         uri?.let { selectedImageUri = it }
     }
 
+    private val takePhotoLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        bitmap ?: return@registerForActivityResult
+        // 카메라 비트맵 → 캐시 파일로 저장 후 Uri 변환
+        val file = java.io.File(requireContext().cacheDir, "camera_${System.currentTimeMillis()}.jpg")
+        file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
+        selectedImageUri = android.net.Uri.fromFile(file)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -50,6 +58,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
                     mode             = mode,
                     selectedImageUri = selectedImageUri,
                     onImagePick      = { pickImageLauncher.launch("image/*") },
+                    onImageCapture   = { takePhotoLauncher.launch(null) },
                     onBackClick      = { parentFragmentManager.popBackStack() },
                     onSubmit         = { page, quotation, memo ->
                         if (memberBookId == -1) {

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -124,6 +125,7 @@ fun LibraryBookmarkScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
+                .navigationBarsPadding()
                 .padding(top = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -173,7 +175,7 @@ private fun BookmarkCardItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ProfilePlaceholder(modifier = Modifier.size(24.dp))
+                    ProfilePlaceholder(imageUrl = card.creatorProfileImageUrl, modifier = Modifier.size(24.dp))
                     Text(text = card.username, style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey800)
                 }
                 Box(
@@ -207,13 +209,24 @@ private fun BookmarkCardItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_heart_fill),
-                    contentDescription = null,
-                    tint = BookiiBookiiTheme.colors.uiPointRed,
-                    modifier = Modifier.size(20.dp),
+                // 리액션 아이콘
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+                    card.reactionCounts.filter { it.value > 0 }.keys.forEach { apiKey ->
+                        com.bookiibookii.bookiibookii.library.ui.reactionIconByApiKey[apiKey]?.let { iconRes ->
+                            Icon(
+                                painter = painterResource(iconRes),
+                                contentDescription = null,
+                                tint = BookiiBookiiTheme.colors.uiMain,
+                                modifier = Modifier.size(13.dp),
+                            )
+                        }
+                    }
+                }
+                Text(
+                    text = if (card.page.isNotBlank() && card.page != "0") "p.${card.page}" else "",
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey400,
                 )
-                Text(text = card.page, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400)
             }
         }
 
@@ -224,7 +237,16 @@ private fun BookmarkCardItem(
                     .fillMaxWidth()
                     .weight(1f)
                     .background(BookiiBookiiTheme.colors.grey200),
-            )
+            ) {
+                if (!card.imageUrl.isNullOrBlank()) {
+                    coil.compose.AsyncImage(
+                        model              = card.imageUrl,
+                        contentDescription = null,
+                        contentScale       = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier           = Modifier.matchParentSize(),
+                    )
+                }
+            }
             ReadingCardType.QUOTE -> Box(
                 modifier = Modifier
                     .fillMaxWidth()

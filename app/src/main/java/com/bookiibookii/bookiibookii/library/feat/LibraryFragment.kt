@@ -56,8 +56,13 @@ class LibraryFragment : Fragment() {
                                     memberBookId = book.memberBookId,
                                     groupName    = book.groupName,
                                     bookTitle    = book.title,
+                                    author       = book.author,
+                                    coverUrl     = book.coverUrl ?: "",
                                     startDate    = book.startDate,
                                     endDate      = book.endDate ?: "",
+                                    rating       = book.rating?.toDouble() ?: 0.0,
+                                    isDone       = book.rating != null,
+                                    progressRate = ((book.progress ?: 0f) * 100).toInt(),
                                 ),
                             )
                             .addToBackStack(null)

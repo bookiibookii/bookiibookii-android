@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.common
 
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -15,10 +16,12 @@ object DateUtils {
     // 서버 시간 문자열 → Instant
     // "...Z"/offset 있으면 Instant.parse, 없으면 UTC LocalDateTime으로 간주
     private fun parseInstant(serverTime: String): Instant = try {
-        Instant.parse(serverTime)
-    } catch (e: Exception) {
-        LocalDateTime.parse(serverTime).toInstant(ZoneOffset.UTC)
-    }
+        Instant.parse(serverTime)                                          // ISO-8601 with Z
+    } catch (_: Exception) { try {
+        LocalDateTime.parse(serverTime).toInstant(ZoneOffset.UTC)         // yyyy-MM-ddTHH:mm:ss
+    } catch (_: Exception) {
+        java.time.LocalDate.parse(serverTime).atStartOfDay().toInstant(ZoneOffset.UTC) // yyyy-MM-dd
+    } }
 
     fun formatDate(dateString: String?): String {
         if (dateString.isNullOrBlank()) return "0000. 00. 00."

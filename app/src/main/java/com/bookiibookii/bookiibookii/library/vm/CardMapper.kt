@@ -9,16 +9,17 @@ import com.bookiibookii.bookiibookii.library.ui.ReadingCardType
  */
 internal fun MemberCardResponseDTO.toReadingCard() = ReadingCard(
     cardId                 = cardId.toLong(),
-    username               = creatorName,
-    content                = memo,
+    username               = creatorName.orEmpty(),
+    content                = memo.orEmpty(),
     page                   = page.toString(),
     type                   = if (cardType == "IMAGE") ReadingCardType.PHOTO else ReadingCardType.QUOTE,
     isBookmarked           = isBookmarked,
     date                   = createdAt.take(10),
-    bookTitle              = bookTitle,
-    quotation              = quotation,
+    bookTitle              = bookTitle.orEmpty(),
+    quotation              = quotation.orEmpty(),
     imageUrl               = cardImage?.presignedGetUrl,
     myReactions            = myReactions,
+    reactionCounts         = reactionCounts.associate { it.reaction to it.count },
     creatorProfileImageUrl = creatorProfileImageUrl,
     isMine                 = isMine,
 )

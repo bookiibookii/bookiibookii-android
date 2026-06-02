@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.data.api
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.library.BookResult
 import com.bookiibookii.bookiibookii.data.model.library.BookReviewUpsertDTO
+import com.bookiibookii.bookiibookii.data.model.library.GroupReviewsResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardBookmarkResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardCreateRequestDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardCreateResponseDTO
@@ -89,6 +90,11 @@ interface LibApi {
     ): Response<ApiResponse<String>>
 
     // ── Reviews ────────────────────────────────────────────────────────────────
+
+    @GET("api/groups/{groupId}/reviews")
+    suspend fun getGroupReviews(
+        @Path("groupId") groupId: Int
+    ): Response<ApiResponse<GroupReviewsResponseDTO>>
 
     @POST("api/groups/{groupId}/reviews")
     suspend fun postBookReview(

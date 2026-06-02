@@ -47,6 +47,7 @@ internal fun ReadingCardShareBottomSheet(
         sheetState = sheetState,
         containerColor = BookiiBookiiTheme.colors.white,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+
         dragHandle = {
             Box(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
@@ -69,13 +70,28 @@ internal fun ReadingCardShareBottomSheet(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 ShareOption(label = "카카오톡", onClick = onKakaoClick) {
-                    Icon(painter = painterResource(R.drawable.ic_kakao), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(56.dp))
+                    // 로그인 화면과 동일: 노란 원(#FEE500) + 카카오 아이콘
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFEE500)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_kakao),
+                            contentDescription = null,
+                            tint = Color(0xFF3A1D1D),
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
                 }
                 ShareOption(label = "인스타그램", onClick = onInstaClick) {
                     Icon(painter = painterResource(R.drawable.ic_insta), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(56.dp))
                 }
                 ShareOption(label = "X", onClick = onXClick) {
-                    Icon(painter = painterResource(R.drawable.img_share_x), contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                    // 마이페이지 프로필 공유와 동일: img_share_x 56dp
+                    Icon(painter = painterResource(R.drawable.img_share_x), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(56.dp))
                 }
                 ShareOption(label = "다운로드", onClick = onDownloadClick) {
                     Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(BookiiBookiiTheme.colors.grey100), contentAlignment = Alignment.Center) {

@@ -19,10 +19,11 @@ class GroupReviewFragment : BaseLibraryFragment() {
 
     private val vm: GroupReviewViewModel by viewModels()
 
+    private val groupId: Int    get() = arguments?.getInt(ARG_GROUP_ID, -1) ?: -1
     private val groupName: String get() = arguments?.getString(ARG_GROUP_NAME, "") ?: ""
     private val bookTitle: String get() = arguments?.getString(ARG_BOOK_TITLE, "") ?: ""
     private val startDate: String get() = arguments?.getString(ARG_START_DATE, "") ?: ""
-    private val endDate: String get() = arguments?.getString(ARG_END_DATE, "") ?: ""
+    private val endDate: String   get() = arguments?.getString(ARG_END_DATE, "") ?: ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,8 +38,43 @@ class GroupReviewFragment : BaseLibraryFragment() {
                     data        = state.data,
                     onBackClick = { parentFragmentManager.popBackStack() },
                     onEditClick = {
+                        val reviewData = state.data
+
+                        // API 데이터 우선, 없으면 Fragment args 값으로 fallback
+                        val resolvedGroupName = reviewData?.groupName ?: groupName
+                        val resolvedDateRange = reviewData?.dateRange
+                            ?: run {
+                                val s = startDate
+                                val e = endDate
+                                when {
+                                    s.isBlank() -> ""
+                                    e.isBlank() -> "$s ~"
+                                    else        -> "$s ~ $e"
+                                }
+                            }
+                        val resolvedPartnerName  = reviewData?.partnerUsername ?: ""
+                        // 후기 미작성 시 bookReviews = [] (빈 배열) → Fragment args로 fallback
+                        val apiBooks = reviewData?.bookReviews?.takeIf { it.isNotEmpty() }
+                        val resolvedBookTitles  = apiBooks?.map { it.bookTitle }
+                            ?: if (bookTitle.isNotBlank()) listOf(bookTitle) else emptyList()
+                        val resolvedBookAuthors = apiBooks?.map { it.bookAuthor } ?: emptyList()
+                        val resolvedRatings     = apiBooks?.map { it.myRating.toDouble() } ?: emptyList()
+                        val resolvedComments    = apiBooks?.map { it.myReview } ?: emptyList()
+
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, ReviewEditFragment())
+                            .replace(
+                                R.id.fragmentContainer,
+                                ReviewEditFragment.newInstance(
+                                    groupId         = groupId,
+                                    groupName       = resolvedGroupName,
+                                    dateRange       = resolvedDateRange,
+                                    partnerName     = resolvedPartnerName,
+                                    bookTitles      = resolvedBookTitles,
+                                    bookAuthors     = resolvedBookAuthors,
+                                    initialRatings  = resolvedRatings,
+                                    initialComments = resolvedComments,
+                                )
+                            )
                             .addToBackStack(null)
                             .commit()
                     },
@@ -49,27 +85,32 @@ class GroupReviewFragment : BaseLibraryFragment() {
 
     override fun onResume() {
         super.onResume()
-        vm.loadReview(
-            groupName = groupName,
-            bookTitle = bookTitle,
-            startDate = startDate,
-            endDate   = endDate,
-        )
+        if (groupId != -1) {
+            vm.loadReview(
+                groupId   = groupId,
+                groupName = groupName,
+                startDate = startDate,
+                endDate   = endDate,
+            )
+        }
     }
 
     companion object {
-        private const val ARG_GROUP_NAME = "arg_group_name"
-        private const val ARG_BOOK_TITLE = "arg_book_title"
-        private const val ARG_START_DATE = "arg_start_date"
-        private const val ARG_END_DATE   = "arg_end_date"
+        private const val ARG_GROUP_ID    = "arg_group_id"
+        private const val ARG_GROUP_NAME  = "arg_group_name"
+        private const val ARG_BOOK_TITLE  = "arg_book_title"
+        private const val ARG_START_DATE  = "arg_start_date"
+        private const val ARG_END_DATE    = "arg_end_date"
 
         fun newInstance(
+            groupId: Int    = -1,
             groupName: String = "",
             bookTitle: String = "",
             startDate: String = "",
-            endDate: String = "",
+            endDate: String   = "",
         ) = GroupReviewFragment().apply {
             arguments = Bundle().apply {
+                putInt(ARG_GROUP_ID, groupId)
                 putString(ARG_GROUP_NAME, groupName)
                 putString(ARG_BOOK_TITLE, bookTitle)
                 putString(ARG_START_DATE, startDate)

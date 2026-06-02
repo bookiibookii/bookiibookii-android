@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.library.vm
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
@@ -33,15 +34,30 @@ class LibraryDetailViewModel : ViewModel() {
     fun fetchGroupCards(groupId: Int) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
+            Log.d("LibraryDetail", "fetchGroupCards 시작 — groupId=$groupId")
             try {
                 val response = RetrofitClient.libApi().getGroupCards(groupId)
+                Log.d("LibraryDetail", "응답 코드: ${response.code()}")
+                Log.d("LibraryDetail", "isSuccessful: ${response.isSuccessful}")
+                Log.d("LibraryDetail", "isSuccess(body): ${response.body()?.isSuccess}")
+
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val cards = response.body()?.result?.cards?.map { it.toReadingCard() } ?: emptyList()
+                    val result = response.body()?.result
+                    Log.d("LibraryDetail", "result: $result")
+                    Log.d("LibraryDetail", "cards 개수: ${result?.cards?.size}")
+                    result?.cards?.forEachIndexed { i, card ->
+                        Log.d("LibraryDetail", "  card[$i] id=${card.cardId} type=${card.cardType} memo=${card.memo?.take(20)}")
+                    }
+                    val cards = result?.cards?.map { it.toReadingCard() } ?: emptyList()
+                    Log.d("LibraryDetail", "변환된 ReadingCard 개수: ${cards.size}")
                     _uiState.update { it.copy(isLoading = false, cards = cards) }
                 } else {
+                    val errBody = response.errorBody()?.string()
+                    Log.e("LibraryDetail", "실패 — code=${response.code()}, errBody=$errBody")
                     _uiState.update { it.copy(isLoading = false, errorMessage = "독서카드를 불러오지 못했습니다.") }
                 }
             } catch (e: Exception) {
+                Log.e("LibraryDetail", "예외 발생: ${e.message}", e)
                 _uiState.update { it.copy(isLoading = false, errorMessage = "네트워크 오류가 발생했습니다.") }
             }
         }
@@ -68,16 +84,27 @@ class LibraryDetailViewModel : ViewModel() {
     fun addRepresentative(memberBookId: Int) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.mypApi().addRepresentativeBook(
-                    AddRepresentativeBookRequest(memberBookId = memberBookId.toLong())
-                )
+                val request = AddRepresentativeBookRequest(memberBookId = memberBookId.toLong())
+                Log.d("Representative", "대표도서 등록 요청 → memberBookId=$memberBookId, request=$request")
+
+                val response = RetrofitClient.mypApi().addRepresentativeBook(request)
+                Log.d("Representative", "응답 코드: ${response.code()}")
+                Log.d("Representative", "응답 body: ${response.body()}")
+
+                if (!response.isSuccessful) {
+                    val errBody = response.errorBody()?.string()
+                    Log.e("Representative", "실패 에러 body: $errBody")
+                }
+
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _uiState.update { it.copy(isRepresentative = true) }
                     _event.emit("대표 도서로 등록되었습니다.")
                 } else {
+                    Log.e("Representative", "isSuccess=false, code=${response.code()}, message=${response.message()}")
                     _event.emit("대표 도서 등록에 실패했습니다.")
                 }
             } catch (e: Exception) {
+                Log.e("Representative", "예외 발생: ${e.message}", e)
                 _event.emit("네트워크 오류가 발생했습니다.")
             }
         }
