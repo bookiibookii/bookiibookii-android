@@ -48,6 +48,8 @@ import com.bookiibookii.bookiibookii.tracker.model.toDisplay
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryReceiveConfirmDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryShippingConfirmDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryTrackingNumberDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectExchangeConfirmDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectExchangeFailDialog
@@ -444,18 +446,24 @@ fun TrackerMainRoute(
     var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var deliveryInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var deliveryEditDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    // 운송장 정보 확인 / 책 수령 확인 다이얼로그
+    var shippingConfirmGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var receiveConfirmGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     // 약속 잡기(1=일시, 2=장소, 3=확인)
     var meetingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var meetingStep by rememberSaveable { mutableStateOf(1) }
     // 1/3에서 고른 약속 일시 (raw ISO, 예: 2026-05-20T14:30:00)
     var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
+    // 2/3에서 입력한 상세주소 (사용자 직접 입력, 빈칸 시작)
+    var meetingAddressDetail by rememberSaveable { mutableStateOf("") }
     // 약속 확인(조회) 다이얼로그
     var meetingInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
-    // 교환 확인 다이얼로그: 어느 카드인지(null=닫힘)
+    // 교환 확인 다이얼로그
     var exchangeConfirmGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
-    // 교환 실패 안내 다이얼로그: 어느 카드인지(null=닫힘)
+    // 교환 실패 안내 다이얼로그
     var exchangeFailGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
+    val partnerDelivery by viewModel.partnerDelivery.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
     TrackerMainScreen(
@@ -489,6 +497,10 @@ fun TrackerMainRoute(
                 },
                 onConfirmExchange = { exchangeConfirmGroupId = groupId },
                 onWritePartnerReview = { onNavigatePartnerReview(groupId) },
+                onCheckShippingInfo = {
+                    viewModel.loadPartnerDelivery(groupId) { shippingConfirmGroupId = groupId }
+                },
+                onConfirmReceive = { receiveConfirmGroupId = groupId },
             )
         },
         onSecondaryAction = { groupId ->
@@ -513,6 +525,10 @@ fun TrackerMainRoute(
                 },
                 onConfirmExchange = { exchangeConfirmGroupId = groupId },
                 onWritePartnerReview = { onNavigatePartnerReview(groupId) },
+                onCheckShippingInfo = {
+                    viewModel.loadPartnerDelivery(groupId) { shippingConfirmGroupId = groupId }
+                },
+                onConfirmReceive = { receiveConfirmGroupId = groupId },
             )
         },
     )
@@ -584,12 +600,41 @@ fun TrackerMainRoute(
             },
         )
     }
+    // 운송장 정보 확인 (상대방 운송장)
+    val shippingGroupId = shippingConfirmGroupId
+    val partner = partnerDelivery
+    if (shippingGroupId != null && partner != null) {
+        TrackerDeliveryShippingConfirmDialog(
+            companyName = partner.deliveryCompanyName.orEmpty(),
+            trackingNumber = partner.trackingNumber.orEmpty(),
+            onDismiss = {
+                shippingConfirmGroupId = null
+                viewModel.clearPartnerDelivery()
+            },
+            onTrackingSearchClick = {}, // TODO: 배송 조회 이동 로직 보류
+            onConfirmClick = {
+                shippingConfirmGroupId = null
+                viewModel.clearPartnerDelivery()
+            },
+        )
+    }
+    // 책 수령 확인 → PATCH 수령 확인
+    val receiveGroupId = receiveConfirmGroupId
+    if (receiveGroupId != null) {
+        TrackerDeliveryReceiveConfirmDialog(
+            onDismiss = { receiveConfirmGroupId = null },
+            onConfirmClick = {
+                viewModel.confirmReceive(receiveGroupId) { receiveConfirmGroupId = null }
+            },
+        )
+    }
     // 약속 잡기 1/3 → 2/3 → 3/3
     if (meetingDialogGroupId != null) {
         when (meetingStep) {
             1 -> TrackerDirectMeetingTimeDialog(
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
                 onNextClick = { scheduledAt ->
@@ -599,10 +644,12 @@ fun TrackerMainRoute(
             )
             2 -> TrackerDirectMeetingPlaceDialog(
                 address = meetingPlace?.address.orEmpty(),
-                addressDetail = meetingPlace?.addressDetail.orEmpty(),
+                addressDetail = meetingAddressDetail,
+                onAddressDetailChange = { meetingAddressDetail = it },
                 onLoadMyPlaceClick = { viewModel.loadMyExchangePlace() },
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
                 onPreviousClick = { meetingStep = 1 },
@@ -611,9 +658,10 @@ fun TrackerMainRoute(
             3 -> TrackerDirectMeetingConfirmDialog(
                 scheduledAt = meetingScheduledAt,
                 address = meetingPlace?.address.orEmpty(),
-                addressDetail = meetingPlace?.addressDetail.orEmpty(),
+                addressDetail = meetingAddressDetail,
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
                 onConfirmClick = {
@@ -623,10 +671,11 @@ fun TrackerMainRoute(
                         viewModel.registerMeeting(
                             groupId = gid,
                             locationId = place.id,
-                            addressDetail = place.addressDetail,
+                            addressDetail = meetingAddressDetail.ifBlank { null },
                             scheduledAt = meetingScheduledAt,
                         ) {
                             meetingDialogGroupId = null
+                            meetingAddressDetail = ""
                             viewModel.clearMeetingPlace()
                         }
                     }
@@ -690,6 +739,8 @@ private inline fun dispatchAction(
     onCheckMeeting: () -> Unit,
     onConfirmExchange: () -> Unit,
     onWritePartnerReview: () -> Unit,
+    onCheckShippingInfo: () -> Unit,
+    onConfirmReceive: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
@@ -701,6 +752,8 @@ private inline fun dispatchAction(
         TrackerAction.CheckMeeting -> onCheckMeeting()
         TrackerAction.ConfirmExchange -> onConfirmExchange()
         TrackerAction.WritePartnerReview -> onWritePartnerReview()
+        TrackerAction.CheckShippingInfo -> onCheckShippingInfo()
+        TrackerAction.ConfirmReceive -> onConfirmReceive()
         TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
         TrackerAction.None, null -> Unit
     }

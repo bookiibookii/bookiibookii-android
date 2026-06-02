@@ -16,6 +16,7 @@ import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewCreateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.PartnerDeliveryResponseDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
@@ -92,6 +93,18 @@ interface TrkApi {
     suspend fun patchMyDeliveryAddress(
         @Path("groupId") groupId: Long,
         @Body request: DeliveryAddressUpdateReqDTO,
+    ): Response<ApiResponse<String>>
+
+    // 상대방이 나에게 보낸 운송장 정보 조회
+    @GET("/api/groups/{groupId}/deliveries/partner")
+    suspend fun getPartnerDelivery(
+        @Path("groupId") groupId: Long,
+    ): Response<ApiResponse<PartnerDeliveryResponseDTO>>
+
+    // 상대방 운송장 수령 확인
+    @PATCH("/api/groups/{groupId}/deliveries/partner/receive")
+    suspend fun patchPartnerReceive(
+        @Path("groupId") groupId: Long,
     ): Response<ApiResponse<String>>
 
     @POST("/api/groups/{groupId}/tracker/delivery")

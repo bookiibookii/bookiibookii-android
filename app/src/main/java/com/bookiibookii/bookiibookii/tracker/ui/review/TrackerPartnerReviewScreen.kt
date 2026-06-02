@@ -1,7 +1,5 @@
 package com.bookiibookii.bookiibookii.tracker.ui.review
 
-import android.app.Activity
-import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,10 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerPartnerReviewViewModel
+import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -57,22 +56,17 @@ fun TrackerPartnerReviewRoute(
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
 
-    // 후기 화면 진입 시 바텀 네비 숨김 / 나갈 때 복구
-    val context = LocalContext.current
-    DisposableEffect(Unit) {
-        val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = View.GONE
-        onDispose {
-            bottomNav?.visibility = View.VISIBLE
-        }
-    }
-
+    // 바텀 네비 표시는 TrackerNavHost에서 현재 라우트 기준으로 일괄 제어 (여기서 토글하지 않음)
     TrackerPartnerReviewScreen(
         groupName = uiState.groupName,
         myNickname = uiState.myNickname,
         myBookTitle = uiState.myBookTitle,
+        myBookCoverUrl = uiState.myBookCoverUrl,
+        myProfileImageUrl = uiState.myProfileImageUrl,
         partnerNickname = uiState.partnerNickname,
         partnerBookTitle = uiState.partnerBookTitle,
+        partnerBookCoverUrl = uiState.partnerBookCoverUrl,
+        partnerProfileImageUrl = uiState.partnerProfileImageUrl,
         onBackClick = onBackClick,
         onSubmit = { reaction, comment ->
             viewModel.submitReview(reaction, comment, onSuccess = onBackClick)
@@ -85,8 +79,12 @@ fun TrackerPartnerReviewScreen(
     groupName: String,
     myNickname: String,
     myBookTitle: String,
+    myBookCoverUrl: String?,
+    myProfileImageUrl: String?,
     partnerNickname: String,
     partnerBookTitle: String,
+    partnerBookCoverUrl: String?,
+    partnerProfileImageUrl: String?,
     onBackClick: () -> Unit,
     onSubmit: (reaction: String?, comment: String) -> Unit,
 ) {
@@ -114,11 +112,16 @@ fun TrackerPartnerReviewScreen(
                 groupName = groupName,
                 myNickname = myNickname,
                 myBookTitle = myBookTitle,
+                myBookCoverUrl = myBookCoverUrl,
+                myProfileImageUrl = myProfileImageUrl,
                 partnerNickname = partnerNickname,
                 partnerBookTitle = partnerBookTitle,
+                partnerBookCoverUrl = partnerBookCoverUrl,
+                partnerProfileImageUrl = partnerProfileImageUrl,
             )
             ReviewCard(
                 partnerNickname = partnerNickname,
+                partnerProfileImageUrl = partnerProfileImageUrl,
                 rating = rating,
                 onRatingChange = { rating = it },
                 comment = commentInput,
@@ -190,6 +193,7 @@ private fun RatingButton(
 @Composable
 private fun ReviewCard(
     partnerNickname: String,
+    partnerProfileImageUrl: String?,
     rating: PartnerRating,
     onRatingChange: (PartnerRating) -> Unit,
     comment: String,
@@ -210,8 +214,10 @@ private fun ReviewCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            // 파트너 프로필 — VM 연결 시 imageUrl 와이어링
-            ProfilePlaceholder(modifier = Modifier.size(20.dp))
+            ProfilePlaceholder(
+                modifier = Modifier.size(20.dp),
+                imageUrl = partnerProfileImageUrl,
+            )
             Text(
                 text = buildAnnotatedString {
                     withStyle(SpanStyle(color = BookiiBookiiTheme.colors.uiMain)) {
@@ -281,8 +287,12 @@ private fun TrackerCard(
     groupName: String,
     myNickname: String,
     myBookTitle: String,
+    myBookCoverUrl: String?,
+    myProfileImageUrl: String?,
     partnerNickname: String,
     partnerBookTitle: String,
+    partnerBookCoverUrl: String?,
+    partnerProfileImageUrl: String?,
 ) {
     Column(
         modifier = Modifier
@@ -321,12 +331,16 @@ private fun TrackerCard(
             BookColumn(
                 nickname = myNickname,
                 bookTitle = myBookTitle,
+                bookCoverUrl = myBookCoverUrl,
+                profileImageUrl = myProfileImageUrl,
                 isMyBook = true,
                 modifier = Modifier.weight(1f),
             )
             BookColumn(
                 nickname = partnerNickname,
                 bookTitle = partnerBookTitle,
+                bookCoverUrl = partnerBookCoverUrl,
+                profileImageUrl = partnerProfileImageUrl,
                 isMyBook = false,
                 modifier = Modifier.weight(1f),
             )
@@ -338,6 +352,8 @@ private fun TrackerCard(
 private fun BookColumn(
     nickname: String,
     bookTitle: String,
+    bookCoverUrl: String?,
+    profileImageUrl: String?,
     isMyBook: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -354,17 +370,17 @@ private fun BookColumn(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .size(width = 100.dp, height = 132.dp)
-                    .background(
-                        color = BookiiBookiiTheme.colors.grey200,
-                        shape = BookiiBookiiTheme.shape.round8,
-                    )
-                    .padding(4.dp),
+                    .size(width = 100.dp, height = 132.dp),
                 contentAlignment = Alignment.BottomEnd,
             ) {
+                BookCover(
+                    imageUrl = bookCoverUrl,
+                    modifier = Modifier.fillMaxSize(),
+                )
                 if (isMyBook) {
                     Box(
                         modifier = Modifier
+                            .padding(4.dp)
                             .clip(BookiiBookiiTheme.shape.round4)
                             .background(BookiiBookiiTheme.colors.grey200.copy(alpha = 0.75f))
                             .padding(horizontal = 4.dp, vertical = 2.dp),
@@ -383,6 +399,7 @@ private fun BookColumn(
                     .align(Alignment.TopStart)
                     .padding(start = 17.dp)
                     .size(44.dp),
+                imageUrl = profileImageUrl,
                 innerStroke = true,
             )
         }
@@ -395,6 +412,11 @@ private fun BookColumn(
             text = bookTitle,
             style = BookiiBookiiTheme.typography.medium16,
             color = BookiiBookiiTheme.colors.grey800,
+            textAlign = TextAlign.Center,
+            // 항상 2줄 높이 확보 → 한쪽만 길어도 양쪽 칼럼 높이가 같아 표지 정렬 유지
+            minLines = 2,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -468,8 +490,12 @@ private fun TrackerPartnerReviewScreenPreview() {
             groupName = "김영하 도장깨기 하실 분",
             myNickname = "나",
             myBookTitle = "살인자의 기억법",
+            myBookCoverUrl = null,
+            myProfileImageUrl = null,
             partnerNickname = "noshel",
             partnerBookTitle = "작별인사",
+            partnerBookCoverUrl = null,
+            partnerProfileImageUrl = null,
             onBackClick = {},
             onSubmit = { _, _ -> },
         )
