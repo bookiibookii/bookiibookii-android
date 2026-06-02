@@ -1,126 +1,90 @@
 package com.bookiibookii.bookiibookii.data.model.library
 
-// ==========================================
-// [2] 독서카드 목록 조회 (DetailFragment용 - 이어읽기/함께읽기 공통)
-// ==========================================
-data class GroupCardListResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: GroupCardResult?
-)
-
-data class GroupCardResult(
+// 카드 목록 조회 응답 (GET /api/member-books/group/{groupId}/cards)
+data class MemberCardListResponseDTO(
     val groupId: Int,
-    val currentBookOwner: OwnerInfo?,
-    val myComment: String?,
-    val partnerComment: String?,
-    val togetherComments: List<TogetherComment>?, // ★ [추가됨] 함께읽기 코멘트 배열
-    val cards: List<CardItem>
+    val cards: List<MemberCardResponseDTO>
 )
 
-// ★ [추가됨] 함께읽기 코멘트 모델
-data class TogetherComment(
-    val userId: Int,
-    val nickname: String,
-    val comment: String
-)
-
-data class OwnerInfo(
-    val matchedMemberId: Int,
-    val nickname: String
-)
-
-data class CardItem(
+// 카드 공통 응답 DTO — 목록/상세/북마크 모두 사용
+data class MemberCardResponseDTO(
     val cardId: Int,
+    val memberBookId: Int,
+    val cardType: String,
     val page: Int,
-    val memo: String,
-    val cardImage: CardImage?,
+    val memo: String?,
+    val quotation: String?,
+    val cardImage: MemberCardImageResponseDTO?,
     val createdAt: String,
-    val bookTitle: String,
+    val bookTitle: String?,
+    val isMine: Boolean,
     val isBookmarked: Boolean,
-    val creatorName: String,
-    val profileImageUrl: String? = null,
-    val commentCount: Int = 0
+    val creatorName: String?,
+    val creatorProfileImageUrl: String?,
+    val reactionCounts: List<MemberCardReactionCountDTO>,
+    val myReactions: List<String>,
 )
 
-data class CardImage(
+data class MemberCardImageResponseDTO(
     val cardImageId: Int,
     val s3Key: String,
     val presignedGetUrl: String
 )
 
-// ==========================================
-// [3] 카드 상세 조회 (LibraryCardDetailFragment)
-// ==========================================
-data class CardDetailResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: CardDetailResult?
+data class MemberCardReactionCountDTO(
+    val reaction: String,
+    val count: Int
 )
 
-data class CardDetailResult(
-    val cardId: Int,
-    val page: Int,
-    val memo: String,
-    val cardImage: CardImage?,
-    val createdAt: String,
-    val bookTitle: String,
-    val isBookmarked: Boolean?,
-    val creatorName: String
-)
-
-// ==========================================
-// [5] 카드 생성/수정/이미지 업로드
-// ==========================================
-
-// 카드 생성 요청
-data class CreateCardRequest(
+// 카드 생성 요청 (POST /api/member-books/{memberBookId}/cards)
+data class MemberCardCreateRequestDTO(
+    val cardType: String,
+    val quotation: String,
     val s3Key: String,
     val page: Int,
-    val memo: String
+    val memo: String,
+    val quotationValidForText: Boolean = false,
+    val s3KeyValidForImage: Boolean = false,
 )
 
-// 카드 수정 요청
-data class UpdateCardRequest(
+// 카드 수정 요청 (PATCH /api/member-books/cards/{cardId})
+data class MemberCardUpdateRequestDTO(
     val page: Int,
     val memo: String,
+    val quotation: String,
     val s3Key: String? = null
 )
 
-// 카드 생성/수정 성공 응답
-data class CardOperationResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: CardDetailResult?
+// 카드 생성 응답
+data class MemberCardCreateResponseDTO(
+    val cardId: Int,
+    val cardType: String,
+    val page: Int,
+    val memo: String,
+    val quotation: String,
+    val cardImage: MemberCardImageResponseDTO?,
+    val createdAt: String,
+    val creatorName: String,
+    val creatorProfileImageUrl: String?
 )
 
-// 카드 생성 성공 응답
-data class CreateCardResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: CardDetailResult? // 생성된 카드 정보
-)
-
-// 북마크 토글 응답
-data class BookmarkToggleResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: BookmarkResult?
-)
-
-data class BookmarkResult(
+// 북마크 토글 응답 (PATCH /api/member-books/cards/{cardId}/bookmark)
+data class MemberCardBookmarkResponseDTO(
     val bookmarked: Boolean
 )
 
-// 북마크 목록 조회 응답 (GET /api/cards/bookmarks)
-data class BookmarkListResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: List<CardItem>? // CardItem은 기존에 정의한 것 재사용
+// 리액션 토글 요청/응답 (PATCH /api/member-books/cards/{cardId}/reactions)
+data class MemberCardReactionToggleRequestDTO(
+    val reaction: String
+)
+
+data class MemberCardReactionToggleResponseDTO(
+    val reaction: String,
+    val active: Boolean
+)
+
+// Presigned URL 응답 (POST /api/member-books/{memberBookId}/cards/presigned-url)
+data class PresignedUrlResponseDTO(
+    val s3Key: String,
+    val presignedPutUrl: String
 )

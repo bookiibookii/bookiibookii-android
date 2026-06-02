@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -46,26 +47,40 @@ private val searchBarShape = RoundedCornerShape(
 )
 
 data class LibraryBook(
+    val groupId: Int = 0,
+    val memberBookId: Int = 0,
     val groupName: String,
     val title: String,
+    val author: String = "",
     val coverUrl: String? = null,
     val progress: Float? = null,
     val rating: Int? = null,
+    val startDate: String = "",
+    val endDate: String? = null,
 )
 
 @Composable
 fun LibraryScreen(
     readingBooks: List<LibraryBook> = emptyList(),
     doneBooks: List<LibraryBook> = emptyList(),
+    sortType: LibrarySortType = LibrarySortType.RECENT,
+    isLoading: Boolean = false,
+    onSortChange: (LibrarySortType) -> Unit = {},
     onProfileClick: () -> Unit = {},
     onBookmarkClick: () -> Unit = {},
     onBookClick: (LibraryBook) -> Unit = {},
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var sortType by remember { mutableStateOf(LibrarySortType.RECENT) }
     var viewType by remember { mutableStateOf(LibraryViewType.GRID) }
     val allBooks = readingBooks + doneBooks
     val isSearchActive = searchQuery.isNotEmpty()
+    val filteredBooks = if (isSearchActive) {
+        allBooks.filter {
+            it.title.contains(searchQuery, ignoreCase = true) ||
+            it.groupName.contains(searchQuery, ignoreCase = true) ||
+            it.author.contains(searchQuery, ignoreCase = true)
+        }
+    } else allBooks
 
     Column(
         modifier = Modifier
@@ -85,7 +100,7 @@ fun LibraryScreen(
 
         if (isSearchActive) {
             LibrarySearchResults(
-                books = allBooks,
+                books = filteredBooks,
                 viewType = viewType,
                 onBookClick = onBookClick,
             )
@@ -94,7 +109,7 @@ fun LibraryScreen(
                 bookCount = allBooks.size,
                 sortType = sortType,
                 viewType = viewType,
-                onSortChange = { sortType = it },
+                onSortChange = { onSortChange(it) },
                 onViewToggle = {
                     viewType = if (viewType == LibraryViewType.GRID) LibraryViewType.LIST else LibraryViewType.GRID
                 },
@@ -118,7 +133,7 @@ fun LibraryScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.navigationBarsPadding().height(24.dp))
     }
 }
 
@@ -215,7 +230,7 @@ private fun LibrarySearchBar(
                 Icon(
                     painter = painterResource(R.drawable.ic_search),
                     contentDescription = null,
-                    tint = BookiiBookiiTheme.colors.grey500,
+                    tint = androidx.compose.ui.graphics.Color.White,
                     modifier = Modifier.size(24.dp),
                 )
             }

@@ -1,48 +1,30 @@
 package com.bookiibookii.bookiibookii.data.model.library
 
+// 나의 트래커 목록 조회 응답 (GET /api/me/trackers)
 data class TrackerResponse(
     val isSuccess: Boolean,
     val code: String,
     val message: String,
-    val result: List<TrackerResult>?
+    val result: List<TrackerListItemResDTO>?
 )
 
-data class TrackerResult(
+data class TrackerListItemResDTO(
     val groupId: Int,
-    val groupType: String,
-    val tradeType: String?,
-    val bookTitle: String?,
-    val bookImage: String?,
-    val bookAuthor: String?,
-    val bookCategory: String?,
-    val togetherDetail: TogetherDetail?,
-    val relayDetail: RelayDetail?
+    val groupName: String,
+    val tradeType: String,
+    val displayStatus: String,
+    val remainingDays: Int,
+    val myCurrentBook: BookInfo?,
+    val partnerCurrentBook: BookInfo?
 )
 
-data class TogetherDetail(
-    val hostNickname: String?,
-    val participantCount: Int,
-    val myReadingRate: Int,    // ★ 내 독서율
-    val groupReadingRate: Int  // ★ 그룹 평균 독서율
-)
-
-data class RelayDetail(
-    val trackerStatus: String?,
-    val partnerNickname: String?,
-    val hostProfileImageUrl: String?,
-    val guestProfileImageUrls: List<String>?,
-    val stepDates: List<String>?
-)
-
-data class CompleteReadingResponse(
-    val isSuccess: Boolean,
-    val code: String,
-    val message: String,
-    val result: CompleteReadingResult?
-)
-
-data class CompleteReadingResult(
-    val matchedMemberId: Int,
-    val currentReadingRate: Int,
-    val completedAt: String
+data class BookInfo(
+    val title: String,
+    val image: String?,
+    val totalPages: Int,
+    val currentPage: Int,
+    val isOwnerBook: Boolean,
+    val currentReaderNickname: String,
+    val currentReaderProfileImageUrl: String?,
+    val currentReadingRate: Int
 )
