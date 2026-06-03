@@ -113,7 +113,7 @@ fun GroupSearchScreen(
                     modifier = Modifier.size(40.dp),
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_chevron),
+                        painter = painterResource(R.drawable.ic_back),
                         contentDescription = "뒤로가기",
                         tint = BookiiBookiiTheme.colors.grey900,
                     )
