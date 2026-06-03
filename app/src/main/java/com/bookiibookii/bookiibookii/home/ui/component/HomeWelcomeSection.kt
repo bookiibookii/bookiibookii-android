@@ -76,7 +76,7 @@ internal fun HomeWelcomeSection(
             Text(
                 text = topGreeting,
                 style = typography.regular24,
-                color = colors.grey800,
+                color = colors.grey900,
             )
             Text(
                 text = nickname,

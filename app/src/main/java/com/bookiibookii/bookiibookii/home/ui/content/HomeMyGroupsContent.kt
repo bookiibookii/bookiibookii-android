@@ -35,9 +35,11 @@ internal fun LazyListScope.homeMyGroupsContent(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // "N 권" 라벨 (regular14, grey900)
+            // "N 권" 라벨 — 피그마: gap=4dp, h=20dp, regular14, grey900
             Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.height(20.dp),
             ) {
                 Text(
                     text = myGroups.size.toString(),
@@ -45,7 +47,7 @@ internal fun LazyListScope.homeMyGroupsContent(
                     color = BookiiBookiiTheme.colors.grey900,
                 )
                 Text(
-                    text = " 권",
+                    text = "권",
                     style = BookiiBookiiTheme.typography.regular14,
                     color = BookiiBookiiTheme.colors.grey900,
                 )

@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.home.ui.content
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,11 +11,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.data.model.group.GroupItem
+import com.bookiibookii.bookiibookii.data.model.group.HomeBestsellerSection
 import com.bookiibookii.bookiibookii.data.model.group.HomeCategorySection
 import com.bookiibookii.bookiibookii.data.model.group.HomeRegionSection
 import com.bookiibookii.bookiibookii.home.ui.component.RecommendGroupRow
@@ -24,29 +25,28 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 internal fun LazyListScope.homeRecommendContent(
     newGroups: List<GroupItem>,
     categorySection: HomeCategorySection?,
+    bestsellerSection: HomeBestsellerSection?,
     regionSection: HomeRegionSection?,
     onGroupClick: (Long) -> Unit,
 ) {
     // 피그마: 탭 영역 ~ 첫 번째 섹션 사이 8dp 회색 간격
     item { Box(Modifier.fillMaxWidth().height(8.dp)) }
 
-    // ① 신규 그룹 섹션 — 항상 고정 노출
-    item {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(BookiiBookiiTheme.colors.white)
-                .padding(top = 16.dp, bottom = 16.dp),
-        ) {
-            HomeSectionHeader(
-                title = "신규 그룹을 확인해보세요",
-                subtitle = "오늘 만들어진 따끈따끈한 그룹들만 모았어요.",
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 0.dp),
-            )
-            Box(Modifier.height(12.dp))
-            if (newGroups.isEmpty()) {
-                HomeRecommendEmptyItem(message = "추천 그룹이 없어요")
-            } else {
+    // ① 신규 그룹 섹션 — 오늘 생성된 그룹 없으면 섹션 미표시
+    if (newGroups.isNotEmpty()) {
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(BookiiBookiiTheme.colors.white)
+                    .padding(top = 16.dp, bottom = 16.dp),
+            ) {
+                HomeSectionHeader(
+                    title = "신규 그룹을 확인해보세요.",
+                    subtitle = "오늘 만들어진 따끈따끈한 그룹들만 모았어요.",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 0.dp),
+                )
+                Box(Modifier.height(12.dp))
                 RecommendGroupRow(
                     groups = newGroups,
                     onGroupClick = onGroupClick,
@@ -80,7 +80,32 @@ internal fun LazyListScope.homeRecommendContent(
         }
     }
 
-    // ③ 지역 기반 섹션 — region != null 이고 그룹 있을 때만 노출
+    // ③ 베스트셀러 기반 섹션 — 그룹 있을 때만 노출
+    val bestsellerGroups = bestsellerSection?.groups.orEmpty()
+    if (bestsellerGroups.isNotEmpty()) {
+        item { Box(Modifier.fillMaxWidth().height(8.dp)) }
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(BookiiBookiiTheme.colors.white)
+                    .padding(top = 16.dp, bottom = 16.dp),
+            ) {
+                HomeSectionHeader(
+                    title = "나 빼고 다 읽은 책 여기 있어요.",
+                    subtitle = "이번 기회에 베스트셀러/스테디셀러 읽어볼까요?",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 0.dp),
+                )
+                Box(Modifier.height(12.dp))
+                RecommendGroupRow(
+                    groups = bestsellerGroups,
+                    onGroupClick = onGroupClick,
+                )
+            }
+        }
+    }
+
+    // ④ 지역 기반 섹션 — region != null 이고 그룹 있을 때만 노출
     val regionGroups = regionSection?.groups.orEmpty()
     if (regionSection?.region != null && regionGroups.isNotEmpty()) {
         item { Box(Modifier.fillMaxWidth().height(8.dp)) }
@@ -117,7 +142,10 @@ private fun HomeSectionHeader(
 ) {
     val typography = BookiiBookiiTheme.typography
     val colors = BookiiBookiiTheme.colors
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Text(
             text = title,
             style = typography.regular20,
@@ -127,25 +155,6 @@ private fun HomeSectionHeader(
             text = subtitle,
             style = typography.medium16,
             color = colors.grey600,
-        )
-    }
-}
-
-@Composable
-private fun HomeRecommendEmptyItem(
-    message: String,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 40.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = message,
-            style = BookiiBookiiTheme.typography.regular15,
-            color = BookiiBookiiTheme.colors.grey400,
         )
     }
 }
@@ -175,6 +184,7 @@ private fun HomeRecommendContentPreview() {
                     category = "한국소설",
                     groups = mockNewGroups,
                 ),
+                bestsellerSection = HomeBestsellerSection(groups = mockNewGroups),
                 regionSection = HomeRegionSection(
                     region = "인천 남동구",
                     groups = mockNewGroups,
@@ -193,6 +203,7 @@ private fun HomeRecommendContentNewOnlyPreview() {
             homeRecommendContent(
                 newGroups = mockNewGroups,
                 categorySection = null,
+                bestsellerSection = null,
                 regionSection = null,
                 onGroupClick = {},
             )

@@ -6,12 +6,18 @@ import com.google.gson.annotations.SerializedName
 data class HomeGroupsResponse(
     @SerializedName("newGroups") val newGroups: List<GroupItem> = emptyList(),
     @SerializedName("categorySection") val categorySection: HomeCategorySection? = null,
+    @SerializedName("bestsellerSection") val bestsellerSection: HomeBestsellerSection? = null,
     @SerializedName("regionSection") val regionSection: HomeRegionSection? = null,
 )
 
 // 카테고리 기반 섹션 — category=null이면 추천 불가
 data class HomeCategorySection(
     @SerializedName("category") val category: String?,
+    @SerializedName("groups") val groups: List<GroupItem> = emptyList(),
+)
+
+// 베스트셀러 기반 섹션
+data class HomeBestsellerSection(
     @SerializedName("groups") val groups: List<GroupItem> = emptyList(),
 )
 

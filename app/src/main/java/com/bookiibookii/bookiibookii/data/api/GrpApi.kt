@@ -61,6 +61,10 @@ interface GrpApi {
     @GET("api/groups/home")
     suspend fun getHomeGroups(): Response<ApiResponse<HomeGroupsResponse>>
 
+    // 내가 만든 그룹 목록 조회 (내 그룹 탭)
+    @GET("api/groups/my-hosted")
+    suspend fun getMyHostedGroups(): Response<ApiResponse<List<GroupItem>>>
+
     // 내가 신청한 그룹 목록 조회 (신청한 그룹 탭)
     @GET("api/groups/apply/me")
     suspend fun getAppliedGroups(): Response<ApiResponse<List<GroupItem>>>

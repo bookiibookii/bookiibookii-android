@@ -35,28 +35,32 @@ internal fun LazyListScope.homeAppliedContent(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // "N 권" 라벨 (regular14, grey900)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            // 피그마: "N 권" + 안내 문구를 gap=4dp 서브그룹으로 묶음
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                // "N 권" 라벨 — 피그마: gap=4dp, h=20dp, regular14, grey900
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.height(20.dp),
+                ) {
+                    Text(
+                        text = appliedGroups.size.toString(),
+                        style = BookiiBookiiTheme.typography.regular14,
+                        color = BookiiBookiiTheme.colors.grey900,
+                    )
+                    Text(
+                        text = "권",
+                        style = BookiiBookiiTheme.typography.regular14,
+                        color = BookiiBookiiTheme.colors.grey900,
+                    )
+                }
+                // 안내 문구 — 피그마: regular14, grey500
                 Text(
-                    text = appliedGroups.size.toString(),
+                    text = "매칭 대기 중인 그룹만 노출됩니다.",
                     style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey900,
-                )
-                Text(
-                    text = " 권",
-                    style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey900,
+                    color = BookiiBookiiTheme.colors.grey500,
                 )
             }
-
-            // 안내 문구
-            Text(
-                text = "매칭 대기 중인 그룹만 노출됩니다.",
-                style = BookiiBookiiTheme.typography.regular14,
-                color = BookiiBookiiTheme.colors.grey500,
-            )
 
             if (appliedGroups.isEmpty()) {
                 Box(

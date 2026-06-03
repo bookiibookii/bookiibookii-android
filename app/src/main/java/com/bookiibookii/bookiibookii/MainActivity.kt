@@ -145,7 +145,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             )
 
             val params = binding.bottomNav.root.layoutParams as ConstraintLayout.LayoutParams
-            params.bottomMargin = systemBars.bottom
+            val bottomNavMargin = (20 * resources.displayMetrics.density).toInt()
+            params.bottomMargin = systemBars.bottom + bottomNavMargin
             binding.bottomNav.root.layoutParams = params
 
             insets

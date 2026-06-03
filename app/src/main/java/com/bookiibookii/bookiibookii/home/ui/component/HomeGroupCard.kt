@@ -68,7 +68,7 @@ internal fun HomeGroupCard(
                         HomeExchangeBadge(text = group.tradeType)
                     }
                     Text(
-                        text = group.title,
+                        text = group.title.orEmpty(),
                         style = typography.medium16,
                         color = colors.grey900,
                         maxLines = 1,
@@ -125,7 +125,7 @@ internal fun HomeGroupCard(
                         imageUrl = group.hostProfileImageUrl,
                     )
                     Text(
-                        text = group.hostNickname ?: "",
+                        text = group.hostNickname.orEmpty(),
                         style = typography.regular15,
                         color = colors.grey700,
                     )
@@ -135,7 +135,7 @@ internal fun HomeGroupCard(
                         color = colors.grey700,
                     )
                     Text(
-                        text = group.groupName,
+                        text = group.groupName.orEmpty(),
                         style = typography.regular15,
                         color = colors.grey500,
                         maxLines = 1,
@@ -171,7 +171,7 @@ private fun HomeExchangeBadge(
         modifier = modifier
             .clip(BookiiBookiiTheme.shape.round8)
             .background(BookiiBookiiTheme.colors.uiMainPale)
-            .padding(horizontal = 4.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
         Text(
             text = text,
