@@ -253,15 +253,19 @@ private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
 
 @Composable
 private fun ReviewStarRating(rating: Double) {
-    val filled = rating.toInt()
     Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
-        repeat(5) { index ->
-            Icon(
-                painter = painterResource(R.drawable.ic_star),
-                contentDescription = null,
-                tint = if (index < filled) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200,
-                modifier = Modifier.size(16.dp),
-            )
+        for (i in 1..5) {
+            val starValue = (rating - (i - 1)).coerceIn(0.0, 1.0)
+            val isFull = starValue >= 0.75
+            val isHalf = starValue >= 0.25
+            when {
+                isFull -> Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMainSub, modifier = Modifier.size(16.dp))
+                isHalf -> Box(modifier = Modifier.size(16.dp)) {
+                    Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMainSubPale, modifier = Modifier.size(16.dp))
+                    Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMainSub, modifier = Modifier.size(16.dp))
+                }
+                else -> Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(16.dp))
+            }
         }
     }
 }

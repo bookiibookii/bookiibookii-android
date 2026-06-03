@@ -24,11 +24,14 @@ object DateUtils {
     } }
 
     fun formatDate(dateString: String?): String {
-        if (dateString.isNullOrBlank()) return "0000. 00. 00."
+        if (dateString.isNullOrBlank()) return ""
+        // 서버가 이미 "yyyy. MM. dd." 형태로 보내는 경우 그대로 반환
+        if (dateString.matches(Regex("\\d{4}\\. \\d{2}\\. \\d{2}\\."))) return dateString
         return try {
             formatter.format(parseInstant(dateString))
         } catch (e: Exception) {
-            "0000. 00. 00."
+            // 파싱 실패 시 원본 문자열 반환 (빈 문자열보다 낫기 때문)
+            dateString
         }
     }
 

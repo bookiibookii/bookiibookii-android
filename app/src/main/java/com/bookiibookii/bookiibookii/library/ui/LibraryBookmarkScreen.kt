@@ -78,7 +78,7 @@ fun LibraryBookmarkScreen(
                         painter = painterResource(R.drawable.ic_back),
                         contentDescription = "뒤로 가기",
                         tint = BookiiBookiiTheme.colors.grey900,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(32.dp),
                     )
                 }
                 Text(text = "북마크", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)

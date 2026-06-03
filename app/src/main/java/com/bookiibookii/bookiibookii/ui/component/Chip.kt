@@ -161,8 +161,8 @@ fun ExchangeTypeChip(isDelivery: Boolean, modifier: Modifier = Modifier) {
     } else {
         SmallChip(
             text = "직접 교환",
-            bgColor = BookiiBookiiTheme.colors.uiMainSubPale,
-            textColor = BookiiBookiiTheme.colors.uiMainSub,
+            bgColor = BookiiBookiiTheme.colors.uiMainSubPale,  // sub_pale 배경
+            textColor = BookiiBookiiTheme.colors.uiMainSub,     // sub 글자
             modifier = modifier,
         )
     }

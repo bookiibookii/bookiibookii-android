@@ -110,7 +110,7 @@ private fun WrittenReviewCard(review: BookReviewSummaryDto) {
                 }
                 MypageStarRating(rating = review.rating.toInt().coerceIn(0, 5))
             }
-            ExchangeTypeChip(isDelivery = review.tradeType == "DELIVERY")
+            ExchangeTypeChip(isDelivery = review.tradeType != "DIRECT")
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200)
         Text(text = review.comment ?: "", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
@@ -203,10 +203,12 @@ private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
 private fun MypageStarRating(rating: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
         repeat(5) { index ->
+            // 채운 별: ic_star_fill + uiMainSub / 빈 별: ic_star + grey200
+            val filled = index < rating
             Icon(
-                painter = painterResource(R.drawable.ic_star),
+                painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star),
                 contentDescription = null,
-                tint = if (index < rating) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
+                tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
                 modifier = Modifier.size(16.dp),
             )
         }

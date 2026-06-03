@@ -91,7 +91,7 @@ fun GroupReviewScreen(
                     painter = painterResource(R.drawable.ic_back),
                     contentDescription = "뒤로 가기",
                     tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(32.dp),
                 )
             }
             Text(text = "후기", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
@@ -100,7 +100,7 @@ fun GroupReviewScreen(
                     painter = painterResource(R.drawable.ic_edit),
                     contentDescription = "수정",
                     tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(32.dp),
                 )
             }
         }
@@ -325,10 +325,11 @@ private fun BookReviewCard(
 private fun StarRow(rating: Int) {
     Row {
         for (i in 1..5) {
+            val filled = i <= rating
             Icon(
-                painter = painterResource(R.drawable.ic_star),
+                painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star),
                 contentDescription = null,
-                tint = if (i <= rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200,
+                tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
                 modifier = Modifier.size(14.dp),
             )
         }
