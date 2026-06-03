@@ -58,9 +58,11 @@ import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupRule
 import com.bookiibookii.bookiibookii.data.model.group.ParticipantSlot
+import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.model.GroupDetailActionButton
 import com.bookiibookii.bookiibookii.group.model.GroupDetailUiState
 import com.bookiibookii.bookiibookii.group.ui.editor.GroupDeleteDialog
+import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupAddressRequiredDialog
 import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupApplyDialog
 import com.bookiibookii.bookiibookii.group.vm.GroupDetailViewModel
 import com.bookiibookii.bookiibookii.group.vm.JoinRequestViewModel
@@ -81,6 +83,7 @@ fun GroupDetailRoute(
     onManage: (groupId: Long) -> Unit,
     onEdit: (groupId: Long) -> Unit,
     onDeleted: () -> Unit,
+    onManageAddress: (ExchangeType) -> Unit = {},
     viewModel: GroupDetailViewModel = viewModel(),
     applyViewModel: JoinRequestViewModel = viewModel(),
 ) {
@@ -90,6 +93,7 @@ fun GroupDetailRoute(
     var expanded by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showApplyDialog by remember { mutableStateOf(false) }
+    var showAddressRequiredDialog by remember { mutableStateOf(false) }
 
     // 삭제 결과 처리: 성공 -> 그룹 목록 이동, 실패 -> 토스트
     LaunchedEffect(Unit) {
@@ -117,6 +121,9 @@ fun GroupDetailRoute(
                     context.showCustomToast("참여 신청을 취소했어요", isSuccess = true)
                     viewModel.retry()
                 }
+                // 주소 확인 결과: 있으면 신청 다이얼로그, 없으면 주소 등록 안내 다이얼로그
+                is JoinRequestViewModel.Event.AddressReady -> showApplyDialog = true
+                is JoinRequestViewModel.Event.AddressMissing -> showAddressRequiredDialog = true
                 is JoinRequestViewModel.Event.ShowError ->
                     context.showCustomToast(event.message, isSuccess = false)
 
@@ -150,7 +157,16 @@ fun GroupDetailRoute(
                 val detail = uiState.detail
                 if (detail != null) {
                     when (detail.buttonStatus) {
-                        "APPLY" -> showApplyDialog = true
+                        // 주소 등록 여부 확인 후 분기 (있으면 신청 다이얼로그, 없으면 안내 다이얼로그)
+                        // 유형 불명 시 기존 동작대로 바로 신청 다이얼로그
+                        "APPLY" -> {
+                            val type = runCatching { ExchangeType.valueOf(detail.tradeType) }.getOrNull()
+                            if (type != null) {
+                                applyViewModel.checkAddressBeforeApply(type)
+                            } else {
+                                showApplyDialog = true
+                            }
+                        }
                         "MANAGE" -> onManage(detail.groupId)
                         "CANCEL" -> applyViewModel.cancelApply(detail.groupId)
                         else -> Unit
@@ -231,6 +247,26 @@ fun GroupDetailRoute(
                     onConfirm = {
                         showDeleteDialog = false
                         viewModel.deleteGroup()
+                    },
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                )
+            }
+        }
+
+        // 주소 미등록 안내 다이얼로그 (APPLY 시 배송지/희망 교환 장소 없음)
+        // 주소지 관리 → 교환 유형에 맞는 탭으로 주소 관리 화면 이동
+        if (showAddressRequiredDialog) {
+            Dialog(
+                onDismissRequest = { showAddressRequiredDialog = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false),
+            ) {
+                GroupAddressRequiredDialog(
+                    onDismiss = { showAddressRequiredDialog = false },
+                    onManageAddress = {
+                        showAddressRequiredDialog = false
+                        uiState.detail?.tradeType
+                            ?.let { runCatching { ExchangeType.valueOf(it) }.getOrNull() }
+                            ?.let { onManageAddress(it) }
                     },
                     modifier = Modifier.padding(horizontal = 24.dp),
                 )

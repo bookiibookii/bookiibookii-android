@@ -103,6 +103,8 @@ fun GroupNavHost(
                         launchSingleTop = true
                     }
                 },
+                // 주소 미등록 안내 다이얼로그 → 주소지 관리 화면 이동 (교환 유형에 맞는 탭)
+                onManageAddress = onManageAddress,
             )
         }
         composable(
