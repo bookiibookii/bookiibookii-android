@@ -100,12 +100,14 @@ fun GroupReviewScreen(
                     painter = painterResource(R.drawable.ic_edit),
                     contentDescription = "수정",
                     tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(32.dp),
                 )
             }
         }
 
         if (data == null) return@Column
+
+        val hasReviews = data.messages.isNotEmpty() || data.bookReviews.isNotEmpty()
 
         Column(
             modifier = Modifier
@@ -127,6 +129,25 @@ fun GroupReviewScreen(
             ) {
                 Text(text = data.groupName, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
                 Text(text = data.dateRange, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
+            }
+
+            // 후기 없음 빈 상태
+            if (!hasReviews) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(BookiiBookiiTheme.colors.white)
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "작성된 후기가 없습니다.",
+                        style = BookiiBookiiTheme.typography.regular16,
+                        color = BookiiBookiiTheme.colors.grey600,
+                    )
+                }
+                return@Column
             }
 
             // 교환 후기 채팅 섹션
@@ -304,10 +325,11 @@ private fun BookReviewCard(
 private fun StarRow(rating: Int) {
     Row {
         for (i in 1..5) {
+            val filled = i <= rating
             Icon(
-                painter = painterResource(R.drawable.ic_star),
+                painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star),
                 contentDescription = null,
-                tint = if (i <= rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200,
+                tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
                 modifier = Modifier.size(14.dp),
             )
         }

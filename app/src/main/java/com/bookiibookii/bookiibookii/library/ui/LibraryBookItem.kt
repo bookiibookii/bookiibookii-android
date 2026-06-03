@@ -90,9 +90,9 @@ internal fun LibraryBookGridItem(book: LibraryBook, modifier: Modifier = Modifie
                     Row {
                         repeat(5) { i ->
                             Icon(
-                                painter = painterResource(R.drawable.ic_star),
+                                painter = painterResource(if (i < book.rating) R.drawable.ic_star_fill else R.drawable.ic_star),
                                 contentDescription = null,
-                                tint = if (i < book.rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200,
+                                tint = if (i < book.rating) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
                                 modifier = Modifier.size(16.dp),
                             )
                         }
@@ -155,9 +155,9 @@ internal fun LibraryBookListItem(book: LibraryBook, onClick: () -> Unit) {
                 Row {
                     repeat(5) { i ->
                         Icon(
-                            painter = painterResource(R.drawable.ic_star),
+                            painter = painterResource(if (i < book.rating) R.drawable.ic_star_fill else R.drawable.ic_star),
                             contentDescription = null,
-                            tint = if (i < book.rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200,
+                            tint = if (i < book.rating) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
                             modifier = Modifier.size(16.dp),
                         )
                     }

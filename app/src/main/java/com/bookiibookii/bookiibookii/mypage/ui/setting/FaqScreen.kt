@@ -71,6 +71,8 @@ private val mockFaqItems = listOf(
 fun FaqScreen(
     onBackClick: () -> Unit = {},
     onPostInquiry: (title: String, content: String) -> Unit = { _, _ -> },
+    onInquiryClick: () -> Unit = {},
+    onReportClick: () -> Unit = {},
 ) {
     var expandedIndex by remember { mutableStateOf<Int?>(0) }
     var showInquirySheet by remember { mutableStateOf(false) }
@@ -112,7 +114,7 @@ fun FaqScreen(
                     .clip(RoundedCornerShape(16.dp))
                     .background(BookiiBookiiTheme.colors.uiMainPale)
                     .border(1.dp, BookiiBookiiTheme.colors.uiMain150, RoundedCornerShape(16.dp))
-                    .clickable { showInquirySheet = true },
+                    .clickable { onInquiryClick() },
                 contentAlignment = Alignment.Center,
             ) {
                 Text("1:1 문의하기", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.uiMain)
@@ -123,7 +125,7 @@ fun FaqScreen(
                     .height(72.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(BookiiBookiiTheme.colors.uiMain)
-                    .clickable { showInquirySheet = true },
+                    .clickable { onReportClick() },
                 contentAlignment = Alignment.Center,
             ) {
                 Text("신고하기", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.white)

@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
@@ -14,6 +13,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.library.BaseLibraryFragment
 import com.bookiibookii.bookiibookii.library.ui.AddCardMode
 import com.bookiibookii.bookiibookii.library.ui.LibraryDetailBook
@@ -125,7 +125,7 @@ class LibraryDetailFragment : BaseLibraryFragment() {
         // ViewModel 이벤트 구독 — viewLifecycleOwner 스코프로 누수 방지
         viewLifecycleOwner.lifecycleScope.launch {
             vm.event.collect { msg ->
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast(msg, !msg.contains("실패") && !msg.contains("오류"))
             }
         }
     }

@@ -191,23 +191,18 @@ private fun RepresentativeEditListItem(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                if (book.isFavorite) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(BookiiBookiiTheme.colors.uiMainSubPale)
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                    ) {
-                        Text(
-                            text = "인생책",
-                            style = BookiiBookiiTheme.typography.regular11,
-                            color = BookiiBookiiTheme.colors.uiMainSub,
-                        )
-                    }
-                }
+                // 상단: 책 제목 semibold14 grey900
                 Text(
                     text = book.title,
-                    style = BookiiBookiiTheme.typography.semibold16,
+                    style = BookiiBookiiTheme.typography.semibold14,
+                    color = BookiiBookiiTheme.colors.grey900,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                // 하단: 저자명 regular14 grey900 (API 미제공 시 빈 문자열)
+                Text(
+                    text = "",
+                    style = BookiiBookiiTheme.typography.regular14,
                     color = BookiiBookiiTheme.colors.grey900,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

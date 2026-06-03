@@ -537,7 +537,8 @@ private fun QuoteCard(
             end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
         )
     }
-    val iconTint  = if (cardVersion == 1) BookiiBookiiTheme.colors.uiMain else Color.White
+    // 따옴표 아이콘: 항상 main_150 (3번 요구사항)
+    val iconTint  = BookiiBookiiTheme.colors.uiMain150
     val textColor = if (cardVersion == 1) BookiiBookiiTheme.colors.uiMain else Color.White
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -710,29 +711,30 @@ private fun CardVersionDot(
                             )
                         }
                     } else {
-                        // 사진 v2: 우상단 주황 삼각 / 좌하단 흰
+                        // 사진 v2: 좌상단→우하단 대각, 좌상단=main, 우하단=main_pale
                         Canvas(modifier = Modifier.fillMaxSize()) {
-                            drawRect(color = Color.White)
+                            drawRect(color = Color(0xFFFFC9A4)) // main_150(main_pale) 배경
                             drawPath(
                                 path = Path().apply {
-                                    moveTo(0f, 0f)
-                                    lineTo(size.width, 0f)
-                                    lineTo(size.width, size.height)
+                                    moveTo(0f, 0f)           // 좌상단
+                                    lineTo(size.width, 0f)   // 우상단
+                                    lineTo(0f, size.height)  // 좌하단
                                     close()
                                 },
-                                color = Color(0xFFFF7618),
+                                color = Color(0xFFFF7618),   // main 색상 (좌상단 삼각)
                             )
                         }
                     }
                 }
                 ReadingCardType.QUOTE -> {
-                    // 인용구 v1: 연한(페일) 주황 T / v2: 진한(비비드) 주황 T
-                    val bgColor = if (version == 1) Color(0xFFFFC9A4) else Color(0xFFFF7618)
+                    // v1: main_pale 배경 + main T / v2: main 배경 + 흰 T
+                    val bgColor  = if (version == 1) BookiiBookiiTheme.colors.uiMainPale else Color(0xFFFF7618)
+                    val txtColor = if (version == 1) BookiiBookiiTheme.colors.uiMain else Color.White
                     Box(
                         modifier         = Modifier.fillMaxSize().background(bgColor),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(text = "T", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
+                        Text(text = "T", color = txtColor, fontSize = 15.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
                     }
                 }
             }
@@ -751,11 +753,11 @@ private fun CardDetailHeader(onBackClick: () -> Unit, onShareClick: () -> Unit) 
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(24.dp))
+                Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
             Text(text = "독서카드", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
             IconButton(onClick = onShareClick, modifier = Modifier.size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_share), contentDescription = "공유", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(24.dp))
+                Icon(painter = painterResource(R.drawable.ic_share), contentDescription = "공유", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)

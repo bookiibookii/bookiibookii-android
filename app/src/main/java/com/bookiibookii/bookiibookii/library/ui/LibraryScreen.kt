@@ -219,12 +219,12 @@ private fun LibrarySearchBar(
                     inner()
                 },
             )
-            // 검색 아이콘 컨테이너: 44dp, Grey300, radius 30dp (피그마 스펙)
+            // 검색어 있으면 grey900, 없으면 grey300
             Box(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(30.dp))
-                    .background(BookiiBookiiTheme.colors.grey300),
+                    .background(if (query.isNotEmpty()) BookiiBookiiTheme.colors.grey900 else BookiiBookiiTheme.colors.grey300),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

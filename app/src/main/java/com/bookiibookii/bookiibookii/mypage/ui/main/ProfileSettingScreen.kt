@@ -355,16 +355,17 @@ private fun GenderField(selectedIndex: Int?, onSelect: (Int) -> Unit) {
     val options = listOf("여성", "남성", "선택 안함")
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = "성별", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
+        // 여성/남성: 큰 버튼 고정 너비, 선택 안함: 작은 버튼 (온보딩과 동일)
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(48.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             options.forEachIndexed { index, label ->
                 val isSelected = selectedIndex == index
+                val modifier = if (index < 2) Modifier.width(119.dp) else Modifier.weight(1f)
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
+                    modifier = modifier
+                        .fillMaxHeight()
                         .clip(RoundedCornerShape(16.dp))
                         .background(if (isSelected) BookiiBookiiTheme.colors.uiMainPale else BookiiBookiiTheme.colors.white)
                         .border(

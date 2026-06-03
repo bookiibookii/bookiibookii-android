@@ -133,7 +133,7 @@ fun AddressManagementScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(56.dp)
+                                .height(48.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(if (isSelected) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.white)
                                 .then(
@@ -479,10 +479,25 @@ private fun DeliveryBottomSheet(
     var isPrimary by remember(editTarget) { mutableStateOf(editTarget?.isDefault ?: false) }
     var showAddressSearch by remember { mutableStateOf(false) }
 
+    var phoneError by remember { mutableStateOf(false) }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = BookiiBookiiTheme.colors.white,
+        dragHandle = {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(44.dp).height(4.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(BookiiBookiiTheme.colors.grey200),
+                )
+            }
+        },
     ) {
         Column(
             modifier = Modifier
@@ -551,6 +566,12 @@ private fun DeliveryBottomSheet(
                     text = "저장",
                     style = BottomSheetBtnStyle.Dark,
                     onClick = {
+                        val phoneDigits = phone.filter { it.isDigit() }
+                        if (phoneDigits.length != 11 || !phoneDigits.startsWith("010")) {
+                            phoneError = true
+                            return@BottomSheetTwoBtnShort
+                        }
+                        phoneError = false
                         onSave(DeliveryAddressRequest(
                             placeName = nickname,
                             address = address,
@@ -598,6 +619,19 @@ private fun ExchangePlaceBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = BookiiBookiiTheme.colors.white,
+        dragHandle = {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(44.dp).height(4.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(BookiiBookiiTheme.colors.grey200),
+                )
+            }
+        },
     ) {
         Column(
             modifier = Modifier

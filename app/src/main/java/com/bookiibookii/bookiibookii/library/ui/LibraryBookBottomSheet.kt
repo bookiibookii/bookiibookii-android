@@ -45,7 +45,6 @@ fun LibraryBookBottomSheet(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .shadow(elevation = 8.dp, shape = sheetShape, ambientColor = Color(0x1A000000), spotColor = Color(0x1A000000))
                 .background(BookiiBookiiTheme.colors.white, sheetShape)
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 24.dp),

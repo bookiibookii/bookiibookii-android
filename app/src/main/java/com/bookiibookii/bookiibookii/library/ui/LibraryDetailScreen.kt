@@ -317,11 +317,11 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(24.dp))
+                Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
             Text(text = title, style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
             IconButton(onClick = onMenuClick, modifier = Modifier.size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_hamburger), contentDescription = "메뉴", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(24.dp))
+                Icon(painter = painterResource(R.drawable.ic_hamburger), contentDescription = "메뉴", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
@@ -379,7 +379,7 @@ private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier)
                     // 완료: 별점 표시
                     Row {
                         for (i in 1..5) {
-                            Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = if (i.toDouble() <= book.rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(20.dp))
+                            val filled = i.toDouble() <= book.rating; Icon(painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star), contentDescription = null, tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(20.dp))
                         }
                     }
                 } else {
@@ -518,7 +518,10 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = BookiiBookiiTheme.colors.white, modifier = Modifier.size(16.dp))
-                    Text(text = "\"새는 알에서 나오려고 싸운다. 알은 세상이다. 태어나려는 자는 한 세계를 파괴해야 한다.\"", style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.white, maxLines = 5, overflow = TextOverflow.Ellipsis)
+                    val displayText = card.quotation.ifBlank { card.content }
+                    if (displayText.isNotBlank()) {
+                        Text(text = "\"$displayText\"", style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.white, maxLines = 5, overflow = TextOverflow.Ellipsis)
+                    }
                 }
             }
         }

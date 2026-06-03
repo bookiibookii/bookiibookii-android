@@ -12,11 +12,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardReactionToggleRequestDTO
 import com.bookiibookii.bookiibookii.library.BaseLibraryFragment
@@ -154,13 +154,13 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
                         }
                     } catch (e: Exception) {
                         withContext(Dispatchers.Main) {
-                            if (isAdded) Toast.makeText(context, "공유 준비 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                            if (isAdded) context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
                         }
                     }
                 }
             } catch (e: Exception) {
                 if (cardView.isAttachedToWindow) container.removeView(cardView)
-                if (isAdded) Toast.makeText(context, "공유 준비 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                if (isAdded) context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
             }
         }, 500L)
     }
@@ -212,7 +212,7 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
         try {
             startActivity(intent)
         } catch (_: Exception) {
-            Toast.makeText(context, "인스타그램 앱을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+            context.showCustomToast("인스타그램 앱을 찾을 수 없습니다.", false)
         }
     }
 

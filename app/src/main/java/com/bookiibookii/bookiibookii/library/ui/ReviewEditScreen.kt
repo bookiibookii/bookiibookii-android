@@ -92,7 +92,7 @@ fun ReviewEditScreen(
                             painter = painterResource(R.drawable.ic_back),
                             contentDescription = "뒤로 가기",
                             tint = BookiiBookiiTheme.colors.grey900,
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(32.dp),
                         )
                     }
                     Text(text = "후기 수정", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
@@ -151,24 +151,27 @@ fun ReviewEditScreen(
                             style = BookiiBookiiTheme.typography.medium16,
                         )
 
-                        // 별점 3상태: Empty(grey) → Half(pale, 0.5) → Full(orange, 정수)
+                        // 별점 3상태: 0=빈별(grey) / 0.5=sub_pale채움+sub stroke / 1=sub채움
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             for (i in 1..5) {
                                 val rating = ratings[index]
-                                val tint = when {
-                                    i.toDouble() <= rating -> BookiiBookiiTheme.colors.uiMain      // Full
-                                    (i - 0.5) == rating   -> BookiiBookiiTheme.colors.uiMainPale   // Half (연하게)
-                                    else                  -> BookiiBookiiTheme.colors.grey200       // Empty
-                                }
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_star),
-                                    contentDescription = null,
-                                    tint = tint,
+                                val isFull = i.toDouble() <= rating
+                                val isHalf = (i - 0.5) == rating
+                                Box(
                                     modifier = Modifier.size(40.dp).clickable {
-                                        // 현재 반(0.5) → Full, 그 외 → Half(0.5)
                                         ratings[index] = if (rating == (i - 0.5)) i.toDouble() else i - 0.5
                                     },
-                                )
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (isFull) {
+                                        Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMainSub, modifier = Modifier.size(36.dp))
+                                    } else if (isHalf) {
+                                        Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMainSubPale, modifier = Modifier.size(36.dp))
+                                        Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMainSub, modifier = Modifier.size(36.dp))
+                                    } else {
+                                        Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(36.dp))
+                                    }
+                                }
                             }
                         }
 
