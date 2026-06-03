@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.ui.detail.GroupDetailRoute
 import com.bookiibookii.bookiibookii.group.ui.editor.GroupEditorRoute
 import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupJoinRequestRoute
@@ -19,6 +20,7 @@ fun GroupNavHost(
     onExit: () -> Unit,
     modifier: Modifier = Modifier,
     startDestination: String = GroupDestinations.SEARCH,
+    onManageAddress: (ExchangeType) -> Unit = {},
 ) {
     val navController = rememberNavController()
     NavHost(
@@ -72,6 +74,7 @@ fun GroupNavHost(
                         launchSingleTop = true
                     }
                 },
+                onManageAddress = onManageAddress,
             )
         }
         composable(

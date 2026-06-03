@@ -49,6 +49,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.heightIn
@@ -72,11 +74,17 @@ fun GroupEditorRoute(
     onBack: () -> Unit,
     onCreated: (Long?) -> Unit,
     onUpdated: (Long) -> Unit,
+    onManageAddress: (ExchangeType) -> Unit = {},
     viewModel: GroupEditorViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var submitError by remember { mutableStateOf<String?>(null) }
+
+    // 주소지 관리 화면 등에서 복귀할 때마다 주소 목록 재조회 (교환 유형 미선택이면 내부에서 no-op)
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.reloadPlaces()
+    }
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
@@ -113,6 +121,7 @@ fun GroupEditorRoute(
             submitError = null
             viewModel.submit()
         },
+        onManageAddress = onManageAddress,
         submitError = submitError,
     )
 }
@@ -136,6 +145,7 @@ fun GroupEditorScreen(
     onRemoveCustomRule: (Int) -> Unit,
     onBack: () -> Unit,
     onSubmit: () -> Unit,
+    onManageAddress: (ExchangeType) -> Unit = {},
     submitError: String? = null,
 ) {
     Column(
@@ -191,6 +201,7 @@ fun GroupEditorScreen(
                             places = uiState.places,
                             selectedPlaceId = uiState.selectedPlaceId,
                             onPlaceSelect = onPlaceSelect,
+                            onManageAddress = onManageAddress,
                         )
                     }
                 }
@@ -554,9 +565,10 @@ private fun AddressSection(
     places: List<SelectablePlace>,
     selectedPlaceId: Long?,
     onPlaceSelect: (Long) -> Unit,
+    onManageAddress: (ExchangeType) -> Unit,
 ) {
     if (places.isEmpty()) {
-        AddressEmpty(tradeType = tradeType)
+        AddressEmpty(tradeType = tradeType, onManageAddress = onManageAddress)
     } else {
         AddressList(
             tradeType = tradeType,
@@ -574,7 +586,10 @@ private fun addressLabel(tradeType: ExchangeType) = when (tradeType) {
 
 // 주소 미등록: 등록 안내 placeholder + 주소지 관리 링크
 @Composable
-private fun AddressEmpty(tradeType: ExchangeType) {
+private fun AddressEmpty(
+    tradeType: ExchangeType,
+    onManageAddress: (ExchangeType) -> Unit,
+) {
     val placeholder = when (tradeType) {
         ExchangeType.DIRECT -> "희망 교환 장소를 등록해주세요"
         ExchangeType.DELIVERY -> "배송지를 등록해주세요"
@@ -595,7 +610,7 @@ private fun AddressEmpty(tradeType: ExchangeType) {
                         color = BookiiBookiiTheme.colors.grey300,
                         shape = BookiiBookiiTheme.shape.round16,
                     )
-                    .clickable { /* TODO: 주소 관리 화면 이동 */ }
+                    .clickable { onManageAddress(tradeType) }
                     .padding(16.dp),
             ) {
                 Text(
@@ -610,7 +625,7 @@ private fun AddressEmpty(tradeType: ExchangeType) {
             style = BookiiBookiiTheme.typography.regular14,
             color = BookiiBookiiTheme.colors.grey400,
             textDecoration = TextDecoration.Underline,
-            modifier = Modifier.clickable { /* TODO: 주소 관리 화면 이동 */ },
+            modifier = Modifier.clickable { onManageAddress(tradeType) },
         )
     }
 }
