@@ -7,6 +7,7 @@ import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppStatusRequest
 import com.bookiibookii.bookiibookii.data.model.group.GroupApplyRequest
 import com.bookiibookii.bookiibookii.group.model.ApplicationListUiState
+import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.model.GroupApplyUiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,7 +43,13 @@ class JoinRequestViewModel : ViewModel() {
         // status: "ACCEPTED" | "REJECTED"
         data class ApplicationUpdated(val status: String, val applicantName: String) : Event()
         data class ShowError(val message: String) : Event()
+        // APPLY 전 주소 등록 여부 확인 결과
+        data object AddressReady : Event()    // 주소 있음 → 참여 신청 다이얼로그
+        data object AddressMissing : Event()  // 주소 없음 → 주소 등록 안내 다이얼로그
     }
+
+    // 주소 조회 중복 호출 가드
+    private var checkingAddress = false
 
     // 취소 중복 호출 가드
     private var canceling = false
@@ -97,6 +104,48 @@ class JoinRequestViewModel : ViewModel() {
 
     // 신청 한 마디 입력 (다이얼로그에서 50자 컷오프 후 호출)
     fun onApplyMsgChange(value: String) = _state.update { it.copy(applyMsg = value) }
+
+    // 참여 신청 전, 교환 유형에 맞는 주소(배송지/희망 교환 장소) 등록 여부 확인
+    //   조회 성공 + 목록 있음 -> AddressReady (참여 신청 다이얼로그)
+    //   조회 성공 + 목록 없음 -> AddressMissing (주소 등록 안내 다이얼로그)
+    //   조회 실패           -> ShowError (토스트, 다이얼로그 미표시)
+    fun checkAddressBeforeApply(tradeType: ExchangeType) {
+        if (checkingAddress) return
+        viewModelScope.launch {
+            checkingAddress = true
+            try {
+                val api = RetrofitClient.locationApi()
+                // null = 조회 실패
+                val addresses = when (tradeType) {
+                    ExchangeType.DELIVERY -> {
+                        val res = api.getDeliveries()
+                        if (res.isSuccessful && res.body()?.isSuccess == true) {
+                            res.body()?.result.orEmpty()
+                        } else {
+                            null
+                        }
+                    }
+                    ExchangeType.DIRECT -> {
+                        val res = api.getExchanges()
+                        if (res.isSuccessful && res.body()?.isSuccess == true) {
+                            res.body()?.result.orEmpty()
+                        } else {
+                            null
+                        }
+                    }
+                }
+                when {
+                    addresses == null -> _eventFlow.emit(Event.ShowError("주소 정보를 불러오지 못했어요"))
+                    addresses.isNotEmpty() -> _eventFlow.emit(Event.AddressReady)
+                    else -> _eventFlow.emit(Event.AddressMissing)
+                }
+            } catch (e: Exception) {
+                _eventFlow.emit(Event.ShowError("네트워크 오류가 발생했어요"))
+            } finally {
+                checkingAddress = false
+            }
+        }
+    }
 
     // 그룹 참여 신청 제출 — POST /api/groups/{groupId}/apply
     // 성공 시 Event.Applied -> 호출부가 다이얼로그 닫고 상세 새로고침

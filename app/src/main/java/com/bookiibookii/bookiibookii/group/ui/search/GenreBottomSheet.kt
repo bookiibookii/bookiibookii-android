@@ -31,6 +31,7 @@ import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetChip
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.ui.component.bottomSheetTopShadow
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 private const val ALL = "전체"
@@ -119,6 +120,7 @@ fun GenreBottomSheet(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .bottomSheetTopShadow(cornerRadius = 20.dp)
             .background(color = BookiiBookiiTheme.colors.white, shape = sheetShape)
             .padding(horizontal = 16.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),

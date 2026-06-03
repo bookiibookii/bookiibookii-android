@@ -75,6 +75,7 @@ import com.bookiibookii.bookiibookii.group.model.GroupCommentUiState
 import com.bookiibookii.bookiibookii.group.vm.GroupCommentViewModel
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.ui.component.DeletePopover
+import com.bookiibookii.bookiibookii.ui.component.bottomSheetTopShadow
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -158,10 +159,12 @@ fun GroupCommentBottomSheetContent(
         }
     }
 
+    val sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .bottomSheetTopShadow(cornerRadius = 20.dp)
+            .clip(sheetShape)
             .background(BookiiBookiiTheme.colors.white),
     ) {
         Column(
@@ -547,8 +550,8 @@ private fun CommentInputField(
 // 입력 필드 좌측 잠금 칩 — secret 토글 (active일 때 main 컬러)
 @Composable
 private fun LockChip(active: Boolean, onClick: () -> Unit) {
-    val bg = if (active) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200
-    val tint = if (active) BookiiBookiiTheme.colors.white else BookiiBookiiTheme.colors.grey500
+    val bg = if (active) BookiiBookiiTheme.colors.uiMainSubPale else BookiiBookiiTheme.colors.grey200
+    val tint = if (active) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey500
     Box(
         modifier = Modifier
             .size(40.dp)

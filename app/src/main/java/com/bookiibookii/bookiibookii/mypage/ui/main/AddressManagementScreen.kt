@@ -67,6 +67,7 @@ import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddressRequest
 fun AddressManagementScreen(
     deliveries: List<DeliveryAddress> = emptyList(),
     exchanges: List<ExchangeAddress> = emptyList(),
+    initialTabIndex: Int = 0,
     onBackClick: () -> Unit = {},
     onFetchDeliveries: () -> Unit = {},
     onFetchExchanges: () -> Unit = {},
@@ -77,7 +78,7 @@ fun AddressManagementScreen(
     onUpdateExchange: (Long, ExchangeAddressRequest, () -> Unit) -> Unit = { _, _, _ -> },
     onDeleteExchange: (Long) -> Unit = {},
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by remember { mutableStateOf(initialTabIndex) }
     var showDeliverySheet by remember { mutableStateOf(false) }
     var showExchangeSheet by remember { mutableStateOf(false) }
     var editDelivery by remember { mutableStateOf<DeliveryAddress?>(null) }
@@ -861,5 +862,40 @@ private fun AddressSearchField(
 @Preview(showBackground = true, widthDp = 412)
 @Composable
 private fun AddressManagementScreenPreview() {
-    AddressManagementScreen()
+    BookiiBookiiTheme {
+        AddressManagementScreen(
+            deliveries = listOf(
+                DeliveryAddress(
+                    id = 1L,
+                    placeName = "우리집",
+                    address = "서울특별시 강남구 테헤란로 123",
+                    zipCode = "06234",
+                    addressDetail = "456동 789호",
+                    receiverName = "북이",
+                    phone = "010-1234-5678",
+                    isDefault = true,
+                ),
+                DeliveryAddress(
+                    id = 2L,
+                    placeName = "회사",
+                    address = "서울특별시 중구 세종대로 110",
+                    zipCode = "04524",
+                    addressDetail = null,
+                    receiverName = "북이",
+                    phone = "010-9876-5432",
+                    isDefault = false,
+                ),
+            ),
+            exchanges = listOf(
+                ExchangeAddress(
+                    id = 1L,
+                    placeName = "강남역 11번 출구",
+                    address = "서울특별시 강남구 강남대로 396",
+                    zipCode = "06241",
+                    addressDetail = "스타벅스 앞",
+                    isDefault = true,
+                ),
+            ),
+        )
+    }
 }
