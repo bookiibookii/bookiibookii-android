@@ -4,11 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.mypage.ui.setting.FaqScreen
 import com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel
@@ -45,9 +45,9 @@ class FaqFragment : BaseMypageFragment() {
             viewModel.eventFlow.collect { event ->
                 when (event) {
                     is SettingViewModel.Event.ShowToast ->
-                        Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast(event.message, false)
                     is SettingViewModel.Event.InquirySuccess ->
-                        Toast.makeText(requireContext(), "문의가 접수되었습니다.", Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast("문의가 접수되었습니다.", true)
                     else -> Unit
                 }
             }

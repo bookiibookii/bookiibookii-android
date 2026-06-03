@@ -88,10 +88,10 @@ fun GroupReviewScreen(
         ) {
             IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_chevron),
+                    painter = painterResource(R.drawable.ic_back),
                     contentDescription = "뒤로 가기",
                     tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
             Text(text = "후기", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
@@ -106,6 +106,8 @@ fun GroupReviewScreen(
         }
 
         if (data == null) return@Column
+
+        val hasReviews = data.messages.isNotEmpty() || data.bookReviews.isNotEmpty()
 
         Column(
             modifier = Modifier
@@ -127,6 +129,25 @@ fun GroupReviewScreen(
             ) {
                 Text(text = data.groupName, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
                 Text(text = data.dateRange, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
+            }
+
+            // 후기 없음 빈 상태
+            if (!hasReviews) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(BookiiBookiiTheme.colors.white)
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "작성된 후기가 없습니다.",
+                        style = BookiiBookiiTheme.typography.regular16,
+                        color = BookiiBookiiTheme.colors.grey600,
+                    )
+                }
+                return@Column
             }
 
             // 교환 후기 채팅 섹션

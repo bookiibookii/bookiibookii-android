@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +13,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.library.BaseLibraryFragment
 import com.bookiibookii.bookiibookii.library.ui.AddCardMode
 import com.bookiibookii.bookiibookii.library.ui.LibraryAddCardScreen
@@ -62,7 +62,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
                     onBackClick      = { parentFragmentManager.popBackStack() },
                     onSubmit         = { page, quotation, memo ->
                         if (memberBookId == -1) {
-                            Toast.makeText(requireContext(), "책 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                            requireContext().showCustomToast("책 정보를 찾을 수 없습니다.", false)
                             return@LibraryAddCardScreen
                         }
                         vm.createCard(
@@ -87,11 +87,11 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
             vm.event.collect { event ->
                 when (event) {
                     is LibraryAddCardViewModel.AddCardEvent.Success -> {
-                        Toast.makeText(requireContext(), "독서카드가 등록되었습니다.", Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast("독서카드가 등록되었습니다.", true)
                         parentFragmentManager.popBackStack()
                     }
                     is LibraryAddCardViewModel.AddCardEvent.Error -> {
-                        Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast(event.message, false)
                     }
                 }
             }

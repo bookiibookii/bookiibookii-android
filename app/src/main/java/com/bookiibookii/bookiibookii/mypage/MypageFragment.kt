@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.fragment.app.activityViewModels
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.mypage.feat.detail.MyBookshelfFragment
 import com.bookiibookii.bookiibookii.mypage.feat.detail.ReviewFragment
@@ -143,7 +143,7 @@ class MypageFragment : BaseMypageFragment() {
                 val h = cardView.height
                 if (w <= 0 || h <= 0) {
                     container.removeView(cardView)
-                    Toast.makeText(context, "공유 준비 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                    context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
                     return@postDelayed
                 }
 
@@ -161,7 +161,7 @@ class MypageFragment : BaseMypageFragment() {
                 launchInstagramStoryIntent(uri)
             } catch (e: Exception) {
                 if (cardView.isAttachedToWindow) container.removeView(cardView)
-                Toast.makeText(context, "공유 준비 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
             }
         }, 500L)
     }
@@ -184,7 +184,7 @@ class MypageFragment : BaseMypageFragment() {
         try {
             startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "인스타그램 앱을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+            requireContext().showCustomToast("인스타그램 앱을 찾을 수 없습니다.", false)
         }
     }
 }

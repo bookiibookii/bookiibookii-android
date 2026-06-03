@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.viewModels
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.library.BaseLibraryFragment
 import com.bookiibookii.bookiibookii.library.ui.GroupReviewScreen
 import com.bookiibookii.bookiibookii.library.vm.GroupReviewViewModel
@@ -39,6 +40,12 @@ class GroupReviewFragment : BaseLibraryFragment() {
                     onBackClick = { parentFragmentManager.popBackStack() },
                     onEditClick = {
                         val reviewData = state.data
+                        // 후기 없으면 토스트 후 접근 차단
+                        val hasReviews = (reviewData?.messages?.isNotEmpty() == true || reviewData?.bookReviews?.isNotEmpty() == true)
+                        if (!hasReviews) {
+                            requireContext().showCustomToast("작성된 후기가 없습니다.", false)
+                            return@GroupReviewScreen
+                        }
 
                         // API 데이터 우선, 없으면 Fragment args 값으로 fallback
                         val resolvedGroupName = reviewData?.groupName ?: groupName

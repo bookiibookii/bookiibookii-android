@@ -9,7 +9,6 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -18,6 +17,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.mypage.ui.main.ProfileSettingScreen
 import com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel
@@ -95,7 +95,7 @@ class ProfileSettingFragment : BaseMypageFragment() {
             viewModel.eventFlow.collect { event ->
                 when (event) {
                     is MypageViewModel.Event.NavigateBack -> parentFragmentManager.popBackStack()
-                    is MypageViewModel.Event.ShowToast -> Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                    is MypageViewModel.Event.ShowToast -> requireContext().showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
                     else -> {}
                 }
             }

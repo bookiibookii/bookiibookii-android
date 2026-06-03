@@ -160,7 +160,7 @@ internal fun MottoSection(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(BookiiBookiiTheme.colors.grey100)
-                    .padding(16.dp),
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 OutlinedTextField(

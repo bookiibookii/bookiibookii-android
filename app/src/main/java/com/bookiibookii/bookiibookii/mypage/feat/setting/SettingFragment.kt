@@ -32,10 +32,12 @@ class SettingFragment : BaseMypageFragment() {
                             .commit()
                     },
                     onQuestionClick = {
-                        parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, FaqFragment())
-                            .addToBackStack(null)
-                            .commit()
+                        startActivity(
+                            android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse("http://pf.kakao.com/_cIxlxjX")
+                            )
+                        )
                     },
                     onTermsClick = {
                         parentFragmentManager.beginTransaction()
