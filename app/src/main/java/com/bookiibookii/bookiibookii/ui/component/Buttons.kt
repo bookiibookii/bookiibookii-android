@@ -188,6 +188,7 @@ fun CardButton(
     height: Dp = 56.dp,
     shape: Shape = BookiiBookiiTheme.shape.round16,
     textStyle: TextStyle = BookiiBookiiTheme.typography.regular16,
+    contentColorOverride: Color? = null,
 ) {
     val containerColor: Color
     val contentColor: Color
@@ -233,7 +234,7 @@ fun CardButton(
         Text(
             text = text,
             style = textStyle,
-            color = contentColor,
+            color = contentColorOverride ?: contentColor,
             maxLines = 1,
         )
     }

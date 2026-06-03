@@ -35,6 +35,7 @@ class AddressManagementFragment : BaseMypageFragment() {
                 AddressManagementScreen(
                     deliveries = deliveries,
                     exchanges = exchanges,
+                    initialTabIndex = arguments?.getInt(ARG_INITIAL_TAB) ?: 0,
                     onBackClick = { parentFragmentManager.popBackStack() },
                     onFetchDeliveries = { viewModel.fetchDeliveries() },
                     onFetchExchanges = { viewModel.fetchExchanges() },
@@ -62,6 +63,15 @@ class AddressManagementFragment : BaseMypageFragment() {
                         Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+
+    companion object {
+        // 0 = 배송지, 1 = 희망 교환 장소
+        private const val ARG_INITIAL_TAB = "initialTab"
+
+        fun newInstance(initialTab: Int) = AddressManagementFragment().apply {
+            arguments = Bundle().apply { putInt(ARG_INITIAL_TAB, initialTab) }
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.group.nav
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
@@ -7,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.ui.detail.GroupDetailRoute
 import com.bookiibookii.bookiibookii.group.ui.editor.GroupEditorRoute
 import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupJoinRequestRoute
@@ -17,12 +20,18 @@ fun GroupNavHost(
     onExit: () -> Unit,
     modifier: Modifier = Modifier,
     startDestination: String = GroupDestinations.SEARCH,
+    onManageAddress: (ExchangeType) -> Unit = {},
 ) {
     val navController = rememberNavController()
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
+        // 화면 전환 애니메이션 제거(기본 크로스페이드 시 이전 화면이 잔상처럼 겹쳐 보이는 현상 방지)
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None },
     ) {
         composable(GroupDestinations.SEARCH) {
             GroupSearchRoute(
@@ -65,6 +74,7 @@ fun GroupNavHost(
                         launchSingleTop = true
                     }
                 },
+                onManageAddress = onManageAddress,
             )
         }
         composable(
@@ -93,6 +103,8 @@ fun GroupNavHost(
                         launchSingleTop = true
                     }
                 },
+                // 주소 미등록 안내 다이얼로그 → 주소지 관리 화면 이동 (교환 유형에 맞는 탭)
+                onManageAddress = onManageAddress,
             )
         }
         composable(

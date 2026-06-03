@@ -148,8 +148,15 @@ class GroupEditorViewModel(
         loadPlaces(type)
     }
 
+    // 주소지 관리 화면에서 복귀 시 호출. 현재 교환 유형으로 목록을 다시 불러오되 기존 선택은 유지
+    fun reloadPlaces() {
+        val type = _state.value.tradeType ?: return
+        loadPlaces(type, preserveSelection = true)
+    }
+
     // 교환 유형에 맞는 주소 목록을 불러오고 대표(isDefault) 주소를 기본 선택
-    private fun loadPlaces(type: ExchangeType) {
+    // preserveSelection: 재조회 시 기존 선택이 새 목록에 남아 있으면 그대로 유지
+    private fun loadPlaces(type: ExchangeType, preserveSelection: Boolean = false) {
         viewModelScope.launch {
             _state.update { it.copy(placesLoading = true) }
             try {
@@ -172,9 +179,14 @@ class GroupEditorViewModel(
                         }
                     }
                 }
-                val defaultId = (places.firstOrNull { it.isDefault } ?: places.firstOrNull())?.id
+                val currentSelected = _state.value.selectedPlaceId
+                val selectedId = if (preserveSelection && places.any { it.id == currentSelected }) {
+                    currentSelected
+                } else {
+                    (places.firstOrNull { it.isDefault } ?: places.firstOrNull())?.id
+                }
                 _state.update {
-                    it.copy(places = places, selectedPlaceId = defaultId, placesLoading = false)
+                    it.copy(places = places, selectedPlaceId = selectedId, placesLoading = false)
                 }
             } catch (e: Exception) {
                 _state.update {
