@@ -64,8 +64,9 @@ internal fun HomeGroupCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (!group.tradeType.isNullOrBlank()) {
-                        HomeExchangeBadge(text = group.tradeType)
+                    val badgeLabel = tradeTypeLabel(group.tradeType)
+                    if (badgeLabel.isNotBlank()) {
+                        HomeExchangeBadge(text = badgeLabel)
                     }
                     Text(
                         text = group.title.orEmpty(),
@@ -171,7 +172,7 @@ private fun HomeExchangeBadge(
         modifier = modifier
             .clip(BookiiBookiiTheme.shape.round8)
             .background(BookiiBookiiTheme.colors.uiMainPale)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 4.dp, vertical = 2.dp),
     ) {
         Text(
             text = text,
@@ -179,6 +180,12 @@ private fun HomeExchangeBadge(
             color = BookiiBookiiTheme.colors.uiMain,
         )
     }
+}
+
+private fun tradeTypeLabel(tradeType: String?): String = when (tradeType) {
+    "DIRECT" -> "직접"
+    "DELIVERY" -> "택배"
+    else -> tradeType.orEmpty()
 }
 
 // ─── 프리뷰 ───────────────────────────────────────────────────────────────────

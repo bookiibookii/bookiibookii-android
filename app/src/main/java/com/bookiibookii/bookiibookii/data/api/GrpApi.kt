@@ -8,6 +8,7 @@ import com.bookiibookii.bookiibookii.data.model.group.CommentItem
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppListResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppStatusRequest
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppStatusResponse
+import com.bookiibookii.bookiibookii.data.model.group.AppliedGroupsResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupApplyRequest
 import com.bookiibookii.bookiibookii.data.model.group.GroupApplyResponse
 import com.bookiibookii.bookiibookii.data.model.group.GroupCancelResponse
@@ -67,7 +68,7 @@ interface GrpApi {
 
     // 내가 신청한 그룹 목록 조회 (신청한 그룹 탭)
     @GET("api/groups/apply/me")
-    suspend fun getAppliedGroups(): Response<ApiResponse<List<GroupItem>>>
+    suspend fun getAppliedGroups(): Response<ApiResponse<AppliedGroupsResponse>>
 
     // 인기 검색어
     @GET("api/groups/popular-keywords")

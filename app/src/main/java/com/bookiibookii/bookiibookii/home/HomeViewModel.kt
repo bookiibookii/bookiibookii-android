@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.home
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
@@ -117,8 +118,11 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
             runCatching {
                 RetrofitClient.grpApi().getAppliedGroups()
             }.onSuccess { response ->
-                val groups = response.body()?.result ?: return@onSuccess
+                val groups = response.body()?.result?.applicationList
+                    ?.map { it.toGroupItem() } ?: return@onSuccess
                 _uiState.update { it.copy(appliedGroups = groups) }
+            }.onFailure { e ->
+                Log.e("HomeVM", "fetchAppliedGroups error", e)
             }
         }
     }

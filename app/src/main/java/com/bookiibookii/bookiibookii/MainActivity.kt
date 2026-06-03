@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -33,6 +34,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        Log.d("DEV_TOKEN", "AccessToken: ${TokenManager.getAccessToken(this)}")
 
         if (!TokenManager.hasAccessToken(this)) {
             startActivity(Intent(this, LoginActivity::class.java).apply {

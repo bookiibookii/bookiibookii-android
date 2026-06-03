@@ -149,10 +149,12 @@ internal fun HomeScreen(
                 HomeTab.MY_GROUPS -> homeMyGroupsContent(
                     myGroups = uiState.myGroups,
                     onGroupClick = onGroupClick,
+                    onCreateGroupClick = onCreateGroupClick,
                 )
                 HomeTab.APPLIED -> homeAppliedContent(
                     appliedGroups = uiState.appliedGroups,
                     onGroupClick = onGroupClick,
+                    onCreateGroupClick = onCreateGroupClick,
                 )
             }
         }

@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.home.ui.content
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,10 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.data.model.group.GroupItem
@@ -23,6 +27,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 internal fun LazyListScope.homeMyGroupsContent(
     myGroups: List<GroupItem>,
     onGroupClick: (Long) -> Unit,
+    onCreateGroupClick: () -> Unit = {},
 ) {
     // 피그마: 탭 영역 ~ 첫 섹션 사이 8dp 회색 간격
     item { Box(Modifier.fillMaxWidth().height(8.dp)) }
@@ -54,17 +59,32 @@ internal fun LazyListScope.homeMyGroupsContent(
             }
 
             if (myGroups.isEmpty()) {
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 60.dp),
-                    contentAlignment = Alignment.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Text(
                         text = "참여 중인 그룹이 없어요",
                         style = BookiiBookiiTheme.typography.regular15,
                         color = BookiiBookiiTheme.colors.grey400,
                     )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(BookiiBookiiTheme.colors.uiMain)
+                            .clickable(onClick = onCreateGroupClick)
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "그룹 생성하기",
+                            style = BookiiBookiiTheme.typography.medium15,
+                            color = BookiiBookiiTheme.colors.white,
+                        )
+                    }
                 }
             } else {
                 // 카드들 — white bg, round20은 HomeGroupCard 내부에 적용

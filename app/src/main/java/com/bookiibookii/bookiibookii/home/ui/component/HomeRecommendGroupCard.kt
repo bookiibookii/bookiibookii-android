@@ -130,8 +130,9 @@ private fun HomeRecommendGroupCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (!group.tradeType.isNullOrBlank()) {
-                            RecommendExchangeBadge(text = group.tradeType)
+                        val badgeLabel = tradeTypeLabel(group.tradeType)
+                        if (badgeLabel.isNotBlank()) {
+                            RecommendExchangeBadge(text = badgeLabel)
                         }
                         Text(
                             text = group.title.orEmpty(),
@@ -232,7 +233,13 @@ private fun HomeRecommendGroupCard(
     }
 }
 
-// 교환방식 뱃지 — 피그마: uiMainPale bg, uiMain text, round8, px=8dp py=4dp
+private fun tradeTypeLabel(tradeType: String?): String = when (tradeType) {
+    "DIRECT" -> "직접"
+    "DELIVERY" -> "택배"
+    else -> tradeType.orEmpty()
+}
+
+// 교환방식 뱃지 — 피그마: uiMainPale bg, uiMain text, round8, px=4dp py=2dp
 @Composable
 private fun RecommendExchangeBadge(
     text: String,
@@ -242,7 +249,7 @@ private fun RecommendExchangeBadge(
         modifier = modifier
             .clip(BookiiBookiiTheme.shape.round8)
             .background(BookiiBookiiTheme.colors.uiMainPale)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 4.dp, vertical = 2.dp),
     ) {
         Text(
             text = text,
