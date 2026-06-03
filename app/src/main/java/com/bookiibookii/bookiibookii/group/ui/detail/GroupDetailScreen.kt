@@ -529,6 +529,7 @@ private fun GroupDetailInfoSection(
                 style = actionButton.style,
                 onClick = onActionClick,
                 modifier = Modifier.fillMaxWidth(),
+                height = 48.dp,
             )
         }
     }
@@ -643,7 +644,7 @@ private fun GroupDetailExchangeBadge(text: String) {
             .padding(horizontal = 4.dp, vertical = 2.dp),
     ) {
         Text(
-            text = "$text 교환",
+            text = "$text",
             style = BookiiBookiiTheme.typography.medium11,
             color = BookiiBookiiTheme.colors.uiMain,
         )

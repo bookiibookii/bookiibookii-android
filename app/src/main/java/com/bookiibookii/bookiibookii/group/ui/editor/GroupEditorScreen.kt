@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -688,7 +689,10 @@ private fun ReadingPeriodSection(
                         } else {
                             BookiiBookiiTheme.colors.grey400
                         },
-                        modifier = Modifier.clickable { onSelect(index) },
+                        modifier = Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { onSelect(index) },
                     )
                 }
             }
@@ -751,7 +755,10 @@ private fun ReadingPeriodTrack(
                                 BookiiBookiiTheme.colors.grey100
                             },
                         )
-                        .clickable { onSelect(index) },
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { onSelect(index) },
                     contentAlignment = Alignment.Center,
                 ) {
                     if (isSelected) {
@@ -975,7 +982,7 @@ private fun CustomRuleRow(
                 Box {
                     if (value.isEmpty()) {
                         Text(
-                            text = "독서 스타일을 입력해주세요",
+                            text = "독서 규칙을 입력해주세요",
                             style = BookiiBookiiTheme.typography.regular16,
                             color = BookiiBookiiTheme.colors.grey400,
                         )
