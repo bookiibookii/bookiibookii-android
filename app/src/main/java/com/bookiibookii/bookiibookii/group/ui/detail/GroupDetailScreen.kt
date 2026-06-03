@@ -158,13 +158,13 @@ fun GroupDetailRoute(
                 if (detail != null) {
                     when (detail.buttonStatus) {
                         // 주소 등록 여부 확인 후 분기 (있으면 신청 다이얼로그, 없으면 안내 다이얼로그)
-                        // 유형 불명 시 기존 동작대로 바로 신청 다이얼로그
+                        // 기본은 안내 다이얼로그
                         "APPLY" -> {
                             val type = runCatching { ExchangeType.valueOf(detail.tradeType) }.getOrNull()
                             if (type != null) {
                                 applyViewModel.checkAddressBeforeApply(type)
                             } else {
-                                showApplyDialog = true
+                                showAddressRequiredDialog = true
                             }
                         }
                         "MANAGE" -> onManage(detail.groupId)
