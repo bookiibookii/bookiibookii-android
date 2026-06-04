@@ -35,7 +35,7 @@ import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.auth.LoginRequest
 import com.bookiibookii.bookiibookii.data.model.mypage.MypageResult
-import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroAnimActivity
+import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroActivity
 import com.bookiibookii.bookiibookii.onboarding.steps.OnbStepActivity
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -237,7 +237,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun moveToIntroAnim() {
-        val intent = Intent(this, LoginIntroAnimActivity::class.java).apply {
+        val intent = Intent(this, LoginIntroActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
                     Intent.FLAG_ACTIVITY_NEW_TASK or
                     Intent.FLAG_ACTIVITY_CLEAR_TASK
