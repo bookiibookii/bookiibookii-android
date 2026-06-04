@@ -21,22 +21,9 @@
             android:name=".common.ComErrorActivity"
             android:exported="false" />
         <activity
-            android:name=".onboarding.Intro.LoginIntroAnimActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".MainActivity"
+            android:name=".onboarding.Intro.LoginIntroActivity"
             android:exported="true"
-            android:theme="@style/Theme.BookiiBookii.Splash">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <!--<activity
-            android:name=".common.SplashActivity"
-            android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.BookiiBookii.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -47,7 +34,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize" />-->
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".onboarding.login.LoginActivity"
             android:exported="false" />
