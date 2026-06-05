@@ -23,4 +23,8 @@ object TrackerDestinations {
     const val COMMENT_ROUTE = "comment/{$COMMENT_ARG_GROUP_ID}?$COMMENT_ARG_TITLE={$COMMENT_ARG_TITLE}"
     fun comment(groupId: Long, title: String): String =
         "comment/$groupId?$COMMENT_ARG_TITLE=${Uri.encode(title)}"
+
+    // 약속 장소 카카오 키워드 검색 (선택 결과는 savedStateHandle로 반환)
+    const val PLACE_SEARCH = "placeSearch"
+    const val RESULT_SELECTED_PLACE = "selectedPlace"
 }

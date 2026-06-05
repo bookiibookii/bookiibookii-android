@@ -6,12 +6,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddress
+import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.PartnerDeliveryResponseDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.toMeetingPlace
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
 import com.bookiibookii.bookiibookii.tracker.model.TrackerDetailUiState
 import com.bookiibookii.bookiibookii.tracker.model.toUiState
@@ -35,9 +37,9 @@ class TrackerDetailViewModel(
     private val _partnerDelivery = MutableStateFlow<PartnerDeliveryResponseDTO?>(null)
     val partnerDelivery: StateFlow<PartnerDeliveryResponseDTO?> = _partnerDelivery
 
-    // 약속 장소: "나의 희망교환장소 불러오기"로 채워지는 대표 장소
-    private val _meetingPlace = MutableStateFlow<ExchangeAddress?>(null)
-    val meetingPlace: StateFlow<ExchangeAddress?> = _meetingPlace
+    // 약속 장소: 희망교환장소 불러오기 또는 카카오 검색으로 채워짐
+    private val _meetingPlace = MutableStateFlow<MeetingPlace?>(null)
+    val meetingPlace: StateFlow<MeetingPlace?> = _meetingPlace
 
     // 등록된 약속 정보 (약속 확인 조회)
     private val _meetingInfo = MutableStateFlow<MeetingResDTO?>(null)
@@ -131,7 +133,7 @@ class TrackerDetailViewModel(
         }
     }
 
-    // 대표(희망) 교환 장소를 불러와 약속 장소로 채운다. isDefault 우선, 없으면 첫 항목.
+    // 대표(희망) 교환 장소를 불러와 약속 장소로 채움. isDefault 우선, 없으면 첫 항목.
     fun loadMyExchangePlace() {
         viewModelScope.launch {
             try {
@@ -139,12 +141,18 @@ class TrackerDetailViewModel(
                 val body = res.body()
                 if (res.isSuccessful && body?.isSuccess == true) {
                     val list = body.result.orEmpty()
-                    _meetingPlace.value = list.firstOrNull { it.isDefault } ?: list.firstOrNull()
+                    val picked = list.firstOrNull { it.isDefault } ?: list.firstOrNull()
+                    _meetingPlace.value = picked?.toMeetingPlace()
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
             }
         }
+    }
+
+    // 카카오 검색에서 선택한 장소를 약속 장소로 채움
+    fun setMeetingPlace(result: PlaceSearchResult) {
+        _meetingPlace.value = result.toMeetingPlace()
     }
 
     fun clearMeetingPlace() {
@@ -187,7 +195,11 @@ class TrackerDetailViewModel(
     }
 
     fun registerMeeting(
-        locationId: Long,
+        placeName: String,
+        address: String,
+        zipCode: String?,
+        x: Double,
+        y: Double,
         addressDetail: String?,
         scheduledAt: String,
         onSuccess: () -> Unit,
@@ -197,7 +209,11 @@ class TrackerDetailViewModel(
                 val res = repository.registerMeeting(
                     groupId,
                     MeetingRegisterReqDTO(
-                        locationId = locationId,
+                        placeName = placeName,
+                        address = address,
+                        zipCode = zipCode,
+                        x = x,
+                        y = y,
                         addressDetail = addressDetail,
                         scheduledAt = scheduledAt,
                     ),

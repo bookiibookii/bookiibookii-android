@@ -35,6 +35,8 @@ android {
 
         buildConfigField("String", "KAKAO_APP_KEY", "\"${properties["kakao_native_app_key"]}\"")
         manifestPlaceholders["KAKAO_APP_KEY"] = properties["kakao_native_app_key"] as String
+
+        buildConfigField("String", "KAKAO_REST_API_KEY", "\"${properties["KAKAO_REST_API_KEY"] ?: ""}\"")
     }
 
     buildTypes {

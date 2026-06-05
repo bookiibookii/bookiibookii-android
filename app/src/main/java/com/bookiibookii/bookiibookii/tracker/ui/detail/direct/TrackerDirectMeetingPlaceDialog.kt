@@ -36,6 +36,7 @@ fun TrackerDirectMeetingPlaceDialog(
     address: String,
     addressDetail: String,
     onAddressDetailChange: (String) -> Unit,
+    onSearchClick: () -> Unit,
     onLoadMyPlaceClick: () -> Unit,
     onDismiss: () -> Unit,
     onPreviousClick: () -> Unit,
@@ -49,6 +50,7 @@ fun TrackerDirectMeetingPlaceDialog(
             address = address,
             addressDetail = addressDetail,
             onAddressDetailChange = onAddressDetailChange,
+            onSearchClick = onSearchClick,
             onLoadMyPlaceClick = onLoadMyPlaceClick,
             onDismiss = onDismiss,
             onPreviousClick = onPreviousClick,
@@ -62,6 +64,7 @@ private fun TrackerDirectMeetingPlaceDialogContent(
     address: String,
     addressDetail: String,
     onAddressDetailChange: (String) -> Unit,
+    onSearchClick: () -> Unit,
     onLoadMyPlaceClick: () -> Unit,
     onDismiss: () -> Unit,
     onPreviousClick: () -> Unit,
@@ -104,7 +107,10 @@ private fun TrackerDirectMeetingPlaceDialogContent(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            SearchInput(placeholder = "지번, 도로명, 건물명으로 검색")
+            SearchInput(
+                placeholder = "지번, 도로명, 건물명으로 검색",
+                onClick = onSearchClick,
+            )
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -169,7 +175,7 @@ private fun StepChip(text: String) {
 }
 
 @Composable
-private fun SearchInput(placeholder: String) {
+private fun SearchInput(placeholder: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -183,6 +189,7 @@ private fun SearchInput(placeholder: String) {
                 color = BookiiBookiiTheme.colors.grey200,
                 shape = BookiiBookiiTheme.shape.round20,
             )
+            .clickable(onClick = onClick)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -307,6 +314,7 @@ private fun TrackerDirectMeetingPlaceDialogPreview() {
             address = "서울특별시 강남구 강남대로 396",
             addressDetail = "",
             onAddressDetailChange = {},
+            onSearchClick = {},
             onLoadMyPlaceClick = {},
             onDismiss = {},
             onPreviousClick = {},
