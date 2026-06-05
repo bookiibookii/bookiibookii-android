@@ -13,7 +13,7 @@ data class GroupEditorUiState(
     val tradeType: ExchangeType? = null,
     val places: List<SelectablePlace> = emptyList(),  // tradeType에 해당하는 주소 목록
     val placesLoading: Boolean = false,
-    val selectedPlaceId: Long? = null,                // 선택한 주소 id (제출 시 CreateDTO.selectedPlaceId)
+    val selectedPlaceId: Long? = null,                // 선택한 주소 id (DIRECT→userExchangeId / DELIVERY→userDeliveryId)
     val readingPeriodIndex: Int = 0,
     val groupComment: String = "",         // 선택, 최대 500자
     val ruleStyle: ReadingStyle? = null,   // 프리셋 1개 (드롭다운)

@@ -246,11 +246,14 @@ class GroupEditorViewModel(
                     s.customRules.filter { it.isNotBlank() }
                         .forEach { add(GroupRuleRequest(tag = "CUSTOM", content = it)) }
                 }
+                val isDirect = tradeType == ExchangeType.DIRECT
                 val request = GroupCreateRequest(
                     isbn13 = isbn13,
                     groupName = s.groupName,
                     tradeType = tradeType.name,
-                    selectedPlaceId = placeId,
+                    // DIRECT=희망교환장소, DELIVERY=배송지. 반대쪽은 null
+                    userDeliveryId = if (isDirect) null else placeId,
+                    userExchangeId = if (isDirect) placeId else null,
                     readingPeriod = s.readingPeriod,
                     groupComment = s.groupComment.ifBlank { null },
                     rules = rules,
