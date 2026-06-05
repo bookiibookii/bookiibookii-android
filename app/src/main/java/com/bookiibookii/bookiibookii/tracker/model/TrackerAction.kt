@@ -5,6 +5,7 @@ enum class TrackerAction(val label: String) {
     RecordProgress("진행률 기록"),
     WriteReadingCard("독서카드 작성"),
     WriteBookReview("책 후기 작성"),
+    EditBookReview("책 후기 수정"),
     CheckDeliveryInfo("배송 정보 확인"),
     CheckShippingInfo("운송장 정보 확인"),
     ConfirmReceive("수령 확인"),
@@ -20,6 +21,8 @@ enum class TrackerAction(val label: String) {
 fun actionsForStatus(displayStatus: String?): Pair<TrackerAction, TrackerAction> = when (displayStatus) {
     "READING" -> TrackerAction.RecordProgress to TrackerAction.WriteReadingCard
     "REVIEW_WRITING" -> TrackerAction.WriteBookReview to TrackerAction.WriteReadingCard
+    // 파트너 후기 대기
+    "REVIEW_WAITING_PARTNER" -> TrackerAction.EditBookReview to TrackerAction.WriteReadingCard
     // 교환독서 후기 작성: 단일 버튼 → 파트너 리뷰 화면
     "EXCHANGE_REVIEW_WRITING" -> TrackerAction.WritePartnerReview to TrackerAction.None
     "TRACKING_REQUIRED" -> TrackerAction.RegisterTrackingNumber to TrackerAction.CheckDeliveryInfo

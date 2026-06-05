@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
+import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.ui.comment.TrackerCommentRoute
 import com.bookiibookii.bookiibookii.tracker.ui.detail.TrackerDetailRoute
 import com.bookiibookii.bookiibookii.tracker.ui.main.TrackerMainRoute
@@ -26,6 +27,7 @@ import com.bookiibookii.bookiibookii.tracker.ui.review.TrackerPartnerReviewRoute
 @Composable
 fun TrackerNavHost(
     onCreateGroupClick: () -> Unit,
+    onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = TrackerDestinations.MAIN,
 ) {
@@ -57,15 +59,19 @@ fun TrackerNavHost(
                 onCardClick = { groupId ->
                     navController.navigate(TrackerDestinations.detail(groupId))
                 },
-                onNavigateBookReview = { groupId ->
-                    navController.navigate(TrackerDestinations.bookReview(groupId))
+                onNavigateBookReview = { groupId, edit ->
+                    navController.navigate(TrackerDestinations.bookReview(groupId, edit))
                 },
                 onNavigatePartnerReview = { groupId ->
                     navController.navigate(TrackerDestinations.partnerReview(groupId))
                 },
+                onNavigateComment = { groupId, title ->
+                    navController.navigate(TrackerDestinations.comment(groupId, title))
+                },
                 onNavigatePlaceSearch = {
                     navController.navigate(TrackerDestinations.PLACE_SEARCH)
                 },
+                onNavigateLibraryDetail = onNavigateLibraryDetail,
                 selectedPlace = selectedPlace,
                 onPlaceConsumed = {
                     entry.savedStateHandle[TrackerDestinations.RESULT_SELECTED_PLACE] = null
@@ -88,8 +94,8 @@ fun TrackerNavHost(
             TrackerDetailRoute(
                 groupId = groupId,
                 onBackClick = { navController.popBackStack() },
-                onNavigateBookReview = {
-                    navController.navigate(TrackerDestinations.bookReview(groupId))
+                onNavigateBookReview = { edit ->
+                    navController.navigate(TrackerDestinations.bookReview(groupId, edit))
                 },
                 onNavigatePartnerReview = {
                     navController.navigate(TrackerDestinations.partnerReview(groupId))
@@ -100,6 +106,7 @@ fun TrackerNavHost(
                 onNavigatePlaceSearch = {
                     navController.navigate(TrackerDestinations.PLACE_SEARCH)
                 },
+                onNavigateLibraryDetail = onNavigateLibraryDetail,
                 selectedPlace = selectedPlace,
                 onPlaceConsumed = {
                     backStackEntry.savedStateHandle[TrackerDestinations.RESULT_SELECTED_PLACE] = null
@@ -112,13 +119,20 @@ fun TrackerNavHost(
                 navArgument(TrackerDestinations.BOOK_REVIEW_ARG_GROUP_ID) {
                     type = NavType.LongType
                 },
+                navArgument(TrackerDestinations.BOOK_REVIEW_ARG_EDIT) {
+                    type = NavType.BoolType
+                    defaultValue = false
+                },
             ),
         ) { backStackEntry ->
             val groupId = backStackEntry.arguments
                 ?.getLong(TrackerDestinations.BOOK_REVIEW_ARG_GROUP_ID) ?: return@composable
+            val isEdit = backStackEntry.arguments
+                ?.getBoolean(TrackerDestinations.BOOK_REVIEW_ARG_EDIT) ?: false
             TrackerBookReviewRoute(
                 groupId = groupId,
                 onBackClick = { navController.popBackStack() },
+                isEdit = isEdit,
             )
         }
         composable(
@@ -134,6 +148,10 @@ fun TrackerNavHost(
             TrackerPartnerReviewRoute(
                 groupId = groupId,
                 onBackClick = { navController.popBackStack() },
+                // 등록 완료 시 상세가 아니라 메인까지 되돌아감
+                onSubmitDone = {
+                    navController.popBackStack(TrackerDestinations.MAIN, inclusive = false)
+                },
             )
         }
         composable(

@@ -10,8 +10,12 @@ object TrackerDestinations {
     fun detail(groupId: Long): String = "detail/$groupId"
 
     const val BOOK_REVIEW_ARG_GROUP_ID = "groupId"
-    const val BOOK_REVIEW_ROUTE = "bookReview/{$BOOK_REVIEW_ARG_GROUP_ID}"
-    fun bookReview(groupId: Long): String = "bookReview/$groupId"
+    const val BOOK_REVIEW_ARG_EDIT = "edit"
+    const val BOOK_REVIEW_ROUTE =
+        "bookReview/{$BOOK_REVIEW_ARG_GROUP_ID}?$BOOK_REVIEW_ARG_EDIT={$BOOK_REVIEW_ARG_EDIT}"
+    // edit=true면 책 후기 수정(PATCH), false면 작성(POST)
+    fun bookReview(groupId: Long, edit: Boolean = false): String =
+        "bookReview/$groupId?$BOOK_REVIEW_ARG_EDIT=$edit"
 
     const val PARTNER_REVIEW_ARG_GROUP_ID = "groupId"
     const val PARTNER_REVIEW_ROUTE = "partnerReview/{$PARTNER_REVIEW_ARG_GROUP_ID}"

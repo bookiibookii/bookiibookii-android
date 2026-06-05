@@ -30,6 +30,6 @@ object KakaoRetrofitClient {
             .build()
     }
 
-    // 카카오 Local API 접근자 (KakaoLocalApi 인터페이스는 4단계에서 추가)
+    // 카카오 Local API 접근자
     val kakaoLocalApi: KakaoLocalApi by lazy { retrofit.create(KakaoLocalApi::class.java) }
 }

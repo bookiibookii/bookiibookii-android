@@ -37,12 +37,18 @@ fun BottomSheetTwoBtnShort(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     textStyle: TextStyle = BookiiBookiiTheme.typography.medium16,
+    enabled: Boolean = true,
 ) {
     val shape = BookiiBookiiTheme.shape.round16
     val containerColor: Color
     val contentColor: Color
     val borderColor: Color?
-    when (style) {
+    // 비활성
+    if (!enabled) {
+        containerColor = BookiiBookiiTheme.colors.grey200
+        contentColor = BookiiBookiiTheme.colors.grey500
+        borderColor = null
+    } else when (style) {
         BottomSheetBtnStyle.White -> {
             containerColor = BookiiBookiiTheme.colors.white
             contentColor = BookiiBookiiTheme.colors.grey900
@@ -81,7 +87,7 @@ fun BottomSheetTwoBtnShort(
                     Modifier
                 },
             )
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
     ) {

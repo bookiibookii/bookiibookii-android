@@ -7,6 +7,7 @@ import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListItemResDTO
 private fun displayStatusToLabel(status: String?): String = when (status) {
     "READING" -> "읽는 중"
     "REVIEW_WRITING" -> "후기 작성"
+    "REVIEW_WAITING_PARTNER" -> "후기 수정"
     "TRACKING_REQUIRED" -> "운송장 등록"
     "SHIPPING" -> "수령 전"
     "RETURN_TRACKING_REQUIRED" -> "수령 완료"

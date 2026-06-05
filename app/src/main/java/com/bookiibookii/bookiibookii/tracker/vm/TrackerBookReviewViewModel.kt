@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 
 class TrackerBookReviewViewModel(
     private val groupId: Long,
+    private val isEdit: Boolean = false,   // true면 제출 시 PATCH(수정), false면 POST(작성)
     private val repository: TrackerRepository = TrackerRepository(RetrofitClient.trkApi())
 ) : ViewModel() {
 
@@ -57,7 +58,11 @@ class TrackerBookReviewViewModel(
     fun submitReview(star: Double, comment: String?, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
-                val res = repository.submitBookReview(groupId, star, comment)
+                val res = if (isEdit) {
+                    repository.updateMyBookReview(groupId, star, comment)
+                } else {
+                    repository.submitBookReview(groupId, star, comment)
+                }
                 if (res.isSuccessful && res.body()?.isSuccess == true) {
                     onSuccess()
                 }
@@ -68,10 +73,11 @@ class TrackerBookReviewViewModel(
     }
 
     companion object {
-        fun factory(groupId: Long): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                TrackerBookReviewViewModel(groupId)
+        fun factory(groupId: Long, isEdit: Boolean = false): ViewModelProvider.Factory =
+            viewModelFactory {
+                initializer {
+                    TrackerBookReviewViewModel(groupId, isEdit)
+                }
             }
-        }
     }
 }

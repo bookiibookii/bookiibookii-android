@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -61,6 +62,7 @@ import com.bookiibookii.bookiibookii.ui.component.DaumAddressWebView
 import com.bookiibookii.bookiibookii.data.model.location.DeliveryAddressRequest
 import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddress
 import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddressRequest
+import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -613,6 +615,9 @@ private fun ExchangePlaceBottomSheet(
     var zipCode by remember(editTarget) { mutableStateOf(editTarget?.zipCode ?: "") }
     var detail by remember(editTarget) { mutableStateOf(editTarget?.addressDetail ?: "") }
     var isPrimary by remember(editTarget) { mutableStateOf(editTarget?.isDefault ?: false) }
+    // 카카오 장소검색으로 채워지는 좌표 (수정 모드면 기존 값 프리필)
+    var x by remember(editTarget) { mutableStateOf(editTarget?.x ?: 0.0) }
+    var y by remember(editTarget) { mutableStateOf(editTarget?.y ?: 0.0) }
     var showAddressSearch by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
@@ -693,9 +698,8 @@ private fun ExchangePlaceBottomSheet(
                             placeName = nickname,
                             address = placeAddress,
                             zipCode = zipCode,
-                            // TODO: 카카오 장소검색 연동 시 실제 좌표 전달 (현재 Daum 우편번호는 좌표 미제공)
-                            x = 0.0,
-                            y = 0.0,
+                            x = x,
+                            y = y,
                             addressDetail = detail.ifBlank { "" },
                         ))
                     },
@@ -707,14 +711,32 @@ private fun ExchangePlaceBottomSheet(
     }
 
     if (showAddressSearch) {
-        AddressSearchDialog(
-            onResult = { addr, zip ->
-                placeAddress = addr
-                zipCode = zip
-                showAddressSearch = false
-            },
-            onDismiss = { showAddressSearch = false },
-        )
+        Dialog(
+            onDismissRequest = { showAddressSearch = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            // Dialog 윈도우를 MATCH_PARENT로 강제 — 풀스크린
+            val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
+            SideEffect {
+                dialogWindowProvider?.window?.setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                )
+            }
+            PlaceSearchScreen(
+                onBackClick = { showAddressSearch = false },
+                onPlaceClick = { result ->
+                    // 카카오 장소 선택
+                    if (nickname.isBlank()) nickname = result.placeName
+                    placeAddress = result.address
+                    zipCode = ""
+                    x = result.x
+                    y = result.y
+                    showAddressSearch = false
+                },
+                modifier = Modifier.statusBarsPadding(),
+            )
+        }
     }
 }
 

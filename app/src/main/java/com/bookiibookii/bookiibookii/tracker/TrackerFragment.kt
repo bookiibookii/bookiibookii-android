@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
+import com.bookiibookii.bookiibookii.library.feat.LibraryDetailFragment
 import com.bookiibookii.bookiibookii.tracker.nav.TrackerNavHost
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -28,6 +29,28 @@ class TrackerFragment : Fragment() {
                             .replace(
                                 R.id.fragmentContainer,
                                 GroupFragment.newInstance(GroupDestinations.EDITOR),
+                            )
+                            .addToBackStack(null)
+                            .commit()
+                    },
+                    // "독서카드 작성" → 해석된 책 정보로 서재 상세 진입 (FAB로 카드 작성)
+                    onNavigateLibraryDetail = { target ->
+                        parentFragmentManager.beginTransaction()
+                            .replace(
+                                R.id.fragmentContainer,
+                                LibraryDetailFragment.newInstance(
+                                    groupId = target.groupId,
+                                    memberBookId = target.memberBookId,
+                                    groupName = target.groupName,
+                                    bookTitle = target.bookTitle,
+                                    author = target.author,
+                                    coverUrl = target.coverUrl,
+                                    startDate = target.startDate,
+                                    endDate = target.endDate,
+                                    rating = target.rating,
+                                    isDone = target.isDone,
+                                    progressRate = target.progressRate,
+                                ),
                             )
                             .addToBackStack(null)
                             .commit()

@@ -26,6 +26,8 @@ data class TrackerDetailUiState(
     val exchangeLabel: String = "",
     val primaryAction: TrackerAction = TrackerAction.None,
     val secondaryAction: TrackerAction = TrackerAction.None,
+    // 호스트만 약속 등록 가능 — 게스트는 약속 등록 버튼 비활성화
+    val isHost: Boolean = false,
     val steps: List<TrackerStep> = emptyList(),
     val loading: Boolean = false,
     val error: String? = null,

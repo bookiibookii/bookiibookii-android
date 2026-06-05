@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 enum class LibrarySortType { RECENT, OLDEST, RATING, TITLE }
@@ -370,8 +371,19 @@ private fun LibrarySearchResults(
 
 // LibraryBookGridItem, LibraryBookListItem → LibraryBookItem.kt
 
-@Preview(showBackground = true)
+private val previewReadingBooks = listOf(
+    LibraryBook(groupId = 1, memberBookId = 1, groupName = "숭실대 경제 독서모임", title = "데미안", author = "헤르만 헤세", progress = 0.64f, startDate = "2026-05-20"),
+    LibraryBook(groupId = 2, memberBookId = 2, groupName = "주말 소설 읽기", title = "어린 왕자", author = "생텍쥐페리", progress = 0.3f, startDate = "2026-05-25"),
+)
+
+private val previewDoneBooks = listOf(
+    LibraryBook(groupId = 3, memberBookId = 3, groupName = "한 달 한 권", title = "1984", author = "조지 오웰", rating = 5, startDate = "2026-04-01", endDate = "2026-04-20"),
+)
+
+@Preview(showBackground = true, heightDp = 1000)
 @Composable
 private fun LibraryScreenPreview() {
-    LibraryScreen()
+    BookiiPreview {
+        LibraryScreen(readingBooks = previewReadingBooks, doneBooks = previewDoneBooks)
+    }
 }

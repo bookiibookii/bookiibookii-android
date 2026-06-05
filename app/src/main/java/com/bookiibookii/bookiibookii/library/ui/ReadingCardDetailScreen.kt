@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -860,8 +861,42 @@ private fun ReactionBar(
     }
 }
 
-@Preview(showBackground = true)
+private val previewCards = listOf(
+    ReadingCard(
+        cardId = 1L,
+        username = "북이",
+        content = "다시 읽어도 마음에 오래 남는 문장이었다.",
+        page = "123",
+        type = ReadingCardType.QUOTE,
+        date = "2026.06.05",
+        bookTitle = "데미안",
+        quotation = "새는 알에서 나오려고 투쟁한다.",
+        isBookmarked = true,
+        myReactions = listOf("LIKE"),
+    ),
+    ReadingCard(
+        cardId = 2L,
+        username = "부키",
+        content = "이 장면이 특히 인상 깊었어요.",
+        page = "45",
+        type = ReadingCardType.PHOTO,
+        date = "2026.06.04",
+        bookTitle = "어린 왕자",
+    ),
+)
+
+@Preview(showBackground = true, heightDp = 900)
 @Composable
-private fun ReadingCardDetailScreenPreview() {
-    ReadingCardDetailScreen()
+private fun ReadingCardDetailScreenQuotePreview() {
+    BookiiPreview {
+        ReadingCardDetailScreen(cards = previewCards, initialIndex = 0)
+    }
+}
+
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+private fun ReadingCardDetailScreenPhotoPreview() {
+    BookiiPreview {
+        ReadingCardDetailScreen(cards = previewCards, initialIndex = 1)
+    }
 }

@@ -56,6 +56,13 @@ interface TrkApi {
         @Body request: BookReviewReqDTO,
     ): Response<ApiResponse<BookReviewResDTO>>
 
+    // 내 책 리뷰 수정
+    @PATCH("/api/groups/{groupId}/reviews/me")
+    suspend fun patchMyBookReview(
+        @Path("groupId") groupId: Long,
+        @Body request: BookReviewReqDTO,
+    ): Response<ApiResponse<BookReviewResDTO>>
+
     @POST("/api/groups/{groupId}/member-reviews")
     suspend fun postMemberReview(
         @Path("groupId") groupId: Long,

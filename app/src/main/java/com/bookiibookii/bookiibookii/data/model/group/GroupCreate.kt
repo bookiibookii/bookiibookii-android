@@ -6,8 +6,9 @@ data class GroupCreateRequest(
     @SerializedName("isbn13") val isbn13: String,
     @SerializedName("groupName") val groupName: String,
     @SerializedName("tradeType") val tradeType: String,         // DIRECT / DELIVERY
-    // 선택한 장소 id. DELIVERY=배송지 id, DIRECT=희망교환장소 id
-    @SerializedName("selectedPlaceId") val selectedPlaceId: Long,
+    // tradeType에 따라 하나만 채우고 나머지는 null
+    @SerializedName("userDeliveryId") val userDeliveryId: Long?, // DELIVERY일 때만 (선택한 배송지 id)
+    @SerializedName("userExchangeId") val userExchangeId: Long?, // DIRECT일 때만 (선택한 희망교환장소 id)
     @SerializedName("readingPeriod") val readingPeriod: Int,    // 3, 7, 14, 21, 28
     @SerializedName("groupComment") val groupComment: String?,  // 선택, 최대 500자
     @SerializedName("rules") val rules: List<GroupRuleRequest>  // 1~5개

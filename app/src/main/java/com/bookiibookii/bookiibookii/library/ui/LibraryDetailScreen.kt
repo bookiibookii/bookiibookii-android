@@ -56,6 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 enum class ReadingCardType { PHOTO, QUOTE }
@@ -528,8 +529,54 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
     }
 }
 
-@Preview(showBackground = true)
+private val previewDetailCards = listOf(
+    ReadingCard(
+        username = "북이",
+        content = "다시 읽어도 오래 남는 문장이었다.",
+        page = "123",
+        type = ReadingCardType.QUOTE,
+        bookTitle = "데미안",
+        quotation = "새는 알에서 나오려고 투쟁한다.",
+        date = "2026.06.05",
+        isMine = true,
+    ),
+    ReadingCard(
+        username = "부키",
+        content = "이 장면이 특히 인상 깊었어요.",
+        page = "45",
+        type = ReadingCardType.PHOTO,
+        bookTitle = "데미안",
+        date = "2026.06.04",
+    ),
+)
+
+private val previewReadingBook = LibraryDetailBook(
+    groupName = "숭실대 경제 독서모임",
+    title = "데미안",
+    author = "헤르만 헤세",
+    genre = "소설",
+    isDone = false,
+    progressRate = 64,
+    startDate = "2026-05-20",
+)
+
+// 읽는 중 (진행률 바)
+@Preview(showBackground = true, heightDp = 1000)
 @Composable
-private fun LibraryDetailScreenPreview() {
-    LibraryDetailScreen()
+private fun LibraryDetailScreenReadingPreview() {
+    BookiiPreview {
+        LibraryDetailScreen(book = previewReadingBook, cards = previewDetailCards)
+    }
+}
+
+// 완료 (별점)
+@Preview(showBackground = true, heightDp = 1000)
+@Composable
+private fun LibraryDetailScreenDonePreview() {
+    BookiiPreview {
+        LibraryDetailScreen(
+            book = previewReadingBook.copy(isDone = true, rating = 4.5, endDate = "2026-06-01"),
+            cards = previewDetailCards,
+        )
+    }
 }

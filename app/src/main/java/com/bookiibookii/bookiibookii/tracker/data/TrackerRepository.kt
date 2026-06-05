@@ -44,6 +44,15 @@ class TrackerRepository(
         return api.postBookReview(groupId, BookReviewReqDTO(star, comment))
     }
 
+    // 내 책 리뷰 수정 (PATCH /reviews/me)
+    suspend fun updateMyBookReview(
+        groupId: Long,
+        star: Double,
+        comment: String?,
+    ): Response<ApiResponse<BookReviewResDTO>> {
+        return api.patchMyBookReview(groupId, BookReviewReqDTO(star, comment))
+    }
+
     suspend fun submitMemberReview(
         groupId: Long,
         reaction: String?,

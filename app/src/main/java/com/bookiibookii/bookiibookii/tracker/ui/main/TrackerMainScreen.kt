@@ -35,6 +35,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
@@ -43,6 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
@@ -439,14 +442,20 @@ fun TrackerMainRoute(
     onAlertClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
     onCardClick: (groupId: Long) -> Unit,
-    onNavigateBookReview: (groupId: Long) -> Unit,
+    onNavigateBookReview: (groupId: Long, edit: Boolean) -> Unit,
     onNavigatePartnerReview: (groupId: Long) -> Unit,
+    onNavigateComment: (groupId: Long, title: String) -> Unit = { _, _ -> },
     onNavigatePlaceSearch: () -> Unit = {},
+    onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
     selectedPlace: PlaceSearchResult? = null,
     onPlaceConsumed: () -> Unit = {},
     viewModel: TrackerMainViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    // 상세 화면 등에서 복귀할 때마다 목록 재조회
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.load()
+    }
     var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var deliveryInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -492,7 +501,8 @@ fun TrackerMainRoute(
             dispatchAction(
                 action = action,
                 onRecordProgress = { progressDialogGroupId = groupId },
-                onWriteBookReview = { onNavigateBookReview(groupId) },
+                onWriteBookReview = { onNavigateBookReview(groupId, false) },
+                onEditBookReview = { onNavigateBookReview(groupId, true) },
                 onRegisterTrackingNumber = { trackingDialogGroupId = groupId },
                 onCheckDeliveryInfo = {
                     viewModel.loadDeliveryAddress(groupId) {
@@ -513,6 +523,10 @@ fun TrackerMainRoute(
                     viewModel.loadPartnerDelivery(groupId) { shippingConfirmGroupId = groupId }
                 },
                 onConfirmReceive = { receiveConfirmGroupId = groupId },
+                onWriteReadingCard = {
+                    val bookTitle = uiState.cards.firstOrNull { it.groupId == groupId }?.bookTitle.orEmpty()
+                    viewModel.openReadingCard(groupId, bookTitle) { onNavigateLibraryDetail(it) }
+                },
             )
         },
         onSecondaryAction = { groupId ->
@@ -520,7 +534,8 @@ fun TrackerMainRoute(
             dispatchAction(
                 action = action,
                 onRecordProgress = { progressDialogGroupId = groupId },
-                onWriteBookReview = { onNavigateBookReview(groupId) },
+                onWriteBookReview = { onNavigateBookReview(groupId, false) },
+                onEditBookReview = { onNavigateBookReview(groupId, true) },
                 onRegisterTrackingNumber = { trackingDialogGroupId = groupId },
                 onCheckDeliveryInfo = {
                     viewModel.loadDeliveryAddress(groupId) {
@@ -541,6 +556,10 @@ fun TrackerMainRoute(
                     viewModel.loadPartnerDelivery(groupId) { shippingConfirmGroupId = groupId }
                 },
                 onConfirmReceive = { receiveConfirmGroupId = groupId },
+                onWriteReadingCard = {
+                    val bookTitle = uiState.cards.firstOrNull { it.groupId == groupId }?.bookTitle.orEmpty()
+                    viewModel.openReadingCard(groupId, bookTitle) { onNavigateLibraryDetail(it) }
+                },
             )
         },
     )
@@ -706,7 +725,7 @@ fun TrackerMainRoute(
         TrackerDirectMeetingInfoDialog(
             scheduledAt = meeting.scheduledAt.orEmpty(),
             address = meeting.location?.address.orEmpty(),
-            addressDetail = meeting.location?.addressDetail.orEmpty(),
+            addressDetail = meeting.addressDetail.orEmpty(),
             onDismiss = {
                 meetingInfoDialogGroupId = null
                 viewModel.clearMeeting()
@@ -736,11 +755,17 @@ fun TrackerMainRoute(
         )
     }
     // 교환 실패 안내
-    if (exchangeFailGroupId != null) {
+    val exchangeFailGid = exchangeFailGroupId
+    if (exchangeFailGid != null) {
         TrackerDirectExchangeFailDialog(
             onDismiss = { exchangeFailGroupId = null },
             onReportClick = {}, // TODO: 신고하기 이동 로직 보류
-            onGoToCommentsClick = {}, // TODO: 댓글 바로가기 이동 로직 보류
+            onGoToCommentsClick = {
+                val title = uiState.cards
+                    .firstOrNull { it.groupId == exchangeFailGid }?.groupName.orEmpty()
+                exchangeFailGroupId = null
+                onNavigateComment(exchangeFailGid, title)
+            },
         )
     }
 }
@@ -749,6 +774,7 @@ private inline fun dispatchAction(
     action: TrackerAction?,
     onRecordProgress: () -> Unit,
     onWriteBookReview: () -> Unit,
+    onEditBookReview: () -> Unit,
     onRegisterTrackingNumber: () -> Unit,
     onCheckDeliveryInfo: () -> Unit,
     onRegisterMeeting: () -> Unit,
@@ -758,10 +784,12 @@ private inline fun dispatchAction(
     onWritePartnerReview: () -> Unit,
     onCheckShippingInfo: () -> Unit,
     onConfirmReceive: () -> Unit,
+    onWriteReadingCard: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
         TrackerAction.WriteBookReview -> onWriteBookReview()
+        TrackerAction.EditBookReview -> onEditBookReview()
         TrackerAction.RegisterTrackingNumber -> onRegisterTrackingNumber()
         TrackerAction.CheckDeliveryInfo -> onCheckDeliveryInfo()
         TrackerAction.RegisterMeeting -> onRegisterMeeting()
@@ -771,7 +799,7 @@ private inline fun dispatchAction(
         TrackerAction.WritePartnerReview -> onWritePartnerReview()
         TrackerAction.CheckShippingInfo -> onCheckShippingInfo()
         TrackerAction.ConfirmReceive -> onConfirmReceive()
-        TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
+        TrackerAction.WriteReadingCard -> onWriteReadingCard()
         TrackerAction.None, null -> Unit
     }
 }
