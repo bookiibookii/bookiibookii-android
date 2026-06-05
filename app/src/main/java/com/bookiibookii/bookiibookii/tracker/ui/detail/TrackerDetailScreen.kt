@@ -222,7 +222,11 @@ fun TrackerDetailRoute(
                 val place = meetingPlace
                 if (place != null) {
                     viewModel.registerMeeting(
-                        locationId = place.id,
+                        placeName = place.placeName,
+                        address = place.address,
+                        zipCode = place.zipCode,
+                        x = 0.0, // TODO: 카카오 검색 연동 시 실제 좌표
+                        y = 0.0, // TODO: 카카오 검색 연동 시 실제 좌표
                         addressDetail = place.addressDetail,
                         scheduledAt = meetingScheduledAt,
                     ) {

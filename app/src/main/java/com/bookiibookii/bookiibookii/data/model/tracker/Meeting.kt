@@ -1,10 +1,14 @@
 package com.bookiibookii.bookiibookii.data.model.tracker
 
-// POST /api/groups/{groupId}/meetings - 직접 교환 약속 등록 요청
+// POST /api/groups/{groupId}/meetings - 직접 교환 약속 등록
 data class MeetingRegisterReqDTO(
-    val locationId: Long,
-    val addressDetail: String?,
-    val scheduledAt: String, // ISO date-time (예: "2026-05-20T14:30:00")
+    val placeName: String,       // 장소명 [0, 100]
+    val address: String,         // 주소 [0, 200]
+    val zipCode: String?,        // 우편번호(선택) [0, 10]
+    val x: Double,               // X 좌표(경도) [-180, 180]
+    val y: Double,               // Y 좌표(위도) [-90, 90]
+    val addressDetail: String?,  // 약속별 상세 주소/설명 [0, 200]
+    val scheduledAt: String,     // ISO date-time
 )
 
 // MeetingResponseDTO - 약속 등록(POST 201) / 조회(GET 200) 공용 응답

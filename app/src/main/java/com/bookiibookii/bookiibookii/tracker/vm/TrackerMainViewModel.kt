@@ -95,7 +95,11 @@ class TrackerMainViewModel(
 
     fun registerMeeting(
         groupId: Long,
-        locationId: Long,
+        placeName: String,
+        address: String,
+        zipCode: String?,
+        x: Double,
+        y: Double,
         addressDetail: String?,
         scheduledAt: String,
         onSuccess: () -> Unit,
@@ -105,7 +109,11 @@ class TrackerMainViewModel(
                 val res = repository.registerMeeting(
                     groupId,
                     MeetingRegisterReqDTO(
-                        locationId = locationId,
+                        placeName = placeName,
+                        address = address,
+                        zipCode = zipCode,
+                        x = x,
+                        y = y,
                         addressDetail = addressDetail,
                         scheduledAt = scheduledAt,
                     ),
