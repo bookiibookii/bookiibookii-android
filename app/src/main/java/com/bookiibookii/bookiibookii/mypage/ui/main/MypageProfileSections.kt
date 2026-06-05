@@ -19,11 +19,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -160,25 +160,29 @@ internal fun MottoSection(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(BookiiBookiiTheme.colors.grey100)
-                    .padding(16.dp),
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                OutlinedTextField(
-                    value = editText,
-                    onValueChange = { if (it.length <= 100) onEditTextChange(it) },
-                    modifier = Modifier.fillMaxWidth().height(80.dp),
-                    placeholder = {
-                        Text(text = "나만의 인용구를 입력하세요...", style = BookiiBookiiTheme.typography.regular15, color = BookiiBookiiTheme.colors.grey500)
-                    },
-                    textStyle = BookiiBookiiTheme.typography.regular15.copy(color = BookiiBookiiTheme.colors.grey900),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                    ),
-                    maxLines = 4,
-                )
+                // 텍스트와 카운터 정렬: BasicTextField를 Box 안에 겹쳐 배치
+                Box(
+                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 80.dp),
+                    contentAlignment = Alignment.TopStart,
+                ) {
+                    if (editText.isEmpty()) {
+                        Text(
+                            text = "나만의 인용구를 입력하세요...",
+                            style = BookiiBookiiTheme.typography.regular15,
+                            color = BookiiBookiiTheme.colors.grey500,
+                        )
+                    }
+                    BasicTextField(
+                        value = editText,
+                        onValueChange = { if (it.length <= 100) onEditTextChange(it) },
+                        textStyle = BookiiBookiiTheme.typography.regular15.copy(color = BookiiBookiiTheme.colors.grey900),
+                        maxLines = 4,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

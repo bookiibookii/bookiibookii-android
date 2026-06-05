@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.mypage.ui.detail
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
@@ -108,7 +111,23 @@ fun MyBookshelfScreen(
                 onSortOrderChange = onSortOrderChange,
             )
 
-            if (viewMode == BookViewMode.GRID) {
+            if (sortedCompletedBooks.isEmpty()) {
+                // 책 0권: 빈 상태 카드
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+                        .background(BookiiBookiiTheme.colors.white)
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "책장이 비어 있어요.",
+                        style = BookiiBookiiTheme.typography.regular16,
+                        color = BookiiBookiiTheme.colors.grey600,
+                    )
+                }
+            } else if (viewMode == BookViewMode.GRID) {
                 BookGridView(
                     books = sortedCompletedBooks,
                     representativeTitles = representativeTitles,

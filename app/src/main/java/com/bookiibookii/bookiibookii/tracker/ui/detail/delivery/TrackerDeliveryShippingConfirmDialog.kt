@@ -26,6 +26,8 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 // 운송장 정보 확인 다이얼로그
 @Composable
 fun TrackerDeliveryShippingConfirmDialog(
+    companyName: String,
+    trackingNumber: String,
     onDismiss: () -> Unit,
     onTrackingSearchClick: () -> Unit,
     onConfirmClick: () -> Unit,
@@ -35,6 +37,8 @@ fun TrackerDeliveryShippingConfirmDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         TrackerDeliveryShippingConfirmDialogContent(
+            companyName = companyName,
+            trackingNumber = trackingNumber,
             onDismiss = onDismiss,
             onTrackingSearchClick = onTrackingSearchClick,
             onConfirmClick = onConfirmClick,
@@ -44,6 +48,8 @@ fun TrackerDeliveryShippingConfirmDialog(
 
 @Composable
 private fun TrackerDeliveryShippingConfirmDialogContent(
+    companyName: String,
+    trackingNumber: String,
     onDismiss: () -> Unit,
     onTrackingSearchClick: () -> Unit,
     onConfirmClick: () -> Unit,
@@ -75,8 +81,8 @@ private fun TrackerDeliveryShippingConfirmDialogContent(
             CloseButton(onClick = onDismiss)
         }
 
-        ReadOnlyField(label = "택배사", value = "CJ대한통운")
-        ReadOnlyField(label = "운송장 번호", value = "790335274231")
+        ReadOnlyField(label = "택배사", value = companyName)
+        ReadOnlyField(label = "운송장 번호", value = trackingNumber)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -150,6 +156,8 @@ private fun ReadOnlyField(label: String, value: String) {
 private fun TrackerDeliveryShippingConfirmDialogPreview() {
     BookiiPreview {
         TrackerDeliveryShippingConfirmDialogContent(
+            companyName = "CJ대한통운",
+            trackingNumber = "790335274231",
             onDismiss = {},
             onTrackingSearchClick = {},
             onConfirmClick = {},

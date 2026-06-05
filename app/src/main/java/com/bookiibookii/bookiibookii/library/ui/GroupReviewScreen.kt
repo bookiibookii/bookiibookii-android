@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -87,7 +88,7 @@ fun GroupReviewScreen(
         ) {
             IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_chevron),
+                    painter = painterResource(R.drawable.ic_back),
                     contentDescription = "뒤로 가기",
                     tint = BookiiBookiiTheme.colors.grey900,
                     modifier = Modifier.size(32.dp),
@@ -99,18 +100,21 @@ fun GroupReviewScreen(
                     painter = painterResource(R.drawable.ic_edit),
                     contentDescription = "수정",
                     tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(32.dp),
                 )
             }
         }
 
         if (data == null) return@Column
 
+        val hasReviews = data.messages.isNotEmpty() || data.bookReviews.isNotEmpty()
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
+                .navigationBarsPadding()
                 .padding(top = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -125,6 +129,25 @@ fun GroupReviewScreen(
             ) {
                 Text(text = data.groupName, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
                 Text(text = data.dateRange, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
+            }
+
+            // 후기 없음 빈 상태
+            if (!hasReviews) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(BookiiBookiiTheme.colors.white)
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "작성된 후기가 없습니다.",
+                        style = BookiiBookiiTheme.typography.regular16,
+                        color = BookiiBookiiTheme.colors.grey600,
+                    )
+                }
+                return@Column
             }
 
             // 교환 후기 채팅 섹션
@@ -302,10 +325,11 @@ private fun BookReviewCard(
 private fun StarRow(rating: Int) {
     Row {
         for (i in 1..5) {
+            val filled = i <= rating
             Icon(
-                painter = painterResource(R.drawable.ic_star),
+                painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star),
                 contentDescription = null,
-                tint = if (i <= rating) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200,
+                tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
                 modifier = Modifier.size(14.dp),
             )
         }
@@ -315,5 +339,41 @@ private fun StarRow(rating: Int) {
 @Preview(showBackground = true)
 @Composable
 private fun GroupReviewScreenPreview() {
-    GroupReviewScreen()
+    BookiiBookiiTheme {
+        GroupReviewScreen(
+            data = GroupReviewData(
+                groupName = "함께 읽는 소설 모임",
+                dateRange = "2026.05.01 ~ 2026.05.31",
+                myUsername = "북이",
+                partnerUsername = "부키",
+                messages = listOf(
+                    ExchangeMessage(
+                        username = "부키",
+                        message = "이번 교환 정말 즐거웠어요!",
+                        reaction = false,
+                        isMine = false,
+                    ),
+                    ExchangeMessage(
+                        username = "북이",
+                        message = "저도요, 다음에 또 함께해요 :)",
+                        reaction = true,
+                        isMine = true,
+                    ),
+                ),
+                bookReviews = listOf(
+                    BookReviewItem(
+                        bookTitle = "사피엔스",
+                        bookAuthor = "유발 하라리",
+                        bookGenre = "인문",
+                        myRating = 5,
+                        myReview = "인류의 역사를 큰 흐름으로 볼 수 있어 좋았습니다.",
+                        myDate = "2026.05.20",
+                        partnerRating = 4,
+                        partnerReview = "내용이 방대해서 읽는 데 시간이 걸렸지만 유익했어요.",
+                        partnerDate = "2026.05.18",
+                    ),
+                ),
+            ),
+        )
+    }
 }

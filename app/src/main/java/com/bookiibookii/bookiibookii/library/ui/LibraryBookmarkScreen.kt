@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -45,11 +46,13 @@ private enum class BookmarkSortType { RECENT, OLDEST }
 @Composable
 fun LibraryBookmarkScreen(
     cards: List<ReadingCard> = emptyList(),
+    isLoading: Boolean = false,
+    onSortChange: (isLatest: Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onCardClick: (index: Int, bookmarkedCards: List<ReadingCard>) -> Unit = { _, _ -> },
 ) {
     var sortType by remember { mutableStateOf(BookmarkSortType.RECENT) }
-    val bookmarkedCards = cards.filter { it.isBookmarked }
+    val bookmarkedCards = cards  // 이미 서버에서 필터된 북마크 카드
 
     Column(
         modifier = Modifier
@@ -75,7 +78,7 @@ fun LibraryBookmarkScreen(
                         painter = painterResource(R.drawable.ic_back),
                         contentDescription = "뒤로 가기",
                         tint = BookiiBookiiTheme.colors.grey900,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(32.dp),
                     )
                 }
                 Text(text = "북마크", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
@@ -104,14 +107,14 @@ fun LibraryBookmarkScreen(
                     text = "최신순",
                     style = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
                     color = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
-                    modifier = Modifier.clickable { sortType = BookmarkSortType.RECENT },
+                    modifier = Modifier.clickable { sortType = BookmarkSortType.RECENT; onSortChange(true) },
                 )
                 Text(text = " | ", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey300)
                 Text(
                     text = "과거순",
                     style = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
                     color = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
-                    modifier = Modifier.clickable { sortType = BookmarkSortType.OLDEST },
+                    modifier = Modifier.clickable { sortType = BookmarkSortType.OLDEST; onSortChange(false) },
                 )
             }
         }
@@ -122,6 +125,7 @@ fun LibraryBookmarkScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
+                .navigationBarsPadding()
                 .padding(top = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -171,7 +175,7 @@ private fun BookmarkCardItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ProfilePlaceholder(modifier = Modifier.size(24.dp))
+                    ProfilePlaceholder(imageUrl = card.creatorProfileImageUrl, modifier = Modifier.size(24.dp))
                     Text(text = card.username, style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey800)
                 }
                 Box(
@@ -205,13 +209,24 @@ private fun BookmarkCardItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_heart_fill),
-                    contentDescription = null,
-                    tint = BookiiBookiiTheme.colors.uiPointRed,
-                    modifier = Modifier.size(20.dp),
+                // 리액션 아이콘
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+                    card.reactionCounts.filter { it.value > 0 }.keys.forEach { apiKey ->
+                        com.bookiibookii.bookiibookii.library.ui.reactionIconByApiKey[apiKey]?.let { iconRes ->
+                            Icon(
+                                painter = painterResource(iconRes),
+                                contentDescription = null,
+                                tint = BookiiBookiiTheme.colors.uiMain,
+                                modifier = Modifier.size(13.dp),
+                            )
+                        }
+                    }
+                }
+                Text(
+                    text = if (card.page.isNotBlank() && card.page != "0") "p.${card.page}" else "",
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey400,
                 )
-                Text(text = card.page, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400)
             }
         }
 
@@ -222,7 +237,16 @@ private fun BookmarkCardItem(
                     .fillMaxWidth()
                     .weight(1f)
                     .background(BookiiBookiiTheme.colors.grey200),
-            )
+            ) {
+                if (!card.imageUrl.isNullOrBlank()) {
+                    coil.compose.AsyncImage(
+                        model              = card.imageUrl,
+                        contentDescription = null,
+                        contentScale       = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier           = Modifier.matchParentSize(),
+                    )
+                }
+            }
             ReadingCardType.QUOTE -> Box(
                 modifier = Modifier
                     .fillMaxWidth()

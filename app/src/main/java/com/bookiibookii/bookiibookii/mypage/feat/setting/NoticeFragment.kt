@@ -4,13 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.mypage.ui.setting.NoticeScreen
@@ -57,7 +57,7 @@ class NoticeFragment : BaseMypageFragment() {
             viewModel.eventFlow.collect { event ->
                 when (event) {
                     is SettingViewModel.Event.ShowToast ->
-                        Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
                     else -> Unit
                 }
             }

@@ -8,6 +8,7 @@ import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.PartnerDeliveryResponseDTO
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
 import com.bookiibookii.bookiibookii.tracker.model.toCardModel
@@ -25,6 +26,10 @@ class TrackerMainViewModel(
 
     private val _deliveryAddress = MutableStateFlow<DeliveryAddressResDTO?>(null)
     val deliveryAddress: StateFlow<DeliveryAddressResDTO?> = _deliveryAddress
+
+    // 상대방 운송장 정보 (운송장 정보 확인 다이얼로그용)
+    private val _partnerDelivery = MutableStateFlow<PartnerDeliveryResponseDTO?>(null)
+    val partnerDelivery: StateFlow<PartnerDeliveryResponseDTO?> = _partnerDelivery
 
     // 약속 장소: "나의 희망교환장소 불러오기"로 채워지는 대표 장소
     private val _meetingPlace = MutableStateFlow<ExchangeAddress?>(null)
@@ -155,6 +160,41 @@ class TrackerMainViewModel(
         viewModelScope.launch {
             try {
                 val res = repository.updateMyDeliveryAddress(groupId, request)
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    onSuccess()
+                    load()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
+    }
+
+    // 상대방 운송장 정보 조회 후 다이얼로그 표시
+    fun loadPartnerDelivery(groupId: Long, onLoaded: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = repository.fetchPartnerDelivery(groupId)
+                val body = res.body()
+                if (res.isSuccessful && body?.isSuccess == true) {
+                    _partnerDelivery.value = body.result
+                    onLoaded()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
+    }
+
+    fun clearPartnerDelivery() {
+        _partnerDelivery.value = null
+    }
+
+    // 상대방 운송장 수령 확인
+    fun confirmReceive(groupId: Long, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = repository.confirmPartnerReceive(groupId)
                 if (res.isSuccessful && res.body()?.isSuccess == true) {
                     onSuccess()
                     load()

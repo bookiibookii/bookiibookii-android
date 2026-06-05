@@ -216,7 +216,8 @@ internal fun ProfileShareCardContent(
         bookCount == 6 -> Pair(3, 3)
         else -> Pair(3, minOf(bookCount - 3, 4))
     }
-    val maxRowCount = maxOf(row1Count, row2Count).coerceAtLeast(1)
+    // 1권도 7권(최대 4열) 기준과 동일 크기로 고정
+    val maxRowCount = maxOf(row1Count, row2Count, 4)
 
     Column(modifier = Modifier.fillMaxWidth().background(cardBg)) {
         // Logo

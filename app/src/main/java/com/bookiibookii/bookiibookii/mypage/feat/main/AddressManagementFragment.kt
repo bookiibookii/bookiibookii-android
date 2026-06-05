@@ -4,13 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.mypage.ui.main.AddressManagementScreen
 import com.bookiibookii.bookiibookii.mypage.vm.AddressViewModel
@@ -35,6 +35,7 @@ class AddressManagementFragment : BaseMypageFragment() {
                 AddressManagementScreen(
                     deliveries = deliveries,
                     exchanges = exchanges,
+                    initialTabIndex = arguments?.getInt(ARG_INITIAL_TAB) ?: 0,
                     onBackClick = { parentFragmentManager.popBackStack() },
                     onFetchDeliveries = { viewModel.fetchDeliveries() },
                     onFetchExchanges = { viewModel.fetchExchanges() },
@@ -59,9 +60,18 @@ class AddressManagementFragment : BaseMypageFragment() {
             viewModel.eventFlow.collect { event ->
                 when (event) {
                     is AddressViewModel.Event.ShowToast ->
-                        Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                        requireContext().showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
                 }
             }
+        }
+    }
+
+    companion object {
+        // 0 = 배송지, 1 = 희망 교환 장소
+        private const val ARG_INITIAL_TAB = "initialTab"
+
+        fun newInstance(initialTab: Int) = AddressManagementFragment().apply {
+            arguments = Bundle().apply { putInt(ARG_INITIAL_TAB, initialTab) }
         }
     }
 }

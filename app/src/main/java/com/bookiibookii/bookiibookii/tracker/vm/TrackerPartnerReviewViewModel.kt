@@ -38,8 +38,12 @@ class TrackerPartnerReviewViewModel(
                             groupName = dto?.groupName.orEmpty(),
                             myNickname = dto?.myBook?.currentReaderNickname.orEmpty(),
                             myBookTitle = dto?.myBook?.title.orEmpty(),
+                            myBookCoverUrl = dto?.myBook?.image,
+                            myProfileImageUrl = dto?.myBook?.currentReaderProfileImageUrl,
                             partnerNickname = dto?.partnerBook?.currentReaderNickname.orEmpty(),
                             partnerBookTitle = dto?.partnerBook?.title.orEmpty(),
+                            partnerBookCoverUrl = dto?.partnerBook?.image,
+                            partnerProfileImageUrl = dto?.partnerBook?.currentReaderProfileImageUrl,
                             loading = false,
                         )
                     }

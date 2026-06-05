@@ -70,7 +70,9 @@ fun GroupJoinRequestRoute(
                 is JoinRequestViewModel.Event.ShowError ->
                     context.showCustomToast(event.message, isSuccess = false)
                 is JoinRequestViewModel.Event.Applied,
-                is JoinRequestViewModel.Event.Canceled -> Unit
+                is JoinRequestViewModel.Event.Canceled,
+                is JoinRequestViewModel.Event.AddressReady,
+                is JoinRequestViewModel.Event.AddressMissing -> Unit
             }
         }
     }

@@ -60,8 +60,11 @@ private const val PHOTO_MEMO_MAX = 150
 @Composable
 fun LibraryAddCardScreen(
     mode: AddCardMode = AddCardMode.TEXT,
+    selectedImageUri: android.net.Uri? = null,
+    onImagePick: () -> Unit = {},      // 갤러리
+    onImageCapture: () -> Unit = {},   // 카메라
     onBackClick: () -> Unit = {},
-    onSubmit: () -> Unit = {},
+    onSubmit: (page: Int, quotation: String, memo: String) -> Unit = { _, _, _ -> },
 ) {
     var quote by remember { mutableStateOf("") }
     var page by remember { mutableStateOf("") }
@@ -97,7 +100,7 @@ fun LibraryAddCardScreen(
                         painter = painterResource(R.drawable.ic_back),
                         contentDescription = "뒤로 가기",
                         tint = BookiiBookiiTheme.colors.grey900,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(32.dp),
                     )
                 }
                 Text(
@@ -158,12 +161,13 @@ fun LibraryAddCardScreen(
                         required = false,
                         value = memo,
                         onValueChange = { if (it.length <= memoMax) memo = it },
-                        placeholder = "어떤 책을 읽어볼까요?",
+                        placeholder = "메모를 입력해주세요.",
                         maxLength = memoMax,
                     )
                 }
                 AddCardMode.PHOTO -> {
                     // 사진 업로드 영역
+                    var showPhotoSheet by remember { mutableStateOf(false) }
                     Column {
                         Box(
                             modifier = Modifier
@@ -172,25 +176,41 @@ fun LibraryAddCardScreen(
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(BookiiBookiiTheme.colors.grey200)
                                 .border(1.dp, BookiiBookiiTheme.colors.grey300, RoundedCornerShape(20.dp))
-                                .clickable { /* 갤러리 열기 */ },
+                                .clickable { showPhotoSheet = true },
                             contentAlignment = Alignment.Center,
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_upload),
+                            if (selectedImageUri != null) {
+                                coil.compose.AsyncImage(
+                                    model              = selectedImageUri,
                                     contentDescription = null,
-                                    tint = BookiiBookiiTheme.colors.grey600,
-                                    modifier = Modifier.size(24.dp),
+                                    contentScale       = androidx.compose.ui.layout.ContentScale.Crop,
+                                    modifier           = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp)),
                                 )
-                                Text(
-                                    text = "사진 업로드",
-                                    style = BookiiBookiiTheme.typography.regular14,
-                                    color = BookiiBookiiTheme.colors.grey600,
-                                )
+                            } else {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_upload),
+                                        contentDescription = null,
+                                        tint = BookiiBookiiTheme.colors.grey600,
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                    Text(
+                                        text = "사진 업로드",
+                                        style = BookiiBookiiTheme.typography.regular14,
+                                        color = BookiiBookiiTheme.colors.grey600,
+                                    )
+                                }
                             }
+                        }
+                        if (showPhotoSheet) {
+                            CardImagePickerBottomSheet(
+                                onCamera  = { onImageCapture(); showPhotoSheet = false },
+                                onGallery = { onImagePick();   showPhotoSheet = false },
+                                onDismiss = { showPhotoSheet = false },
+                            )
                         }
                     }
                     // 페이지 (필수)
@@ -213,7 +233,7 @@ fun LibraryAddCardScreen(
                         required = false,
                         value = memo,
                         onValueChange = { if (it.length <= memoMax) memo = it },
-                        placeholder = "어떤 책을 읽어볼까요?",
+                        placeholder = "메모를 입력해주세요.",
                         maxLength = memoMax,
                     )
                 }
@@ -259,7 +279,7 @@ fun LibraryAddCardScreen(
                             pageError = true
                             valid = false
                         }
-                        if (valid) onSubmit()
+                        if (valid) onSubmit(page.toIntOrNull() ?: 0, quote, memo)
                     },
                 contentAlignment = Alignment.Center,
             ) {

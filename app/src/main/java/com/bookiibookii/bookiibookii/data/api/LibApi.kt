@@ -1,25 +1,20 @@
 package com.bookiibookii.bookiibookii.data.api
 
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
-import com.bookiibookii.bookiibookii.data.model.library.BookmarkListResponse
-import com.bookiibookii.bookiibookii.data.model.library.BookmarkToggleResponse
-import com.bookiibookii.bookiibookii.data.model.library.CardDetailResponse
-import com.bookiibookii.bookiibookii.data.model.library.CardOperationResponse
-import com.bookiibookii.bookiibookii.data.model.library.CommentListResponse
-import com.bookiibookii.bookiibookii.data.model.library.CompleteReadingResponse
-import com.bookiibookii.bookiibookii.data.model.library.CreateCardRequest
-import com.bookiibookii.bookiibookii.data.model.library.CreateCardResponse
-import com.bookiibookii.bookiibookii.data.model.library.GroupCardListResponse
-import com.bookiibookii.bookiibookii.data.model.library.LibraryResponse
-import com.bookiibookii.bookiibookii.data.model.library.PostCommentRequest
-import com.bookiibookii.bookiibookii.data.model.library.PostCommentResponse
-import com.bookiibookii.bookiibookii.data.model.library.RelayBookReviewRequest
-import com.bookiibookii.bookiibookii.data.model.library.RelayReviewRequest
-import com.bookiibookii.bookiibookii.data.model.library.ReviewRequest
+import com.bookiibookii.bookiibookii.data.model.library.BookResult
+import com.bookiibookii.bookiibookii.data.model.library.BookReviewUpsertDTO
+import com.bookiibookii.bookiibookii.data.model.library.GroupReviewsResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.MemberCardBookmarkResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.MemberCardCreateRequestDTO
+import com.bookiibookii.bookiibookii.data.model.library.MemberCardCreateResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.MemberCardListResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.MemberCardReactionToggleRequestDTO
+import com.bookiibookii.bookiibookii.data.model.library.MemberCardReactionToggleResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.MemberCardResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.MemberCardUpdateRequestDTO
+import com.bookiibookii.bookiibookii.data.model.library.MemberReviewCreateDTO
+import com.bookiibookii.bookiibookii.data.model.library.PresignedUrlResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.TrackerResponse
-import com.bookiibookii.bookiibookii.data.model.library.UpdateCardRequest
-import com.bookiibookii.bookiibookii.data.model.mypage.RelayReviewResponse
-import com.bookiibookii.bookiibookii.data.model.user.PresignedUrlResult
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -27,98 +22,100 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface LibApi {
 
-    // Library
-    @GET("api/library/books")
-    suspend fun getLibraryBooks(): Response<LibraryResponse>
+    // ── Library (멤버북) ───────────────────────────────────────────────────────
 
-    @DELETE("api/library/{userBookId}")
-    suspend fun deleteGroup(
-        @Path("userBookId") userBookId: Int
+    @GET("api/library/memberbooks")
+    suspend fun getLibraryBooks(): Response<ApiResponse<List<BookResult>>>
+
+    @GET("api/library/memberbooks/search")
+    suspend fun searchLibraryBooks(
+        @Query("keyword") keyword: String
+    ): Response<ApiResponse<List<BookResult>>>
+
+    @DELETE("api/library/memberbooks/{memberBookId}")
+    suspend fun deleteMemberBook(
+        @Path("memberBookId") memberBookId: Int
     ): Response<ApiResponse<String>>
 
-    // Cards
-    @GET("api/cards/detail/{cardId}")
-    suspend fun getCardDetail(
-        @Path("cardId") cardId: Long
-    ): Response<CardDetailResponse>
+    // ── Cards ──────────────────────────────────────────────────────────────────
 
-    @GET("api/cards/{cardId}/comments")
-    suspend fun getCardComments(
-        @Path("cardId") cardId: Long
-    ): Response<CommentListResponse>
-
-    @GET("api/cards/group/{groupId}")
+    @GET("api/member-books/group/{groupId}/cards")
     suspend fun getGroupCards(
         @Path("groupId") groupId: Int
-    ): Response<GroupCardListResponse>
+    ): Response<ApiResponse<MemberCardListResponseDTO>>
 
-    @POST("api/cards/{cardId}/comments")
-    suspend fun postCardComment(
-        @Path("cardId") cardId: Long,
-        @Body request: PostCommentRequest
-    ): Response<PostCommentResponse>
+    @GET("api/member-books/cards/detail/{cardId}")
+    suspend fun getCardDetail(
+        @Path("cardId") cardId: Long
+    ): Response<ApiResponse<MemberCardResponseDTO>>
 
-    @POST("api/cards/{userBookId}/presigned-url")
+    @GET("api/member-books/cards/bookmarks")
+    suspend fun getBookmarkedCards(): Response<ApiResponse<List<MemberCardResponseDTO>>>
+
+    @POST("api/member-books/{memberBookId}/cards/presigned-url")
     suspend fun postPresignedUrl(
-        @Path("userBookId") userBookId: Int
-    ): Response<ApiResponse<PresignedUrlResult>>
+        @Path("memberBookId") memberBookId: Int
+    ): Response<ApiResponse<PresignedUrlResponseDTO>>
 
-    @POST("api/cards/{userBookId}")
+    @POST("api/member-books/{memberBookId}/cards")
     suspend fun createCard(
-        @Path("userBookId") userBookId: Int,
-        @Body request: CreateCardRequest
-    ): Response<CreateCardResponse>
+        @Path("memberBookId") memberBookId: Int,
+        @Body request: MemberCardCreateRequestDTO
+    ): Response<ApiResponse<MemberCardCreateResponseDTO>>
 
-    @PATCH("api/cards/{cardId}")
+    @PATCH("api/member-books/cards/{cardId}")
     suspend fun updateCard(
         @Path("cardId") cardId: Long,
-        @Body request: UpdateCardRequest
-    ): Response<CardOperationResponse>
+        @Body request: MemberCardUpdateRequestDTO
+    ): Response<ApiResponse<MemberCardResponseDTO>>
 
-    @PATCH("api/cards/{cardId}/bookmark")
+    @PATCH("api/member-books/cards/{cardId}/bookmark")
     suspend fun toggleBookmark(
         @Path("cardId") cardId: Long
-    ): Response<BookmarkToggleResponse>
+    ): Response<ApiResponse<MemberCardBookmarkResponseDTO>>
 
-    @GET("api/cards/bookmarks")
-    suspend fun getBookmarkedCards(): Response<BookmarkListResponse>
+    @PATCH("api/member-books/cards/{cardId}/reactions")
+    suspend fun toggleReaction(
+        @Path("cardId") cardId: Long,
+        @Body request: MemberCardReactionToggleRequestDTO
+    ): Response<ApiResponse<MemberCardReactionToggleResponseDTO>>
 
-    @DELETE("api/cards/{cardId}")
+    @DELETE("api/member-books/cards/{cardId}")
     suspend fun deleteCard(
         @Path("cardId") cardId: Long
     ): Response<ApiResponse<String>>
 
-    // Reviews
-    @POST("api/reviews/together/{userBookId}")
-    suspend fun postBookReview(
-        @Path("userBookId") userBookId: Int,
-        @Body request: ReviewRequest
-    ): Response<ApiResponse<String>>
+    // ── Reviews ────────────────────────────────────────────────────────────────
 
-    @GET("/api/reviews/me/relay")
-    suspend fun getRelayReviews(): Response<RelayReviewResponse>
-
-    @POST("/api/reviews/relay/{userBookId}")
-    suspend fun postRelayReview(
-        @Path("userBookId") userBookId: Int,
-        @Body request: RelayReviewRequest
-    ): Response<ApiResponse<String>>
-
-    @POST("/api/reviews/relay/{userBookId}/book")
-    suspend fun postRelayBookReview(
-        @Path("userBookId") userBookId: Int,
-        @Body request: RelayBookReviewRequest
-    ): Response<ApiResponse<String>>
-
-    // 트래커 / 완독 (라이브러리에서 사용)
-    @GET("/api/groups/me/trackers")
-    suspend fun getMyTrackers(): Response<TrackerResponse>
-
-    @PATCH("/api/groups/{groupId}/together/members/me/complete")
-    suspend fun completeReading(
+    @GET("api/groups/{groupId}/reviews")
+    suspend fun getGroupReviews(
         @Path("groupId") groupId: Int
-    ): Response<CompleteReadingResponse>
+    ): Response<ApiResponse<GroupReviewsResponseDTO>>
+
+    @POST("api/groups/{groupId}/reviews")
+    suspend fun postBookReview(
+        @Path("groupId") groupId: Int,
+        @Body request: BookReviewUpsertDTO
+    ): Response<ApiResponse<String>>
+
+    @POST("api/groups/{groupId}/member-reviews")
+    suspend fun postMemberReview(
+        @Path("groupId") groupId: Int,
+        @Body request: MemberReviewCreateDTO
+    ): Response<ApiResponse<String>>
+
+    @PATCH("api/groups/{groupId}/reviews/me")
+    suspend fun updateMyReview(
+        @Path("groupId") groupId: Int,
+        @Body request: BookReviewUpsertDTO
+    ): Response<ApiResponse<String>>
+
+    // ── Trackers ───────────────────────────────────────────────────────────────
+
+    @GET("api/me/trackers")
+    suspend fun getMyTrackers(): Response<TrackerResponse>
 }

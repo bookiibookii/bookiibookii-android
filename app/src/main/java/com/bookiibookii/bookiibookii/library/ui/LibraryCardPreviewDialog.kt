@@ -65,8 +65,8 @@ private fun QuoteCardPreview(quote: String, memo: String) {
                 .background(
                     Brush.linearGradient(
                         colors = listOf(Color(0xFFFF4E18), Color(0xFFFF7618), Color(0xFFFFC9A4)),
-                        start = Offset(0f, Float.POSITIVE_INFINITY),
-                        end = Offset(Float.POSITIVE_INFINITY, 0f),
+                        start  = Offset(0f, 0f),
+                        end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
                     )
                 ),
         ) {
@@ -94,12 +94,15 @@ private fun QuoteCardPreview(quote: String, memo: String) {
                 .weight(BOTTOM_WEIGHT / (TOP_WEIGHT + BOTTOM_WEIGHT))
                 .padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
-            Text(
-                text = memo.ifBlank { "메모를 입력해주세요." },
-                style = BookiiBookiiTheme.typography.regular16,
-                color = BookiiBookiiTheme.colors.grey800,
-                overflow = TextOverflow.Ellipsis,
-            )
+            // 메모가 없으면 아무것도 표시하지 않음
+            if (memo.isNotBlank()) {
+                Text(
+                    text = memo,
+                    style = BookiiBookiiTheme.typography.regular16,
+                    color = BookiiBookiiTheme.colors.grey800,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
@@ -122,12 +125,14 @@ private fun PhotoCardPreview(memo: String) {
                 .weight(BOTTOM_WEIGHT / (TOP_WEIGHT + BOTTOM_WEIGHT))
                 .padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
-            Text(
-                text = memo.ifBlank { "메모를 입력해주세요." },
-                style = BookiiBookiiTheme.typography.regular16,
-                color = BookiiBookiiTheme.colors.grey800,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (memo.isNotBlank()) {
+                Text(
+                    text = memo,
+                    style = BookiiBookiiTheme.typography.regular16,
+                    color = BookiiBookiiTheme.colors.grey800,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

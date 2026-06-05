@@ -75,6 +75,7 @@ import com.bookiibookii.bookiibookii.group.model.GroupCommentUiState
 import com.bookiibookii.bookiibookii.group.vm.GroupCommentViewModel
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.ui.component.DeletePopover
+import com.bookiibookii.bookiibookii.ui.component.bottomSheetTopShadow
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -129,7 +130,7 @@ fun GroupCommentBottomSheetRoute(
 // 그룹 상세 화면의 댓글 바텀시트
 // - expanded == false → drag handle + 헤더 + 입력 필드만 보임
 // - expanded == true → drag handle + 헤더 + 댓글 리스트 + 입력 필드
-// - 입력 필드는 Box.align(BottomCenter) + imePadding으로 키보드 위에 항상 떠 있음 (댓글 위에 오버레이)
+// - 입력 필드는 키보드 위에 항상 떠 있음 (댓글 위에 오버레이)
 @Composable
 fun GroupCommentBottomSheetContent(
     uiState: GroupCommentUiState,
@@ -158,10 +159,12 @@ fun GroupCommentBottomSheetContent(
         }
     }
 
+    val sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .bottomSheetTopShadow(cornerRadius = 20.dp)
+            .clip(sheetShape)
             .background(BookiiBookiiTheme.colors.white),
     ) {
         Column(
@@ -547,8 +550,8 @@ private fun CommentInputField(
 // 입력 필드 좌측 잠금 칩 — secret 토글 (active일 때 main 컬러)
 @Composable
 private fun LockChip(active: Boolean, onClick: () -> Unit) {
-    val bg = if (active) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200
-    val tint = if (active) BookiiBookiiTheme.colors.white else BookiiBookiiTheme.colors.grey500
+    val bg = if (active) BookiiBookiiTheme.colors.uiMainSubPale else BookiiBookiiTheme.colors.grey200
+    val tint = if (active) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey500
     Box(
         modifier = Modifier
             .size(40.dp)

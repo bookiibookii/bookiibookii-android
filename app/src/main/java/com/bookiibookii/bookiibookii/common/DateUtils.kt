@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.common
 
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -15,17 +16,22 @@ object DateUtils {
     // 서버 시간 문자열 → Instant
     // "...Z"/offset 있으면 Instant.parse, 없으면 UTC LocalDateTime으로 간주
     private fun parseInstant(serverTime: String): Instant = try {
-        Instant.parse(serverTime)
-    } catch (e: Exception) {
-        LocalDateTime.parse(serverTime).toInstant(ZoneOffset.UTC)
-    }
+        Instant.parse(serverTime)                                          // ISO-8601 with Z
+    } catch (_: Exception) { try {
+        LocalDateTime.parse(serverTime).toInstant(ZoneOffset.UTC)         // yyyy-MM-ddTHH:mm:ss
+    } catch (_: Exception) {
+        java.time.LocalDate.parse(serverTime).atStartOfDay().toInstant(ZoneOffset.UTC) // yyyy-MM-dd
+    } }
 
     fun formatDate(dateString: String?): String {
-        if (dateString.isNullOrBlank()) return "0000. 00. 00."
+        if (dateString.isNullOrBlank()) return ""
+        // 서버가 이미 "yyyy. MM. dd." 형태로 보내는 경우 그대로 반환
+        if (dateString.matches(Regex("\\d{4}\\. \\d{2}\\. \\d{2}\\."))) return dateString
         return try {
             formatter.format(parseInstant(dateString))
         } catch (e: Exception) {
-            "0000. 00. 00."
+            // 파싱 실패 시 원본 문자열 반환 (빈 문자열보다 낫기 때문)
+            dateString
         }
     }
 

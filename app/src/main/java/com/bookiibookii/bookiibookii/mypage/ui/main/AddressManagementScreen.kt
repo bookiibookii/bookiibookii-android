@@ -67,6 +67,7 @@ import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddressRequest
 fun AddressManagementScreen(
     deliveries: List<DeliveryAddress> = emptyList(),
     exchanges: List<ExchangeAddress> = emptyList(),
+    initialTabIndex: Int = 0,
     onBackClick: () -> Unit = {},
     onFetchDeliveries: () -> Unit = {},
     onFetchExchanges: () -> Unit = {},
@@ -77,7 +78,7 @@ fun AddressManagementScreen(
     onUpdateExchange: (Long, ExchangeAddressRequest, () -> Unit) -> Unit = { _, _, _ -> },
     onDeleteExchange: (Long) -> Unit = {},
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by remember { mutableStateOf(initialTabIndex) }
     var showDeliverySheet by remember { mutableStateOf(false) }
     var showExchangeSheet by remember { mutableStateOf(false) }
     var editDelivery by remember { mutableStateOf<DeliveryAddress?>(null) }
@@ -132,7 +133,7 @@ fun AddressManagementScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(56.dp)
+                                .height(48.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(if (isSelected) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.white)
                                 .then(
@@ -478,10 +479,25 @@ private fun DeliveryBottomSheet(
     var isPrimary by remember(editTarget) { mutableStateOf(editTarget?.isDefault ?: false) }
     var showAddressSearch by remember { mutableStateOf(false) }
 
+    var phoneError by remember { mutableStateOf(false) }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = BookiiBookiiTheme.colors.white,
+        dragHandle = {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(44.dp).height(4.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(BookiiBookiiTheme.colors.grey200),
+                )
+            }
+        },
     ) {
         Column(
             modifier = Modifier
@@ -550,6 +566,12 @@ private fun DeliveryBottomSheet(
                     text = "저장",
                     style = BottomSheetBtnStyle.Dark,
                     onClick = {
+                        val phoneDigits = phone.filter { it.isDigit() }
+                        if (phoneDigits.length != 11 || !phoneDigits.startsWith("010")) {
+                            phoneError = true
+                            return@BottomSheetTwoBtnShort
+                        }
+                        phoneError = false
                         onSave(DeliveryAddressRequest(
                             placeName = nickname,
                             address = address,
@@ -597,6 +619,19 @@ private fun ExchangePlaceBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = BookiiBookiiTheme.colors.white,
+        dragHandle = {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(44.dp).height(4.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(BookiiBookiiTheme.colors.grey200),
+                )
+            }
+        },
     ) {
         Column(
             modifier = Modifier
@@ -827,5 +862,40 @@ private fun AddressSearchField(
 @Preview(showBackground = true, widthDp = 412)
 @Composable
 private fun AddressManagementScreenPreview() {
-    AddressManagementScreen()
+    BookiiBookiiTheme {
+        AddressManagementScreen(
+            deliveries = listOf(
+                DeliveryAddress(
+                    id = 1L,
+                    placeName = "우리집",
+                    address = "서울특별시 강남구 테헤란로 123",
+                    zipCode = "06234",
+                    addressDetail = "456동 789호",
+                    receiverName = "북이",
+                    phone = "010-1234-5678",
+                    isDefault = true,
+                ),
+                DeliveryAddress(
+                    id = 2L,
+                    placeName = "회사",
+                    address = "서울특별시 중구 세종대로 110",
+                    zipCode = "04524",
+                    addressDetail = null,
+                    receiverName = "북이",
+                    phone = "010-9876-5432",
+                    isDefault = false,
+                ),
+            ),
+            exchanges = listOf(
+                ExchangeAddress(
+                    id = 1L,
+                    placeName = "강남역 11번 출구",
+                    address = "서울특별시 강남구 강남대로 396",
+                    zipCode = "06241",
+                    addressDetail = "스타벅스 앞",
+                    isDefault = true,
+                ),
+            ),
+        )
+    }
 }

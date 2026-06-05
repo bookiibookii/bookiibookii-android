@@ -43,8 +43,8 @@ class LibraryViewModel : ViewModel() {
             SortType.TITLE -> original.sortedBy { it.title }
             SortType.RATING_HIGH -> original.sortedByDescending { it.rating }
             SortType.RATING_LOW -> original.sortedBy { it.rating }
-            SortType.RECENT -> original.sortedByDescending { it.id } // 최신순
-            SortType.OLD -> original.sortedBy { it.id }             // 오래된순
+            SortType.RECENT -> original.sortedByDescending { it.memberBookId }
+            SortType.OLD -> original.sortedBy { it.memberBookId }
         }
 
         bookList.value = sorted
