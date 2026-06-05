@@ -57,8 +57,8 @@ fun TrackerNavHost(
                 onCardClick = { groupId ->
                     navController.navigate(TrackerDestinations.detail(groupId))
                 },
-                onNavigateBookReview = { groupId ->
-                    navController.navigate(TrackerDestinations.bookReview(groupId))
+                onNavigateBookReview = { groupId, edit ->
+                    navController.navigate(TrackerDestinations.bookReview(groupId, edit))
                 },
                 onNavigatePartnerReview = { groupId ->
                     navController.navigate(TrackerDestinations.partnerReview(groupId))
@@ -88,8 +88,8 @@ fun TrackerNavHost(
             TrackerDetailRoute(
                 groupId = groupId,
                 onBackClick = { navController.popBackStack() },
-                onNavigateBookReview = {
-                    navController.navigate(TrackerDestinations.bookReview(groupId))
+                onNavigateBookReview = { edit ->
+                    navController.navigate(TrackerDestinations.bookReview(groupId, edit))
                 },
                 onNavigatePartnerReview = {
                     navController.navigate(TrackerDestinations.partnerReview(groupId))
@@ -112,13 +112,20 @@ fun TrackerNavHost(
                 navArgument(TrackerDestinations.BOOK_REVIEW_ARG_GROUP_ID) {
                     type = NavType.LongType
                 },
+                navArgument(TrackerDestinations.BOOK_REVIEW_ARG_EDIT) {
+                    type = NavType.BoolType
+                    defaultValue = false
+                },
             ),
         ) { backStackEntry ->
             val groupId = backStackEntry.arguments
                 ?.getLong(TrackerDestinations.BOOK_REVIEW_ARG_GROUP_ID) ?: return@composable
+            val isEdit = backStackEntry.arguments
+                ?.getBoolean(TrackerDestinations.BOOK_REVIEW_ARG_EDIT) ?: false
             TrackerBookReviewRoute(
                 groupId = groupId,
                 onBackClick = { navController.popBackStack() },
+                isEdit = isEdit,
             )
         }
         composable(

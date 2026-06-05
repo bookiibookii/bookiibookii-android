@@ -40,7 +40,7 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 fun TrackerDetailRoute(
     groupId: Long,
     onBackClick: () -> Unit,
-    onNavigateBookReview: () -> Unit,
+    onNavigateBookReview: (edit: Boolean) -> Unit,
     onNavigatePartnerReview: () -> Unit,
     onNavigateComment: (title: String) -> Unit = {},
     onNavigatePlaceSearch: () -> Unit = {},
@@ -104,7 +104,8 @@ fun TrackerDetailRoute(
             dispatchAction(
                 action = uiState.secondaryAction,
                 onRecordProgress = { showProgressDialog = true },
-                onWriteBookReview = onNavigateBookReview,
+                onWriteBookReview = { onNavigateBookReview(false) },
+                onEditBookReview = { onNavigateBookReview(true) },
                 onRegisterTrackingNumber = { showTrackingDialog = true },
                 onCheckDeliveryInfo = {
                     viewModel.loadDeliveryAddress { showDeliveryInfoDialog = true }
@@ -126,7 +127,8 @@ fun TrackerDetailRoute(
             dispatchAction(
                 action = uiState.primaryAction,
                 onRecordProgress = { showProgressDialog = true },
-                onWriteBookReview = onNavigateBookReview,
+                onWriteBookReview = { onNavigateBookReview(false) },
+                onEditBookReview = { onNavigateBookReview(true) },
                 onRegisterTrackingNumber = { showTrackingDialog = true },
                 onCheckDeliveryInfo = {
                     viewModel.loadDeliveryAddress { showDeliveryInfoDialog = true }
@@ -334,6 +336,7 @@ private inline fun dispatchAction(
     action: TrackerAction,
     onRecordProgress: () -> Unit,
     onWriteBookReview: () -> Unit,
+    onEditBookReview: () -> Unit,
     onRegisterTrackingNumber: () -> Unit,
     onCheckDeliveryInfo: () -> Unit,
     onRegisterMeeting: () -> Unit,
@@ -347,6 +350,7 @@ private inline fun dispatchAction(
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
         TrackerAction.WriteBookReview -> onWriteBookReview()
+        TrackerAction.EditBookReview -> onEditBookReview()
         TrackerAction.RegisterTrackingNumber -> onRegisterTrackingNumber()
         TrackerAction.CheckDeliveryInfo -> onCheckDeliveryInfo()
         TrackerAction.RegisterMeeting -> onRegisterMeeting()

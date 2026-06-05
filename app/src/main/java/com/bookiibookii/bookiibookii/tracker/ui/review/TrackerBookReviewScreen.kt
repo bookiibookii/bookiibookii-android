@@ -73,8 +73,9 @@ private fun nextScoreAfterClick(score: Int, index: Int): Int {
 fun TrackerBookReviewRoute(
     groupId: Long,
     onBackClick: () -> Unit,
+    isEdit: Boolean = false,
     viewModel: TrackerBookReviewViewModel = viewModel(
-        factory = TrackerBookReviewViewModel.factory(groupId)
+        factory = TrackerBookReviewViewModel.factory(groupId, isEdit)
     ),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()

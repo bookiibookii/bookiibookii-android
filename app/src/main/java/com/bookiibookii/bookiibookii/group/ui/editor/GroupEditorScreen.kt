@@ -33,6 +33,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
+import java.text.Normalizer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -330,6 +333,13 @@ private fun BookSearchSection(
 ) {
     var fieldSize by remember { mutableStateOf(IntSize.Zero) }
     val density = LocalDensity.current
+    // 커서 제어를 위해 TextFieldValue 사용. 외부 query 변경(도서 선택/초기화) 시 동기화하며 커서를 맨 뒤로
+    var fieldValue by remember { mutableStateOf(TextFieldValue(query)) }
+    LaunchedEffect(query) {
+        if (fieldValue.text != query) {
+            fieldValue = TextFieldValue(text = query, selection = TextRange(query.length))
+        }
+    }
     Column {
         FieldLabel(text = "도서 검색", required = true)
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -357,8 +367,19 @@ private fun BookSearchSection(
                         .clickable { onSearchClick() },
                 )
                 BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
+                    value = fieldValue,
+                    onValueChange = { newValue ->
+                        val oldLen = Normalizer.normalize(fieldValue.text, Normalizer.Form.NFD).length
+                        val newLen = Normalizer.normalize(newValue.text, Normalizer.Form.NFD).length
+                        if (newLen < oldLen) {
+                            // 한 글자라도 삭제하면 전부 삭제
+                            fieldValue = TextFieldValue("")
+                            onClearClick()
+                        } else {
+                            fieldValue = newValue
+                            onQueryChange(newValue.text)
+                        }
+                    },
                     singleLine = true,
                     textStyle = BookiiBookiiTheme.typography.regular16.copy(
                         color = BookiiBookiiTheme.colors.grey900,
@@ -369,7 +390,7 @@ private fun BookSearchSection(
                     modifier = Modifier.weight(1f),
                     decorationBox = { innerTextField ->
                         Box {
-                            if (query.isEmpty()) {
+                            if (fieldValue.text.isEmpty()) {
                                 Text(
                                     text = "어떤 책을 읽어볼까요?",
                                     style = BookiiBookiiTheme.typography.regular16,
