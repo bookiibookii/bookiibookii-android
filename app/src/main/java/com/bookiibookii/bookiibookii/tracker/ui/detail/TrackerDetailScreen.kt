@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.tracker.ui.detail
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -11,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
@@ -41,6 +43,9 @@ fun TrackerDetailRoute(
     onNavigateBookReview: () -> Unit,
     onNavigatePartnerReview: () -> Unit,
     onNavigateComment: (title: String) -> Unit = {},
+    onNavigatePlaceSearch: () -> Unit = {},
+    selectedPlace: PlaceSearchResult? = null,
+    onPlaceConsumed: () -> Unit = {},
     viewModel: TrackerDetailViewModel = viewModel(
         factory = TrackerDetailViewModel.factory(groupId)
     ),
@@ -50,6 +55,13 @@ fun TrackerDetailRoute(
     val partnerDelivery by viewModel.partnerDelivery.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
+
+    // 장소 검색 화면에서 선택한 결과를 약속 장소로 반영 (복귀 시 step 2 다이얼로그 유지됨)
+    LaunchedEffect(selectedPlace) {
+        val place = selectedPlace ?: return@LaunchedEffect
+        viewModel.setMeetingPlace(place)
+        onPlaceConsumed()
+    }
     var showProgressDialog by rememberSaveable { mutableStateOf(false) }
     var showTrackingDialog by rememberSaveable { mutableStateOf(false) }
     var showDeliveryInfoDialog by rememberSaveable { mutableStateOf(false) }
@@ -235,6 +247,7 @@ fun TrackerDetailRoute(
             address = meetingPlace?.address.orEmpty(),
             addressDetail = meetingAddressDetail,
             onAddressDetailChange = { meetingAddressDetail = it },
+            onSearchClick = onNavigatePlaceSearch,
             onLoadMyPlaceClick = { viewModel.loadMyExchangePlace() },
             onDismiss = {
                 meetingStep = 0
@@ -260,8 +273,8 @@ fun TrackerDetailRoute(
                         placeName = place.placeName,
                         address = place.address,
                         zipCode = place.zipCode,
-                        x = 0.0, // TODO: 카카오 검색 연동 시 실제 좌표
-                        y = 0.0, // TODO: 카카오 검색 연동 시 실제 좌표
+                        x = place.x,
+                        y = place.y,
                         addressDetail = meetingAddressDetail.ifBlank { null },
                         scheduledAt = meetingScheduledAt,
                     ) {

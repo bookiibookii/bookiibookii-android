@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +15,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
+import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
 import com.bookiibookii.bookiibookii.tracker.ui.comment.TrackerCommentRoute
 import com.bookiibookii.bookiibookii.tracker.ui.detail.TrackerDetailRoute
 import com.bookiibookii.bookiibookii.tracker.ui.main.TrackerMainRoute
@@ -43,7 +46,10 @@ fun TrackerNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
-        composable(TrackerDestinations.MAIN) {
+        composable(TrackerDestinations.MAIN) { entry ->
+            val selectedPlace by entry.savedStateHandle
+                .getStateFlow<PlaceSearchResult?>(TrackerDestinations.RESULT_SELECTED_PLACE, null)
+                .collectAsStateWithLifecycle()
             TrackerMainRoute(
                 onProfileClick = {},
                 onAlertClick = {},
@@ -57,6 +63,13 @@ fun TrackerNavHost(
                 onNavigatePartnerReview = { groupId ->
                     navController.navigate(TrackerDestinations.partnerReview(groupId))
                 },
+                onNavigatePlaceSearch = {
+                    navController.navigate(TrackerDestinations.PLACE_SEARCH)
+                },
+                selectedPlace = selectedPlace,
+                onPlaceConsumed = {
+                    entry.savedStateHandle[TrackerDestinations.RESULT_SELECTED_PLACE] = null
+                },
             )
         }
         composable(
@@ -69,6 +82,9 @@ fun TrackerNavHost(
         ) { backStackEntry ->
             val groupId = backStackEntry.arguments
                 ?.getLong(TrackerDestinations.DETAIL_ARG_GROUP_ID) ?: return@composable
+            val selectedPlace by backStackEntry.savedStateHandle
+                .getStateFlow<PlaceSearchResult?>(TrackerDestinations.RESULT_SELECTED_PLACE, null)
+                .collectAsStateWithLifecycle()
             TrackerDetailRoute(
                 groupId = groupId,
                 onBackClick = { navController.popBackStack() },
@@ -80,6 +96,13 @@ fun TrackerNavHost(
                 },
                 onNavigateComment = { title ->
                     navController.navigate(TrackerDestinations.comment(groupId, title))
+                },
+                onNavigatePlaceSearch = {
+                    navController.navigate(TrackerDestinations.PLACE_SEARCH)
+                },
+                selectedPlace = selectedPlace,
+                onPlaceConsumed = {
+                    backStackEntry.savedStateHandle[TrackerDestinations.RESULT_SELECTED_PLACE] = null
                 },
             )
         }
@@ -133,6 +156,18 @@ fun TrackerNavHost(
                 groupId = groupId,
                 title = title,
                 onBackClick = { navController.popBackStack() },
+            )
+        }
+        composable(TrackerDestinations.PLACE_SEARCH) {
+            PlaceSearchScreen(
+                onBackClick = { navController.popBackStack() },
+                onPlaceClick = { result ->
+                    // 선택 결과를 이전 화면(약속 다이얼로그)으로 반환하고 복귀
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(TrackerDestinations.RESULT_SELECTED_PLACE, result)
+                    navController.popBackStack()
+                },
             )
         }
     }

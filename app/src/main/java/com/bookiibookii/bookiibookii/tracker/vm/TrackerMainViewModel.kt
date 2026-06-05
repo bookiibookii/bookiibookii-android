@@ -3,12 +3,14 @@ package com.bookiibookii.bookiibookii.tracker.vm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddress
+import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.PartnerDeliveryResponseDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.toMeetingPlace
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
 import com.bookiibookii.bookiibookii.tracker.model.toCardModel
@@ -31,9 +33,9 @@ class TrackerMainViewModel(
     private val _partnerDelivery = MutableStateFlow<PartnerDeliveryResponseDTO?>(null)
     val partnerDelivery: StateFlow<PartnerDeliveryResponseDTO?> = _partnerDelivery
 
-    // 약속 장소: "나의 희망교환장소 불러오기"로 채워지는 대표 장소
-    private val _meetingPlace = MutableStateFlow<ExchangeAddress?>(null)
-    val meetingPlace: StateFlow<ExchangeAddress?> = _meetingPlace
+    // 약속 장소: 희망교환장소 불러오기 또는 카카오 검색으로 채워짐
+    private val _meetingPlace = MutableStateFlow<MeetingPlace?>(null)
+    val meetingPlace: StateFlow<MeetingPlace?> = _meetingPlace
 
     // 등록된 약속 정보 (약속 확인 조회)
     private val _meetingInfo = MutableStateFlow<MeetingResDTO?>(null)
@@ -51,12 +53,18 @@ class TrackerMainViewModel(
                 val body = res.body()
                 if (res.isSuccessful && body?.isSuccess == true) {
                     val list = body.result.orEmpty()
-                    _meetingPlace.value = list.firstOrNull { it.isDefault } ?: list.firstOrNull()
+                    val picked = list.firstOrNull { it.isDefault } ?: list.firstOrNull()
+                    _meetingPlace.value = picked?.toMeetingPlace()
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
             }
         }
+    }
+
+    // 카카오 검색에서 선택한 장소를 약속 장소로 채운다 (좌표 포함)
+    fun setMeetingPlace(result: PlaceSearchResult) {
+        _meetingPlace.value = result.toMeetingPlace()
     }
 
     fun clearMeetingPlace() {

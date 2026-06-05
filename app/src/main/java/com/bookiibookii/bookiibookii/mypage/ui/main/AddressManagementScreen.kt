@@ -693,6 +693,9 @@ private fun ExchangePlaceBottomSheet(
                             placeName = nickname,
                             address = placeAddress,
                             zipCode = zipCode,
+                            // TODO: 카카오 장소검색 연동 시 실제 좌표 전달 (현재 Daum 우편번호는 좌표 미제공)
+                            x = 0.0,
+                            y = 0.0,
                             addressDetail = detail.ifBlank { "" },
                         ))
                     },
@@ -892,6 +895,8 @@ private fun AddressManagementScreenPreview() {
                     placeName = "강남역 11번 출구",
                     address = "서울특별시 강남구 강남대로 396",
                     zipCode = "06241",
+                    x = 127.027621,
+                    y = 37.497942,
                     addressDetail = "스타벅스 앞",
                     isDefault = true,
                 ),
