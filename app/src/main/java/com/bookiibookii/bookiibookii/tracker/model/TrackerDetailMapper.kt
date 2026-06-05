@@ -22,6 +22,7 @@ fun TrackerDetailResDTO.toUiState(): TrackerDetailUiState {
         exchangeLabel = tradeType.toExchangeLabel(),
         primaryAction = primary,
         secondaryAction = secondary,
+        isHost = myRole == "HOST",
         steps = safeSteps.toUiSteps(dDayChip),
     )
 }

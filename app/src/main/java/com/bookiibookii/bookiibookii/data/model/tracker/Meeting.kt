@@ -16,6 +16,7 @@ data class MeetingResDTO(
     val meetingId: Long?,
     val exchangeRound: String?, // FIRST_EXCHANGE | RETURN_EXCHANGE
     val location: MeetingLocationDTO?,
+    val addressDetail: String?,
     val scheduledAt: String?,
     val createdBy: MeetingCreatedByDTO?,
 )

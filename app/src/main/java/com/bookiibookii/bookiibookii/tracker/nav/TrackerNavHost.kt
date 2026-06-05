@@ -65,6 +65,9 @@ fun TrackerNavHost(
                 onNavigatePartnerReview = { groupId ->
                     navController.navigate(TrackerDestinations.partnerReview(groupId))
                 },
+                onNavigateComment = { groupId, title ->
+                    navController.navigate(TrackerDestinations.comment(groupId, title))
+                },
                 onNavigatePlaceSearch = {
                     navController.navigate(TrackerDestinations.PLACE_SEARCH)
                 },
@@ -145,6 +148,10 @@ fun TrackerNavHost(
             TrackerPartnerReviewRoute(
                 groupId = groupId,
                 onBackClick = { navController.popBackStack() },
+                // 등록 완료 시 상세가 아니라 메인까지 되돌아감
+                onSubmitDone = {
+                    navController.popBackStack(TrackerDestinations.MAIN, inclusive = false)
+                },
             )
         }
         composable(

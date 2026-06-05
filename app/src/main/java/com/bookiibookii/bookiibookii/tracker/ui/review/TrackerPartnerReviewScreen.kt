@@ -50,6 +50,7 @@ private const val COMMENT_MAX_LENGTH = 20
 fun TrackerPartnerReviewRoute(
     groupId: Long,
     onBackClick: () -> Unit,
+    onSubmitDone: () -> Unit = onBackClick,
     viewModel: TrackerPartnerReviewViewModel = viewModel(
         factory = TrackerPartnerReviewViewModel.factory(groupId)
     ),
@@ -69,7 +70,7 @@ fun TrackerPartnerReviewRoute(
         partnerProfileImageUrl = uiState.partnerProfileImageUrl,
         onBackClick = onBackClick,
         onSubmit = { reaction, comment ->
-            viewModel.submitReview(reaction, comment, onSuccess = onBackClick)
+            viewModel.submitReview(reaction, comment, onSuccess = onSubmitDone)
         },
     )
 }

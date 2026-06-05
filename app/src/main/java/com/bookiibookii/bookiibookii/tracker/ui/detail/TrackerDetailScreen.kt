@@ -9,6 +9,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
@@ -58,6 +60,11 @@ fun TrackerDetailRoute(
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
 
+    // 하위 화면(서재/리뷰 등)에서 복귀할 때마다 상세 재조회
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.load()
+    }
+
     // 장소 검색 화면에서 선택한 결과를 약속 장소로 반영 (복귀 시 step 2 다이얼로그 유지됨)
     LaunchedEffect(selectedPlace) {
         val place = selectedPlace ?: return@LaunchedEffect
@@ -97,6 +104,9 @@ fun TrackerDetailRoute(
         exchangeLabel = uiState.exchangeLabel,
         secondaryActionLabel = uiState.secondaryAction.label,
         primaryActionLabel = uiState.primaryAction.label,
+        // 약속 등록은 호스트 전용 — 게스트면 비활성화
+        secondaryActionEnabled =
+            !(uiState.secondaryAction == TrackerAction.RegisterMeeting && !uiState.isHost),
         steps = uiState.steps,
         onBackClick = onBackClick,
         onMessageClick = { onNavigateComment(uiState.groupName) },
@@ -124,7 +134,9 @@ fun TrackerDetailRoute(
                 },
                 onConfirmReceive = { showReceiveConfirmDialog = true },
                 onWriteReadingCard = {
-                    viewModel.openReadingCard(groupId) { onNavigateLibraryDetail(it) }
+                    viewModel.openReadingCard(groupId, uiState.myProfile.bookTitle) {
+                        onNavigateLibraryDetail(it)
+                    }
                 },
             )
         },
@@ -150,7 +162,9 @@ fun TrackerDetailRoute(
                 },
                 onConfirmReceive = { showReceiveConfirmDialog = true },
                 onWriteReadingCard = {
-                    viewModel.openReadingCard(groupId) { onNavigateLibraryDetail(it) }
+                    viewModel.openReadingCard(groupId, uiState.myProfile.bookTitle) {
+                        onNavigateLibraryDetail(it)
+                    }
                 },
             )
         },
@@ -302,7 +316,7 @@ fun TrackerDetailRoute(
         TrackerDirectMeetingInfoDialog(
             scheduledAt = meeting.scheduledAt.orEmpty(),
             address = meeting.location?.address.orEmpty(),
-            addressDetail = meeting.location?.addressDetail.orEmpty(),
+            addressDetail = meeting.addressDetail.orEmpty(),
             onDismiss = {
                 showMeetingInfoDialog = false
                 viewModel.clearMeeting()
@@ -335,7 +349,10 @@ fun TrackerDetailRoute(
         TrackerDirectExchangeFailDialog(
             onDismiss = { showExchangeFailDialog = false },
             onReportClick = {}, // TODO: 신고하기 이동 로직 보류
-            onGoToCommentsClick = {}, // TODO: 댓글 바로가기 이동 로직 보류
+            onGoToCommentsClick = {
+                showExchangeFailDialog = false
+                onNavigateComment(uiState.groupName)
+            },
         )
     }
 }
@@ -394,6 +411,7 @@ fun TrackerDetailScreen(
     onSecondaryActionClick: () -> Unit,
     onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
+    secondaryActionEnabled: Boolean = true,
 ) {
     TrackerDetailContent(
         groupName = groupName,
@@ -414,6 +432,7 @@ fun TrackerDetailScreen(
         onSecondaryActionClick = onSecondaryActionClick,
         onPrimaryActionClick = onPrimaryActionClick,
         modifier = modifier,
+        secondaryActionEnabled = secondaryActionEnabled,
     )
 }
 

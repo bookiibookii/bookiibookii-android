@@ -73,14 +73,15 @@ class TrackerMainViewModel(
         _meetingPlace.value = null
     }
 
-    // "독서카드 작성" — groupId로 서재 책(memberBookId 등)을 해석해 콜백. 트래커엔 memberBookId가 없어서 필요
-    fun openReadingCard(groupId: Long, onResolved: (ReadingCardTarget) -> Unit) {
+    // "독서카드 작성" — 한 그룹에 책이 여러 권일 수 있어 groupId + 현재 읽는 책 제목으로 매칭해 해석
+    fun openReadingCard(groupId: Long, bookTitle: String, onResolved: (ReadingCardTarget) -> Unit) {
         viewModelScope.launch {
             try {
                 val res = RetrofitClient.libApi().getLibraryBooks()
                 val body = res.body()
                 if (res.isSuccessful && body?.isSuccess == true) {
-                    body.result?.firstOrNull { it.groupId.toLong() == groupId }
+                    body.result
+                        ?.firstOrNull { it.groupId.toLong() == groupId && it.title == bookTitle }
                         ?.let { onResolved(it.toReadingCardTarget()) }
                 }
             } catch (_: Exception) {

@@ -35,6 +35,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
@@ -442,6 +444,7 @@ fun TrackerMainRoute(
     onCardClick: (groupId: Long) -> Unit,
     onNavigateBookReview: (groupId: Long, edit: Boolean) -> Unit,
     onNavigatePartnerReview: (groupId: Long) -> Unit,
+    onNavigateComment: (groupId: Long, title: String) -> Unit = { _, _ -> },
     onNavigatePlaceSearch: () -> Unit = {},
     onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
     selectedPlace: PlaceSearchResult? = null,
@@ -449,6 +452,10 @@ fun TrackerMainRoute(
     viewModel: TrackerMainViewModel = viewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    // 상세 화면 등에서 복귀할 때마다 목록 재조회
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.load()
+    }
     var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var deliveryInfoDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -517,7 +524,8 @@ fun TrackerMainRoute(
                 },
                 onConfirmReceive = { receiveConfirmGroupId = groupId },
                 onWriteReadingCard = {
-                    viewModel.openReadingCard(groupId) { onNavigateLibraryDetail(it) }
+                    val bookTitle = uiState.cards.firstOrNull { it.groupId == groupId }?.bookTitle.orEmpty()
+                    viewModel.openReadingCard(groupId, bookTitle) { onNavigateLibraryDetail(it) }
                 },
             )
         },
@@ -549,7 +557,8 @@ fun TrackerMainRoute(
                 },
                 onConfirmReceive = { receiveConfirmGroupId = groupId },
                 onWriteReadingCard = {
-                    viewModel.openReadingCard(groupId) { onNavigateLibraryDetail(it) }
+                    val bookTitle = uiState.cards.firstOrNull { it.groupId == groupId }?.bookTitle.orEmpty()
+                    viewModel.openReadingCard(groupId, bookTitle) { onNavigateLibraryDetail(it) }
                 },
             )
         },
@@ -716,7 +725,7 @@ fun TrackerMainRoute(
         TrackerDirectMeetingInfoDialog(
             scheduledAt = meeting.scheduledAt.orEmpty(),
             address = meeting.location?.address.orEmpty(),
-            addressDetail = meeting.location?.addressDetail.orEmpty(),
+            addressDetail = meeting.addressDetail.orEmpty(),
             onDismiss = {
                 meetingInfoDialogGroupId = null
                 viewModel.clearMeeting()
@@ -746,11 +755,17 @@ fun TrackerMainRoute(
         )
     }
     // 교환 실패 안내
-    if (exchangeFailGroupId != null) {
+    val exchangeFailGid = exchangeFailGroupId
+    if (exchangeFailGid != null) {
         TrackerDirectExchangeFailDialog(
             onDismiss = { exchangeFailGroupId = null },
             onReportClick = {}, // TODO: 신고하기 이동 로직 보류
-            onGoToCommentsClick = {}, // TODO: 댓글 바로가기 이동 로직 보류
+            onGoToCommentsClick = {
+                val title = uiState.cards
+                    .firstOrNull { it.groupId == exchangeFailGid }?.groupName.orEmpty()
+                exchangeFailGroupId = null
+                onNavigateComment(exchangeFailGid, title)
+            },
         )
     }
 }
