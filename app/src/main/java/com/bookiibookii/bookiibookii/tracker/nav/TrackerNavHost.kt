@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
+import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.ui.comment.TrackerCommentRoute
 import com.bookiibookii.bookiibookii.tracker.ui.detail.TrackerDetailRoute
 import com.bookiibookii.bookiibookii.tracker.ui.main.TrackerMainRoute
@@ -26,6 +27,7 @@ import com.bookiibookii.bookiibookii.tracker.ui.review.TrackerPartnerReviewRoute
 @Composable
 fun TrackerNavHost(
     onCreateGroupClick: () -> Unit,
+    onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = TrackerDestinations.MAIN,
 ) {
@@ -66,6 +68,7 @@ fun TrackerNavHost(
                 onNavigatePlaceSearch = {
                     navController.navigate(TrackerDestinations.PLACE_SEARCH)
                 },
+                onNavigateLibraryDetail = onNavigateLibraryDetail,
                 selectedPlace = selectedPlace,
                 onPlaceConsumed = {
                     entry.savedStateHandle[TrackerDestinations.RESULT_SELECTED_PLACE] = null
@@ -100,6 +103,7 @@ fun TrackerNavHost(
                 onNavigatePlaceSearch = {
                     navController.navigate(TrackerDestinations.PLACE_SEARCH)
                 },
+                onNavigateLibraryDetail = onNavigateLibraryDetail,
                 selectedPlace = selectedPlace,
                 onPlaceConsumed = {
                     backStackEntry.savedStateHandle[TrackerDestinations.RESULT_SELECTED_PLACE] = null

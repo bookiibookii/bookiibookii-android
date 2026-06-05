@@ -47,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -387,14 +388,18 @@ private fun AddCardField(
 }
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 900)
 @Composable
 private fun LibraryAddCardTextPreview() {
-    LibraryAddCardScreen(mode = AddCardMode.TEXT)
+    BookiiPreview {
+        LibraryAddCardScreen(mode = AddCardMode.TEXT)
+    }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 900)
 @Composable
 private fun LibraryAddCardPhotoPreview() {
-    LibraryAddCardScreen(mode = AddCardMode.PHOTO)
+    BookiiPreview {
+        LibraryAddCardScreen(mode = AddCardMode.PHOTO)
+    }
 }

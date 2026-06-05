@@ -12,6 +12,8 @@ import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.PartnerDeliveryResponseDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.toMeetingPlace
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
+import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
+import com.bookiibookii.bookiibookii.tracker.model.toReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
 import com.bookiibookii.bookiibookii.tracker.model.toCardModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,6 +71,22 @@ class TrackerMainViewModel(
 
     fun clearMeetingPlace() {
         _meetingPlace.value = null
+    }
+
+    // "독서카드 작성" — groupId로 서재 책(memberBookId 등)을 해석해 콜백. 트래커엔 memberBookId가 없어서 필요
+    fun openReadingCard(groupId: Long, onResolved: (ReadingCardTarget) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = RetrofitClient.libApi().getLibraryBooks()
+                val body = res.body()
+                if (res.isSuccessful && body?.isSuccess == true) {
+                    body.result?.firstOrNull { it.groupId.toLong() == groupId }
+                        ?.let { onResolved(it.toReadingCardTarget()) }
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
     }
 
     // 등록된 약속 조회 후 다이얼로그 표시

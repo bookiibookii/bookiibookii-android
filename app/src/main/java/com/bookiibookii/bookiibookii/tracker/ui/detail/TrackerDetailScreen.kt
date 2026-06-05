@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
@@ -44,6 +45,7 @@ fun TrackerDetailRoute(
     onNavigatePartnerReview: () -> Unit,
     onNavigateComment: (title: String) -> Unit = {},
     onNavigatePlaceSearch: () -> Unit = {},
+    onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
     selectedPlace: PlaceSearchResult? = null,
     onPlaceConsumed: () -> Unit = {},
     viewModel: TrackerDetailViewModel = viewModel(
@@ -121,6 +123,9 @@ fun TrackerDetailRoute(
                     viewModel.loadPartnerDelivery { showShippingConfirmDialog = true }
                 },
                 onConfirmReceive = { showReceiveConfirmDialog = true },
+                onWriteReadingCard = {
+                    viewModel.openReadingCard(groupId) { onNavigateLibraryDetail(it) }
+                },
             )
         },
         onPrimaryActionClick = {
@@ -144,6 +149,9 @@ fun TrackerDetailRoute(
                     viewModel.loadPartnerDelivery { showShippingConfirmDialog = true }
                 },
                 onConfirmReceive = { showReceiveConfirmDialog = true },
+                onWriteReadingCard = {
+                    viewModel.openReadingCard(groupId) { onNavigateLibraryDetail(it) }
+                },
             )
         },
     )
@@ -346,6 +354,7 @@ private inline fun dispatchAction(
     onWritePartnerReview: () -> Unit,
     onCheckShippingInfo: () -> Unit,
     onConfirmReceive: () -> Unit,
+    onWriteReadingCard: () -> Unit,
 ) {
     when (action) {
         TrackerAction.RecordProgress -> onRecordProgress()
@@ -360,7 +369,7 @@ private inline fun dispatchAction(
         TrackerAction.WritePartnerReview -> onWritePartnerReview()
         TrackerAction.CheckShippingInfo -> onCheckShippingInfo()
         TrackerAction.ConfirmReceive -> onConfirmReceive()
-        TrackerAction.WriteReadingCard -> Unit // TODO: 독서카드 작성 화면 연결 보류
+        TrackerAction.WriteReadingCard -> onWriteReadingCard()
         TrackerAction.None -> Unit
     }
 }
