@@ -53,6 +53,7 @@ fun TrackerDetailRoute(
     onNavigateComment: (title: String) -> Unit = {},
     onNavigatePlaceSearch: () -> Unit = {},
     onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
+    onNavigateLibrary: () -> Unit = {},
     selectedPlace: PlaceSearchResult? = null,
     onPlaceConsumed: () -> Unit = {},
     viewModel: TrackerDetailViewModel = viewModel(
@@ -121,8 +122,7 @@ fun TrackerDetailRoute(
         onBackClick = onBackClick,
         onMessageClick = { onNavigateComment(uiState.groupName) },
         onEditPeriodClick = { showReadingPeriodDialog = true },
-        // 서재로 이동은 후속 작업
-        onGoToLibraryClick = {}, // TODO: 서재로 이동
+        onGoToLibraryClick = onNavigateLibrary,
         onReportClick = { context.openReportChannel() },
         onSecondaryActionClick = {
             dispatchAction(

@@ -28,6 +28,7 @@ import com.bookiibookii.bookiibookii.tracker.ui.review.TrackerPartnerReviewRoute
 fun TrackerNavHost(
     onCreateGroupClick: () -> Unit,
     onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
+    onNavigateLibrary: () -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = TrackerDestinations.MAIN,
 ) {
@@ -107,6 +108,7 @@ fun TrackerNavHost(
                     navController.navigate(TrackerDestinations.PLACE_SEARCH)
                 },
                 onNavigateLibraryDetail = onNavigateLibraryDetail,
+                onNavigateLibrary = onNavigateLibrary,
                 selectedPlace = selectedPlace,
                 onPlaceConsumed = {
                     backStackEntry.savedStateHandle[TrackerDestinations.RESULT_SELECTED_PLACE] = null
