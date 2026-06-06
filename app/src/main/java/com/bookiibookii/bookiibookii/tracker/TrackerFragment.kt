@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
@@ -24,6 +25,10 @@ class TrackerFragment : Fragment() {
         setContent {
             BookiiBookiiTheme {
                 TrackerNavHost(
+                    // "서재로 이동" → 바텀네비 서재 탭을 누른 것처럼 전환
+                    onNavigateLibrary = {
+                        (activity as? MainActivity)?.moveToLibraryTab()
+                    },
                     onCreateGroupClick = {
                         parentFragmentManager.beginTransaction()
                             .replace(

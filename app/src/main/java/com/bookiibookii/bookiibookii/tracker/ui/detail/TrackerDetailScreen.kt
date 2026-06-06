@@ -13,7 +13,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
@@ -24,6 +26,7 @@ import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
 import com.bookiibookii.bookiibookii.tracker.model.toDisplay
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerDetailContent
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerReadingPeriodEditDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryReceiveConfirmDialog
@@ -39,6 +42,7 @@ import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStep
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStepStatus
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerDetailViewModel
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import java.time.LocalDate
 
 @Composable
 fun TrackerDetailRoute(
@@ -49,12 +53,14 @@ fun TrackerDetailRoute(
     onNavigateComment: (title: String) -> Unit = {},
     onNavigatePlaceSearch: () -> Unit = {},
     onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
+    onNavigateLibrary: () -> Unit = {},
     selectedPlace: PlaceSearchResult? = null,
     onPlaceConsumed: () -> Unit = {},
     viewModel: TrackerDetailViewModel = viewModel(
         factory = TrackerDetailViewModel.factory(groupId)
     ),
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
     val savedDeliveries by viewModel.savedDeliveries.collectAsStateWithLifecycle()
@@ -74,6 +80,8 @@ fun TrackerDetailRoute(
         onPlaceConsumed()
     }
     var showProgressDialog by rememberSaveable { mutableStateOf(false) }
+    // 독서 기간 수정 다이얼로그(더보기 > 독서 기간 수정)
+    var showReadingPeriodDialog by rememberSaveable { mutableStateOf(false) }
     var showTrackingDialog by rememberSaveable { mutableStateOf(false) }
     var showDeliveryInfoDialog by rememberSaveable { mutableStateOf(false) }
     var showDeliveryEditDialog by rememberSaveable { mutableStateOf(false) }
@@ -110,10 +118,12 @@ fun TrackerDetailRoute(
         secondaryActionEnabled =
             !(uiState.secondaryAction == TrackerAction.RegisterMeeting && !uiState.isHost),
         steps = uiState.steps,
+        isHost = uiState.isHost,
         onBackClick = onBackClick,
         onMessageClick = { onNavigateComment(uiState.groupName) },
-        // TODO: 더보기 placeholder
-        onMoreClick = {},
+        onEditPeriodClick = { showReadingPeriodDialog = true },
+        onGoToLibraryClick = onNavigateLibrary,
+        onReportClick = { context.openReportChannel() },
         onSecondaryActionClick = {
             dispatchAction(
                 action = uiState.secondaryAction,
@@ -176,6 +186,19 @@ fun TrackerDetailRoute(
             totalPages = uiState.myProfile.totalPages,
             onDismiss = { showProgressDialog = false },
             onConfirm = { currentPage -> viewModel.recordProgress(currentPage) },
+        )
+    }
+    if (showReadingPeriodDialog) {
+        // 기존 예정 종료일 = 오늘 + dDay
+        val originalEndDate = uiState.dDayCount?.let { LocalDate.now().plusDays(it.toLong()) }
+        TrackerReadingPeriodEditDialog(
+            originalEndDate = originalEndDate,
+            onConfirm = { newEndDate ->
+                viewModel.updateReadingPeriod(newEndDate.toString()) {
+                    showReadingPeriodDialog = false
+                }
+            },
+            onDismiss = { showReadingPeriodDialog = false },
         )
     }
     if (showTrackingDialog) {
@@ -348,7 +371,7 @@ fun TrackerDetailRoute(
     if (showExchangeFailDialog) {
         TrackerDirectExchangeFailDialog(
             onDismiss = { showExchangeFailDialog = false },
-            onReportClick = {}, // TODO: 신고하기 이동 로직 보류
+            onReportClick = { context.openReportChannel() },
             onGoToCommentsClick = {
                 showExchangeFailDialog = false
                 onNavigateComment(uiState.groupName)
@@ -405,9 +428,12 @@ fun TrackerDetailScreen(
     secondaryActionLabel: String,
     primaryActionLabel: String,
     steps: List<TrackerStep>,
+    isHost: Boolean,
     onBackClick: () -> Unit,
     onMessageClick: () -> Unit,
-    onMoreClick: () -> Unit,
+    onEditPeriodClick: () -> Unit,
+    onGoToLibraryClick: () -> Unit,
+    onReportClick: () -> Unit,
     onSecondaryActionClick: () -> Unit,
     onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -426,9 +452,12 @@ fun TrackerDetailScreen(
         secondaryActionLabel = secondaryActionLabel,
         primaryActionLabel = primaryActionLabel,
         steps = steps,
+        isHost = isHost,
         onBackClick = onBackClick,
         onMessageClick = onMessageClick,
-        onMoreClick = onMoreClick,
+        onEditPeriodClick = onEditPeriodClick,
+        onGoToLibraryClick = onGoToLibraryClick,
+        onReportClick = onReportClick,
         onSecondaryActionClick = onSecondaryActionClick,
         onPrimaryActionClick = onPrimaryActionClick,
         modifier = modifier,
@@ -488,9 +517,12 @@ private fun TrackerDetailScreenPreview() {
                     status = TrackerStepStatus.Completed,
                 ),
             ),
+            isHost = true,
             onBackClick = {},
             onMessageClick = {},
-            onMoreClick = {},
+            onEditPeriodClick = {},
+            onGoToLibraryClick = {},
+            onReportClick = {},
             onSecondaryActionClick = {},
             onPrimaryActionClick = {},
         )

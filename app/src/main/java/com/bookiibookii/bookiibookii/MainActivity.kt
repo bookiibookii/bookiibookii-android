@@ -103,12 +103,19 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     private fun selectTab(tab: NavTab, fragment: Fragment) {
+        // 탑레벨 탭으로 전환 — 트래커 상세 등에서 GONE된 바텀네비를 다시 표시
+        binding.bottomNav.root.visibility = View.VISIBLE
         setBottomNavSelected(tab)
         replaceFragment(fragment)
     }
 
     fun moveToGroupTab() {
         selectTab(NavTab.HOME, HomeFragment())
+    }
+
+    // 서재 탭으로 이동 (바텀네비 '서재'를 누른 것과 동일)
+    fun moveToLibraryTab() {
+        selectTab(NavTab.LIBRARY, LibraryFragment())
     }
 
     private fun updateBottomNavSelection(current: Fragment?) {

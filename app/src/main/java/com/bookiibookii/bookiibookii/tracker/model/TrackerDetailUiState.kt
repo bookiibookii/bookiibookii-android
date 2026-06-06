@@ -16,6 +16,8 @@ enum class TrackerStepLabelStyle { Main, Sub }
 data class TrackerDetailUiState(
     val groupName: String = "",
     val dDay: String = "",
+    // 독서 기간 수정 다이얼로그용 원본 dDay(일 수). 종료일 = 오늘 + dDayCount
+    val dDayCount: Int? = null,
     val statusLabel: String = "",
     val currentStepLabel: String = "",
     val currentStepLabelStyle: TrackerStepLabelStyle = TrackerStepLabelStyle.Main,

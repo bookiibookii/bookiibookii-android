@@ -289,6 +289,21 @@ class TrackerDetailViewModel(
         }
     }
 
+    // 독서 기간(예상 종료일) 수정 — 호스트 전용
+    fun updateReadingPeriod(newEndDate: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = repository.updateReadingPeriod(groupId, newEndDate)
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    onSuccess()
+                    load()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
+    }
+
     fun recordProgress(currentPage: Int) {
         viewModelScope.launch {
             try {

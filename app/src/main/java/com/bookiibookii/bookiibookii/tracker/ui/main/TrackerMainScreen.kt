@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -43,6 +44,7 @@ import com.bookiibookii.bookiibookii.R
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
@@ -452,6 +454,7 @@ fun TrackerMainRoute(
     onPlaceConsumed: () -> Unit = {},
     viewModel: TrackerMainViewModel = viewModel(),
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     // 상세 화면 등에서 복귀할 때마다 목록 재조회
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -515,7 +518,10 @@ fun TrackerMainRoute(
                     meetingStep = 1
                     meetingDialogGroupId = groupId
                 },
-                onGoToComments = {}, // TODO: 댓글 화면 연결 보류
+                onGoToComments = {
+                    val title = uiState.cards.firstOrNull { it.groupId == groupId }?.groupName.orEmpty()
+                    onNavigateComment(groupId, title)
+                },
                 onCheckMeeting = {
                     viewModel.loadMeeting(groupId) { meetingInfoDialogGroupId = groupId }
                 },
@@ -548,7 +554,10 @@ fun TrackerMainRoute(
                     meetingStep = 1
                     meetingDialogGroupId = groupId
                 },
-                onGoToComments = {}, // TODO: 댓글 화면 연결 보류
+                onGoToComments = {
+                    val title = uiState.cards.firstOrNull { it.groupId == groupId }?.groupName.orEmpty()
+                    onNavigateComment(groupId, title)
+                },
                 onCheckMeeting = {
                     viewModel.loadMeeting(groupId) { meetingInfoDialogGroupId = groupId }
                 },
@@ -758,7 +767,7 @@ fun TrackerMainRoute(
     if (exchangeFailGid != null) {
         TrackerDirectExchangeFailDialog(
             onDismiss = { exchangeFailGroupId = null },
-            onReportClick = {}, // TODO: 신고하기 이동 로직 보류
+            onReportClick = { context.openReportChannel() },
             onGoToCommentsClick = {
                 val title = uiState.cards
                     .firstOrNull { it.groupId == exchangeFailGid }?.groupName.orEmpty()

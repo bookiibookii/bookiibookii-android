@@ -16,6 +16,8 @@ import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewCreateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.PartnerDeliveryResponseDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.ReadingPeriodUpdateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.ReadingPeriodUpdateResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
@@ -39,6 +41,14 @@ class TrackerRepository(
         currentPage: Int,
     ): Response<ApiResponse<ReadingProgressResDTO>> {
         return api.patchReadingProgress(groupId, ReadingProgressReqDTO(currentPage))
+    }
+
+    // 독서 기간(예상 종료일) 수정
+    suspend fun updateReadingPeriod(
+        groupId: Long,
+        newEndDate: String,
+    ): Response<ApiResponse<ReadingPeriodUpdateResDTO>> {
+        return api.patchReadingPeriod(groupId, ReadingPeriodUpdateReqDTO(newEndDate))
     }
 
     suspend fun submitBookReview(

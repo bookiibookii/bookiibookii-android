@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.mypage.ui.setting.FaqScreen
@@ -30,8 +31,8 @@ class FaqFragment : BaseMypageFragment() {
                 FaqScreen(
                     onBackClick = { parentFragmentManager.popBackStack() },
                     onPostInquiry = { title, content -> viewModel.postInquiry(title, content) },
-                    onInquiryClick = { openKakaoLink() },
-                    onReportClick = { openKakaoLink() },
+                    onInquiryClick = { requireContext().openReportChannel() },
+                    onReportClick = { requireContext().openReportChannel() },
                 )
             }
         }
@@ -40,15 +41,6 @@ class FaqFragment : BaseMypageFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         collectEvents()
-    }
-
-    private fun openKakaoLink() {
-        startActivity(
-            android.content.Intent(
-                android.content.Intent.ACTION_VIEW,
-                android.net.Uri.parse("http://pf.kakao.com/_cIxlxjX")
-            )
-        )
     }
 
     private fun collectEvents() {
