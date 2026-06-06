@@ -26,20 +26,32 @@ object TokenManager {
         return synchronized(this) {
             encryptedPrefs ?: run {
                 val appContext = context.applicationContext
-                val masterKey = MasterKey.Builder(appContext)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build()
-                val created = EncryptedSharedPreferences.create(
-                    appContext,
-                    PREF,
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                )
+                val created = try {
+                    buildEncryptedPrefs(appContext)
+                } catch (e: Exception) {
+                    // 백업 복원 등으로 마스터키-keyset 불일치(AEADBadTagException) → 복호화 불가
+                    // 깨진 prefs 파일을 삭제하고 재생성하여 자가복구
+                    // (복원된 토큰은 어차피 못 쓰는 값이라 버리고 로그인 화면으로 정상 진입)
+                    appContext.deleteSharedPreferences(PREF)
+                    buildEncryptedPrefs(appContext)
+                }
                 encryptedPrefs = created
                 created
             }
         }
+    }
+
+    private fun buildEncryptedPrefs(appContext: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(appContext)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        return EncryptedSharedPreferences.create(
+            appContext,
+            PREF,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 
     fun saveTokens(context: Context, access: String, refresh: String, userId: Long) {
