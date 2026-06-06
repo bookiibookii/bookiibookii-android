@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 data class GroupItem(
     @SerializedName("groupId") val groupId: Long,
     @SerializedName("groupName") val groupName: String,
-    @SerializedName("title") val title: String,
+    @SerializedName(value = "title", alternate = ["bookTitle"]) val title: String?,
     @SerializedName("author") val author: String?,
     @SerializedName("genre") val genre: String?,
     @SerializedName("bookImage") val bookImage: String?,

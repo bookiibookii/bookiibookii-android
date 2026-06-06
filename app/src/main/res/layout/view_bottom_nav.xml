@@ -8,7 +8,7 @@
     android:background="@drawable/bg_white_stroke_circle"
     android:padding="8dp"
     android:gravity="center"
-    android:elevation="10dp">
+    android:elevation="2dp">
 
     <!-- 그룹 -->
     <LinearLayout
@@ -30,7 +30,8 @@
             android:id="@+id/tvGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="그룹"
+            android:layout_marginTop="2dp"
+            android:text="탐색"
             android:textSize="11sp"
             android:textColor="@color/grey_900"
             android:fontFamily="@font/pretendard_medium"
