@@ -101,7 +101,12 @@ class OnbStepActivity : AppCompatActivity() {
     }
 
     private fun launchCamera() {
+        // insert가 null을 반환하면(저장공간 부족·MediaStore 오류 등) NPE 대신 안내 후 중단
         val uri = createCameraImageUri()
+        if (uri == null) {
+            Toast.makeText(this, "카메라를 실행할 수 없습니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
         cameraImageUri = uri
         takePictureLauncher.launch(uri)
     }
@@ -123,11 +128,11 @@ class OnbStepActivity : AppCompatActivity() {
         }
     }
 
-    private fun createCameraImageUri(): Uri {
+    private fun createCameraImageUri(): Uri? {
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "profile_${System.currentTimeMillis()}.jpg")
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
         }
-        return contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
+        return contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
     }
 }

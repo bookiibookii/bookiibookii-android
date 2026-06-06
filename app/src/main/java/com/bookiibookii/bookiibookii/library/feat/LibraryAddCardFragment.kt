@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.library.feat
 
+import android.Manifest
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -46,6 +47,10 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
         selectedImageUri = android.net.Uri.fromFile(file)
     }
 
+    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) takePhotoLauncher.launch(null)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -58,7 +63,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
                     mode             = mode,
                     selectedImageUri = selectedImageUri,
                     onImagePick      = { pickImageLauncher.launch("image/*") },
-                    onImageCapture   = { takePhotoLauncher.launch(null) },
+                    onImageCapture   = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
                     onBackClick      = { parentFragmentManager.popBackStack() },
                     onSubmit         = { page, quotation, memo ->
                         if (memberBookId == -1) {

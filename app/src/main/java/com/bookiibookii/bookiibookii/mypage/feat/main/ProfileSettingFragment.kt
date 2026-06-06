@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.feat.main
 
+import android.Manifest
 import android.content.ContentValues
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -43,6 +44,11 @@ class ProfileSettingFragment : BaseMypageFragment() {
         }
     }
 
+    private val cameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) launchCamera()
+        }
+
     private val pickMediaLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             selectedImageUri.value = it
@@ -68,9 +74,7 @@ class ProfileSettingFragment : BaseMypageFragment() {
                     nicknameCheckState = nicknameCheckState,
                     onBackClick = { parentFragmentManager.popBackStack() },
                     onOpenCamera = {
-                        val uri = createCameraUri()
-                        cameraImageUri = uri
-                        takePictureLauncher.launch(uri)
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     },
                     onOpenGallery = {
                         pickMediaLauncher.launch("image/*")
@@ -102,12 +106,23 @@ class ProfileSettingFragment : BaseMypageFragment() {
         }
     }
 
-    private fun createCameraUri(): Uri {
+    private fun launchCamera() {
+        // insert가 null을 반환하면(저장공간 부족·MediaStore 오류 등) NPE 대신 안내 후 중단
+        val uri = createCameraUri()
+        if (uri == null) {
+            requireContext().showCustomToast("카메라를 실행할 수 없습니다. 잠시 후 다시 시도해주세요.", false)
+            return
+        }
+        cameraImageUri = uri
+        takePictureLauncher.launch(uri)
+    }
+
+    private fun createCameraUri(): Uri? {
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "profile_${System.currentTimeMillis()}.jpg")
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
         }
-        return requireContext().contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
+        return requireContext().contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
     }
 
     private fun createCompressedImageFile(uri: Uri): File? {
