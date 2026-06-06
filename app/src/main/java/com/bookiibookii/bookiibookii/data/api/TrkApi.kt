@@ -19,6 +19,8 @@ import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewCreateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.PartnerDeliveryResponseDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MemberReviewResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.ReadingPeriodUpdateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.ReadingPeriodUpdateResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.ReadingProgressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerMeetingRequest
@@ -51,6 +53,13 @@ interface TrkApi {
         @Path("groupId") groupId: Long,
         @Body request: ReadingProgressReqDTO,
     ): Response<ApiResponse<ReadingProgressResDTO>>
+
+    // 독서 기간(예상 종료일) 수정 — 호스트 전용, MY_BOOK_READING/PARTNER_BOOK_READING 단계에서만
+    @PATCH("/api/trackers/{groupId}/reading-period")
+    suspend fun patchReadingPeriod(
+        @Path("groupId") groupId: Long,
+        @Body request: ReadingPeriodUpdateReqDTO,
+    ): Response<ApiResponse<ReadingPeriodUpdateResDTO>>
 
     @POST("/api/groups/{groupId}/reviews")
     suspend fun postBookReview(

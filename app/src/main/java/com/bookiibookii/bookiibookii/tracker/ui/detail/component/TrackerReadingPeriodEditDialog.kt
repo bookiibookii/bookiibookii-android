@@ -48,27 +48,36 @@ private data class DayCell(
 private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd")
 
 // 예상 독서 기간 수정 다이얼로그 (택배/직접교환 공통)
+// originalEndDate: 기존 예정 종료일(오늘 + dDay로 산출)
 @Composable
 fun TrackerReadingPeriodEditDialog(
+    originalEndDate: LocalDate?,
+    onConfirm: (newEndDate: LocalDate) -> Unit,
     onDismiss: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        TrackerReadingPeriodEditDialogContent(onDismiss = onDismiss)
+        TrackerReadingPeriodEditDialogContent(
+            originalEndDate = originalEndDate,
+            onConfirm = onConfirm,
+            onDismiss = onDismiss,
+        )
     }
 }
 
 @Composable
 private fun TrackerReadingPeriodEditDialogContent(
+    originalEndDate: LocalDate?,
+    onConfirm: (newEndDate: LocalDate) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var displayMonth by remember { mutableStateOf(YearMonth.of(2026, 5)) }
+    val today = remember { LocalDate.now() }
+    var displayMonth by remember { mutableStateOf(YearMonth.from(originalEndDate ?: today)) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
-    val today = LocalDate.of(2026, 5, 14)
-    val originalDate: LocalDate? = LocalDate.of(2026, 5, 28)
+    val originalDate: LocalDate? = originalEndDate
 
     Column(
         modifier = modifier
@@ -260,7 +269,7 @@ private fun TrackerReadingPeriodEditDialogContent(
             CardButton(
                 text = "수정",
                 style = if (selectedDate != null) CardButtonStyle.Main else CardButtonStyle.Grey,
-                onClick = {},
+                onClick = { selectedDate?.let(onConfirm) },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -340,6 +349,10 @@ private fun DayCellView(
 @Composable
 private fun TrackerReadingPeriodEditDialogPreview() {
     BookiiPreview {
-        TrackerReadingPeriodEditDialogContent(onDismiss = {})
+        TrackerReadingPeriodEditDialogContent(
+            originalEndDate = LocalDate.now().plusDays(14),
+            onConfirm = {},
+            onDismiss = {},
+        )
     }
 }

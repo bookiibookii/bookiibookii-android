@@ -13,6 +13,7 @@ fun TrackerDetailResDTO.toUiState(): TrackerDetailUiState {
     return TrackerDetailUiState(
         groupName = groupName.orEmpty(),
         dDay = dDayChip,
+        dDayCount = dDay,
         statusLabel = displayStatusText.orEmpty(),
         currentStepLabel = currentStepStatus.toPhaseLabel(),
         currentStepLabelStyle = currentStepStatus.toPhaseStyle(),

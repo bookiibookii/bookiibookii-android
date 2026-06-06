@@ -23,16 +23,24 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
@@ -61,9 +69,12 @@ fun TrackerDetailContent(
     secondaryActionLabel: String,
     primaryActionLabel: String,
     steps: List<TrackerStep>,
+    isHost: Boolean,
     onBackClick: () -> Unit,
     onMessageClick: () -> Unit,
-    onMoreClick: () -> Unit,
+    onEditPeriodClick: () -> Unit,
+    onGoToLibraryClick: () -> Unit,
+    onReportClick: () -> Unit,
     onSecondaryActionClick: () -> Unit,
     onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -75,9 +86,12 @@ fun TrackerDetailContent(
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
         TrackerDetailHeader(
+            isHost = isHost,
             onBackClick = onBackClick,
             onMessageClick = onMessageClick,
-            onMoreClick = onMoreClick,
+            onEditPeriodClick = onEditPeriodClick,
+            onGoToLibraryClick = onGoToLibraryClick,
+            onReportClick = onReportClick,
         )
         Column(
             modifier = Modifier
@@ -123,9 +137,12 @@ fun TrackerDetailContent(
 
 @Composable
 private fun TrackerDetailHeader(
+    isHost: Boolean,
     onBackClick: () -> Unit,
     onMessageClick: () -> Unit,
-    onMoreClick: () -> Unit,
+    onEditPeriodClick: () -> Unit,
+    onGoToLibraryClick: () -> Unit,
+    onReportClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -158,10 +175,40 @@ private fun TrackerDetailHeader(
                     iconRes = R.drawable.ic_message,
                     onClick = onMessageClick,
                 )
-                IconCircleButton(
-                    iconRes = R.drawable.ic_meetball,
-                    onClick = onMoreClick,
-                )
+                // 미트볼 + 더보기 드롭다운
+                Box {
+                    var expanded by remember { mutableStateOf(false) }
+                    // 드롭다운 오프셋 일단 60dp
+                    val popupOffsetY = with(LocalDensity.current) { 60.dp.roundToPx() }
+                    IconCircleButton(
+                        iconRes = R.drawable.ic_meetball,
+                        onClick = { expanded = true },
+                    )
+                    if (expanded) {
+                        Popup(
+                            alignment = Alignment.TopEnd,
+                            offset = IntOffset(x = 0, y = popupOffsetY),
+                            onDismissRequest = { expanded = false },
+                            properties = PopupProperties(focusable = true),
+                        ) {
+                            TrackerMoreMenuDropdown(
+                                isHost = isHost,
+                                onEditPeriodClick = {
+                                    expanded = false
+                                    onEditPeriodClick()
+                                },
+                                onGoToLibraryClick = {
+                                    expanded = false
+                                    onGoToLibraryClick()
+                                },
+                                onReportClick = {
+                                    expanded = false
+                                    onReportClick()
+                                },
+                            )
+                        }
+                    }
+                }
             }
         }
         HorizontalDivider(
@@ -555,9 +602,12 @@ private fun TrackerDetailContentPreview() {
                     status = TrackerStepStatus.Completed,
                 ),
             ),
+            isHost = true,
             onBackClick = {},
             onMessageClick = {},
-            onMoreClick = {},
+            onEditPeriodClick = {},
+            onGoToLibraryClick = {},
+            onReportClick = {},
             onSecondaryActionClick = {},
             onPrimaryActionClick = {},
         )

@@ -24,6 +24,7 @@ import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
 import com.bookiibookii.bookiibookii.tracker.model.toDisplay
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerDetailContent
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerProgressRecordDialog
+import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerReadingPeriodEditDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryAddressEditDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryInfoDialog
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.TrackerDeliveryReceiveConfirmDialog
@@ -39,6 +40,7 @@ import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStep
 import com.bookiibookii.bookiibookii.tracker.ui.detail.component.TrackerStepStatus
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerDetailViewModel
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import java.time.LocalDate
 
 @Composable
 fun TrackerDetailRoute(
@@ -74,6 +76,8 @@ fun TrackerDetailRoute(
         onPlaceConsumed()
     }
     var showProgressDialog by rememberSaveable { mutableStateOf(false) }
+    // 독서 기간 수정 다이얼로그(더보기 > 독서 기간 수정)
+    var showReadingPeriodDialog by rememberSaveable { mutableStateOf(false) }
     var showTrackingDialog by rememberSaveable { mutableStateOf(false) }
     var showDeliveryInfoDialog by rememberSaveable { mutableStateOf(false) }
     var showDeliveryEditDialog by rememberSaveable { mutableStateOf(false) }
@@ -110,10 +114,13 @@ fun TrackerDetailRoute(
         secondaryActionEnabled =
             !(uiState.secondaryAction == TrackerAction.RegisterMeeting && !uiState.isHost),
         steps = uiState.steps,
+        isHost = uiState.isHost,
         onBackClick = onBackClick,
         onMessageClick = { onNavigateComment(uiState.groupName) },
-        // TODO: 더보기 placeholder
-        onMoreClick = {},
+        onEditPeriodClick = { showReadingPeriodDialog = true },
+        // 서재로 이동/신고는 후속 작업
+        onGoToLibraryClick = {}, // TODO: 서재로 이동
+        onReportClick = {}, // TODO: 신고
         onSecondaryActionClick = {
             dispatchAction(
                 action = uiState.secondaryAction,
@@ -176,6 +183,19 @@ fun TrackerDetailRoute(
             totalPages = uiState.myProfile.totalPages,
             onDismiss = { showProgressDialog = false },
             onConfirm = { currentPage -> viewModel.recordProgress(currentPage) },
+        )
+    }
+    if (showReadingPeriodDialog) {
+        // 기존 예정 종료일 = 오늘 + dDay
+        val originalEndDate = uiState.dDayCount?.let { LocalDate.now().plusDays(it.toLong()) }
+        TrackerReadingPeriodEditDialog(
+            originalEndDate = originalEndDate,
+            onConfirm = { newEndDate ->
+                viewModel.updateReadingPeriod(newEndDate.toString()) {
+                    showReadingPeriodDialog = false
+                }
+            },
+            onDismiss = { showReadingPeriodDialog = false },
         )
     }
     if (showTrackingDialog) {
@@ -405,9 +425,12 @@ fun TrackerDetailScreen(
     secondaryActionLabel: String,
     primaryActionLabel: String,
     steps: List<TrackerStep>,
+    isHost: Boolean,
     onBackClick: () -> Unit,
     onMessageClick: () -> Unit,
-    onMoreClick: () -> Unit,
+    onEditPeriodClick: () -> Unit,
+    onGoToLibraryClick: () -> Unit,
+    onReportClick: () -> Unit,
     onSecondaryActionClick: () -> Unit,
     onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -426,9 +449,12 @@ fun TrackerDetailScreen(
         secondaryActionLabel = secondaryActionLabel,
         primaryActionLabel = primaryActionLabel,
         steps = steps,
+        isHost = isHost,
         onBackClick = onBackClick,
         onMessageClick = onMessageClick,
-        onMoreClick = onMoreClick,
+        onEditPeriodClick = onEditPeriodClick,
+        onGoToLibraryClick = onGoToLibraryClick,
+        onReportClick = onReportClick,
         onSecondaryActionClick = onSecondaryActionClick,
         onPrimaryActionClick = onPrimaryActionClick,
         modifier = modifier,
@@ -488,9 +514,12 @@ private fun TrackerDetailScreenPreview() {
                     status = TrackerStepStatus.Completed,
                 ),
             ),
+            isHost = true,
             onBackClick = {},
             onMessageClick = {},
-            onMoreClick = {},
+            onEditPeriodClick = {},
+            onGoToLibraryClick = {},
+            onReportClick = {},
             onSecondaryActionClick = {},
             onPrimaryActionClick = {},
         )
