@@ -13,7 +13,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
@@ -57,6 +59,7 @@ fun TrackerDetailRoute(
         factory = TrackerDetailViewModel.factory(groupId)
     ),
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
     val savedDeliveries by viewModel.savedDeliveries.collectAsStateWithLifecycle()
@@ -118,9 +121,9 @@ fun TrackerDetailRoute(
         onBackClick = onBackClick,
         onMessageClick = { onNavigateComment(uiState.groupName) },
         onEditPeriodClick = { showReadingPeriodDialog = true },
-        // 서재로 이동/신고는 후속 작업
+        // 서재로 이동은 후속 작업
         onGoToLibraryClick = {}, // TODO: 서재로 이동
-        onReportClick = {}, // TODO: 신고
+        onReportClick = { context.openReportChannel() },
         onSecondaryActionClick = {
             dispatchAction(
                 action = uiState.secondaryAction,
@@ -368,7 +371,7 @@ fun TrackerDetailRoute(
     if (showExchangeFailDialog) {
         TrackerDirectExchangeFailDialog(
             onDismiss = { showExchangeFailDialog = false },
-            onReportClick = {}, // TODO: 신고하기 이동 로직 보류
+            onReportClick = { context.openReportChannel() },
             onGoToCommentsClick = {
                 showExchangeFailDialog = false
                 onNavigateComment(uiState.groupName)
