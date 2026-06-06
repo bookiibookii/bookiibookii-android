@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+   Auto Backup 규칙 (API < 31).
+   암호화 토큰 prefs(auth_prefs_enc)는 백업/복원 대상에서 제외.
+   마스터키(AndroidKeyStore)는 복원되지 않으므로, 파일만 복원되면
+   복호화 실패(AEADBadTagException)로 앱이 크래시하기 때문.
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude domain="sharedpref" path="auth_prefs_enc.xml" />
 </full-backup-content>
