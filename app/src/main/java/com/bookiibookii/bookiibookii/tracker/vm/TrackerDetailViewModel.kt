@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.location.DeliveryAddress
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
-import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
@@ -34,6 +34,10 @@ class TrackerDetailViewModel(
 
     private val _deliveryAddress = MutableStateFlow<DeliveryAddressResDTO?>(null)
     val deliveryAddress: StateFlow<DeliveryAddressResDTO?> = _deliveryAddress
+
+    // 마이페이지에 등록된 배송지 목록 (배송지 수정 다이얼로그용)
+    private val _savedDeliveries = MutableStateFlow<List<DeliveryAddress>>(emptyList())
+    val savedDeliveries: StateFlow<List<DeliveryAddress>> = _savedDeliveries
 
     // 상대방 운송장 정보 (운송장 정보 확인 다이얼로그용)
     private val _partnerDelivery = MutableStateFlow<PartnerDeliveryResponseDTO?>(null)
@@ -70,13 +74,51 @@ class TrackerDetailViewModel(
         _deliveryAddress.value = null
     }
 
-    fun updateMyDeliveryAddress(
-        request: DeliveryAddressUpdateReqDTO,
+    // 배송지 수정 다이얼로그 진입 시 마이페이지 등록 배송지 목록 조회
+    fun loadSavedDeliveries(onLoaded: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = repository.fetchSavedDeliveries()
+                val body = res.body()
+                if (res.isSuccessful && body?.isSuccess == true) {
+                    _savedDeliveries.value = body.result.orEmpty()
+                }
+            } catch (_: Exception) {
+
+            } finally {
+                onLoaded()
+            }
+        }
+    }
+
+    // 이번 교환 배송지 변경 - 기존 배송지 선택
+    fun changeDeliveryAddressSaved(
+        userDeliveryId: Long,
         onSuccess: () -> Unit,
     ) {
         viewModelScope.launch {
             try {
-                val res = repository.updateMyDeliveryAddress(groupId, request)
+                val res = repository.changeDeliveryAddressSaved(groupId, userDeliveryId)
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    onSuccess()
+                    load()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
+    }
+
+    // 이번 교환 배송지 변경 - 직접 입력 (주소만)
+    fun changeDeliveryAddressDirect(
+        zipCode: String,
+        address: String,
+        addressDetail: String,
+        onSuccess: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            try {
+                val res = repository.changeDeliveryAddressDirect(groupId, zipCode, address, addressDetail)
                 if (res.isSuccessful && res.body()?.isSuccess == true) {
                     onSuccess()
                     load()

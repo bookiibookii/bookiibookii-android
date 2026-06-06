@@ -15,7 +15,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
-import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
 import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
@@ -56,6 +57,7 @@ fun TrackerDetailRoute(
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
+    val savedDeliveries by viewModel.savedDeliveries.collectAsStateWithLifecycle()
     val partnerDelivery by viewModel.partnerDelivery.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
@@ -195,7 +197,7 @@ fun TrackerDetailRoute(
             },
             onEditClick = {
                 showDeliveryInfoDialog = false
-                showDeliveryEditDialog = true
+                viewModel.loadSavedDeliveries { showDeliveryEditDialog = true }
             },
             onConfirmClick = {
                 showDeliveryInfoDialog = false
@@ -206,22 +208,20 @@ fun TrackerDetailRoute(
     if (showDeliveryEditDialog) {
         val myAddress = deliveryAddress?.myAddress
         TrackerDeliveryAddressEditDialog(
-            initialAddress = myAddress?.address.orEmpty(),
-            initialAddressDetail = myAddress?.addressDetail.orEmpty(),
+            savedAddresses = savedDeliveries.map { it.toDeliveryAddressOption() },
+            initialSelectedUserDeliveryId = savedDeliveries.matchUserDeliveryId(myAddress),
             onDismiss = {
                 showDeliveryEditDialog = false
                 viewModel.clearDeliveryAddress()
             },
-            onConfirm = { newAddress, newDetail ->
-                viewModel.updateMyDeliveryAddress(
-                    DeliveryAddressUpdateReqDTO(
-                        receiverName = myAddress?.receiverName.orEmpty(),
-                        phoneNumber = myAddress?.phoneNumber.orEmpty(),
-                        address = newAddress,
-                        addressDetail = newDetail,
-                        zipCode = myAddress?.zipCode.orEmpty(),
-                    ),
-                ) {
+            onConfirmSaved = { userDeliveryId ->
+                viewModel.changeDeliveryAddressSaved(userDeliveryId) {
+                    showDeliveryEditDialog = false
+                    viewModel.clearDeliveryAddress()
+                }
+            },
+            onConfirmDirect = { zipCode, address, addressDetail ->
+                viewModel.changeDeliveryAddressDirect(zipCode, address, addressDetail) {
                     showDeliveryEditDialog = false
                     viewModel.clearDeliveryAddress()
                 }

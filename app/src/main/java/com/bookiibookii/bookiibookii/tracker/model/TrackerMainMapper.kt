@@ -40,5 +40,6 @@ fun TrackerListItemResDTO.toCardModel(): TrackerCardModel {
         right = partnerCurrentBook.toProfile(),
         primaryAction = primary,
         secondaryAction = secondary,
+        isHost = myRole == "HOST",
     )
 }

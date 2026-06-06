@@ -1,6 +1,8 @@
 package com.bookiibookii.bookiibookii.group.ui.editor
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextDecoration
@@ -340,6 +343,17 @@ private fun BookSearchSection(
             fieldValue = TextFieldValue(text = query, selection = TextRange(query.length))
         }
     }
+    // 도서 선택 시 검색 필드를 한 번 하이라이트
+    var selectTick by remember { mutableStateOf(0) }
+    val highlight = remember { Animatable(0f) }
+    LaunchedEffect(selectTick) {
+        if (selectTick == 0) return@LaunchedEffect
+        highlight.snapTo(1f) // 메인색으로 즉시 점등
+        highlight.animateTo(0f, animationSpec = tween(durationMillis = 600)) // 부드럽게 원복
+    }
+    val fraction = highlight.value
+    val fieldBorderColor = lerp(BookiiBookiiTheme.colors.grey300, BookiiBookiiTheme.colors.uiMain, fraction)
+    val fieldBgColor = lerp(BookiiBookiiTheme.colors.white, BookiiBookiiTheme.colors.uiMainPale, fraction)
     Column {
         FieldLabel(text = "도서 검색", required = true)
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -348,10 +362,10 @@ private fun BookSearchSection(
                     .fillMaxWidth()
                     .onSizeChanged { fieldSize = it }
                     .clip(BookiiBookiiTheme.shape.round16)
-                    .background(BookiiBookiiTheme.colors.white)
+                    .background(fieldBgColor)
                     .border(
                         width = 1.dp,
-                        color = BookiiBookiiTheme.colors.grey300,
+                        color = fieldBorderColor,
                         shape = BookiiBookiiTheme.shape.round16,
                     )
                     .padding(16.dp),
@@ -422,7 +436,10 @@ private fun BookSearchSection(
                 ) {
                     BookSearchDropdown(
                         books = results,
-                        onBookClick = onBookSelect,
+                        onBookClick = { book ->
+                            selectTick++
+                            onBookSelect(book)
+                        },
                         modifier = Modifier
                             .width(with(density) { fieldSize.width.toDp() })
                             .heightIn(max = 320.dp),

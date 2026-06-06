@@ -16,6 +16,7 @@ data class TrackerListItemResDTO(
     val groupId: Long,
     val groupName: String?,
     val tradeType: String?,
+    val myRole: String?,
     val displayStatus: String?,
     val remainingDays: Int?,
     val myCurrentBook: BookInfo?,

@@ -44,7 +44,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
-import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
 import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
@@ -477,6 +478,7 @@ fun TrackerMainRoute(
     // 교환 실패 안내 다이얼로그
     var exchangeFailGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     val deliveryAddress by viewModel.deliveryAddress.collectAsStateWithLifecycle()
+    val savedDeliveries by viewModel.savedDeliveries.collectAsStateWithLifecycle()
     val partnerDelivery by viewModel.partnerDelivery.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
@@ -596,7 +598,7 @@ fun TrackerMainRoute(
             },
             onEditClick = {
                 deliveryInfoDialogGroupId = null
-                deliveryEditDialogGroupId = infoGroupId
+                viewModel.loadSavedDeliveries { deliveryEditDialogGroupId = infoGroupId }
             },
             onConfirmClick = {
                 deliveryInfoDialogGroupId = null
@@ -608,23 +610,20 @@ fun TrackerMainRoute(
     if (editGroupId != null) {
         val myAddress = deliveryAddress?.myAddress
         TrackerDeliveryAddressEditDialog(
-            initialAddress = myAddress?.address.orEmpty(),
-            initialAddressDetail = myAddress?.addressDetail.orEmpty(),
+            savedAddresses = savedDeliveries.map { it.toDeliveryAddressOption() },
+            initialSelectedUserDeliveryId = savedDeliveries.matchUserDeliveryId(myAddress),
             onDismiss = {
                 deliveryEditDialogGroupId = null
                 viewModel.clearDeliveryAddress()
             },
-            onConfirm = { newAddress, newDetail ->
-                viewModel.updateMyDeliveryAddress(
-                    groupId = editGroupId,
-                    request = DeliveryAddressUpdateReqDTO(
-                        receiverName = myAddress?.receiverName.orEmpty(),
-                        phoneNumber = myAddress?.phoneNumber.orEmpty(),
-                        address = newAddress,
-                        addressDetail = newDetail,
-                        zipCode = myAddress?.zipCode.orEmpty(),
-                    ),
-                ) {
+            onConfirmSaved = { userDeliveryId ->
+                viewModel.changeDeliveryAddressSaved(editGroupId, userDeliveryId) {
+                    deliveryEditDialogGroupId = null
+                    viewModel.clearDeliveryAddress()
+                }
+            },
+            onConfirmDirect = { zipCode, address, addressDetail ->
+                viewModel.changeDeliveryAddressDirect(editGroupId, zipCode, address, addressDetail) {
                     deliveryEditDialogGroupId = null
                     viewModel.clearDeliveryAddress()
                 }

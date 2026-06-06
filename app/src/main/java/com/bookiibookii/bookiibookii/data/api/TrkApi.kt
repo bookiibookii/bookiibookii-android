@@ -10,8 +10,9 @@ import com.bookiibookii.bookiibookii.data.model.tracker.TrackerExtensionResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerImagePresignedUrlResponse
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressDirectUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
-import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressUpdateReqDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressSavedUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingRegisterReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
@@ -32,6 +33,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -96,11 +98,19 @@ interface TrkApi {
         @Path("groupId") groupId: Long,
     ): Response<ApiResponse<DeliveryAddressResDTO>>
 
-    @PATCH("/api/groups/{groupId}/deliveries/address/me")
-    suspend fun patchMyDeliveryAddress(
+    // 이번 교환 배송지 변경 - 기존(마이페이지 등록) 배송지 선택
+    @PUT("/api/groups/{groupId}/deliveries/address/me/saved")
+    suspend fun putMyDeliveryAddressSaved(
         @Path("groupId") groupId: Long,
-        @Body request: DeliveryAddressUpdateReqDTO,
-    ): Response<ApiResponse<String>>
+        @Body request: DeliveryAddressSavedUpdateReqDTO,
+    ): Response<ApiResponse<DeliveryAddressResDTO>>
+
+    // 이번 교환 배송지 변경 - 직접 입력
+    @PUT("/api/groups/{groupId}/deliveries/address/me/direct")
+    suspend fun putMyDeliveryAddressDirect(
+        @Path("groupId") groupId: Long,
+        @Body request: DeliveryAddressDirectUpdateReqDTO,
+    ): Response<ApiResponse<DeliveryAddressResDTO>>
 
     // 상대방이 나에게 보낸 운송장 정보 조회
     @GET("/api/groups/{groupId}/deliveries/partner")
