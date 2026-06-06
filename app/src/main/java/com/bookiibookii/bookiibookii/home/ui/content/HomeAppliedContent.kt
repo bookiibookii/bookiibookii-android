@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.data.model.group.GroupItem
@@ -59,49 +60,52 @@ internal fun LazyListScope.homeAppliedContent(
                         color = BookiiBookiiTheme.colors.grey900,
                     )
                 }
-                // 안내 문구 — 피그마: regular14, grey500
+                // 캡션 — 피그마: regular14, grey500
                 Text(
-                    text = "매칭 대기 중인 그룹만 노출됩니다.",
+                    text = "매칭을 기다리는 그룹만 보여요.",
                     style = BookiiBookiiTheme.typography.regular14,
                     color = BookiiBookiiTheme.colors.grey500,
                 )
             }
 
             if (appliedGroups.isEmpty()) {
+                // 피그마: NullModal — white bg, round24, padding=20dp, gap=20dp
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 60.dp),
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(BookiiBookiiTheme.colors.white)
+                        .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     Text(
-                        text = "신청한 그룹이 없어요",
-                        style = BookiiBookiiTheme.typography.regular15,
-                        color = BookiiBookiiTheme.colors.grey400,
+                        text = "매칭을 기다리는 신청 내역이 없어요.\n새로운 교환독서를 시작해볼까요?",
+                        style = BookiiBookiiTheme.typography.medium16,
+                        color = BookiiBookiiTheme.colors.grey900,
+                        textAlign = TextAlign.Center,
                     )
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(16.dp))
                             .background(BookiiBookiiTheme.colors.uiMain)
-                            .clickable(onClick = onCreateGroupClick)
-                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                            .clickable(onClick = onCreateGroupClick),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "그룹 생성하기",
-                            style = BookiiBookiiTheme.typography.medium15,
+                            text = "그룹 탐색하기",
+                            style = BookiiBookiiTheme.typography.regular15,
                             color = BookiiBookiiTheme.colors.white,
                         )
                     }
                 }
             } else {
-                // 피그마: 신청한 그룹 카드에는 상태 텍스트 없음 (showStatus = false)
                 appliedGroups.forEach { group ->
                     HomeGroupCard(
                         group = group,
                         onClick = { onGroupClick(group.groupId) },
-                        showStatus = false,
                     )
                 }
             }

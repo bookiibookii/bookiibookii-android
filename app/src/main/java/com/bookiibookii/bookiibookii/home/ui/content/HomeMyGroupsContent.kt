@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.data.model.group.GroupItem
@@ -40,59 +41,71 @@ internal fun LazyListScope.homeMyGroupsContent(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // "N 권" 라벨 — 피그마: gap=4dp, h=20dp, regular14, grey900
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.height(20.dp),
-            ) {
+            // 피그마: "N 권" + 캡션을 gap=4dp 서브그룹으로 묶음
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                // "N 권" 라벨 — 피그마: gap=4dp, h=20dp, regular14, grey900
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.height(20.dp),
+                ) {
+                    Text(
+                        text = myGroups.size.toString(),
+                        style = BookiiBookiiTheme.typography.regular14,
+                        color = BookiiBookiiTheme.colors.grey900,
+                    )
+                    Text(
+                        text = "권",
+                        style = BookiiBookiiTheme.typography.regular14,
+                        color = BookiiBookiiTheme.colors.grey900,
+                    )
+                }
+                // 캡션 — 피그마: regular14, grey500
                 Text(
-                    text = myGroups.size.toString(),
+                    text = "매칭을 기다리는 그룹만 보여요.",
                     style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey900,
-                )
-                Text(
-                    text = "권",
-                    style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey900,
+                    color = BookiiBookiiTheme.colors.grey500,
                 )
             }
 
             if (myGroups.isEmpty()) {
+                // 피그마: NullModal — white bg, round24, padding=20dp, gap=20dp
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 60.dp),
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(BookiiBookiiTheme.colors.white)
+                        .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     Text(
-                        text = "참여 중인 그룹이 없어요",
-                        style = BookiiBookiiTheme.typography.regular15,
-                        color = BookiiBookiiTheme.colors.grey400,
+                        text = "매칭을 기다리는 내 그룹이 없어요.\n새로운 교환독서를 시작해볼까요?",
+                        style = BookiiBookiiTheme.typography.medium16,
+                        color = BookiiBookiiTheme.colors.grey900,
+                        textAlign = TextAlign.Center,
                     )
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(16.dp))
                             .background(BookiiBookiiTheme.colors.uiMain)
-                            .clickable(onClick = onCreateGroupClick)
-                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                            .clickable(onClick = onCreateGroupClick),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "그룹 생성하기",
-                            style = BookiiBookiiTheme.typography.medium15,
+                            text = "그룹 만들기",
+                            style = BookiiBookiiTheme.typography.regular15,
                             color = BookiiBookiiTheme.colors.white,
                         )
                     }
                 }
             } else {
-                // 카드들 — white bg, round20은 HomeGroupCard 내부에 적용
                 myGroups.forEach { group ->
                     HomeGroupCard(
                         group = group,
                         onClick = { onGroupClick(group.groupId) },
-                        showStatus = true,
                     )
                 }
             }
@@ -126,7 +139,7 @@ private val mockGroup = GroupItem(
 
 private val mockMyGroups = listOf(
     mockGroup,
-    mockGroup.copy(groupId = 2L, groupStatus = "MATCHED", tradeType = "택배", title = "채식주의자"),
+    mockGroup.copy(groupId = 2L, tradeType = "택배", title = "채식주의자"),
 )
 
 @Preview(showBackground = true, name = "HomeMyGroupsContent - 데이터 있음")

@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,15 +24,11 @@ import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// 피그마 color/point/red_200
-private val ColorPointRed200 = Color(0xFFFF6B6B)
-
 @Composable
 internal fun HomeGroupCard(
     group: GroupItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    showStatus: Boolean = true,
 ) {
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
@@ -147,19 +142,6 @@ internal fun HomeGroupCard(
             }
         }
 
-        // 상태 텍스트 — 피그마: "매칭 전" = #ff6b6b, "진행 중" = grey/500
-        if (showStatus) {
-            val (statusText, statusColor) = when (group.groupStatus) {
-                "RECRUITING" -> "매칭 전" to ColorPointRed200
-                "MATCHED" -> "진행 중" to colors.grey500
-                else -> (group.groupStatus ?: "") to colors.grey500
-            }
-            Text(
-                text = statusText,
-                style = typography.regular14,
-                color = statusColor,
-            )
-        }
     }
 }
 
@@ -209,43 +191,13 @@ private val mockGroupRecruiting = GroupItem(
     pictureBadge = null,
 )
 
-private val mockGroupMatched = mockGroupRecruiting.copy(
-    groupStatus = "MATCHED",
-    tradeType = "택배",
-)
-
-@Preview(showBackground = true, name = "HomeGroupCard - 매칭 전")
+@Preview(showBackground = true, name = "HomeGroupCard")
 @Composable
-private fun HomeGroupCardRecruitingPreview() {
+private fun HomeGroupCardPreview() {
     BookiiPreview {
         HomeGroupCard(
             group = mockGroupRecruiting,
             onClick = {},
-            modifier = Modifier.padding(16.dp),
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "HomeGroupCard - 진행 중")
-@Composable
-private fun HomeGroupCardMatchedPreview() {
-    BookiiPreview {
-        HomeGroupCard(
-            group = mockGroupMatched,
-            onClick = {},
-            modifier = Modifier.padding(16.dp),
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "HomeGroupCard - 상태 숨김(신청한 그룹)")
-@Composable
-private fun HomeGroupCardNoStatusPreview() {
-    BookiiPreview {
-        HomeGroupCard(
-            group = mockGroupRecruiting,
-            onClick = {},
-            showStatus = false,
             modifier = Modifier.padding(16.dp),
         )
     }
