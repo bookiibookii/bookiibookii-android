@@ -10,6 +10,7 @@ data class TrackerCardModel(
     val right: TrackerProfileItem,
     val primaryAction: TrackerAction = TrackerAction.None,
     val secondaryAction: TrackerAction = TrackerAction.None,
+    val isHost: Boolean = false,
 )
 
 data class TrackerProfileItem(

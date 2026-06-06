@@ -79,6 +79,8 @@ internal fun TrackerMainCard(
                     text = card.secondaryAction.label,
                     style = BottomSheetBtnStyle.White,
                     onClick = onSecondaryAction,
+                    // 약속 등록은 호스트 전용 — 게스트면 비활성화
+                    enabled = !(card.secondaryAction == TrackerAction.RegisterMeeting && !card.isHost),
                     modifier = Modifier.weight(1f),
                 )
                 BottomSheetTwoBtnShort(
