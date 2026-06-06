@@ -6,6 +6,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.bookiibookii.bookiibookii.R
 
@@ -53,10 +54,13 @@ data class BookiiTypography(
     val bold24: TextStyle,
 )
 
+// 피그마: lineHeight=1.4, letterSpacing=-0.01em (모든 텍스트 스타일 공통)
 private fun pretendard(weight: FontWeight, size: Int) = TextStyle(
     fontFamily = Pretendard,
     fontWeight = weight,
     fontSize = size.sp,
+    lineHeight = (size * 1.4f).sp,
+    letterSpacing = (-0.01).em,
 )
 
 val bookiiTypography = BookiiTypography(

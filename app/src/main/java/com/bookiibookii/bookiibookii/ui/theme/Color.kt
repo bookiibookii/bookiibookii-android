@@ -32,6 +32,7 @@ val UiMainSubPale = Color(0xFFD4EDFF)
 val UiBg = Color(0xFFF6F6F6)
 
 val UiPointRed = Color(0xFFFF4D4D)
+val UiPointRed200 = Color(0xFFFF6B6B)
 val UiPointRedPale = Color(0xFFFFBBBB)
 val UiPointRed150 = Color(0xFFFFF3F3)
 
@@ -63,6 +64,7 @@ data class BookiiColors(
     val uiMainSubPale: Color,
     val uiBg: Color,
     val uiPointRed: Color,
+    val uiPointRed200: Color,
     val uiPointRedPale: Color,
     val uiPointRed150: Color,
     val uiPointGreen200: Color,
@@ -91,6 +93,7 @@ val bookiiColors = BookiiColors(
     uiMainSubPale = UiMainSubPale,
     uiBg = UiBg,
     uiPointRed = UiPointRed,
+    uiPointRed200 = UiPointRed200,
     uiPointRedPale = UiPointRedPale,
     uiPointRed150 = UiPointRed150,
     uiPointGreen200 = UiPointGreen200,

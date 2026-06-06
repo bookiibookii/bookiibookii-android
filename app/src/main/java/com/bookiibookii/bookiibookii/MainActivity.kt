@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -33,6 +34,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        Log.d("DEV_TOKEN", "AccessToken: ${TokenManager.getAccessToken(this)}")
 
         if (!TokenManager.hasAccessToken(this)) {
             startActivity(Intent(this, LoginActivity::class.java).apply {
@@ -152,7 +155,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             )
 
             val params = binding.bottomNav.root.layoutParams as ConstraintLayout.LayoutParams
-            params.bottomMargin = systemBars.bottom
+            val bottomNavMargin = (20 * resources.displayMetrics.density).toInt()
+            params.bottomMargin = systemBars.bottom + bottomNavMargin
             binding.bottomNav.root.layoutParams = params
 
             insets

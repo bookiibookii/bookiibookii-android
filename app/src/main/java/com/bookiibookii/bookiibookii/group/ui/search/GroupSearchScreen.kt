@@ -217,7 +217,7 @@ fun GroupSearchScreen(
                     ) {
                         items(uiState.items, key = { it.groupId }) { item ->
                             ExploreGroupCard(
-                                title = item.title,
+                                title = item.title.orEmpty(),
                                 author = item.author.orEmpty(),
                                 category = item.genre.orEmpty(),
                                 exchangeType = tradeTypeLabel(item.tradeType),
