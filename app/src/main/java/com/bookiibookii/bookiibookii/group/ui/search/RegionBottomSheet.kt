@@ -71,7 +71,6 @@ private fun toggleDistrict(current: Set<String>, district: String): Set<String> 
     return if (next.isEmpty()) setOf(ALL) else next
 }
 
-// 선택 상태 → 백엔드 regions 토큰 리스트
 //   NATIONWIDE / 도시 미선택 -> [] (전체)
 //   도시 + ALL -> (city 단일)
 //   도시 + 특정 구 다중 -> (city + 구)
@@ -114,6 +113,18 @@ private fun headSummary(
         ordered.take(3).joinToString(" · ") + " 외 ${ordered.size - 3}개"
     }
     return "${city.name} | $body"
+}
+
+// 지역 필터 칩 라벨. 비어있으면 호출 측에서 기본 라벨 사용
+//   ["서울"] -> "서울 전체", ["서울 동작구"] -> "서울 동작구"
+//   ["서울 동작구", ...] -> "서울 동작구 외 N"
+internal fun regionChipLabel(regions: List<String>): String {
+    val first = regions.first()
+    return when {
+        regions.size > 1 -> "$first 외 ${regions.size - 1}"
+        !first.contains(' ') -> "$first 전체"
+        else -> first
+    }
 }
 
 // 지역 필터 바텀시트

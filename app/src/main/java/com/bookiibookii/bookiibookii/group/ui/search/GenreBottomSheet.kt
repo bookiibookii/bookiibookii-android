@@ -102,6 +102,18 @@ private fun headSummary(category: String?, subs: Set<String>, orderedGenres: Lis
     return "$category | $body"
 }
 
+// 장르 필터 칩 라벨. 비어있으면 호출 측에서 기본 라벨 사용
+//   문학/비문학 전체 -> "문학 전체", 단일 장르 -> "한국소설"
+//   다중 장르 -> "한국소설 외 N"
+internal fun genreChipLabel(categories: List<String>): String {
+    val sel = selectionOf(categories)
+    val category = sel.category ?: return ""
+    if (sel.subs.isEmpty()) return "$category 전체"
+    val ordered = genresOf(category).filter { it in sel.subs }
+    val first = ordered.first()
+    return if (ordered.size > 1) "$first 외 ${ordered.size - 1}" else first
+}
+
 // 장르 필터 바텀시트
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

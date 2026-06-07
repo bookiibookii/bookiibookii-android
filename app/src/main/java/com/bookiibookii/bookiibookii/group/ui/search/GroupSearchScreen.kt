@@ -128,17 +128,21 @@ fun GroupSearchScreen(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
-                    text = "교환 방식",
+                    text = when {
+                        "DIRECT" in uiState.tradeTypes -> "직접 교환"
+                        "DELIVERY" in uiState.tradeTypes -> "택배 교환"
+                        else -> "교환 방식"
+                    },
                     selected = uiState.tradeTypes.isNotEmpty(),
                     onClick = { openSheet = FilterSheet.EXCHANGE },
                 )
                 FilterChip(
-                    text = "지역별",
+                    text = if (uiState.regions.isEmpty()) "지역별" else regionChipLabel(uiState.regions),
                     selected = uiState.regions.isNotEmpty(),
                     onClick = { openSheet = FilterSheet.REGION },
                 )
                 FilterChip(
-                    text = "분야별",
+                    text = if (uiState.categories.isEmpty()) "분야별" else genreChipLabel(uiState.categories),
                     selected = uiState.categories.isNotEmpty(),
                     onClick = { openSheet = FilterSheet.GENRE },
                 )
