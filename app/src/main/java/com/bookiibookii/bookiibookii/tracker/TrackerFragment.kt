@@ -12,6 +12,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.library.feat.LibraryDetailFragment
+import com.bookiibookii.bookiibookii.mypage.MypageFragment
 import com.bookiibookii.bookiibookii.tracker.nav.TrackerNavHost
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -28,6 +29,12 @@ class TrackerFragment : Fragment() {
                     // "서재로 이동" → 바텀네비 서재 탭을 누른 것처럼 전환
                     onNavigateLibrary = {
                         (activity as? MainActivity)?.moveToLibraryTab()
+                    },
+                    onProfileClick = {
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, MypageFragment())
+                            .addToBackStack(null)
+                            .commit()
                     },
                     onCreateGroupClick = {
                         parentFragmentManager.beginTransaction()

@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -179,6 +180,10 @@ private fun LibraryHeader(
                 )
             }
         }
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = BookiiBookiiTheme.colors.grey200,
+        )
     }
 }
 
