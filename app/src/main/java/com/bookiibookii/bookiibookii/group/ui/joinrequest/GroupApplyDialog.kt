@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.group.ui.joinrequest
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,14 +26,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -44,6 +50,7 @@ import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.group.ui.component.BookSearchDropdown
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import java.text.Normalizer
 
 // 그룹 참여 신청 다이얼로그
 // 활성화: isbn13 != null && applyMsg 비어있지 않음
@@ -55,6 +62,7 @@ fun GroupApplyDialog(
     canSubmit: Boolean,
     onQueryChange: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onClearClick: () -> Unit,
     onBookSelect: (BookItem) -> Unit,
     onApplyMsgChange: (String) -> Unit,
     onSubmit: () -> Unit,
@@ -102,6 +110,7 @@ fun GroupApplyDialog(
             results = bookSearchResults,
             onQueryChange = onQueryChange,
             onSearchClick = onSearchClick,
+            onClearClick = onClearClick,
             onBookSelect = onBookSelect,
         )
         // 신청 한 마디 (0/50 카운터)
@@ -125,10 +134,29 @@ private fun BookSearchField(
     results: List<BookItem>,
     onQueryChange: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onClearClick: () -> Unit,
     onBookSelect: (BookItem) -> Unit,
 ) {
     var fieldSize by remember { mutableStateOf(IntSize.Zero) }
     val density = LocalDensity.current
+    // 커서 제어를 위해 TextFieldValue 사용
+    var fieldValue by remember { mutableStateOf(TextFieldValue(query)) }
+    LaunchedEffect(query) {
+        if (fieldValue.text != query) {
+            fieldValue = TextFieldValue(text = query, selection = TextRange(query.length))
+        }
+    }
+    // 도서 선택 시 검색 필드를 한 번 하이라이트
+    var selectTick by remember { mutableStateOf(0) }
+    val highlight = remember { Animatable(0f) }
+    LaunchedEffect(selectTick) {
+        if (selectTick == 0) return@LaunchedEffect
+        highlight.snapTo(1f) // 메인색으로 즉시 점등
+        highlight.animateTo(0f, animationSpec = tween(durationMillis = 600)) // 부드럽게 원복
+    }
+    val fraction = highlight.value
+    val fieldBorderColor = lerp(BookiiBookiiTheme.colors.grey200, BookiiBookiiTheme.colors.uiMain, fraction)
+    val fieldBgColor = lerp(BookiiBookiiTheme.colors.white, BookiiBookiiTheme.colors.uiMainPale, fraction)
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -136,10 +164,10 @@ private fun BookSearchField(
                 .height(48.dp)
                 .onSizeChanged { fieldSize = it }
                 .clip(BookiiBookiiTheme.shape.round20)
-                .background(BookiiBookiiTheme.colors.white)
+                .background(fieldBgColor)
                 .border(
                     width = 1.dp,
-                    color = BookiiBookiiTheme.colors.grey200,
+                    color = fieldBorderColor,
                     shape = BookiiBookiiTheme.shape.round20,
                 )
                 .padding(horizontal = 12.dp),
@@ -155,8 +183,19 @@ private fun BookSearchField(
                     .clickable { onSearchClick() },
             )
             BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
+                value = fieldValue,
+                onValueChange = { newValue ->
+                    val oldLen = Normalizer.normalize(fieldValue.text, Normalizer.Form.NFD).length
+                    val newLen = Normalizer.normalize(newValue.text, Normalizer.Form.NFD).length
+                    if (newLen < oldLen) {
+                        // 한 글자라도 삭제하면 전부 삭제
+                        fieldValue = TextFieldValue("")
+                        onClearClick()
+                    } else {
+                        fieldValue = newValue
+                        onQueryChange(newValue.text)
+                    }
+                },
                 singleLine = true,
                 textStyle = BookiiBookiiTheme.typography.regular16.copy(
                     color = BookiiBookiiTheme.colors.grey900,
@@ -167,7 +206,7 @@ private fun BookSearchField(
                 modifier = Modifier.weight(1f),
                 decorationBox = { innerTextField ->
                     Box {
-                        if (query.isEmpty()) {
+                        if (fieldValue.text.isEmpty()) {
                             Text(
                                 text = "어떤 책을 읽어볼까요?",
                                 style = BookiiBookiiTheme.typography.regular16,
@@ -191,7 +230,10 @@ private fun BookSearchField(
             ) {
                 BookSearchDropdown(
                     books = results,
-                    onBookClick = onBookSelect,
+                    onBookClick = { book ->
+                        selectTick++
+                        onBookSelect(book)
+                    },
                     modifier = Modifier
                         .width(with(density) { fieldSize.width.toDp() })
                         .heightIn(max = 240.dp),
@@ -300,6 +342,7 @@ private fun GroupApplyDialogEmptyPreview() {
                 canSubmit = false,
                 onQueryChange = {},
                 onSearchClick = {},
+                onClearClick = {},
                 onBookSelect = {},
                 onApplyMsgChange = {},
                 onSubmit = {},
@@ -321,6 +364,7 @@ private fun GroupApplyDialogFilledPreview() {
                 canSubmit = true,
                 onQueryChange = {},
                 onSearchClick = {},
+                onClearClick = {},
                 onBookSelect = {},
                 onApplyMsgChange = {},
                 onSubmit = {},

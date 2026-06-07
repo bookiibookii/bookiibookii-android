@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -70,7 +71,6 @@ private fun toggleDistrict(current: Set<String>, district: String): Set<String> 
     return if (next.isEmpty()) setOf(ALL) else next
 }
 
-// 선택 상태 → 백엔드 regions 토큰 리스트
 //   NATIONWIDE / 도시 미선택 -> [] (전체)
 //   도시 + ALL -> (city 단일)
 //   도시 + 특정 구 다중 -> (city + 구)
@@ -115,6 +115,18 @@ private fun headSummary(
     return "${city.name} | $body"
 }
 
+// 지역 필터 칩 라벨. 비어있으면 호출 측에서 기본 라벨 사용
+//   ["서울"] -> "서울 전체", ["서울 동작구"] -> "서울 동작구"
+//   ["서울 동작구", ...] -> "서울 동작구 외 N"
+internal fun regionChipLabel(regions: List<String>): String {
+    val first = regions.first()
+    return when {
+        regions.size > 1 -> "$first 외 ${regions.size - 1}"
+        !first.contains(' ') -> "$first 전체"
+        else -> first
+    }
+}
+
 // 지역 필터 바텀시트
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -138,6 +150,7 @@ fun RegionBottomSheet(
             .fillMaxWidth()
             .bottomSheetTopShadow(cornerRadius = 20.dp)
             .background(color = BookiiBookiiTheme.colors.white, shape = sheetShape)
+            .navigationBarsPadding()
             .padding(horizontal = 16.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {

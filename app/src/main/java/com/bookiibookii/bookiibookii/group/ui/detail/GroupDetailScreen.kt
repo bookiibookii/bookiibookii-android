@@ -221,6 +221,7 @@ fun GroupDetailRoute(
                     canSubmit = applyState.canSubmit && !applyState.submitting,
                     onQueryChange = applyViewModel::onBookSearchQueryChange,
                     onSearchClick = applyViewModel::searchBooks,
+                    onClearClick = applyViewModel::onClearBookSearch,
                     onBookSelect = applyViewModel::onBookSelect,
                     onApplyMsgChange = applyViewModel::onApplyMsgChange,
                     onSubmit = {

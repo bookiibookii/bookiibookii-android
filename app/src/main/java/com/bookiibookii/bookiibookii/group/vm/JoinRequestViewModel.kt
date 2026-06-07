@@ -102,6 +102,16 @@ class JoinRequestViewModel : ViewModel() {
         )
     }
 
+    // 텍스트 삭제 시 전체 초기화 (Editor와 동일)
+    fun onClearBookSearch() = _state.update {
+        it.copy(
+            bookSearchQuery = "",
+            isbn13 = null,
+            bookSearchResults = emptyList(),
+            bookSearchError = null,
+        )
+    }
+
     // 신청 한 마디 입력 (다이얼로그에서 50자 컷오프 후 호출)
     fun onApplyMsgChange(value: String) = _state.update { it.copy(applyMsg = value) }
 

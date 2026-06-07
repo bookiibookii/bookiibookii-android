@@ -29,6 +29,7 @@ fun TrackerNavHost(
     onCreateGroupClick: () -> Unit,
     onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
     onNavigateLibrary: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = TrackerDestinations.MAIN,
 ) {
@@ -54,7 +55,7 @@ fun TrackerNavHost(
                 .getStateFlow<PlaceSearchResult?>(TrackerDestinations.RESULT_SELECTED_PLACE, null)
                 .collectAsStateWithLifecycle()
             TrackerMainRoute(
-                onProfileClick = {},
+                onProfileClick = onProfileClick,
                 onAlertClick = {},
                 onCreateGroupClick = onCreateGroupClick,
                 onCardClick = { groupId ->
