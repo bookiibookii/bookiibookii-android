@@ -144,6 +144,7 @@ fun ReadingCardDetailScreen(
     onCopyLink: (card: ReadingCard) -> Unit = {},
     onKakaoShare: (card: ReadingCard) -> Unit = {},
     onXShare: (card: ReadingCard) -> Unit = {},
+    onDownload: (card: ReadingCard) -> Unit = {},
 ) {
     val pagerState    = rememberPagerState(initialPage = initialIndex) { cards.size }
     val coroutineScope = rememberCoroutineScope()
@@ -274,6 +275,10 @@ fun ReadingCardDetailScreen(
             onXClick = {
                 showShareSheet = false
                 currentCard?.let { onXShare(it) }
+            },
+            onDownloadClick = {
+                showShareSheet = false
+                currentCard?.let { onDownload(it) }
             },
             onCopyLinkClick = {
                 showShareSheet = false
