@@ -153,7 +153,7 @@ private fun HomeSectionHeader(
         )
         Text(
             text = subtitle,
-            style = typography.medium16,
+            style = typography.regular16,
             color = colors.grey600,
         )
     }
