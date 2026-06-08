@@ -94,10 +94,11 @@ fun ProfileSettingScreen(
     val originalNickname = profile?.nickname ?: ""
 
     var nickname by remember(profile?.nickname) { mutableStateOf(profile?.nickname ?: "") }
-    var selectedGenderIndex by remember { mutableStateOf<Int?>(null) }
-    var birthYear by remember { mutableStateOf<Int?>(null) }
-    var birthMonth by remember { mutableStateOf<Int?>(null) }
-    var birthDay by remember { mutableStateOf<Int?>(null) }
+    var selectedGenderIndex by remember(profile?.gender) { mutableStateOf(genderIndexFromCode(profile?.gender)) }
+    val parsedBirth = remember(profile?.birthDate) { parseBirthDate(profile?.birthDate) }
+    var birthYear by remember(profile?.birthDate) { mutableStateOf(parsedBirth?.first) }
+    var birthMonth by remember(profile?.birthDate) { mutableStateOf(parsedBirth?.second) }
+    var birthDay by remember(profile?.birthDate) { mutableStateOf(parsedBirth?.third) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showPhotoSheet by remember { mutableStateOf(false) }
 
@@ -111,7 +112,7 @@ fun ProfileSettingScreen(
         true
     }
 
-    val genderOptions = listOf("FEMALE", "MALE", null)
+    val genderOptions = listOf("FEMALE", "MALE", "NONE")
     val birthDateDisplay = if (birthYear != null && birthMonth != null && birthDay != null) {
         "%04d.%02d.%02d".format(birthYear!!, birthMonth!!, birthDay!!)
     } else ""
@@ -385,6 +386,24 @@ private fun GenderField(selectedIndex: Int?, onSelect: (Int) -> Unit) {
             }
         }
     }
+}
+
+// gender
+private fun genderIndexFromCode(code: String?): Int? = when (code) {
+    "FEMALE" -> 0
+    "MALE" -> 1
+    "NONE" -> 2
+    else -> null
+}
+
+// "yyyy-MM-dd"
+private fun parseBirthDate(birthDate: String?): Triple<Int, Int, Int>? {
+    val parts = birthDate?.split("-") ?: return null
+    if (parts.size != 3) return null
+    val year = parts[0].toIntOrNull() ?: return null
+    val month = parts[1].toIntOrNull() ?: return null
+    val day = parts[2].toIntOrNull() ?: return null
+    return Triple(year, month, day)
 }
 
 @Composable

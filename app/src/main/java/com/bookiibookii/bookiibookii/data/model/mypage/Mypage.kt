@@ -6,6 +6,8 @@ data class UserProfileResDTO(
     val profileImageUrl: String?,
     val nickname: String,
     val introduction: String?,
+    val gender: String? = null,        // MALE | FEMALE | NONE
+    val birthDate: String? = null,     // yyyy-MM-dd
     val userBooks: List<UserBookDto>?,
     val bookReviewCount: Int,
     val recentBookReviews: List<BookReviewSummaryDto>?,
