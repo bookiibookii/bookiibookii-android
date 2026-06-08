@@ -1,10 +1,10 @@
-package com.bookiibookii.bookiibookii.home.ui.component
+package com.bookiibookii.bookiibookii.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,16 +28,19 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
+
+// 홈/트래커 공통 상단바. 좌측 프로필, 가운데 제목, 우측 알림(미읽음 시 배지 점)
 @Composable
-internal fun HomeTopBar(
-    onNotificationClick: () -> Unit,
+fun BookiiTopBar(
+    title: String,
     onProfileClick: () -> Unit,
+    onNotificationClick: () -> Unit,
     hasNewNotification: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
-    androidx.compose.foundation.layout.Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -46,7 +50,6 @@ internal fun HomeTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            // 왼쪽: 프로필 아이콘 — 피그마: w=88dp (오른쪽과 동일 너비로 중앙 정렬 보장)
             Row(
                 modifier = Modifier.width(88.dp),
                 horizontalArrangement = Arrangement.Start,
@@ -57,22 +60,21 @@ internal fun HomeTopBar(
                     modifier = Modifier.size(40.dp),
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_person_fill),
+                        painter = painterResource(R.drawable.ic_person2),
                         contentDescription = "프로필",
-                        tint = androidx.compose.ui.graphics.Color.Unspecified,
-                        modifier = Modifier.size(32.dp),
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }
 
             // 가운데: 화면 제목
             Text(
-                text = "탐색",
+                text = title,
                 style = typography.medium20,
                 color = colors.grey900,
             )
 
-            // 오른쪽: 알림 아이콘 — 피그마: w=88dp (빈 슬롯 40dp + gap 8dp + 알림 40dp)
             Row(
                 modifier = Modifier.width(88.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
@@ -86,7 +88,7 @@ internal fun HomeTopBar(
                         Icon(
                             painter = painterResource(R.drawable.ic_alert_32),
                             contentDescription = "알림",
-                            tint = androidx.compose.ui.graphics.Color.Unspecified,
+                            tint = Color.Unspecified,
                             modifier = Modifier.size(32.dp),
                         )
                     }
@@ -109,13 +111,15 @@ internal fun HomeTopBar(
 
 // ─── 프리뷰 ───────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, name = "HomeTopBar")
+@Preview(showBackground = true, name = "BookiiTopBar")
 @Composable
-private fun HomeTopBarPreview() {
+private fun BookiiTopBarPreview() {
     BookiiPreview {
-        HomeTopBar(
-            onNotificationClick = {},
+        BookiiTopBar(
+            title = "탐색",
             onProfileClick = {},
+            onNotificationClick = {},
+            hasNewNotification = true,
         )
     }
 }

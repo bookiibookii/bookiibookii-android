@@ -13,6 +13,7 @@ import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.home.ui.HomeRoute
 import com.bookiibookii.bookiibookii.mypage.MypageFragment
+import com.bookiibookii.bookiibookii.notification.NotificationFragment
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 class HomeFragment : Fragment() {
@@ -30,6 +31,7 @@ class HomeFragment : Fragment() {
             return
         }
         vm.refreshCurrentTab()
+        vm.fetchNotificationDot()
     }
 
     override fun onCreateView(
@@ -69,7 +71,12 @@ class HomeFragment : Fragment() {
                             .addToBackStack(null)
                             .commit()
                     },
-                    onNotificationClick = { },
+                    onNotificationClick = {
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, NotificationFragment())
+                            .addToBackStack(null)
+                            .commit()
+                    },
                     onProfileClick = {
                         parentFragmentManager.beginTransaction()
                             .replace(R.id.fragmentContainer, MypageFragment())

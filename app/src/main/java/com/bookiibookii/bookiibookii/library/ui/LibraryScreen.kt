@@ -159,10 +159,10 @@ private fun LibraryHeader(
             // 아이콘 버튼 40dp, 아이콘 자체 32dp (피그마 스펙)
             IconButton(onClick = onProfileClick, modifier = Modifier.size(40.dp)) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_person_fill),
+                    painter = painterResource(R.drawable.ic_person2),
                     contentDescription = "프로필",
                     tint = Color.Unspecified,
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
             Text(

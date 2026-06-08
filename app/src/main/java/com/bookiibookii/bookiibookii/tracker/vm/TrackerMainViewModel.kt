@@ -16,6 +16,7 @@ import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.model.toReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
 import com.bookiibookii.bookiibookii.tracker.model.toCardModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -50,6 +51,25 @@ class TrackerMainViewModel(
     // 최초 조회는 여기서. 화면의 ON_RESUME은 '첫 진입을 건너뛰고' 복귀 때만 재조회하므로 중복되지 않는다.
     init {
         load()
+        fetchNotificationDot()
+    }
+
+    // 상단 알림 아이콘 배지 점: SYSTEM·KEYWORD 알림 중 미읽음이 하나라도 있으면 표시
+    fun fetchNotificationDot() {
+        viewModelScope.launch {
+            val systemDeferred = async {
+                runCatching {
+                    RetrofitClient.notiApi().getNotifications("SYSTEM", null, 20)
+                }.getOrNull()?.body()?.result?.items.orEmpty()
+            }
+            val keywordDeferred = async {
+                runCatching {
+                    RetrofitClient.notiApi().getNotifications("KEYWORD", null, 20)
+                }.getOrNull()?.body()?.result?.items.orEmpty()
+            }
+            val hasUnread = (systemDeferred.await() + keywordDeferred.await()).any { !it.isRead }
+            _state.update { it.copy(hasNewNotification = hasUnread) }
+        }
     }
 
     // 대표(희망) 교환 장소를 불러와 약속 장소로 채운다. isDefault 우선, 없으면 첫 항목.

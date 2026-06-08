@@ -13,6 +13,7 @@ import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.library.feat.LibraryDetailFragment
 import com.bookiibookii.bookiibookii.mypage.MypageFragment
+import com.bookiibookii.bookiibookii.notification.NotificationFragment
 import com.bookiibookii.bookiibookii.tracker.nav.TrackerNavHost
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -33,6 +34,12 @@ class TrackerFragment : Fragment() {
                     onProfileClick = {
                         parentFragmentManager.beginTransaction()
                             .replace(R.id.fragmentContainer, MypageFragment())
+                            .addToBackStack(null)
+                            .commit()
+                    },
+                    onAlertClick = {
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, NotificationFragment())
                             .addToBackStack(null)
                             .commit()
                     },
