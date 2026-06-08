@@ -2,7 +2,6 @@ package com.bookiibookii.bookiibookii.home.notification.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.home.notification.data.NotificationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,8 +27,7 @@ class NotificationViewModel(
                     nextCursor = null,
                     hasNext = false,
                     isLoading = true,
-                    isLoadingMore = false,
-                    errorType = null
+                    isLoadingMore = false
                 )
             }
 
@@ -50,8 +48,7 @@ class NotificationViewModel(
                 } else {
                     _state.update {
                         it.copy(
-                            isLoading = false,
-                            errorType = ErrorType.SYSTEM
+                            isLoading = false
                         )
                     }
                 }
@@ -59,8 +56,7 @@ class NotificationViewModel(
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
-                        isLoading = false,
-                        errorType = ErrorType.NETWORK
+                        isLoading = false
                     )
                 }
             }
@@ -75,7 +71,7 @@ class NotificationViewModel(
 
         viewModelScope.launch {
 
-            _state.update { it.copy(isLoadingMore = true, errorType = null) }
+            _state.update { it.copy(isLoadingMore = true) }
 
             try {
                 val http = repo.fetchNotifications(category, s.nextCursor, pageSize)
@@ -94,8 +90,7 @@ class NotificationViewModel(
                 } else {
                     _state.update {
                         it.copy(
-                            isLoadingMore = false,
-                            errorType = ErrorType.SYSTEM
+                            isLoadingMore = false
                         )
                     }
                 }
@@ -103,8 +98,7 @@ class NotificationViewModel(
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
-                        isLoadingMore = false,
-                        errorType = ErrorType.NETWORK
+                        isLoadingMore = false
                     )
                 }
             }
