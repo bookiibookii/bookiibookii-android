@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -37,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerBookReviewViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
@@ -81,8 +79,6 @@ fun TrackerBookReviewRoute(
         factory = TrackerBookReviewViewModel.factory(
             groupId = groupId,
             isEdit = isEdit,
-            // 수정 모드일 때 내 후기 선별용. 작성 모드면 미사용.
-            myUserId = TokenManager.getUserId(LocalContext.current),
         )
     ),
 ) {

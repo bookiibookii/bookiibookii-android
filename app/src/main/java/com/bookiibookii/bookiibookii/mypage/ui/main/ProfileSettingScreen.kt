@@ -540,8 +540,33 @@ private fun WheelPickerColumn(
     }
 }
 
-@Preview(showBackground = true, widthDp = 412)
+private val previewProfile = UserProfileResDTO(
+    userId = 1L,
+    profileImageUrl = null,
+    nickname = "부키",
+    introduction = "매일 한 챕터씩 읽는 중입니다.",
+    userBooks = emptyList(),
+    bookReviewCount = 0,
+    recentBookReviews = emptyList(),
+    boomUpCount = 0,
+    recentReceivedReviews = emptyList(),
+)
+
+@Preview(name = "프로필 수정 - 닉네임 사용가능", showBackground = true, widthDp = 412, heightDp = 900)
 @Composable
 private fun ProfileSettingScreenPreview() {
-    ProfileSettingScreen()
+    BookiiBookiiTheme {
+        ProfileSettingScreen(
+            profile = previewProfile,
+            nicknameCheckState = NicknameCheckState.Available("사용 가능한 닉네임이에요"),
+        )
+    }
+}
+
+@Preview(name = "프로필 수정 - 빈 상태", showBackground = true, widthDp = 412, heightDp = 900)
+@Composable
+private fun ProfileSettingScreenEmptyPreview() {
+    BookiiBookiiTheme {
+        ProfileSettingScreen()
+    }
 }

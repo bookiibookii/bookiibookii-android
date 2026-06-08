@@ -7,7 +7,7 @@ import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.location.DeliveryAddress
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
-import com.bookiibookii.bookiibookii.data.model.tracker.GroupReviewsResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MyBookReviewsResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressDirectUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressSavedUpdateReqDTO
@@ -52,11 +52,11 @@ class TrackerRepository(
         return api.patchReadingPeriod(groupId, ReadingPeriodUpdateReqDTO(newEndDate))
     }
 
-    // 그룹 후기 전체 조회 — 기존 책 후기 프리필용(writerId로 내 후기 선별)
-    suspend fun fetchGroupReviews(
+    // 내 책 리뷰 목록 조회 — 기존 책 후기 프리필용(reviewType으로 내 책/파트너 책 구분)
+    suspend fun fetchMyBookReviews(
         groupId: Long,
-    ): Response<ApiResponse<GroupReviewsResDTO>> {
-        return api.getGroupReviews(groupId)
+    ): Response<ApiResponse<MyBookReviewsResDTO>> {
+        return api.getMyBookReviews(groupId)
     }
 
     suspend fun submitBookReview(
@@ -67,13 +67,14 @@ class TrackerRepository(
         return api.postBookReview(groupId, BookReviewReqDTO(star, comment))
     }
 
-    // 내 책 리뷰 수정 (PATCH /reviews/me)
+    // 내 책 리뷰 수정 (PATCH /reviews/book/{reviewId})
     suspend fun updateMyBookReview(
         groupId: Long,
+        reviewId: Long,
         star: Double,
         comment: String?,
     ): Response<ApiResponse<BookReviewResDTO>> {
-        return api.patchMyBookReview(groupId, BookReviewReqDTO(star, comment))
+        return api.patchMyBookReview(groupId, reviewId, BookReviewReqDTO(star, comment))
     }
 
     suspend fun submitMemberReview(

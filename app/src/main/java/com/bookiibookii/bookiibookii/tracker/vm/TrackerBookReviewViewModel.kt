@@ -17,12 +17,14 @@ import kotlinx.coroutines.launch
 class TrackerBookReviewViewModel(
     private val groupId: Long,
     private val isEdit: Boolean = false,   // true면 제출 시 PATCH(수정), false면 POST(작성)
-    private val myUserId: Long? = null,    // 수정 모드 프리필 시 내 후기 선별용
     private val repository: TrackerRepository = TrackerRepository(RetrofitClient.trkApi())
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TrackerBookReviewUiState())
     val state: StateFlow<TrackerBookReviewUiState> = _state
+
+    // 수정 모드에서 PATCH 대상 reviewId (프리필 때 GET reviews/book/me 로 확보)
+    private var editReviewId: Long? = null
 
     init {
         load()
@@ -37,18 +39,17 @@ class TrackerBookReviewViewModel(
                 if (res.isSuccessful && body?.isSuccess == true) {
                     val dto = body.result
                     // EXCHANGE_REVIEW_WRITING은 파트너 책 후기, 그 외 REVIEW_WRITING은 내 책
-                    val book = when (dto?.displayStatus) {
-                        "EXCHANGE_REVIEW_WRITING" -> dto.partnerBook
-                        else -> dto?.myBook
-                    }
-                    // 수정 모드면 기존 책 후기(내가 쓴 것)를 불러와 프리필
-                    val myReview = if (isEdit) fetchMyBookReview() else null
+                    val isPartnerReview = dto?.displayStatus == "EXCHANGE_REVIEW_WRITING"
+                    val book = if (isPartnerReview) dto?.partnerBook else dto?.myBook
+                    // 수정 모드면 화면에 표시 중인 책과 같은 책의 내 리뷰를 골라 프리필
+                    val myReview = if (isEdit) fetchMyBookReview(book?.title) else null
+                    editReviewId = myReview?.reviewId
                     _state.update {
                         it.copy(
                             bookTitle = book?.title.orEmpty(),
                             bookImageUrl = book?.image,
-                            initialStar = myReview?.star ?: 0.0,
-                            initialComment = myReview?.comment.orEmpty(),
+                            initialStar = myReview?.rating ?: 0.0,
+                            initialComment = myReview?.content.orEmpty(),
                             loading = false,
                         )
                     }
@@ -61,14 +62,14 @@ class TrackerBookReviewViewModel(
         }
     }
 
-    // 그룹 후기 전체 조회 후 writerId == 내 userId 인 책 후기 1건 선별. 실패/없으면 null.
-    private suspend fun fetchMyBookReview(): BookReviewItem? {
-        if (myUserId == null) return null
+    // 내 책 리뷰 목록 조회 후 표시 중인 책 제목과 일치하는 항목 1건 선별. 실패/없으면 null.
+    private suspend fun fetchMyBookReview(bookTitle: String?): BookReviewItem? {
+        if (bookTitle.isNullOrBlank()) return null
         return try {
-            val res = repository.fetchGroupReviews(groupId)
+            val res = repository.fetchMyBookReviews(groupId)
             val body = res.body()
             if (res.isSuccessful && body?.isSuccess == true) {
-                body.result?.bookReviews?.firstOrNull { it.writerId == myUserId }
+                body.result?.reviews?.firstOrNull { it.bookTitle == bookTitle }
             } else {
                 null
             }
@@ -81,7 +82,8 @@ class TrackerBookReviewViewModel(
         viewModelScope.launch {
             try {
                 val res = if (isEdit) {
-                    repository.updateMyBookReview(groupId, star, comment)
+                    val reviewId = editReviewId ?: return@launch
+                    repository.updateMyBookReview(groupId, reviewId, star, comment)
                 } else {
                     repository.submitBookReview(groupId, star, comment)
                 }
@@ -98,11 +100,10 @@ class TrackerBookReviewViewModel(
         fun factory(
             groupId: Long,
             isEdit: Boolean = false,
-            myUserId: Long? = null,
         ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
-                    TrackerBookReviewViewModel(groupId, isEdit, myUserId)
+                    TrackerBookReviewViewModel(groupId, isEdit)
                 }
             }
     }

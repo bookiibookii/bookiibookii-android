@@ -15,33 +15,25 @@ data class BookReviewResDTO(
     val exchangeStatus: String?,
 )
 
-// 그룹 후기 전체 조회 — GET /api/groups/{groupId}/reviews
-// 책 후기(bookReviews)와 파트너 후기(memberReviews)를 함께 반환.
-// 기존 책 후기 프리필 시 writerId == 내 userId 인 항목을 골라 star/comment 사용.
-data class GroupReviewsResDTO(
-    val bookReviews: List<BookReviewItem>?,
-    val memberReviews: List<MemberReviewItem>?,
+// 내 책 리뷰 목록 조회 — GET /api/groups/{groupId}/reviews/book/me
+// 현재 로그인 사용자가 해당 그룹에서 작성한 책 리뷰만 반환(파트너 매너 리뷰 제외).
+// 내 원래 책 리뷰(MY_BOOK)와 파트너 책 리뷰(PARTNER_BOOK)를 reviewType으로 구분.
+// 작성한 리뷰가 없으면 빈 배열.
+data class MyBookReviewsResDTO(
+    val reviews: List<BookReviewItem>?,
 )
 
 data class BookReviewItem(
+    val reviewId: Long?,
+    val reviewType: String?,   // MY_BOOK | PARTNER_BOOK
+    val groupId: Long?,
     val bookId: Long?,
     val bookTitle: String?,
     val bookAuthor: String?,
-    val bookImage: String?,
-    val writerId: Long?,
-    val writerNickname: String?,
-    val writerProfileImageUrl: String?,
-    val star: Double?,
-    val comment: String?,
+    val bookImageUrl: String?,
+    val rating: Double?,
+    val content: String?,
+    val isEditable: Boolean?,
     val createdAt: String?,
-)
-
-data class MemberReviewItem(
-    val groupName: String?,
-    val readingPeriod: Int?,
-    val writerId: Long?,
-    val writerNickname: String?,
-    val writerProfileImageUrl: String?,
-    val reaction: String?,
-    val comment: String?,
+    val updatedAt: String?,
 )
