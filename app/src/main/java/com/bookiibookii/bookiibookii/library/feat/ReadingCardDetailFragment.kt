@@ -224,7 +224,8 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
             }
         }
 
-        val container = (requireView().parent as? ViewGroup) ?: run {
+        // FragmentContainerView에는 Fragment 미연결 View를 못 붙이므로 액티비티 content 루트에 부착
+        val container = requireActivity().findViewById<ViewGroup>(android.R.id.content) ?: run {
             onBitmap(null)
             return
         }
