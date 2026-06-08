@@ -73,6 +73,8 @@ private fun PreviewPage5() { BookiiBookiiTheme { IntroScreen(onStart = {}, initi
 fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { PAGE_COUNT })
     var startVisible by remember { mutableStateOf(initialPage == PAGE_COUNT - 1) }
+    // 자동 재생이 끝난 뒤부터 사용자가 직접 스와이프해 이전 화면을 다시 볼 수 있게 허용
+    var userScrollEnabled by remember { mutableStateOf(initialPage != 0) }
 
     LaunchedEffect(Unit) {
         if (initialPage != 0) return@LaunchedEffect
@@ -85,6 +87,7 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
         }
         delay(350L)
         startVisible = true
+        userScrollEnabled = true
     }
 
     Box(
@@ -96,7 +99,7 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
-            userScrollEnabled = false,
+            userScrollEnabled = userScrollEnabled,
         ) { page ->
             Box(
                 modifier = Modifier.fillMaxSize(),
