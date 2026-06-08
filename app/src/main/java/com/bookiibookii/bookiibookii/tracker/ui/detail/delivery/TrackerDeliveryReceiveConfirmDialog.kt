@@ -110,8 +110,8 @@ private fun TrackerDeliveryReceiveConfirmDialogContent(
             style = if (isChecked) CardButtonStyle.Main else CardButtonStyle.Grey,
             onClick = if (isChecked) onConfirmClick else {{}},
             modifier = Modifier.fillMaxWidth(),
-            shape = BookiiBookiiTheme.shape.round20,
-            textStyle = BookiiBookiiTheme.typography.bold18,
+            shape = BookiiBookiiTheme.shape.round16,
+            textStyle = BookiiBookiiTheme.typography.regular15,
         )
     }
 }

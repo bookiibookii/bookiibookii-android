@@ -45,8 +45,11 @@ import com.bookiibookii.bookiibookii.R
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.bookiibookii.bookiibookii.common.openExternalUrl
 import com.bookiibookii.bookiibookii.common.openReportChannel
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.deliveryTrackingUrl
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
 import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
@@ -648,7 +651,14 @@ fun TrackerMainRoute(
                 shippingConfirmGroupId = null
                 viewModel.clearPartnerDelivery()
             },
-            onTrackingSearchClick = {}, // TODO: 배송 조회 이동 로직 보류
+            onTrackingSearchClick = {
+                val url = deliveryTrackingUrl(partner.deliveryCompany, partner.trackingNumber)
+                if (url != null) {
+                    context.openExternalUrl(url)
+                } else {
+                    context.showCustomToast("배송 조회를 지원하지 않는 택배사예요.", false)
+                }
+            },
             onConfirmClick = {
                 shippingConfirmGroupId = null
                 viewModel.clearPartnerDelivery()
