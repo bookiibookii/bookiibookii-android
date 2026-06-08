@@ -2,7 +2,7 @@ package com.bookiibookii.bookiibookii.home.notification.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bookiibookii.bookiibookii.common.ComErrorActivity
+import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.home.notification.data.NotificationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,7 +51,7 @@ class NotificationViewModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            errorType = ComErrorActivity.TYPE_SYSTEM_ERROR
+                            errorType = ErrorType.SYSTEM
                         )
                     }
                 }
@@ -60,7 +60,7 @@ class NotificationViewModel(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        errorType = ComErrorActivity.TYPE_NETWORK_ERROR
+                        errorType = ErrorType.NETWORK
                     )
                 }
             }
@@ -95,7 +95,7 @@ class NotificationViewModel(
                     _state.update {
                         it.copy(
                             isLoadingMore = false,
-                            errorType = ComErrorActivity.TYPE_SYSTEM_ERROR
+                            errorType = ErrorType.SYSTEM
                         )
                     }
                 }
@@ -104,7 +104,7 @@ class NotificationViewModel(
                 _state.update {
                     it.copy(
                         isLoadingMore = false,
-                        errorType = ComErrorActivity.TYPE_NETWORK_ERROR
+                        errorType = ErrorType.NETWORK
                     )
                 }
             }
