@@ -112,11 +112,15 @@ class NotificationViewModel(
                 val body = http.body()
 
                 if (http.isSuccessful && body?.isSuccess == true && body.result != null) {
-                    val updated = body.result
+                    val result = body.result
                     _state.update { cur ->
                         cur.copy(
                             items = cur.items.map { item ->
-                                if (item.id == notificationId) updated else item
+                                if (item.id == notificationId) {
+                                    item.copy(isRead = result.isRead, readAt = result.readAt)
+                                } else {
+                                    item
+                                }
                             }
                         )
                     }

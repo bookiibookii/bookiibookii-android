@@ -30,6 +30,7 @@ fun TrackerNavHost(
     onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
     onNavigateLibrary: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onAlertClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = TrackerDestinations.MAIN,
 ) {
@@ -56,7 +57,7 @@ fun TrackerNavHost(
                 .collectAsStateWithLifecycle()
             TrackerMainRoute(
                 onProfileClick = onProfileClick,
-                onAlertClick = {},
+                onAlertClick = onAlertClick,
                 onCreateGroupClick = onCreateGroupClick,
                 onCardClick = { groupId ->
                     navController.navigate(TrackerDestinations.detail(groupId))

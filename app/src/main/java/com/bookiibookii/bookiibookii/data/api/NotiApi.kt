@@ -1,8 +1,8 @@
 package com.bookiibookii.bookiibookii.data.api
 
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
-import com.bookiibookii.bookiibookii.data.model.notification.NotificationItem
 import com.bookiibookii.bookiibookii.data.model.notification.NotificationListResult
+import com.bookiibookii.bookiibookii.data.model.notification.NotificationReadResult
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.PATCH
@@ -23,5 +23,5 @@ interface NotiApi {
     @PATCH("api/notifications/{notificationId}/read")
     suspend fun readNotification(
         @Path("notificationId") notificationId: Long
-    ): Response<ApiResponse<NotificationItem>>
+    ): Response<ApiResponse<NotificationReadResult>>
 }
