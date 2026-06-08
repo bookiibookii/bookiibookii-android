@@ -23,7 +23,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bookiibookii.bookiibookii.data.model.group.GroupItem
+import com.bookiibookii.bookiibookii.data.model.group.HomeLayoutType
+import com.bookiibookii.bookiibookii.data.model.group.HomeSection
+import com.bookiibookii.bookiibookii.data.model.group.HomeSectionItem
 import com.bookiibookii.bookiibookii.home.HomeTab
 import com.bookiibookii.bookiibookii.home.HomeUiState
 import com.bookiibookii.bookiibookii.home.HomeViewModel
@@ -47,6 +49,7 @@ fun HomeRoute(
     onCreateGroupClick: () -> Unit,
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onBookClick: (String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     HomeScreen(
@@ -57,6 +60,8 @@ fun HomeRoute(
         onCreateGroupClick = onCreateGroupClick,
         onNotificationClick = onNotificationClick,
         onProfileClick = onProfileClick,
+        // 책 탭 → 그 책 제목(searchKeyword)으로 그룹 검색
+        onBookClick = { item -> onBookClick(item.searchKeyword ?: item.title.orEmpty()) },
     )
 }
 
@@ -72,6 +77,7 @@ internal fun HomeScreen(
     onCreateGroupClick: () -> Unit,
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onBookClick: (HomeSectionItem) -> Unit = {},
 ) {
     val lazyListState = rememberLazyListState()
 
@@ -143,11 +149,9 @@ internal fun HomeScreen(
 
             when (uiState.selectedTab) {
                 HomeTab.RECOMMEND -> homeRecommendContent(
-                    newGroups = uiState.newGroups,
-                    categorySection = uiState.categorySection,
-                    bestsellerSection = uiState.bestsellerSection,
-                    regionSection = uiState.regionSection,
+                    sections = uiState.recommendSections,
                     onGroupClick = onGroupClick,
+                    onBookClick = onBookClick,
                 )
                 HomeTab.MY_GROUPS -> homeMyGroupsContent(
                     myGroups = uiState.myGroups,
@@ -166,16 +170,22 @@ internal fun HomeScreen(
 
 // ─── 프리뷰 ───────────────────────────────────────────────────────────────────
 
-private val mockGroupItem = GroupItem(
-    groupId = 1L, groupName = "책과 함께", title = "살인자의 기억법", author = "김영하",
-    genre = "한국소설", bookImage = null, hostNickname = "부키", hostProfileImageUrl = null,
-    groupStatus = "RECRUITING", currentCount = 2, maxCapacity = 5, waitingCount = 0,
-    isHot = false, tradeType = "직접", readingPeriod = 7, pictureBadge = null,
+private val mockGroupItem = HomeSectionItem(
+    groupId = 1L, groupName = "책과 함께", bookTitle = "살인자의 기억법", author = "김영하",
+    bookImage = null, hostNickname = "부키", hostProfileImageUrl = null, readingPeriod = 7,
 )
-private val mockNewGroups = listOf(
-    mockGroupItem,
-    mockGroupItem.copy(groupId = 2L, title = "채식주의자"),
-    mockGroupItem.copy(groupId = 3L, title = "아몬드"),
+private val mockSections = listOf(
+    HomeSection(
+        sectionType = "NEW_GROUPS",
+        title = "신규 그룹을 확인해보세요.",
+        subtitle = "오늘 만들어진 따끈따끈한 그룹들만 모았어요.",
+        layoutType = HomeLayoutType.GROUP_CARD_CAROUSEL,
+        items = listOf(
+            mockGroupItem,
+            mockGroupItem.copy(groupId = 2L, bookTitle = "채식주의자"),
+            mockGroupItem.copy(groupId = 3L, bookTitle = "아몬드"),
+        ),
+    ),
 )
 
 @Preview(showBackground = true, name = "HomeScreen - 추천 탭")
@@ -186,7 +196,7 @@ private fun HomeScreenRecommendPreview() {
             uiState = HomeUiState(
                 nickname = "부키유저",
                 selectedTab = HomeTab.RECOMMEND,
-                newGroups = mockNewGroups,
+                recommendSections = mockSections,
             ),
             onTabSelect = {},
             onGroupClick = {},
@@ -206,7 +216,7 @@ private fun HomeScreenRecommendEmptyPreview() {
             uiState = HomeUiState(
                 nickname = "부키유저",
                 selectedTab = HomeTab.RECOMMEND,
-                newGroups = emptyList(),
+                recommendSections = emptyList(),
             ),
             onTabSelect = {},
             onGroupClick = {},

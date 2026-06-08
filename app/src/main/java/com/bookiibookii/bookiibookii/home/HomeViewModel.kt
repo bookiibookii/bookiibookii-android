@@ -6,9 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.group.GroupItem
-import com.bookiibookii.bookiibookii.data.model.group.HomeBestsellerSection
-import com.bookiibookii.bookiibookii.data.model.group.HomeCategorySection
-import com.bookiibookii.bookiibookii.data.model.group.HomeRegionSection
+import com.bookiibookii.bookiibookii.data.model.group.HomeSection
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,10 +20,7 @@ enum class HomeTab { RECOMMEND, MY_GROUPS, APPLIED }
 data class HomeUiState(
     val nickname: String = "",
     val selectedTab: HomeTab = HomeTab.RECOMMEND,
-    val newGroups: List<GroupItem> = emptyList(),
-    val categorySection: HomeCategorySection? = null,
-    val bestsellerSection: HomeBestsellerSection? = null,
-    val regionSection: HomeRegionSection? = null,
+    val recommendSections: List<HomeSection> = emptyList(),
     val myGroups: List<GroupItem> = emptyList(),
     val appliedGroups: List<GroupItem> = emptyList(),
     val hasNewNotification: Boolean = false,
@@ -73,14 +68,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 RetrofitClient.grpApi().getHomeGroups()
             }.onSuccess { response ->
                 val result = response.body()?.result ?: return@onSuccess
-                _uiState.update {
-                    it.copy(
-                        newGroups = result.newGroups,
-                        categorySection = result.categorySection,
-                        bestsellerSection = result.bestsellerSection,
-                        regionSection = result.regionSection,
-                    )
-                }
+                _uiState.update { it.copy(recommendSections = result.sections) }
             }
         }
     }
