@@ -228,7 +228,7 @@ private fun BookReviewCard(review: BookReviewSummaryDto) {
 
 @Composable
 private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
-    val isGood = review.reaction == "GOOD"
+    val isGood = review.reaction == "BOOM_UP"
     val displayDate = review.createdAt?.let { DateUtils.formatDate(it) } ?: ""
 
     Column(

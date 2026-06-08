@@ -7,6 +7,5 @@ data class NotificationUiState(
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val nextCursor: String? = null,
-    val hasNext: Boolean = false,
-    val errorType: Int? = null
+    val hasNext: Boolean = false
 )

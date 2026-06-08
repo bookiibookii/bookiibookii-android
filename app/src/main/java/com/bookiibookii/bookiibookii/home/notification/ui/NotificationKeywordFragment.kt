@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.ComRetryBus
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.notification.NotificationCategory
 import com.bookiibookii.bookiibookii.data.model.notification.NotificationItem
@@ -108,7 +109,7 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) 
             NotificationType.KEYWORD_GROUP_CREATED -> {
                 val groupId = NotificationPayloadParser.getGroupId(dto)
                 if (groupId == null) {
-                    Toast.makeText(requireContext(), "알림 이동에 필요한 정보가 없습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("알림 이동에 필요한 정보가 없습니다.", false)
                     return
                 }
 
@@ -117,7 +118,7 @@ class HomKeywordNotiFragment : Fragment(R.layout.fragment_notification_keyword) 
             }
 
             else -> {
-                Toast.makeText(requireContext(), "지원하지 않는 키워드 알림입니다.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("지원하지 않는 키워드 알림입니다.", false)
             }
         }
     }

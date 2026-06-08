@@ -8,12 +8,15 @@ import com.bookiibookii.bookiibookii.data.model.library.MemberCardBookmarkRespon
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardCreateRequestDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardCreateResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardListResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.MyBookReviewsResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardReactionToggleRequestDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardReactionToggleResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardUpdateRequestDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberReviewCreateDTO
 import com.bookiibookii.bookiibookii.data.model.library.PresignedUrlResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.PublicReadingCardResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.ShareTokenResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.TrackerResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -89,6 +92,17 @@ interface LibApi {
         @Path("cardId") cardId: Long
     ): Response<ApiResponse<String>>
 
+    @POST("api/member-books/cards/{cardId}/share-token")
+    suspend fun createShareToken(
+        @Path("cardId") cardId: Long
+    ): Response<ApiResponse<ShareTokenResponseDTO>>
+
+    // 공유 토큰 기반 공개 조회 — 인증 불필요. 서버는 ApiResponse 래퍼로 감싸 반환(result에 카드)
+    @GET("api/public/reading-cards/{shareToken}")
+    suspend fun getPublicReadingCard(
+        @Path("shareToken") shareToken: String
+    ): Response<ApiResponse<PublicReadingCardResponseDTO>>
+
     // ── Reviews ────────────────────────────────────────────────────────────────
 
     @GET("api/groups/{groupId}/reviews")
@@ -108,9 +122,16 @@ interface LibApi {
         @Body request: MemberReviewCreateDTO
     ): Response<ApiResponse<String>>
 
-    @PATCH("api/groups/{groupId}/reviews/me")
+    // 내 책 리뷰 목록 조회 — 수정 시 reviewId 확보용
+    @GET("api/groups/{groupId}/reviews/book/me")
+    suspend fun getMyBookReviews(
+        @Path("groupId") groupId: Int
+    ): Response<ApiResponse<MyBookReviewsResponseDTO>>
+
+    @PATCH("api/groups/{groupId}/reviews/book/{reviewId}")
     suspend fun updateMyReview(
         @Path("groupId") groupId: Int,
+        @Path("reviewId") reviewId: Int,
         @Body request: BookReviewUpsertDTO
     ): Response<ApiResponse<String>>
 

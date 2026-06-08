@@ -4,25 +4,36 @@ import com.google.gson.annotations.SerializedName
 
 // GET /api/groups/home 응답 result
 data class HomeGroupsResponse(
-    @SerializedName("newGroups") val newGroups: List<GroupItem> = emptyList(),
-    @SerializedName("categorySection") val categorySection: HomeCategorySection? = null,
-    @SerializedName("bestsellerSection") val bestsellerSection: HomeBestsellerSection? = null,
-    @SerializedName("regionSection") val regionSection: HomeRegionSection? = null,
+    @SerializedName("sections") val sections: List<HomeSection> = emptyList(),
+)
+data class HomeSection(
+    @SerializedName("sectionType") val sectionType: String,
+    @SerializedName("title") val title: String,
+    @SerializedName("subtitle") val subtitle: String,
+    @SerializedName("layoutType") val layoutType: String,
+    @SerializedName("items") val items: List<HomeSectionItem> = emptyList(),
 )
 
-// 카테고리 기반 섹션 — category=null이면 추천 불가
-data class HomeCategorySection(
-    @SerializedName("category") val category: String?,
-    @SerializedName("groups") val groups: List<GroupItem> = emptyList(),
+data class HomeSectionItem(
+    // 공통
+    @SerializedName("author") val author: String? = null,
+    @SerializedName("bookImage") val bookImage: String? = null,
+    // 책 항목
+    @SerializedName("isbn13") val isbn13: String? = null,
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("searchKeyword") val searchKeyword: String? = null,
+    @SerializedName("rank") val rank: Int? = null,
+    // 그룹 항목
+    @SerializedName("groupId") val groupId: Long? = null,
+    @SerializedName("groupName") val groupName: String? = null,
+    @SerializedName("hostNickname") val hostNickname: String? = null,
+    @SerializedName("hostProfileImageUrl") val hostProfileImageUrl: String? = null,
+    @SerializedName("bookTitle") val bookTitle: String? = null,
+    @SerializedName("readingPeriod") val readingPeriod: Int? = null,
 )
 
-// 베스트셀러 기반 섹션
-data class HomeBestsellerSection(
-    @SerializedName("groups") val groups: List<GroupItem> = emptyList(),
-)
-
-// 교환 지역 기반 섹션 — region=null이면 교환 장소 미설정
-data class HomeRegionSection(
-    @SerializedName("region") val region: String?,
-    @SerializedName("groups") val groups: List<GroupItem> = emptyList(),
-)
+object HomeLayoutType {
+    const val GROUP_CARD_CAROUSEL = "GROUP_CARD_CAROUSEL"
+    const val BOOK_THUMBNAIL_CAROUSEL = "BOOK_THUMBNAIL_CAROUSEL"
+    const val BOOK_THUMBNAIL_GRID = "BOOK_THUMBNAIL_GRID"
+}

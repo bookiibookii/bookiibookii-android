@@ -125,7 +125,10 @@ fun LibraryDetailScreen(
 
     val displayedCards = if (myCardsOnly) cards.filter { it.isMine } else cards
     val sortedCards = if (sortByLatest) {
-        displayedCards.sortedByDescending { it.date }
+        // date는 일(day) 단위라 같은 날 카드는 동률 → cardId(생성 순서)로 2차 정렬해 최신이 먼저 오게 함
+        displayedCards.sortedWith(
+            compareByDescending<ReadingCard> { it.date }.thenByDescending { it.cardId },
+        )
     } else {
         displayedCards.sortedBy { it.page.toIntOrNull() ?: 0 }
     }
@@ -158,7 +161,7 @@ fun LibraryDetailScreen(
                 myCardsOnly = myCardsOnly,
                 sortByLatest = sortByLatest,
                 onMyCardsToggle = { myCardsOnly = !myCardsOnly },
-                onSortToggle = { sortByLatest = !sortByLatest },
+                onSortChange = { latest -> sortByLatest = latest },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -411,7 +414,7 @@ private fun FilterRow(
     myCardsOnly: Boolean,
     sortByLatest: Boolean,
     onMyCardsToggle: () -> Unit,
-    onSortToggle: () -> Unit,
+    onSortChange: (latest: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -427,9 +430,10 @@ private fun FilterRow(
             Text(text = "내 독서카드만 보기", style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey500)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(text = "최신순", style = if (sortByLatest) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14, color = if (sortByLatest) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500, modifier = Modifier.clickable { onSortToggle() })
+            // 각 라벨은 해당 정렬로 '설정'한다 (토글 아님). 이미 선택된 라벨을 눌러도 그대로 유지됨.
+            Text(text = "최신순", style = if (sortByLatest) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14, color = if (sortByLatest) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500, modifier = Modifier.clickable { onSortChange(true) })
             Text(text = "|", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
-            Text(text = "페이지순", style = if (!sortByLatest) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14, color = if (!sortByLatest) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500, modifier = Modifier.clickable { onSortToggle() })
+            Text(text = "페이지순", style = if (!sortByLatest) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14, color = if (!sortByLatest) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500, modifier = Modifier.clickable { onSortChange(false) })
         }
     }
 }

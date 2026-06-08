@@ -60,7 +60,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -141,6 +143,10 @@ fun ReadingCardDetailScreen(
     onBookmarkToggle: (cardId: Long) -> Unit = {},
     onReactionToggle: (cardId: Long, reaction: String) -> Unit = { _, _ -> },
     onInstaShare: (card: ReadingCard) -> Unit = {},
+    onCopyLink: (card: ReadingCard) -> Unit = {},
+    onKakaoShare: (card: ReadingCard) -> Unit = {},
+    onXShare: (card: ReadingCard) -> Unit = {},
+    onDownload: (card: ReadingCard) -> Unit = {},
 ) {
     val pagerState    = rememberPagerState(initialPage = initialIndex) { cards.size }
     val coroutineScope = rememberCoroutineScope()
@@ -260,9 +266,25 @@ fun ReadingCardDetailScreen(
     if (showShareSheet) {
         ReadingCardShareBottomSheet(
             onDismiss    = { showShareSheet = false },
+            onKakaoClick = {
+                showShareSheet = false
+                currentCard?.let { onKakaoShare(it) }
+            },
             onInstaClick = {
                 showShareSheet = false
                 currentCard?.let { onInstaShare(it) }
+            },
+            onXClick = {
+                showShareSheet = false
+                currentCard?.let { onXShare(it) }
+            },
+            onDownloadClick = {
+                showShareSheet = false
+                currentCard?.let { onDownload(it) }
+            },
+            onCopyLinkClick = {
+                showShareSheet = false
+                currentCard?.let { onCopyLink(it) }
             },
         )
     }
@@ -619,7 +641,16 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
                         if (!card.imageUrl.isNullOrBlank()) {
-                            AsyncImage(model = card.imageUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
+                            // allowHardware(false): 소프트웨어 Canvas로 캡처(공유/다운로드)하려면 하드웨어 비트맵 비활성 필요
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(card.imageUrl)
+                                    .allowHardware(false)
+                                    .build(),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.matchParentSize(),
+                            )
                         }
                     }
                     Box(

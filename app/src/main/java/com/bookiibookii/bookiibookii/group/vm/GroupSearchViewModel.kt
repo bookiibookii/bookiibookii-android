@@ -1,23 +1,40 @@
 package com.bookiibookii.bookiibookii.group.vm
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.group.GroupItem
 import com.bookiibookii.bookiibookii.group.model.GroupSearchUiState
+import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class GroupSearchViewModel : ViewModel() {
+class GroupSearchViewModel(
+    private val savedStateHandle: SavedStateHandle,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(GroupSearchUiState())
     val state: StateFlow<GroupSearchUiState> = _state
 
     init {
-        // 진입 시 기본값(전체)으로 목록 로드
+        // 검색어 인자(예: 홈에서 책 탭)가 있으면 검색 모드로 시작, 없으면 기본 목록
+        val keyword = savedStateHandle.get<String>(GroupDestinations.ARG_KEYWORD).orEmpty().trim()
+        if (keyword.isNotEmpty()) {
+            _state.update { it.copy(query = keyword, searchKeyword = keyword) }
+        }
         load()
+        // 상세 등에서 복귀하며 재조회 신호가 오면 현재 모드(검색/필터) 그대로 첫 페이지 리로드
+        viewModelScope.launch {
+            savedStateHandle.getStateFlow(GroupDestinations.RESULT_REFRESH, false).collect { refresh ->
+                if (refresh) {
+                    savedStateHandle[GroupDestinations.RESULT_REFRESH] = false
+                    load()
+                }
+            }
+        }
     }
 
     // 첫 페이지 로드. 검색어 있으면 searchGroups, 없으면 필터 기반 getGroupList

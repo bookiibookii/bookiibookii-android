@@ -30,9 +30,30 @@ data class MemberReviewItemDTO(
     val comment: String?,
 )
 
+// ── 내 책 리뷰 목록 조회 (GET /api/groups/{groupId}/reviews/book/me) ──────────
+// 수정 시 reviewId 확보용. reviewType(MY_BOOK|PARTNER_BOOK)으로 구분.
+data class MyBookReviewsResponseDTO(
+    val reviews: List<MyBookReviewItemDTO>?,
+)
+
+data class MyBookReviewItemDTO(
+    val reviewId: Int,
+    val reviewType: String?,
+    val groupId: Int?,
+    val bookId: Int?,
+    val bookTitle: String?,
+    val bookAuthor: String?,
+    val bookImageUrl: String?,
+    val rating: Double?,
+    val content: String?,
+    val isEditable: Boolean?,
+    val createdAt: String?,
+    val updatedAt: String?,
+)
+
 // ── 책 리뷰 등록/수정 ────────────────────────────────────────────────────────
 
-// 책 리뷰 등록/수정 요청 (POST /api/groups/{groupId}/reviews, PATCH /api/groups/{groupId}/reviews/me)
+// 책 리뷰 등록/수정 요청 (POST /api/groups/{groupId}/reviews, PATCH /api/groups/{groupId}/reviews/book/{reviewId})
 data class BookReviewUpsertDTO(
     val star: Double,
     val comment: String

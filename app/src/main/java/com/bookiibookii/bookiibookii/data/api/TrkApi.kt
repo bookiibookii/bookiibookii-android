@@ -5,6 +5,7 @@ import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.MyBookReviewsResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressDirectUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressSavedUpdateReqDTO
@@ -48,16 +49,23 @@ interface TrkApi {
         @Body request: ReadingPeriodUpdateReqDTO,
     ): Response<ApiResponse<ReadingPeriodUpdateResDTO>>
 
+    // 내 책 리뷰 목록 조회 — 기존 책 후기 프리필용(reviewType으로 내 책/파트너 책 구분)
+    @GET("/api/groups/{groupId}/reviews/book/me")
+    suspend fun getMyBookReviews(
+        @Path("groupId") groupId: Long,
+    ): Response<ApiResponse<MyBookReviewsResDTO>>
+
     @POST("/api/groups/{groupId}/reviews")
     suspend fun postBookReview(
         @Path("groupId") groupId: Long,
         @Body request: BookReviewReqDTO,
     ): Response<ApiResponse<BookReviewResDTO>>
 
-    // 내 책 리뷰 수정
-    @PATCH("/api/groups/{groupId}/reviews/me")
+    // 내 책 리뷰 수정 — reviewId 지정(GET reviews/book/me 로 받은 reviewId)
+    @PATCH("/api/groups/{groupId}/reviews/book/{reviewId}")
     suspend fun patchMyBookReview(
         @Path("groupId") groupId: Long,
+        @Path("reviewId") reviewId: Long,
         @Body request: BookReviewReqDTO,
     ): Response<ApiResponse<BookReviewResDTO>>
 

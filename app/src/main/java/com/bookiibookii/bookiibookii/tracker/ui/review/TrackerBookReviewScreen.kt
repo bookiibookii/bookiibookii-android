@@ -41,6 +41,7 @@ import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import kotlin.math.roundToInt
 
 private enum class StarState { Empty, SubPale, Sub }
 
@@ -75,7 +76,10 @@ fun TrackerBookReviewRoute(
     onBackClick: () -> Unit,
     isEdit: Boolean = false,
     viewModel: TrackerBookReviewViewModel = viewModel(
-        factory = TrackerBookReviewViewModel.factory(groupId, isEdit)
+        factory = TrackerBookReviewViewModel.factory(
+            groupId = groupId,
+            isEdit = isEdit,
+        )
     ),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -84,6 +88,8 @@ fun TrackerBookReviewRoute(
     TrackerBookReviewScreen(
         bookTitle = uiState.bookTitle,
         bookImageUrl = uiState.bookImageUrl,
+        initialStar = uiState.initialStar,
+        initialComment = uiState.initialComment,
         onBackClick = onBackClick,
         onSubmit = { star, comment ->
             viewModel.submitReview(star, comment, onSuccess = onBackClick)
@@ -97,10 +103,13 @@ fun TrackerBookReviewScreen(
     bookImageUrl: String?,
     onBackClick: () -> Unit,
     onSubmit: (star: Double, comment: String?) -> Unit,
+    initialStar: Double = 0.0,
+    initialComment: String = "",
 ) {
     // rating: 0~10 (별 5개 × 2단계 — half=1, full=2)
-    var rating by remember { mutableStateOf(0) }
-    var commentInput by remember { mutableStateOf("") }
+    // 수정 모드 프리필: 별점(0~5)·내용이 비동기로 도착하면 key 변경으로 초기값 반영
+    var rating by remember(initialStar) { mutableStateOf((initialStar * 2).roundToInt()) }
+    var commentInput by remember(initialComment) { mutableStateOf(initialComment) }
 
     Scaffold(
         topBar = { TrackerBookReviewHeader(onBackClick = onBackClick) },

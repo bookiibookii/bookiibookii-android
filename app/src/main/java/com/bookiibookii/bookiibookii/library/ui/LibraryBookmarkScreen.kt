@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 private enum class BookmarkSortType { RECENT, OLDEST }
@@ -280,8 +281,35 @@ private fun BookmarkCardItem(
     }
 }
 
-@Preview(showBackground = true)
+private val previewBookmarkCards = listOf(
+    ReadingCard(
+        username = "북이",
+        content = "새는 알에서 나오려고 투쟁한다. 알은 세계다.",
+        page = "123",
+        type = ReadingCardType.QUOTE,
+        bookTitle = "데미안",
+        reactionCounts = mapOf("LIKE" to 3, "FUN" to 1),
+    ),
+    ReadingCard(
+        username = "부키",
+        content = "이 장면이 특히 인상 깊었어요.",
+        page = "45",
+        type = ReadingCardType.PHOTO,
+        bookTitle = "데미안",
+    ),
+    ReadingCard(
+        username = "초록",
+        content = "오래 남는 문장이었다.",
+        page = "0",
+        type = ReadingCardType.QUOTE,
+        bookTitle = "어린 왕자",
+    ),
+)
+
+@Preview(showBackground = true, heightDp = 900)
 @Composable
 private fun LibraryBookmarkScreenPreview() {
-    LibraryBookmarkScreen()
+    BookiiPreview {
+        LibraryBookmarkScreen(cards = previewBookmarkCards)
+    }
 }

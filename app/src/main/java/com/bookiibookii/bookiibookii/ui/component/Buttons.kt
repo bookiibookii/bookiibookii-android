@@ -125,23 +125,32 @@ private fun BottomSheetTwoBtnShortPreview() {
     }
 }
 
+enum class FooterButtonStyle { Dark, Grey }
+
 @Composable
 fun FooterButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    style: FooterButtonStyle = FooterButtonStyle.Dark,
 ) {
     val shape = BookiiBookiiTheme.shape.round20
-    val containerColor = if (enabled) {
-        BookiiBookiiTheme.colors.grey900
-    } else {
-        BookiiBookiiTheme.colors.grey200
-    }
-    val contentColor = if (enabled) {
-        BookiiBookiiTheme.colors.white
-    } else {
-        BookiiBookiiTheme.colors.grey500
+    val containerColor: Color
+    val contentColor: Color
+    when {
+        !enabled -> {
+            containerColor = BookiiBookiiTheme.colors.grey200
+            contentColor = BookiiBookiiTheme.colors.grey500
+        }
+        style == FooterButtonStyle.Grey -> {
+            containerColor = BookiiBookiiTheme.colors.grey200
+            contentColor = BookiiBookiiTheme.colors.grey900
+        }
+        else -> {
+            containerColor = BookiiBookiiTheme.colors.grey900
+            contentColor = BookiiBookiiTheme.colors.white
+        }
     }
     Box(
         modifier = modifier

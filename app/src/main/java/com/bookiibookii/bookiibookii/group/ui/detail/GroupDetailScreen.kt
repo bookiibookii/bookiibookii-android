@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.group.ui.detail
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -367,12 +369,17 @@ private fun GroupDetailContent(
             GroupDetailDescriptionCard(
                 title = "그룹 소개",
                 body = detail.groupComment.orEmpty(),
-                exchangePlaceName = detail.placeName,
-                exchangePlaceAddress = detail.address,
+                // 임시: 장소명 자리에 address 값을 넣고 주소는 null (추후 수정 예정)
+                exchangePlaceName = detail.address,
+                exchangePlaceAddress = null,
+                // 택배 교환 그룹이면 "배송지", 직접 교환이면 "교환 희망 장소"
+                exchangePlaceLabel = if (detail.tradeType == "DELIVERY") "배송지" else "교환 희망 장소",
             )
             GroupDetailDescriptionCard(
                 title = "그룹 규칙",
-                body = detail.rules.joinToString("\n") { it.content },
+                // 규칙마다 앞에 번호를 붙임
+                body = detail.rules.mapIndexed { index, rule -> "${index + 1}. ${rule.content}" }
+                    .joinToString("\n"),
             )
             GroupDetailMembersCard(
                 matchedCount = detail.matchedCount,
@@ -696,7 +703,9 @@ private fun GroupDetailDescriptionCard(
     modifier: Modifier = Modifier,
     exchangePlaceName: String? = null,
     exchangePlaceAddress: String? = null,
+    exchangePlaceLabel: String = "교환 희망 장소",
 ) {
+    val context = LocalContext.current
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -714,19 +723,25 @@ private fun GroupDetailDescriptionCard(
             )
             HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey100)
         }
-        Text(
-            text = body,
-            style = BookiiBookiiTheme.typography.regular15,
-            color = BookiiBookiiTheme.colors.grey700,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        // 그룹 소개 본문 — 비어있으면 빈 칸/구분선 없이 아래 블록을 위로 붙임
+        if (body.isNotBlank()) {
+            Text(
+                text = body,
+                style = BookiiBookiiTheme.typography.regular15,
+                color = BookiiBookiiTheme.colors.grey700,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         if (exchangePlaceName != null) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                DashedDivider(color = BookiiBookiiTheme.colors.grey100)
+                // 본문이 있을 때만 점선 구분선 표시
+                if (body.isNotBlank()) {
+                    DashedDivider(color = BookiiBookiiTheme.colors.grey100)
+                }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 12.dp),
+                        .padding(top = if (body.isNotBlank()) 12.dp else 0.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Box(
@@ -736,7 +751,7 @@ private fun GroupDetailDescriptionCard(
                             .padding(horizontal = 6.dp),
                     ) {
                         Text(
-                            text = "교환 희망 장소",
+                            text = exchangePlaceLabel,
                             style = BookiiBookiiTheme.typography.regular14,
                             color = BookiiBookiiTheme.colors.grey500,
                         )
@@ -751,6 +766,13 @@ private fun GroupDetailDescriptionCard(
                             style = BookiiBookiiTheme.typography.regular15,
                             color = BookiiBookiiTheme.colors.grey600,
                             textDecoration = TextDecoration.Underline,
+                            // 클릭 시 표시된 값으로 카카오맵 검색 (앱 있으면 앱, 없으면 브라우저)
+                            modifier = Modifier.clickable {
+                                val url = "https://map.kakao.com/link/search/${Uri.encode(exchangePlaceName)}"
+                                runCatching {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                }
+                            },
                         )
                         if (exchangePlaceAddress != null) {
                             Text(

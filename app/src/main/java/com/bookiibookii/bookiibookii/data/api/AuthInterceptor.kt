@@ -3,8 +3,9 @@ package com.bookiibookii.bookiibookii.data.api
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.bookiibookii.bookiibookii.common.ComErrorActivity
 import com.bookiibookii.bookiibookii.data.model.auth.TokenRefreshRequest
+import com.bookiibookii.bookiibookii.error.ErrorActivity
+import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import kotlinx.coroutines.runBlocking
@@ -66,7 +67,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             if (chain.call().isCanceled()) {
                 throw e
             } else {
-                routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
+                routeComError(appContext, ErrorType.NETWORK)
                 throw e
             }
         }
@@ -107,7 +108,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             }
 
             if (code >= 500) {
-                routeComError(appContext, ComErrorActivity.TYPE_SYSTEM_ERROR)
+                routeComError(appContext, ErrorType.SYSTEM)
             }
 
             return response
@@ -158,7 +159,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                     if (chain.call().isCanceled()) {
                         throw e
                     } else {
-                        routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
+                        routeComError(appContext, ErrorType.NETWORK)
                         throw e
                     }
                 }
@@ -170,12 +171,12 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             }
 
             RefreshOutcome.NETWORK_ERROR -> {
-                routeComError(appContext, ComErrorActivity.TYPE_NETWORK_ERROR)
+                routeComError(appContext, ErrorType.NETWORK)
                 throw IOException("Network error during token refresh")
             }
 
             RefreshOutcome.SYSTEM_ERROR -> {
-                routeComError(appContext, ComErrorActivity.TYPE_SYSTEM_ERROR)
+                routeComError(appContext, ErrorType.SYSTEM)
                 throw IOException("System error during token refresh")
             }
         }
@@ -273,12 +274,12 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         }
     }
 
-    private fun routeComError(context: Context, type: Int) {
+    private fun routeComError(context: Context, type: ErrorType) {
         Log.e("AUTH_ROUTE", "[COM_ERROR] type=$type called")
 
         if (!tryClaimRoute()) return
 
-        val intent = ComErrorActivity.newIntent(context, type).apply {
+        val intent = ErrorActivity.newIntent(context, type).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
 

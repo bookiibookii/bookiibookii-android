@@ -24,8 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,58 +45,72 @@ internal fun CardImagePickerBottomSheet(
         dragHandle       = null,
 
     ) {
-        Column(
+        CardImagePickerContent(onCamera = onCamera, onGallery = onGallery)
+    }
+}
+
+// 시트 본문 — ModalBottomSheet 래퍼와 분리해 @Preview 대상이 되도록 함
+@Composable
+private fun CardImagePickerContent(onCamera: () -> Unit, onGallery: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = 16.dp)
+            .padding(top = 24.dp, bottom = 24.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .width(44.dp)
+                .height(4.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(BookiiBookiiTheme.colors.grey200)
+                .align(Alignment.CenterHorizontally),
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Text("독서 카드 이미지 추가", style = BookiiBookiiTheme.typography.semibold20, color = BookiiBookiiTheme.colors.grey900)
+        Spacer(modifier = Modifier.height(16.dp))
+        // 카메라 버튼
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 16.dp)
-                .padding(top = 24.dp, bottom = 24.dp),
+                .height(56.dp)
+                .clip(BookiiBookiiTheme.shape.round20)
+                .background(BookiiBookiiTheme.colors.grey900)
+                .clickable { onCamera() },
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .width(44.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(50.dp))
-                    .background(BookiiBookiiTheme.colors.grey200)
-                    .align(Alignment.CenterHorizontally),
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Text("독서 카드 이미지 추가", style = BookiiBookiiTheme.typography.semibold20, color = BookiiBookiiTheme.colors.grey900)
-            Spacer(modifier = Modifier.height(16.dp))
-            // 카메라 버튼
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .clip(BookiiBookiiTheme.shape.round20)
-                    .background(BookiiBookiiTheme.colors.grey900)
-                    .clickable { onCamera() },
-                contentAlignment = Alignment.Center,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(painterResource(R.drawable.ic_camera), null, tint = BookiiBookiiTheme.colors.white, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("카메라로 촬영하기", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.white)
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            // 갤러리 버튼
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .clip(BookiiBookiiTheme.shape.round20)
-                    .border(1.dp, BookiiBookiiTheme.colors.grey200, BookiiBookiiTheme.shape.round20)
-                    .background(BookiiBookiiTheme.colors.white)
-                    .clickable { onGallery() },
-                contentAlignment = Alignment.Center,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(painterResource(R.drawable.ic_album), null, tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("앨범에서 선택하기", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
-                }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(R.drawable.ic_camera), null, tint = BookiiBookiiTheme.colors.white, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("카메라로 촬영하기", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.white)
             }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        // 갤러리 버튼
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clip(BookiiBookiiTheme.shape.round20)
+                .border(1.dp, BookiiBookiiTheme.colors.grey200, BookiiBookiiTheme.shape.round20)
+                .background(BookiiBookiiTheme.colors.white)
+                .clickable { onGallery() },
+            contentAlignment = Alignment.Center,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(R.drawable.ic_album), null, tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("앨범에서 선택하기", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CardImagePickerContentPreview() {
+    BookiiPreview {
+        CardImagePickerContent(onCamera = {}, onGallery = {})
     }
 }

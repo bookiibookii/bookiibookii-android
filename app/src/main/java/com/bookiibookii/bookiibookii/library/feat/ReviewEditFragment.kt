@@ -67,6 +67,7 @@ class ReviewEditFragment : BaseLibraryFragment() {
                         val comment = bookComments.firstOrNull().orEmpty()
                         vm.submit(
                             groupId        = groupId,
+                            bookTitle      = bookTitles.firstOrNull(),
                             bookStar       = star,
                             bookComment    = comment,
                             isPartnerGood  = isPartnerGood,

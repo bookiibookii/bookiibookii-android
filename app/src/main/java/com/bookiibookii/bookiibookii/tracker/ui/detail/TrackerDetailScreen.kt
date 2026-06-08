@@ -15,7 +15,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.openExternalUrl
 import com.bookiibookii.bookiibookii.common.openReportChannel
+import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.deliveryTrackingUrl
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
@@ -68,9 +71,15 @@ fun TrackerDetailRoute(
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
 
-    // 하위 화면(서재/리뷰 등)에서 복귀할 때마다 상세 재조회
+    // 최초 진입은 VM init에서 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
+    // 하위 화면(서재/리뷰 등)에서 복귀할 때만 상세를 재조회한다. (rememberSaveable로 백스택 복귀 시에도 유지)
+    var isFirstResume by rememberSaveable { mutableStateOf(true) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.load()
+        if (isFirstResume) {
+            isFirstResume = false
+        } else {
+            viewModel.load()
+        }
     }
 
     // 장소 검색 화면에서 선택한 결과를 약속 장소로 반영 (복귀 시 step 2 다이얼로그 유지됨)
@@ -261,7 +270,14 @@ fun TrackerDetailRoute(
                 showShippingConfirmDialog = false
                 viewModel.clearPartnerDelivery()
             },
-            onTrackingSearchClick = {}, // TODO: 배송 조회 이동 로직 보류
+            onTrackingSearchClick = {
+                val url = deliveryTrackingUrl(partner.deliveryCompany, partner.trackingNumber)
+                if (url != null) {
+                    context.openExternalUrl(url)
+                } else {
+                    context.showCustomToast("배송 조회를 지원하지 않는 택배사예요.", false)
+                }
+            },
             onConfirmClick = {
                 showShippingConfirmDialog = false
                 viewModel.clearPartnerDelivery()

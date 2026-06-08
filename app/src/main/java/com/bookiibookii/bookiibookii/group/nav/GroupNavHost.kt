@@ -33,7 +33,17 @@ fun GroupNavHost(
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None },
     ) {
-        composable(GroupDestinations.SEARCH) {
+        composable(
+            route = GroupDestinations.SEARCH,
+            arguments = listOf(
+                navArgument(GroupDestinations.ARG_KEYWORD) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
+        ) {
+            // keyword 인자는 GroupSearchViewModel이 SavedStateHandle로 직접 수신
             GroupSearchRoute(
                 // 백스택이 있으면 이전 화면으로, 없으면(홈에서 직접 진입) 그룹 도메인 밖으로 나감
                 onBack = { if (!navController.popBackStack()) onExit() },
@@ -98,7 +108,7 @@ fun GroupNavHost(
                 },
                 // 삭제 성공 → 그룹 목록으로 이동, 삭제된 상세는 백스택에서 제거
                 onDeleted = {
-                    navController.navigate(GroupDestinations.SEARCH) {
+                    navController.navigate(GroupDestinations.search()) {
                         popUpTo(GroupDestinations.SEARCH) { inclusive = true }
                         launchSingleTop = true
                     }
@@ -119,6 +129,17 @@ fun GroupNavHost(
             GroupJoinRequestRoute(
                 groupId = groupId,
                 onBack = { if (!navController.popBackStack()) onExit() },
+                // 수락 성공 → 상세(+명단)를 백스택에서 제거하고 그 전 화면으로.
+                onAccepted = {
+                    navController.popBackStack(GroupDestinations.DETAIL, inclusive = true)
+                    val current = navController.currentBackStackEntry
+                    if (current == null) {
+                        onExit()
+                    } else {
+                        // 복귀한 검색 화면에 재조회 신호
+                        current.savedStateHandle[GroupDestinations.RESULT_REFRESH] = true
+                    }
+                },
             )
         }
     }

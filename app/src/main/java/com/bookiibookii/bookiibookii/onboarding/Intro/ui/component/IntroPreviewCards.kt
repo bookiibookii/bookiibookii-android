@@ -4,10 +4,14 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -95,37 +99,43 @@ fun HomePreviewCard() {
                 )
             }
 
-            // 그룹 카드 슬라이더 (두 번째 카드 peek)
-            Row(
-                modifier = Modifier.padding(start = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                // 첫 번째 카드
-                GroupCard(
-                    bookRes = R.drawable.intro_book_cant_bear,
-                    profileRes = R.drawable.intro_profile_sayo,
-                    bookTitle = "참을 수 없는 존재의 가벼움",
-                    bookAuthor = "밀란 쿤데라 (소설)",
-                    readingDays = "7일",
-                    username = "sayo",
-                    comment = "고전 완독하실 분 구해요",
-                )
-                // 두 번째 카드 (peek)
-                GroupCard(
-                    bookRes = R.drawable.intro_book_boy,
-                    profileRes = R.drawable.intro_profile_mus,
-                    bookTitle = "소년이 온다",
-                    bookAuthor = "한강 (소설)",
-                    readingDays = "14일",
-                    username = "무스",
-                    comment = "같이 읽을 분 환영해요",
-                )
+            // 그룹 카드 슬라이더 — HorizontalPager로 카드 1장 단위 snap + 다음 카드 peek
+            val groupPagerState = rememberPagerState(pageCount = { 2 })
+            HorizontalPager(
+                state = groupPagerState,
+                pageSize = PageSize.Fixed(243.dp),
+                pageSpacing = 8.dp,
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) { page ->
+                when (page) {
+                    0 -> GroupCard(
+                        bookRes = R.drawable.intro_book_cant_bear,
+                        profileRes = R.drawable.intro_profile_sayo,
+                        bookTitle = "참을 수 없는 존재의 가벼움",
+                        bookAuthor = "밀란 쿤데라 (소설)",
+                        readingDays = "7일",
+                        username = "sayo",
+                        comment = "고전 완독하실 분 구해요",
+                    )
+                    else -> GroupCard(
+                        bookRes = R.drawable.intro_book_boy,
+                        profileRes = R.drawable.intro_profile_mus,
+                        bookTitle = "소년이 온다",
+                        bookAuthor = "한강 (소설)",
+                        readingDays = "14일",
+                        username = "무스",
+                        comment = "같이 읽을 분 환영해요",
+                    )
+                }
             }
 
-            // 페이지 인디케이터 (5개)
+            // 페이지 인디케이터 (5개) — 카드 폭 기준 가운데 정렬
             Row(
-                modifier = Modifier.padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterHorizontally),
             ) {
                 repeat(5) { i ->
                     Box(
@@ -836,7 +846,7 @@ private fun GroupCard(
 ) {
     Column(
         modifier = Modifier
-            .width(230.dp)
+            .width(243.dp)
             .shadow(4.dp, RoundedCornerShape(14.dp), clip = false, spotColor = Color(0x0F000000))
             .clip(RoundedCornerShape(14.dp))
             .background(BookiiBookiiTheme.colors.white)

@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.ComRetryBus
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.notification.NotificationCategory
 import com.bookiibookii.bookiibookii.data.model.notification.NotificationItem
@@ -157,7 +158,7 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
 
                 val groupId = NotificationPayloadParser.getGroupId(dto)
                 if (groupId == null) {
-                    Toast.makeText(requireContext(), "알림 이동에 필요한 정보가 없습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("알림 이동에 필요한 정보가 없습니다.", false)
                     return
                 }
 
@@ -169,7 +170,7 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
             NotificationType.TRACKER_EXCHANGE_COMPLETED -> {
                 val groupId = NotificationPayloadParser.getGroupId(dto)
                 if (groupId == null) {
-                    Toast.makeText(requireContext(), "알림 이동에 필요한 정보가 없습니다.", Toast.LENGTH_SHORT).show()
+                    requireContext().showCustomToast("알림 이동에 필요한 정보가 없습니다.", false)
                     return
                 }
 
@@ -179,11 +180,11 @@ class NotificationSystemFragment : Fragment(R.layout.fragment_notification_syste
 
             NotificationType.KEYWORD_GROUP_CREATED -> {
                 // 시스템 탭에서는 원래 안 들어와야 함 (category=KEYWORD)
-                Toast.makeText(requireContext(), "키워드 알림은 키워드 탭에서 확인해주세요.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("키워드 알림은 키워드 탭에서 확인해주세요.", false)
             }
 
             NotificationType.UNKNOWN -> {
-                Toast.makeText(requireContext(), "지원하지 않는 알림입니다.", Toast.LENGTH_SHORT).show()
+                requireContext().showCustomToast("지원하지 않는 알림입니다.", false)
             }
         }
     }

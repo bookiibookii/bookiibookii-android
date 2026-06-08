@@ -31,11 +31,13 @@ class ReviewEditViewModel : ViewModel() {
 
     /**
      * 책 리뷰 수정 + 파트너 후기 제출
-     * - bookStar / bookComment: 내 책 평점·코멘트 (PATCH /api/groups/{groupId}/reviews/me)
+     * - bookTitle: 수정 대상 책 제목(내 리뷰 목록에서 reviewId 매칭용)
+     * - bookStar / bookComment: 내 책 평점·코멘트 (PATCH /api/groups/{groupId}/reviews/book/{reviewId})
      * - isPartnerGood / partnerComment: 파트너 후기 (POST /api/groups/{groupId}/member-reviews)
      */
     fun submit(
         groupId: Int,
+        bookTitle: String?,
         bookStar: Double,
         bookComment: String,
         isPartnerGood: Boolean?,
@@ -46,19 +48,25 @@ class ReviewEditViewModel : ViewModel() {
             _uiState.update { it.copy(isLoading = true) }
             var success = true
 
-            // 책 리뷰 수정
+            // 책 리뷰 수정 — 내 리뷰 목록에서 해당 책의 reviewId를 찾아 PATCH
             try {
-                val resp = RetrofitClient.libApi().updateMyReview(
-                    groupId,
-                    BookReviewUpsertDTO(star = bookStar, comment = bookComment),
-                )
-                if (!resp.isSuccessful || resp.body()?.isSuccess != true) success = false
+                val reviewId = findMyReviewId(groupId, bookTitle)
+                if (reviewId != null) {
+                    val resp = RetrofitClient.libApi().updateMyReview(
+                        groupId,
+                        reviewId,
+                        BookReviewUpsertDTO(star = bookStar, comment = bookComment),
+                    )
+                    if (!resp.isSuccessful || resp.body()?.isSuccess != true) success = false
+                } else {
+                    success = false
+                }
             } catch (_: Exception) { success = false }
 
             // 파트너 후기 (선택한 경우에만)
             if (isPartnerGood != null) {
                 try {
-                    val reaction = if (isPartnerGood) "BOOM_UP" else "DISLIKE"
+                    val reaction = if (isPartnerGood) "BOOM_UP" else "BOOM_DOWN"
                     RetrofitClient.libApi().postMemberReview(
                         groupId,
                         MemberReviewCreateDTO(reaction = reaction, comment = partnerComment),
@@ -72,6 +80,21 @@ class ReviewEditViewModel : ViewModel() {
             } else {
                 _event.emit(ReviewEditEvent.Error("리뷰 수정에 실패했습니다."))
             }
+        }
+    }
+
+    // 내 책 리뷰 목록에서 수정 대상 책의 reviewId를 찾는다. 제목 일치 우선, 없으면 첫 항목.
+    private suspend fun findMyReviewId(groupId: Int, bookTitle: String?): Int? {
+        return try {
+            val resp = RetrofitClient.libApi().getMyBookReviews(groupId)
+            if (resp.isSuccessful && resp.body()?.isSuccess == true) {
+                val reviews = resp.body()?.result?.reviews.orEmpty()
+                (reviews.firstOrNull { it.bookTitle == bookTitle } ?: reviews.firstOrNull())?.reviewId
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 }

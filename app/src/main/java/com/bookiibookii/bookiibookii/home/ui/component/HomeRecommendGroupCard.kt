@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.home.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +35,7 @@ import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import kotlin.math.abs
 
 @Composable
 internal fun RecommendGroupRow(
@@ -39,13 +44,30 @@ internal fun RecommendGroupRow(
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
-    val currentIndex = listState.firstVisibleItemIndex
+    // 뷰포트 중앙에 가장 가까운 카드를 활성 인덱스로 — snap 위치와 일치(이전 카드 sliver 오차 제거)
+    val currentIndex by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val visibleItems = layoutInfo.visibleItemsInfo
+            if (visibleItems.isEmpty()) {
+                0
+            } else {
+                val viewportCenter =
+                    (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
+                visibleItems.minByOrNull { item ->
+                    abs((item.offset + item.size / 2) - viewportCenter)
+                }?.index ?: 0
+            }
+        }
+    }
 
     Column(modifier = modifier) {
         LazyRow(
             state = listState,
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            // 세로 여백을 줘야 LazyRow가 카드 위아래 그림자를 자르지 않음
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
+            flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
         ) {
             items(groups, key = { it.groupId }) { group ->
                 HomeRecommendGroupCard(
@@ -96,7 +118,7 @@ private fun HomeRecommendGroupCard(
         modifier = modifier
             .width(334.dp)
             .shadow(
-                elevation = 2.dp,
+                elevation = 6.dp,
                 shape = shape,
                 ambientColor = Color(0x0F000000),
                 spotColor = Color(0x0F000000),

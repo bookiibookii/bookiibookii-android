@@ -4,7 +4,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
-import android.view.WindowManager
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -13,14 +12,11 @@ import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.StyleSpan
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -31,6 +27,8 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.openPrivacyPolicy
+import com.bookiibookii.bookiibookii.common.openTermsOfService
 import com.bookiibookii.bookiibookii.data.api.AuthInterceptor
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.auth.LoginRequest
@@ -336,10 +334,7 @@ class LoginActivity : AppCompatActivity() {
 
         spannable.setSpan(object : ClickableSpan() {
             override fun onClick(widget: View) {
-                showTermsDialog(
-                    title = "서비스 약관",
-                    rawResId = R.raw.terms_service
-                )
+                openTermsOfService()
             }
             override fun updateDrawState(ds: TextPaint) {
                 ds.color = Color.WHITE
@@ -349,10 +344,7 @@ class LoginActivity : AppCompatActivity() {
 
         spannable.setSpan(object : ClickableSpan() {
             override fun onClick(widget: View) {
-                showTermsDialog(
-                    title = "개인정보 처리방침",
-                    rawResId = R.raw.terms_privacy
-                )
+                openPrivacyPolicy()
             }
             override fun updateDrawState(ds: TextPaint) {
                 ds.color = Color.WHITE
@@ -363,40 +355,5 @@ class LoginActivity : AppCompatActivity() {
         tv.text = spannable
         tv.movementMethod = LinkMovementMethod.getInstance()
         tv.highlightColor = Color.TRANSPARENT
-    }
-
-    private fun showTermsDialog(title: String, rawResId: Int) {
-        val view = LayoutInflater.from(this).inflate(R.layout.dialog_login_terms, null, false)
-
-        val tvTitle = view.findViewById<TextView>(R.id.tv_title)
-        val tvContent = view.findViewById<TextView>(R.id.tv_content)
-        val ivClose = view.findViewById<ImageView>(R.id.iv_close)
-
-        tvTitle.text = title
-        tvContent.text = readRawText(rawResId)
-
-        val dialog = AlertDialog.Builder(this)
-            .setView(view)
-            .create()
-
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        ivClose.setOnClickListener { dialog.dismiss() }
-
-        dialog.show()
-
-        // 카드 크기: 380dp × 480dp
-        val density = resources.displayMetrics.density
-        dialog.window?.setLayout(
-            (380 * density).toInt(),
-            (480 * density).toInt()
-        )
-        // dim 배경 (rgba(0,0,0,0.45))
-        dialog.window?.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-        dialog.window?.setDimAmount(0.45f)
-    }
-
-    private fun readRawText(rawResId: Int): String {
-        return resources.openRawResource(rawResId).bufferedReader().use { it.readText() }
     }
 }

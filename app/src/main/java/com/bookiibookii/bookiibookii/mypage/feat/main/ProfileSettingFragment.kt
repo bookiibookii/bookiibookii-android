@@ -1,9 +1,8 @@
 package com.bookiibookii.bookiibookii.mypage.feat.main
 
 import android.Manifest
-import android.content.ContentValues
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -11,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ComposeView
@@ -39,7 +39,7 @@ class ProfileSettingFragment : BaseMypageFragment() {
         if (success) {
             cameraImageUri?.let { uri ->
                 selectedImageUri.value = uri
-                selectedImageFile = createCompressedImageFile(uri)
+                selectedImageFile = createUploadTempFile(uri)
             }
         }
     }
@@ -52,7 +52,7 @@ class ProfileSettingFragment : BaseMypageFragment() {
     private val pickMediaLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             selectedImageUri.value = it
-            selectedImageFile = createCompressedImageFile(it)
+            selectedImageFile = createUploadTempFile(it)
         }
     }
 
@@ -107,50 +107,50 @@ class ProfileSettingFragment : BaseMypageFragment() {
     }
 
     private fun launchCamera() {
-        // insert가 null을 반환하면(저장공간 부족·MediaStore 오류 등) NPE 대신 안내 후 중단
         val uri = createCameraUri()
         if (uri == null) {
             requireContext().showCustomToast("카메라를 실행할 수 없습니다. 잠시 후 다시 시도해주세요.", false)
             return
         }
         cameraImageUri = uri
+        // FileProvider URI에 카메라 앱이 결과를 쓸 수 있도록 임시 쓰기 권한 부여
+        val captureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        requireContext().packageManager
+            .queryIntentActivities(captureIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            .forEach { info ->
+                requireContext().grantUriPermission(
+                    info.activityInfo.packageName,
+                    uri,
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }
         takePictureLauncher.launch(uri)
     }
 
+    // 카메라 출력 = 앱 내부 캐시(cache/camera) 파일의 FileProvider URI.
+    // MediaStore(공용 갤러리)에 넣지 않으므로 촬영본이 갤러리에 남지 않는다.
     private fun createCameraUri(): Uri? {
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, "profile_${System.currentTimeMillis()}.jpg")
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        return try {
+            val cameraDir = File(requireContext().cacheDir, "camera").apply { mkdirs() }
+            val file = File(cameraDir, "profile_${System.currentTimeMillis()}.jpg")
+            FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.fileprovider",
+                file,
+            )
+        } catch (e: Exception) {
+            null
         }
-        return requireContext().contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
     }
 
-    private fun createCompressedImageFile(uri: Uri): File? {
+    // 원본 이미지를 임시 파일로 복사 (EXIF 보존).
+    // 리사이즈/압축/EXIF 회전 적용은 업로드 시 S3Uploader가 처리
+    private fun createUploadTempFile(uri: Uri): File? {
         return try {
-            val bitmap = requireContext().contentResolver.openInputStream(uri)?.use { stream ->
-                BitmapFactory.decodeStream(stream)
-            } ?: return null
-
-            val maxPx = 1600
-            val scaled = if (bitmap.width > maxPx || bitmap.height > maxPx) {
-                val ratio = maxPx.toFloat() / maxOf(bitmap.width, bitmap.height)
-                val w = (bitmap.width * ratio).toInt()
-                val h = (bitmap.height * ratio).toInt()
-                Bitmap.createScaledBitmap(bitmap, w, h, true).also { bitmap.recycle() }
-            } else {
-                bitmap
-            }
-
             val tempFile = File.createTempFile("profile_", ".jpg", requireContext().cacheDir)
-            var quality = 80
-            do {
-                tempFile.outputStream().use { out ->
-                    scaled.compress(Bitmap.CompressFormat.JPEG, quality, out)
-                }
-                quality -= 10
-            } while (tempFile.length() > 1_048_576L && quality > 20)
-
-            scaled.recycle()
+            requireContext().contentResolver.openInputStream(uri)?.use { input ->
+                tempFile.outputStream().use { output -> input.copyTo(output) }
+            } ?: return null
             tempFile
         } catch (e: Exception) {
             null

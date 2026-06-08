@@ -29,6 +29,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.data.model.mypage.BookReviewSummaryDto
+import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedMemberReviewDto
+import com.bookiibookii.bookiibookii.data.model.mypage.UserBookDto
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -151,8 +154,51 @@ private fun MypTopBar(onBackClick: () -> Unit, onSettingClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true, widthDp = 412)
+private val previewProfile = UserProfileResDTO(
+    userId = 1L,
+    profileImageUrl = null,
+    nickname = "부키",
+    introduction = "매일 한 챕터씩 읽는 중입니다.",
+    userBooks = listOf(
+        UserBookDto(title = "데미안", auth = "헤르만 헤세", image = null),
+        UserBookDto(title = "1984", auth = "조지 오웰", image = null),
+        UserBookDto(title = "작별인사", auth = "김영하", image = null),
+    ),
+    bookReviewCount = 3,
+    recentBookReviews = listOf(
+        BookReviewSummaryDto(
+            bookTitle = "데미안",
+            bookAuthor = "헤르만 헤세",
+            tradeType = "DELIVERY",
+            rating = 4.0,
+            comment = "성장에 대해 다시 생각하게 한 책.",
+            reviewDate = "2026. 05. 01.",
+        ),
+    ),
+    boomUpCount = 5,
+    recentReceivedReviews = listOf(
+        ReceivedMemberReviewDto(
+            reviewerNickname = "noshel",
+            reviewerProfileUrl = null,
+            reaction = "BOOM_UP",
+            comment = "교환 매너가 좋았어요!",
+            createdAt = "2026. 05. 02.",
+        ),
+    ),
+)
+
+@Preview(name = "마이페이지 - 데이터", showBackground = true, widthDp = 412, heightDp = 1100)
 @Composable
 fun MypageScreenPreview() {
-    MypageScreen()
+    BookiiBookiiTheme {
+        MypageScreen(profile = previewProfile)
+    }
+}
+
+@Preview(name = "마이페이지 - 빈 상태", showBackground = true, widthDp = 412)
+@Composable
+fun MypageScreenEmptyPreview() {
+    BookiiBookiiTheme {
+        MypageScreen()
+    }
 }

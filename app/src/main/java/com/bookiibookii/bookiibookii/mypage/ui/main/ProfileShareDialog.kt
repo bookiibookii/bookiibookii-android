@@ -49,6 +49,7 @@ import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.UserBookDto
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 @Composable
 fun ProfileShareDialog(
@@ -446,8 +447,32 @@ private fun ShareActionItem(
     }
 }
 
-@Preview(showBackground = true)
+// Preview용 더미 대표책 (이미지 없음 → grey200 placeholder로 렌더)
+private val previewBooks: List<UserBookDto> = List(5) { index ->
+    UserBookDto(title = "책 제목 ${index + 1}", auth = "저자", image = null)
+}
+
+@Preview(name = "다이얼로그(라이트)", widthDp = 412, heightDp = 917, showBackground = true)
 @Composable
 private fun ProfileShareDialogLightPreview() {
-    ProfileShareDialog(name = "김스카이", motto = "역시나 누군가를 사랑하고\n사랑해야 할 당신을 위해")
+    BookiiPreview {
+        ProfileShareDialog(
+            name = "김스카이",
+            motto = "역시나 누군가를 사랑하고\n사랑해야 할 당신을 위해",
+            representativeBooks = previewBooks,
+        )
+    }
+}
+
+@Preview(name = "카드 콘텐츠(다크)", widthDp = 412, showBackground = true)
+@Composable
+private fun ProfileShareCardContentDarkPreview() {
+    BookiiPreview {
+        ProfileShareCardContent(
+            name = "김스카이",
+            motto = "역시나 누군가를 사랑하고\n사랑해야 할 당신을 위해",
+            representativeBooks = previewBooks,
+            isDark = true,
+        )
+    }
 }

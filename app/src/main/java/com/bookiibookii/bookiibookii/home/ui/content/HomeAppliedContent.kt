@@ -28,7 +28,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 internal fun LazyListScope.homeAppliedContent(
     appliedGroups: List<GroupItem>,
     onGroupClick: (Long) -> Unit,
-    onCreateGroupClick: () -> Unit = {},
+    onExploreGroupClick: () -> Unit = {},
 ) {
     // 피그마: 탭 영역 ~ 첫 섹션 사이 8dp 회색 간격
     item { Box(Modifier.fillMaxWidth().height(8.dp)) }
@@ -91,7 +91,7 @@ internal fun LazyListScope.homeAppliedContent(
                             .height(48.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(BookiiBookiiTheme.colors.uiMain)
-                            .clickable(onClick = onCreateGroupClick),
+                            .clickable(onClick = onExploreGroupClick),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
