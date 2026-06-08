@@ -22,7 +22,7 @@
         android:theme="@style/Theme.BookiiBookii"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".common.ComErrorActivity"
+            android:name=".error.ErrorActivity"
             android:exported="false" />
         <activity
             android:name=".onboarding.Intro.LoginIntroActivity"
@@ -82,7 +82,7 @@
 
                 <data
                     android:scheme="https"
-                    android:host="www.bookiibookii.com"
+                    android:host="bookiibookii.com"
                     android:pathPrefix="/share/reading-card" />
             </intent-filter>
         </activity>

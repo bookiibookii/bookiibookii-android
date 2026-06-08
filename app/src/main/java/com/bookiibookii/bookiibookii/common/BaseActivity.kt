@@ -1,11 +1,15 @@
 package com.bookiibookii.bookiibookii.common
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.viewbinding.ViewBinding
 
 abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
@@ -25,8 +29,33 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
         binding = getViewBinding()
         setContentView(binding.root)
 
-        // 2. 시스템 바 및 키보드(IME) 침범 방지 패딩 자동 적용
+        // 2. 상태바 영역을 흰색으로 (엣지투엣지라 상태바가 투명 → 흰색 View를 위에 덮음)
+        applyWhiteStatusBar()
+
+        // 3. 시스템 바 및 키보드(IME) 침범 방지 패딩 자동 적용
         setupWindowInsets(binding.root)
+    }
+
+    /**
+     * 상태바 영역에 흰색 배경 View를 깔아 상태바가 흰색으로 보이게 합니다.
+     * 높이는 고정값이 아니라 시스템이 알려주는 실제 상태바 높이(statusBars().top)로 맞추므로
+     * 기기·노치·회전 등에 따라 자동으로 변합니다.
+     */
+    private fun applyWhiteStatusBar() {
+        val content = findViewById<FrameLayout>(android.R.id.content)
+        val statusBarBg = View(this).apply {
+            setBackgroundColor(Color.WHITE)
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, 0, Gravity.TOP
+            )
+        }
+        content.addView(statusBarBg)
+
+        ViewCompat.setOnApplyWindowInsetsListener(statusBarBg) { v, insets ->
+            val top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            v.updateLayoutParams { height = top }
+            insets
+        }
     }
 
     /**
@@ -36,7 +65,7 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
      */
     open fun setupWindowInsets(view: View) {
         ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
-            // ★ 핵심 포인트: systemBars()와 ime()를 'or'로 묶어서 두 영역을 모두 가져옵니다.
+            // systemBars()와 ime()를 'or'로 묶어서 두 영역을 모두 가져옵니다.
             val insets = windowInsets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime()
             )

@@ -7,7 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import android.widget.Toast
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import androidx.activity.compose.setContent
 import androidx.core.content.FileProvider
 import androidx.activity.result.PickVisualMediaRequest
@@ -53,7 +53,7 @@ class OnbStepActivity : AppCompatActivity() {
                     vm.setProfileUri(localUri)
                     vm.uploadProfileImage(contentResolver, localUri)
                 } else {
-                    Toast.makeText(this, "이미지를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    showCustomToast("이미지를 불러오지 못했습니다.", false)
                 }
             }
         }
@@ -76,7 +76,7 @@ class OnbStepActivity : AppCompatActivity() {
                     finish()
                 }
                 is OnboardingSubmitState.Error -> {
-                    Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
+                    showCustomToast(state.message, false)
                 }
                 else -> Unit
             }
@@ -104,7 +104,7 @@ class OnbStepActivity : AppCompatActivity() {
     private fun launchCamera() {
         val uri = createCameraImageUri()
         if (uri == null) {
-            Toast.makeText(this, "카메라를 실행할 수 없습니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+            showCustomToast("카메라를 실행할 수 없습니다. 잠시 후 다시 시도해주세요.", false)
             return
         }
         cameraImageUri = uri

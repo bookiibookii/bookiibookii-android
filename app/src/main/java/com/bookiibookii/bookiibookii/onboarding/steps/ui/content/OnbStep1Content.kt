@@ -1,7 +1,7 @@
 package com.bookiibookii.bookiibookii.onboarding.steps.ui.content
 
 import android.net.Uri
-import android.widget.Toast
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -106,9 +106,9 @@ fun OnbStep1Content(
     LaunchedEffect(imageUploadState) {
         when (val s = imageUploadState) {
             is ProfileImageUploadState.Success ->
-                Toast.makeText(context, "프로필 이미지가 업로드되었습니다.", Toast.LENGTH_SHORT).show()
+                context.showCustomToast("프로필 이미지가 업로드되었습니다.", true)
             is ProfileImageUploadState.Error ->
-                Toast.makeText(context, s.message, Toast.LENGTH_SHORT).show()
+                context.showCustomToast(s.message, false)
             else -> {}
         }
     }
