@@ -9,9 +9,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.LinearGradient
-import android.graphics.Paint
-import android.graphics.Shader
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -269,7 +266,6 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
                     // 카드 스티커 저장
                     val stickerFile = File(imagesDir, "card_sticker_${System.currentTimeMillis()}.png")
                     FileOutputStream(stickerFile).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-                    bitmap.recycle()
 
                     val stickerUri = FileProvider.getUriForFile(
                         context,
@@ -277,8 +273,9 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
                         stickerFile,
                     )
 
-                    // 배경 이미지 (주황 그라데이션 1080×1920)
-                    val bgBitmap = createGradientBackground()
+                    // 배경: 카드 대표색 단색 (카드 색감에 맞춰진 꽉 찬 배경)
+                    val bgBitmap = createSolidColorBackground(bitmap)
+                    bitmap.recycle()
                     val bgFile = File(imagesDir, "bg_${System.currentTimeMillis()}.png")
                     FileOutputStream(bgFile).use { bgBitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
                     bgBitmap.recycle()
@@ -369,24 +366,15 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
         }
     }
 
-    /** Bookii 브랜드 오렌지 그라데이션 배경 비트맵 (Instagram 스토리 1080×1920) */
-    private fun createGradientBackground(): Bitmap {
-        val w = 1080
-        val h = 1920
-        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        val gradient = LinearGradient(
-            0f, h.toFloat(), w.toFloat(), 0f,
-            intArrayOf(
-                android.graphics.Color.parseColor("#FF4E18"),
-                android.graphics.Color.parseColor("#FF7618"),
-                android.graphics.Color.parseColor("#FFC9A4"),
-            ),
-            null,
-            Shader.TileMode.CLAMP,
-        )
-        val paint = Paint().apply { shader = gradient }
-        canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
+    /** 카드 대표(평균)색으로 채운 1080×1920 단색 스토리 배경 (카드 색감에 맞춰짐) */
+    private fun createSolidColorBackground(card: Bitmap): Bitmap {
+        // 카드를 1×1로 축소 → 그 픽셀이 곧 평균색 (Palette 의존성 불필요)
+        val pixel = Bitmap.createScaledBitmap(card, 1, 1, true)
+        val avgColor = pixel.getPixel(0, 0)
+        pixel.recycle()
+
+        val bitmap = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888)
+        Canvas(bitmap).drawColor(avgColor)
         return bitmap
     }
 
@@ -394,16 +382,14 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
         val context = requireContext()
         val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
             setPackage("com.instagram.android")
-            setDataAndType(backgroundUri, "image/*")  // 배경
-            putExtra("interactive_asset_uri", stickerUri)  // 스티커
+            setDataAndType(backgroundUri, "image/*")        // 카드 색감 블러 배경
+            putExtra("interactive_asset_uri", stickerUri)   // 선명한 카드 스티커
             putExtra("source_application", context.packageName)
             flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         }
-
-        val clipData = ClipData.newRawUri("Sticker", stickerUri).also {
+        intent.clipData = ClipData.newRawUri("Sticker", stickerUri).also {
             it.addItem(ClipData.Item(backgroundUri))
         }
-        intent.clipData = clipData
 
         // 인스타그램에 URI 읽기 권한 부여
         val resInfoList = context.packageManager.queryIntentActivities(intent, 0)

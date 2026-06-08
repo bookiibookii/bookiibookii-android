@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.home.ui
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bookiibookii.bookiibookii.data.model.group.GroupItem
 import com.bookiibookii.bookiibookii.home.HomeTab
@@ -120,6 +122,7 @@ internal fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(BookiiBookiiTheme.colors.uiBg),
+            contentPadding = PaddingValues(bottom = 100.dp),
         ) {
             // [0] 웰컴섹션 — 맨 위에서만 보임
             item { HomeWelcomeSection(nickname = uiState.nickname) }
