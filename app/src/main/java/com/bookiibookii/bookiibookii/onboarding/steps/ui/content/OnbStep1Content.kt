@@ -332,8 +332,8 @@ private fun GenderSection(selectedGender: String?, onGenderSelected: (String) ->
             modifier = Modifier.fillMaxWidth().height(48.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            GenderButton("여성", selectedGender == "FEMALE", { onGenderSelected("FEMALE") }, Modifier.width(119.dp))
-            GenderButton("남성", selectedGender == "MALE", { onGenderSelected("MALE") }, Modifier.width(119.dp))
+            GenderButton("여성", selectedGender == "FEMALE", { onGenderSelected("FEMALE") }, Modifier.width(120.dp))
+            GenderButton("남성", selectedGender == "MALE", { onGenderSelected("MALE") }, Modifier.width(120.dp))
             GenderButton("선택 안함", selectedGender == "none", { onGenderSelected("none") }, Modifier.weight(1f))
         }
     }
