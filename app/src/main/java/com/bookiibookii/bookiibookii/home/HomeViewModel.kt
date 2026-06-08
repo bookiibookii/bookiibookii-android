@@ -96,7 +96,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 RetrofitClient.grpApi().getMyHostedGroups()
             }.onSuccess { response ->
                 val groups = response.body()?.result
-                    ?.filter { it.groupStatus == "RECRUITING" } ?: return@onSuccess
+                    ?.filter { it.displayStatus == "BEFORE_MATCHING" } ?: return@onSuccess
                 _uiState.update { it.copy(myGroups = groups) }
             }
         }

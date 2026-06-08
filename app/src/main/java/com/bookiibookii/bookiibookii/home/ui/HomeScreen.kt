@@ -161,7 +161,8 @@ internal fun HomeScreen(
                 HomeTab.APPLIED -> homeAppliedContent(
                     appliedGroups = uiState.appliedGroups,
                     onGroupClick = onGroupClick,
-                    onCreateGroupClick = onCreateGroupClick,
+                    // "그룹 탐색하기" → 그룹 검색 화면(GroupSearchScreen)
+                    onExploreGroupClick = onSearchClick,
                 )
             }
         }

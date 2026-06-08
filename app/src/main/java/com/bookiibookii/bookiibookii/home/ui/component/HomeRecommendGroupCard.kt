@@ -64,7 +64,8 @@ internal fun RecommendGroupRow(
     Column(modifier = modifier) {
         LazyRow(
             state = listState,
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            // 세로 여백을 줘야 LazyRow가 카드 위아래 그림자를 자르지 않음
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
         ) {
@@ -117,7 +118,7 @@ private fun HomeRecommendGroupCard(
         modifier = modifier
             .width(334.dp)
             .shadow(
-                elevation = 2.dp,
+                elevation = 6.dp,
                 shape = shape,
                 ambientColor = Color(0x0F000000),
                 spotColor = Color(0x0F000000),
