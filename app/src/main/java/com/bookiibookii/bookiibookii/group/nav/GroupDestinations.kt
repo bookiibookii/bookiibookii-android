@@ -7,6 +7,9 @@ object GroupDestinations {
     const val ARG_GROUP_ID = "groupId"
     const val ARG_KEYWORD = "keyword"
 
+    // 다른 화면(상세 등)에서 복귀 시 검색 목록 재조회를 요청하는 savedStateHandle 키
+    const val RESULT_REFRESH = "result_refresh"
+
     // keyword는 선택 인자 — 있으면 진입 시 해당 검색어로 검색(홈에서 책 탭)
     const val SEARCH = "search?$ARG_KEYWORD={$ARG_KEYWORD}"
     const val DETAIL = "detail/{$ARG_GROUP_ID}"

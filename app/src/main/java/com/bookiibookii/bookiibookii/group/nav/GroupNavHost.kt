@@ -129,6 +129,17 @@ fun GroupNavHost(
             GroupJoinRequestRoute(
                 groupId = groupId,
                 onBack = { if (!navController.popBackStack()) onExit() },
+                // 수락 성공 → 상세(+명단)를 백스택에서 제거하고 그 전 화면으로.
+                onAccepted = {
+                    navController.popBackStack(GroupDestinations.DETAIL, inclusive = true)
+                    val current = navController.currentBackStackEntry
+                    if (current == null) {
+                        onExit()
+                    } else {
+                        // 복귀한 검색 화면에 재조회 신호
+                        current.savedStateHandle[GroupDestinations.RESULT_REFRESH] = true
+                    }
+                },
             )
         }
     }

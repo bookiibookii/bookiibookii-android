@@ -48,6 +48,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 fun GroupJoinRequestRoute(
     groupId: Long,
     onBack: () -> Unit,
+    onAccepted: () -> Unit = {},
     viewModel: JoinRequestViewModel = viewModel(),
 ) {
     val uiState by viewModel.applicationListState.collectAsStateWithLifecycle()
@@ -66,6 +67,8 @@ fun GroupJoinRequestRoute(
                         "${event.applicantName} 님의 요청을 ${verb}했어요",
                         isSuccess = true,
                     )
+                    // 수락 시: 상세 화면을 건너뛰고 그 전 화면으로 나가 재조회 (거절은 머무름)
+                    if (event.status == "ACCEPTED") onAccepted()
                 }
                 is JoinRequestViewModel.Event.ShowError ->
                     context.showCustomToast(event.message, isSuccess = false)
