@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.group.ui.detail
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -367,8 +369,9 @@ private fun GroupDetailContent(
             GroupDetailDescriptionCard(
                 title = "그룹 소개",
                 body = detail.groupComment.orEmpty(),
-                exchangePlaceName = detail.placeName,
-                exchangePlaceAddress = detail.address,
+                // 임시: 장소명 자리에 address 값을 넣고 주소는 null (추후 수정 예정)
+                exchangePlaceName = detail.address,
+                exchangePlaceAddress = null,
                 // 택배 교환 그룹이면 "배송지", 직접 교환이면 "교환 희망 장소"
                 exchangePlaceLabel = if (detail.tradeType == "DELIVERY") "배송지" else "교환 희망 장소",
             )
@@ -702,6 +705,7 @@ private fun GroupDetailDescriptionCard(
     exchangePlaceAddress: String? = null,
     exchangePlaceLabel: String = "교환 희망 장소",
 ) {
+    val context = LocalContext.current
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -762,6 +766,13 @@ private fun GroupDetailDescriptionCard(
                             style = BookiiBookiiTheme.typography.regular15,
                             color = BookiiBookiiTheme.colors.grey600,
                             textDecoration = TextDecoration.Underline,
+                            // 클릭 시 표시된 값으로 카카오맵 검색 (앱 있으면 앱, 없으면 브라우저)
+                            modifier = Modifier.clickable {
+                                val url = "https://map.kakao.com/link/search/${Uri.encode(exchangePlaceName)}"
+                                runCatching {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                }
+                            },
                         )
                         if (exchangePlaceAddress != null) {
                             Text(
