@@ -6,17 +6,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.api.S3Uploader
 import com.bookiibookii.bookiibookii.data.model.mypage.MypageReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UpdateIntroductionReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
 class MypageViewModel : ViewModel() {
@@ -143,21 +140,9 @@ class MypageViewModel : ViewModel() {
                             val uploadUrl = result.presignedPutUrl
                             val issuedS3Key = result.s3Key
 
-                            val mimeType = "image/jpeg"
-                            val requestBody = imageFile.asRequestBody(mimeType.toMediaTypeOrNull())
-                            val cleanClient = okhttp3.OkHttpClient()
-
-                            val requestS3 = okhttp3.Request.Builder()
-                                .url(uploadUrl)
-                                .put(requestBody)
-                                .addHeader("Content-Type", mimeType)
-                                .build()
-
-                            val uploadRes = withContext(Dispatchers.IO) {
-                                cleanClient.newCall(requestS3).execute()
-                            }
-
-                            if (!uploadRes.isSuccessful) {
+                            // S3 업로드 통일 — 리사이즈/압축(≤1MB) 자동 적용
+                            val uploadResult = S3Uploader.uploadImage(imageFile, uploadUrl)
+                            if (uploadResult.isFailure) {
                                 _eventFlow.emit(Event.ShowToast("이미지 업로드에 실패했습니다.", false))
                                 return@launch
                             }

@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- 독서카드 갤러리 저장 — Android 9(API 28) 이하에서만 필요 (Q+는 MediaStore로 권한 불필요) -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <application
         android:name=".onboarding.login.MyApplication"
@@ -62,6 +66,24 @@
                 <data
                     android:host="oauth"
                     android:scheme="kakao${KAKAO_APP_KEY}" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".library.feat.PublicCardViewerActivity"
+            android:exported="true"
+            android:theme="@style/Theme.BookiiBookii">
+            <!-- 독서카드 공유 링크 진입 (App Links). host는 실제 shareUrl 도메인에 맞게 수정 필요 -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="https"
+                    android:host="bookiibookii.com"
+                    android:pathPrefix="/share/reading-card" />
             </intent-filter>
         </activity>
 

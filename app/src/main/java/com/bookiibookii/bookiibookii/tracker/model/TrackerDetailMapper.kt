@@ -40,7 +40,7 @@ private fun String?.toPhaseLabel(): String = when (this) {
     "MY_BOOK_READING", "MY_BOOK_REVIEWING" -> "내 책 읽기"
     "EXCHANGING", "EXCHANGED" -> "교환"
     "PARTNER_BOOK_READING", "PARTNER_BOOK_REVIEWING" -> "파트너 책 읽기"
-    "RETURNING", "COMPLETED", null -> "반납"
+    "RETURNING", "RETURNED", "COMPLETED", null -> "반납"
     else -> ""
 }
 

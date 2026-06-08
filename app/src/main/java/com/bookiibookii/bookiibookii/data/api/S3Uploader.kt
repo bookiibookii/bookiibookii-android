@@ -31,28 +31,40 @@ object S3Uploader {
         presignedPutUrl: String
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val bytes = compressImage(contentResolver, uri)
+            putBytes(compressImage(decodeImage(contentResolver, uri)), presignedPutUrl)
+        }
+    }
 
-            // TODO: 추후 로그 삭제
-            android.util.Log.d("IMG_UPLOAD", "upload size=${bytes.size}B (${bytes.size / 1024}KB)")
+    // File 기반 오버로드 — File을 다루는 흐름(마이페이지 프로필 수정 등)도 동일 압축/업로드 적용
+    suspend fun uploadImage(
+        file: File,
+        presignedPutUrl: String
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            putBytes(compressImage(decodeImage(file)), presignedPutUrl)
+        }
+    }
 
-            val requestBody = bytes.toRequestBody(MIME_JPEG.toMediaTypeOrNull())
-            val request = Request.Builder()
-                .url(presignedPutUrl)
-                .put(requestBody)
-                .addHeader("Content-Type", MIME_JPEG)
-                .build()
+    // 압축된 JPEG 바이트를 presigned URL로 PUT
+    private fun putBytes(bytes: ByteArray, presignedPutUrl: String) {
+        // TODO: 추후 로그 삭제
+        android.util.Log.d("IMG_UPLOAD", "upload size=${bytes.size}B (${bytes.size / 1024}KB)")
 
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    error("S3 업로드 실패: HTTP ${response.code}")
-                }
+        val requestBody = bytes.toRequestBody(MIME_JPEG.toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url(presignedPutUrl)
+            .put(requestBody)
+            .addHeader("Content-Type", MIME_JPEG)
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                error("S3 업로드 실패: HTTP ${response.code}")
             }
         }
     }
 
-    private fun compressImage(contentResolver: ContentResolver, uri: Uri): ByteArray {
-        val bitmap = decodeImage(contentResolver, uri)
+    private fun compressImage(bitmap: Bitmap): ByteArray {
         try {
             var quality = INITIAL_QUALITY
             var bytes = bitmap.toJpegBytes(quality)
@@ -74,8 +86,13 @@ object S3Uploader {
         } else {
             ImageDecoder.createSource(contentResolver, uri)
         }
+        return decodeBitmap(source)
+    }
 
-        return ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+    private fun decodeImage(file: File): Bitmap = decodeBitmap(ImageDecoder.createSource(file))
+
+    private fun decodeBitmap(source: ImageDecoder.Source): Bitmap =
+        ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
             val longSide = maxOf(info.size.width, info.size.height)
             if (longSide > MAX_LONG_SIDE_PX) {
                 val ratio = MAX_LONG_SIDE_PX.toFloat() / longSide
@@ -87,7 +104,6 @@ object S3Uploader {
             // ALLOCATOR_SOFTWARE: hardware bitmap은 Bitmap.compress() 불가
             decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
         }
-    }
 
     private fun Bitmap.toJpegBytes(quality: Int): ByteArray {
         val output = ByteArrayOutputStream()

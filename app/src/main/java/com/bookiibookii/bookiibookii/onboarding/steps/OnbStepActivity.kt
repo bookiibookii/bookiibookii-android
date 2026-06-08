@@ -1,14 +1,15 @@
 package com.bookiibookii.bookiibookii.onboarding.steps
 
 import android.Manifest
-import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.core.content.FileProvider
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -101,13 +102,23 @@ class OnbStepActivity : AppCompatActivity() {
     }
 
     private fun launchCamera() {
-        // insert가 null을 반환하면(저장공간 부족·MediaStore 오류 등) NPE 대신 안내 후 중단
         val uri = createCameraImageUri()
         if (uri == null) {
             Toast.makeText(this, "카메라를 실행할 수 없습니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
             return
         }
         cameraImageUri = uri
+        // FileProvider URI에 카메라 앱이 결과를 쓸 수 있도록 임시 쓰기 권한 부여
+        val captureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        packageManager
+            .queryIntentActivities(captureIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            .forEach { info ->
+                grantUriPermission(
+                    info.activityInfo.packageName,
+                    uri,
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }
         takePictureLauncher.launch(uri)
     }
 
@@ -128,11 +139,15 @@ class OnbStepActivity : AppCompatActivity() {
         }
     }
 
+    // 카메라 출력 = 앱 내부 캐시(cache/camera) 파일의 FileProvider URI.
+    // MediaStore(공용 갤러리)에 넣지 않으므로 촬영본이 갤러리에 남지 않는다.
     private fun createCameraImageUri(): Uri? {
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, "profile_${System.currentTimeMillis()}.jpg")
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        return try {
+            val cameraDir = File(cacheDir, "camera").apply { mkdirs() }
+            val file = File(cameraDir, "profile_${System.currentTimeMillis()}.jpg")
+            FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+        } catch (e: Exception) {
+            null
         }
-        return contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
     }
 }
