@@ -19,8 +19,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,8 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -41,7 +37,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bookiibookii.bookiibookii.R
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -72,80 +67,11 @@ import com.bookiibookii.bookiibookii.tracker.ui.detail.direct.TrackerDirectMeeti
 import com.bookiibookii.bookiibookii.tracker.model.TrackerNotificationItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerMainViewModel
+import com.bookiibookii.bookiibookii.ui.component.BookiiTopBar
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
-
-@Composable
-private fun TrackerHeader(
-    onProfileClick: () -> Unit,
-    onAlertClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(BookiiBookiiTheme.colors.white),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(68.dp)
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            IconCircleButton(
-                iconRes = R.drawable.ic_person_fill,
-                onClick = onProfileClick,
-            )
-            Text(
-                text = "트래커",
-                style = BookiiBookiiTheme.typography.medium20,
-                color = BookiiBookiiTheme.colors.grey900,
-            )
-            IconCircleButton(
-                iconRes = R.drawable.ic_alert_32,
-                onClick = onAlertClick,
-            )
-        }
-        HorizontalDivider(
-            thickness = 1.dp,
-            color = BookiiBookiiTheme.colors.grey200,
-        )
-    }
-}
-
-@Composable
-private fun IconCircleButton(
-    iconRes: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    IconButton(
-        onClick = onClick,
-        modifier = modifier.size(40.dp),
-    ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = null,
-            modifier = Modifier.size(32.dp),
-            tint = Color.Unspecified,
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun TrackerHeaderPreview() {
-    BookiiPreview {
-        TrackerHeader(
-            onProfileClick = {},
-            onAlertClick = {},
-        )
-    }
-}
 
 @Composable
 private fun TrackerNoticeBanner(
@@ -465,6 +391,7 @@ fun TrackerMainRoute(
             isFirstResume = false
         } else {
             viewModel.load()
+            viewModel.fetchNotificationDot()
         }
     }
     var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -850,9 +777,11 @@ fun TrackerMainScreen(
                 .fillMaxWidth()
                 .background(BookiiBookiiTheme.colors.white),
         ) {
-            TrackerHeader(
+            BookiiTopBar(
+                title = "트래커",
                 onProfileClick = onProfileClick,
-                onAlertClick = onAlertClick,
+                onNotificationClick = onAlertClick,
+                hasNewNotification = uiState.hasNewNotification,
             )
             TrackerNoticeBanner(nickname = nickname)
             if (uiState.cards.isNotEmpty()) {

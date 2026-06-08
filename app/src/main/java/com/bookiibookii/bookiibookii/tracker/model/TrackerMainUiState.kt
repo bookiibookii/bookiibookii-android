@@ -6,6 +6,7 @@ data class TrackerMainUiState(
     val readingCount: Int = 0,
     val exchangingCount: Int = 0,
     val reviewCount: Int = 0,
+    val hasNewNotification: Boolean = false,
     val loading: Boolean = false,
     val error: String? = null,
 )

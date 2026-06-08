@@ -30,6 +30,7 @@ class HomeFragment : Fragment() {
             return
         }
         vm.refreshCurrentTab()
+        vm.fetchNotificationDot()
     }
 
     override fun onCreateView(

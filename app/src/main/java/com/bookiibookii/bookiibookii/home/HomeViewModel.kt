@@ -82,7 +82,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun fetchNotificationDot() {
+    fun fetchNotificationDot() {
         viewModelScope.launch {
             val systemDeferred = async {
                 runCatching {

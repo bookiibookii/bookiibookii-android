@@ -31,8 +31,8 @@ import com.bookiibookii.bookiibookii.home.HomeUiState
 import com.bookiibookii.bookiibookii.home.HomeViewModel
 import com.bookiibookii.bookiibookii.home.ui.component.HomeSearchCreateRow
 import com.bookiibookii.bookiibookii.home.ui.component.HomeTabRow
-import com.bookiibookii.bookiibookii.home.ui.component.HomeTopBar
 import com.bookiibookii.bookiibookii.home.ui.component.HomeWelcomeSection
+import com.bookiibookii.bookiibookii.ui.component.BookiiTopBar
 import com.bookiibookii.bookiibookii.home.ui.content.homeAppliedContent
 import com.bookiibookii.bookiibookii.home.ui.content.homeMyGroupsContent
 import com.bookiibookii.bookiibookii.home.ui.content.homeRecommendContent
@@ -116,9 +116,10 @@ internal fun HomeScreen(
             .background(BookiiBookiiTheme.colors.uiBg)
             .nestedScroll(nestedScrollConnection),
     ) {
-        HomeTopBar(
-            onNotificationClick = onNotificationClick,
+        BookiiTopBar(
+            title = "탐색",
             onProfileClick = onProfileClick,
+            onNotificationClick = onNotificationClick,
             hasNewNotification = uiState.hasNewNotification,
             modifier = Modifier.fillMaxWidth(),
         )
