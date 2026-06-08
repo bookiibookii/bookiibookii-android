@@ -5,6 +5,7 @@ import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerDetailResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.GroupReviewsResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressDirectUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressSavedUpdateReqDTO
@@ -47,6 +48,12 @@ interface TrkApi {
         @Path("groupId") groupId: Long,
         @Body request: ReadingPeriodUpdateReqDTO,
     ): Response<ApiResponse<ReadingPeriodUpdateResDTO>>
+
+    // 그룹 후기 전체 조회 — 기존 책 후기 프리필용(writerId로 내 후기 선별)
+    @GET("/api/groups/{groupId}/reviews")
+    suspend fun getGroupReviews(
+        @Path("groupId") groupId: Long,
+    ): Response<ApiResponse<GroupReviewsResDTO>>
 
     @POST("/api/groups/{groupId}/reviews")
     suspend fun postBookReview(

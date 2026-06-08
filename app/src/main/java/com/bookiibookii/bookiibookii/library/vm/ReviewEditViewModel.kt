@@ -58,7 +58,7 @@ class ReviewEditViewModel : ViewModel() {
             // 파트너 후기 (선택한 경우에만)
             if (isPartnerGood != null) {
                 try {
-                    val reaction = if (isPartnerGood) "BOOM_UP" else "DISLIKE"
+                    val reaction = if (isPartnerGood) "BOOM_UP" else "BOOM_DOWN"
                     RetrofitClient.libApi().postMemberReview(
                         groupId,
                         MemberReviewCreateDTO(reaction = reaction, comment = partnerComment),

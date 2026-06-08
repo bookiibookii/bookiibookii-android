@@ -7,6 +7,7 @@ import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.location.DeliveryAddress
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.GroupReviewsResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressDirectUpdateReqDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.DeliveryAddressSavedUpdateReqDTO
@@ -49,6 +50,13 @@ class TrackerRepository(
         newEndDate: String,
     ): Response<ApiResponse<ReadingPeriodUpdateResDTO>> {
         return api.patchReadingPeriod(groupId, ReadingPeriodUpdateReqDTO(newEndDate))
+    }
+
+    // 그룹 후기 전체 조회 — 기존 책 후기 프리필용(writerId로 내 후기 선별)
+    suspend fun fetchGroupReviews(
+        groupId: Long,
+    ): Response<ApiResponse<GroupReviewsResDTO>> {
+        return api.getGroupReviews(groupId)
     }
 
     suspend fun submitBookReview(

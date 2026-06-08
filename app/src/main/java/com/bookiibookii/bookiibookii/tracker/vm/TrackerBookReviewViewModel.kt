@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.tracker.BookReviewItem
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
 import com.bookiibookii.bookiibookii.tracker.model.TrackerBookReviewUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 class TrackerBookReviewViewModel(
     private val groupId: Long,
     private val isEdit: Boolean = false,   // true면 제출 시 PATCH(수정), false면 POST(작성)
+    private val myUserId: Long? = null,    // 수정 모드 프리필 시 내 후기 선별용
     private val repository: TrackerRepository = TrackerRepository(RetrofitClient.trkApi())
 ) : ViewModel() {
 
@@ -39,10 +41,14 @@ class TrackerBookReviewViewModel(
                         "EXCHANGE_REVIEW_WRITING" -> dto.partnerBook
                         else -> dto?.myBook
                     }
+                    // 수정 모드면 기존 책 후기(내가 쓴 것)를 불러와 프리필
+                    val myReview = if (isEdit) fetchMyBookReview() else null
                     _state.update {
                         it.copy(
                             bookTitle = book?.title.orEmpty(),
                             bookImageUrl = book?.image,
+                            initialStar = myReview?.star ?: 0.0,
+                            initialComment = myReview?.comment.orEmpty(),
                             loading = false,
                         )
                     }
@@ -52,6 +58,22 @@ class TrackerBookReviewViewModel(
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message, loading = false) }
             }
+        }
+    }
+
+    // 그룹 후기 전체 조회 후 writerId == 내 userId 인 책 후기 1건 선별. 실패/없으면 null.
+    private suspend fun fetchMyBookReview(): BookReviewItem? {
+        if (myUserId == null) return null
+        return try {
+            val res = repository.fetchGroupReviews(groupId)
+            val body = res.body()
+            if (res.isSuccessful && body?.isSuccess == true) {
+                body.result?.bookReviews?.firstOrNull { it.writerId == myUserId }
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -73,10 +95,14 @@ class TrackerBookReviewViewModel(
     }
 
     companion object {
-        fun factory(groupId: Long, isEdit: Boolean = false): ViewModelProvider.Factory =
+        fun factory(
+            groupId: Long,
+            isEdit: Boolean = false,
+            myUserId: Long? = null,
+        ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
-                    TrackerBookReviewViewModel(groupId, isEdit)
+                    TrackerBookReviewViewModel(groupId, isEdit, myUserId)
                 }
             }
     }
