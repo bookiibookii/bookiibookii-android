@@ -149,7 +149,7 @@ fun PublicCardViewerScreen(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "부키부키 앱에서 보기",
+                text = "부키부키 앱으로 이동하기",
                 style = BookiiBookiiTheme.typography.medium16,
                 color = BookiiBookiiTheme.colors.white,
             )
