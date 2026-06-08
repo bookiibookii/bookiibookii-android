@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -21,9 +22,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -164,5 +167,27 @@ internal fun LibraryBookListItem(book: LibraryBook, onClick: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LibraryBookGridItemPreview() {
+    BookiiPreview {
+        LibraryBookGridItem(
+            book = LibraryBook(groupName = "숭실대 경제 독서모임", title = "데미안", author = "헤르만 헤세", progress = 0.64f),
+            modifier = Modifier.width(160.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LibraryBookListItemPreview() {
+    BookiiPreview {
+        LibraryBookListItem(
+            book = LibraryBook(groupName = "한 달 한 권", title = "1984", author = "조지 오웰", rating = 5),
+            onClick = {},
+        )
     }
 }

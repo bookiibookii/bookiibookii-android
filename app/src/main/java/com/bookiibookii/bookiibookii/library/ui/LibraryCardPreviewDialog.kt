@@ -22,9 +22,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 독서카드 상세의 v2 레이아웃과 동일한 비율
@@ -39,17 +41,23 @@ internal fun LibraryCardPreviewDialog(
     onDismiss: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        Box(
-            modifier = Modifier
-                .width(320.dp)
-                .height(520.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(BookiiBookiiTheme.colors.white),
-        ) {
-            when (mode) {
-                AddCardMode.TEXT -> QuoteCardPreview(quote = quote, memo = memo)
-                AddCardMode.PHOTO -> PhotoCardPreview(memo = memo)
-            }
+        LibraryCardPreviewContent(mode = mode, quote = quote, memo = memo)
+    }
+}
+
+// 카드 본문 — Dialog 래퍼와 분리해 @Preview 대상이 되도록 함
+@Composable
+private fun LibraryCardPreviewContent(mode: AddCardMode, quote: String, memo: String) {
+    Box(
+        modifier = Modifier
+            .width(320.dp)
+            .height(520.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(BookiiBookiiTheme.colors.white),
+    ) {
+        when (mode) {
+            AddCardMode.TEXT -> QuoteCardPreview(quote = quote, memo = memo)
+            AddCardMode.PHOTO -> PhotoCardPreview(memo = memo)
         }
     }
 }
@@ -134,5 +142,29 @@ private fun PhotoCardPreview(memo: String) {
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LibraryCardPreviewContentTextPreview() {
+    BookiiPreview {
+        LibraryCardPreviewContent(
+            mode = AddCardMode.TEXT,
+            quote = "내 안에서 솟아 나오려는 것, 바로 그것을 나는 살아 보려고 했다.",
+            memo = "헤르만 헤세의 데미안 중에서",
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LibraryCardPreviewContentPhotoPreview() {
+    BookiiPreview {
+        LibraryCardPreviewContent(
+            mode = AddCardMode.PHOTO,
+            quote = "",
+            memo = "오늘 읽은 페이지의 한 장면",
+        )
     }
 }
