@@ -117,8 +117,8 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 RetrofitClient.grpApi().getAppliedGroups()
             }.onSuccess { response ->
                 val groups = response.body()?.result?.applicationList
-                    ?.map { it.toGroupItem() }
-                    ?.filter { it.groupStatus == "RECRUITING" } ?: return@onSuccess
+                    ?.filter { it.applicationStatus == "PENDING" }
+                    ?.map { it.toGroupItem() } ?: return@onSuccess
                 _uiState.update { it.copy(appliedGroups = groups) }
             }.onFailure { e ->
                 Log.e("HomeVM", "fetchAppliedGroups error", e)
