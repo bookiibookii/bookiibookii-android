@@ -9,6 +9,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.Shader
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -273,8 +276,8 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
                         stickerFile,
                     )
 
-                    // 배경: 카드 대표색 단색 (카드 색감에 맞춰진 꽉 찬 배경)
-                    val bgBitmap = createSolidColorBackground(bitmap)
+                    // 배경: 카드 위/아래 가장자리색 세로 그라데이션 (인스타 기본 배경 방식)
+                    val bgBitmap = createEdgeGradientBackground(bitmap)
                     bitmap.recycle()
                     val bgFile = File(imagesDir, "bg_${System.currentTimeMillis()}.png")
                     FileOutputStream(bgFile).use { bgBitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -366,15 +369,27 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
         }
     }
 
-    /** 카드 대표(평균)색으로 채운 1080×1920 단색 스토리 배경 (카드 색감에 맞춰짐) */
-    private fun createSolidColorBackground(card: Bitmap): Bitmap {
-        // 카드를 1×1로 축소 → 그 픽셀이 곧 평균색 (Palette 의존성 불필요)
-        val pixel = Bitmap.createScaledBitmap(card, 1, 1, true)
-        val avgColor = pixel.getPixel(0, 0)
-        pixel.recycle()
+    /** 카드 위/아래 가장자리색으로 세로 그라데이션을 채운 스토리 배경 (인스타 기본 배경 방식) */
+    private fun createEdgeGradientBackground(card: Bitmap): Bitmap {
+        // 카드를 1×N으로 축소 → 각 픽셀이 가로줄 평균색. 맨 위/맨 아래 픽셀 = 위/아래 가장자리 색
+        val samples = 10
+        val column = Bitmap.createScaledBitmap(card, 1, samples, true)
+        val topColor = column.getPixel(0, 0)
+        val bottomColor = column.getPixel(0, samples - 1)
+        column.recycle()
 
-        val bitmap = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888)
-        Canvas(bitmap).drawColor(avgColor)
+        val w = 1080
+        val h = 1920
+        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val paint = Paint().apply {
+            shader = LinearGradient(
+                0f, 0f, 0f, h.toFloat(),
+                topColor, bottomColor,
+                Shader.TileMode.CLAMP,
+            )
+        }
+        canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
         return bitmap
     }
 
