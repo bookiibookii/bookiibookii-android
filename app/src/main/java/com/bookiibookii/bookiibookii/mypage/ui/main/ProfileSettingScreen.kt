@@ -94,10 +94,11 @@ fun ProfileSettingScreen(
     val originalNickname = profile?.nickname ?: ""
 
     var nickname by remember(profile?.nickname) { mutableStateOf(profile?.nickname ?: "") }
-    var selectedGenderIndex by remember { mutableStateOf<Int?>(null) }
-    var birthYear by remember { mutableStateOf<Int?>(null) }
-    var birthMonth by remember { mutableStateOf<Int?>(null) }
-    var birthDay by remember { mutableStateOf<Int?>(null) }
+    var selectedGenderIndex by remember(profile?.gender) { mutableStateOf(genderIndexFromCode(profile?.gender)) }
+    val parsedBirth = remember(profile?.birthDate) { parseBirthDate(profile?.birthDate) }
+    var birthYear by remember(profile?.birthDate) { mutableStateOf(parsedBirth?.first) }
+    var birthMonth by remember(profile?.birthDate) { mutableStateOf(parsedBirth?.second) }
+    var birthDay by remember(profile?.birthDate) { mutableStateOf(parsedBirth?.third) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showPhotoSheet by remember { mutableStateOf(false) }
 
@@ -111,7 +112,7 @@ fun ProfileSettingScreen(
         true
     }
 
-    val genderOptions = listOf("FEMALE", "MALE", null)
+    val genderOptions = listOf("FEMALE", "MALE", "NONE")
     val birthDateDisplay = if (birthYear != null && birthMonth != null && birthDay != null) {
         "%04d.%02d.%02d".format(birthYear!!, birthMonth!!, birthDay!!)
     } else ""
@@ -387,6 +388,24 @@ private fun GenderField(selectedIndex: Int?, onSelect: (Int) -> Unit) {
     }
 }
 
+// gender
+private fun genderIndexFromCode(code: String?): Int? = when (code) {
+    "FEMALE" -> 0
+    "MALE" -> 1
+    "NONE" -> 2
+    else -> null
+}
+
+// "yyyy-MM-dd"
+private fun parseBirthDate(birthDate: String?): Triple<Int, Int, Int>? {
+    val parts = birthDate?.split("-") ?: return null
+    if (parts.size != 3) return null
+    val year = parts[0].toIntOrNull() ?: return null
+    val month = parts[1].toIntOrNull() ?: return null
+    val day = parts[2].toIntOrNull() ?: return null
+    return Triple(year, month, day)
+}
+
 @Composable
 private fun BirthDateField(value: String, onClick: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -540,8 +559,33 @@ private fun WheelPickerColumn(
     }
 }
 
-@Preview(showBackground = true, widthDp = 412)
+private val previewProfile = UserProfileResDTO(
+    userId = 1L,
+    profileImageUrl = null,
+    nickname = "부키",
+    introduction = "매일 한 챕터씩 읽는 중입니다.",
+    userBooks = emptyList(),
+    bookReviewCount = 0,
+    recentBookReviews = emptyList(),
+    boomUpCount = 0,
+    recentReceivedReviews = emptyList(),
+)
+
+@Preview(name = "프로필 수정 - 닉네임 사용가능", showBackground = true, widthDp = 412, heightDp = 900)
 @Composable
 private fun ProfileSettingScreenPreview() {
-    ProfileSettingScreen()
+    BookiiBookiiTheme {
+        ProfileSettingScreen(
+            profile = previewProfile,
+            nicknameCheckState = NicknameCheckState.Available("사용 가능한 닉네임이에요"),
+        )
+    }
+}
+
+@Preview(name = "프로필 수정 - 빈 상태", showBackground = true, widthDp = 412, heightDp = 900)
+@Composable
+private fun ProfileSettingScreenEmptyPreview() {
+    BookiiBookiiTheme {
+        ProfileSettingScreen()
+    }
 }

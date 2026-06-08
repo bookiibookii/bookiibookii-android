@@ -10,6 +10,7 @@ fun TrackerDetailResDTO.toUiState(): TrackerDetailUiState {
     val safeSteps = steps.orEmpty()
     val currentStepStatus = safeSteps.firstOrNull { it.completed != true }?.status
     val (primary, secondary) = actionsForStatus(displayStatus)
+    val (mineIsOwner, partnerIsOwner) = ownerBookBadges(myBook, partnerBook)
     return TrackerDetailUiState(
         groupName = groupName.orEmpty(),
         dDay = dDayChip,
@@ -18,8 +19,8 @@ fun TrackerDetailResDTO.toUiState(): TrackerDetailUiState {
         currentStepLabel = currentStepStatus.toPhaseLabel(),
         currentStepLabelStyle = currentStepStatus.toPhaseStyle(),
         currentStepPosition = currentStepStatus.toPhasePosition(),
-        myProfile = myBook.toProfile(),
-        partnerProfile = partnerBook.toProfile(),
+        myProfile = myBook.toProfile().copy(isOwnerBook = mineIsOwner),
+        partnerProfile = partnerBook.toProfile().copy(isOwnerBook = partnerIsOwner),
         exchangeLabel = tradeType.toExchangeLabel(),
         primaryAction = primary,
         secondaryAction = secondary,

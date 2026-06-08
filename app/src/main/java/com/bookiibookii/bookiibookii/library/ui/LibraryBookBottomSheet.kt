@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 @Composable
 fun LibraryBookBottomSheet(
@@ -83,8 +84,10 @@ private fun BottomSheetItem(label: String, color: Color, onClick: () -> Unit) {
     Text(text = label, style = BookiiBookiiTheme.typography.regular18, color = color, modifier = Modifier.fillMaxWidth().clickable { onClick() })
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 500)
 @Composable
 private fun LibraryBookBottomSheetPreview() {
-    LibraryBookBottomSheet(isRepresentative = false)
+    BookiiPreview {
+        LibraryBookBottomSheet(isRepresentative = false)
+    }
 }

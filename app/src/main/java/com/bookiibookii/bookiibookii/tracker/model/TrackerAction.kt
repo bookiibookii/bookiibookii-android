@@ -11,7 +11,7 @@ enum class TrackerAction(val label: String) {
     ConfirmReceive("수령 확인"),
     RegisterTrackingNumber("운송장 등록"),
     RegisterMeeting("약속 등록"),
-    GoToComments("댓글 바로가기"),
+    GoToComments("메시지"),
     CheckMeeting("약속 확인"),
     ConfirmExchange("교환 확인"),
     WritePartnerReview("교환독서 후기 작성"),

@@ -123,6 +123,7 @@ private fun TrackerProgressRecordDialogContent(
                         )
                     }
                     BasicTextField(
+                        modifier = Modifier.fillMaxWidth(),
                         value = pageInput,
                         onValueChange = { raw ->
                             val digits = raw.filter { it.isDigit() }

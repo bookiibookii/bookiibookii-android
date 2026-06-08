@@ -45,8 +45,11 @@ import com.bookiibookii.bookiibookii.R
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.bookiibookii.bookiibookii.common.openExternalUrl
 import com.bookiibookii.bookiibookii.common.openReportChannel
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
+import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.deliveryTrackingUrl
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
 import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
@@ -454,9 +457,15 @@ fun TrackerMainRoute(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.state.collectAsStateWithLifecycle()
-    // 상세 화면 등에서 복귀할 때마다 목록 재조회
+    // 최초 진입은 VM init에서 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
+    // 상세 화면 등에서 복귀할 때만 목록을 재조회한다. (rememberSaveable로 백스택 복귀 시에도 유지)
+    var isFirstResume by rememberSaveable { mutableStateOf(true) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.load()
+        if (isFirstResume) {
+            isFirstResume = false
+        } else {
+            viewModel.load()
+        }
     }
     var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -648,7 +657,14 @@ fun TrackerMainRoute(
                 shippingConfirmGroupId = null
                 viewModel.clearPartnerDelivery()
             },
-            onTrackingSearchClick = {}, // TODO: 배송 조회 이동 로직 보류
+            onTrackingSearchClick = {
+                val url = deliveryTrackingUrl(partner.deliveryCompany, partner.trackingNumber)
+                if (url != null) {
+                    context.openExternalUrl(url)
+                } else {
+                    context.showCustomToast("배송 조회를 지원하지 않는 택배사예요.", false)
+                }
+            },
             onConfirmClick = {
                 shippingConfirmGroupId = null
                 viewModel.clearPartnerDelivery()

@@ -91,7 +91,7 @@ private fun TrackerDirectExchangeFailDialogContent(
                 modifier = Modifier.weight(1f),
             )
             CardButton(
-                text = "댓글 바로가기",
+                text = "메시지",
                 style = CardButtonStyle.Main,
                 onClick = onGoToCommentsClick,
                 modifier = Modifier.weight(1f),

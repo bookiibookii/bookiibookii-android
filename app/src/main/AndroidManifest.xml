@@ -73,7 +73,7 @@
             android:name=".library.feat.PublicCardViewerActivity"
             android:exported="true"
             android:theme="@style/Theme.BookiiBookii">
-            <!-- 독서카드 공유 링크 진입 (App Links). host는 실제 shareUrl 도메인에 맞게 수정 필요 -->
+            <!-- 독서카드 공유 링크 진입 (App Links) -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
 
@@ -82,7 +82,7 @@
 
                 <data
                     android:scheme="https"
-                    android:host="bookiibookii.com"
+                    android:host="www.bookiibookii.com"
                     android:pathPrefix="/share/reading-card" />
             </intent-filter>
         </activity>

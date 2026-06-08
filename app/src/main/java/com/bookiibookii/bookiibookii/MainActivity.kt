@@ -18,8 +18,6 @@ import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
-import com.bookiibookii.bookiibookii.library.feat.PendingShareToken
-import com.bookiibookii.bookiibookii.library.feat.PublicCardViewerActivity
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.tracker.TrackerFragment
@@ -63,17 +61,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         initBottomNav()
         observeFragmentChanges()
         handleNavigationIntent(intent)
-
-        // 공유 링크로 진입했다가 로그인한 경우 — 저장된 shareToken으로 카드 뷰어 복귀
-        if (savedInstanceState == null) {
-            PendingShareToken.consume(this)?.let { token ->
-                startActivity(
-                    Intent(this, PublicCardViewerActivity::class.java).apply {
-                        putExtra(PublicCardViewerActivity.EXTRA_SHARE_TOKEN, token)
-                    },
-                )
-            }
-        }
     }
 
     // 탑레벨 Fragment(홈·트래커·서재 메인)일 때만 BottomNav 표시
