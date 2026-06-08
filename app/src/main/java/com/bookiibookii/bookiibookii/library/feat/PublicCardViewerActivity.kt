@@ -26,7 +26,6 @@ import com.bookiibookii.bookiibookii.library.ui.PublicCardViewerScreen
 import com.bookiibookii.bookiibookii.library.ui.ReadingCard
 import com.bookiibookii.bookiibookii.library.vm.toReadingCard
 import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroActivity
-import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -42,19 +41,7 @@ class PublicCardViewerActivity : ComponentActivity() {
         val shareToken = intent?.data?.lastPathSegment
             ?: intent?.getStringExtra(EXTRA_SHARE_TOKEN)
 
-        // 로그인 필수 — 비로그인 시 토큰을 저장해두고 로그인 진입.
-        // 로그인 완료 후 MainActivity가 consume해서 이 화면으로 복귀시킨다.
-        if (!TokenManager.hasAccessToken(this)) {
-            if (!shareToken.isNullOrBlank()) PendingShareToken.save(this, shareToken)
-            startActivity(
-                Intent(this, LoginIntroActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                },
-            )
-            finish()
-            return
-        }
-
+        // 공개 조회 — 로그인 없이 누구나 열람 가능. 앱 진입은 "부키부키 앱으로 이동하기" 버튼으로.
         setContent {
             BookiiBookiiTheme {
                 var state by remember { mutableStateOf<ViewerState>(ViewerState.Loading) }
@@ -101,8 +88,9 @@ class PublicCardViewerActivity : ComponentActivity() {
         return withContext(Dispatchers.IO) {
             try {
                 val response = RetrofitClient.libApi().getPublicReadingCard(shareToken)
-                val dto = response.body()
-                if (response.isSuccessful && dto != null) {
+                val body = response.body()
+                val dto = body?.result
+                if (response.isSuccessful && body?.isSuccess == true && dto != null) {
                     ViewerState.Success(dto.toReadingCard(), dto.bookAuthor.orEmpty())
                 } else {
                     ViewerState.Error

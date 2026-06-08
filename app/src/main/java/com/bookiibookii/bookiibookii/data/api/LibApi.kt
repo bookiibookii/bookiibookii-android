@@ -97,11 +97,11 @@ interface LibApi {
         @Path("cardId") cardId: Long
     ): Response<ApiResponse<ShareTokenResponseDTO>>
 
-    // 공유 토큰 기반 공개 조회 — 인증 불필요, ApiResponse 래퍼 없이 DTO 직접 반환
+    // 공유 토큰 기반 공개 조회 — 인증 불필요. 서버는 ApiResponse 래퍼로 감싸 반환(result에 카드)
     @GET("api/public/reading-cards/{shareToken}")
     suspend fun getPublicReadingCard(
         @Path("shareToken") shareToken: String
-    ): Response<PublicReadingCardResponseDTO>
+    ): Response<ApiResponse<PublicReadingCardResponseDTO>>
 
     // ── Reviews ────────────────────────────────────────────────────────────────
 
