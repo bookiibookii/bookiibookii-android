@@ -3,8 +3,8 @@
 
     <string name="splash_loading">로그인 중입니다...</string>
 
-    <!-- com error -->
-    <string name="type_system_error_title">현재 서비스 이용이\n원활하지 않습니다.</string>
+    <!-- error -->
+    <string name="type_system_error_title">현재 서비스 이용이 원활하지 않습니다.</string>
 
     <string name="type_network_error_title">네트워크 연결 오류입니다.</string>
     <string name="type_network_error_desc">현재 네트워크에 연결되어 있지 않습니다.\n확인 후 다시 시도해주세요.</string>
@@ -14,8 +14,8 @@
     <string name="type_group_delete_title">삭제된 페이지입니다.</string>
 
     <string name="com_btn_retry">다시 시도</string>
-    <string name="com_btn_back">이전으로</string>
-    <string name="com_btn_main">메인으로</string>
+    <string name="com_btn_back">이전</string>
+    <string name="com_btn_main">메인으로 이동</string>
 
 
     <!-- onb 공통 라벨 -->
