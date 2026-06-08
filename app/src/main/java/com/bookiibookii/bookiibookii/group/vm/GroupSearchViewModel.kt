@@ -1,22 +1,28 @@
 package com.bookiibookii.bookiibookii.group.vm
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.group.GroupItem
 import com.bookiibookii.bookiibookii.group.model.GroupSearchUiState
+import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class GroupSearchViewModel : ViewModel() {
+class GroupSearchViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
     private val _state = MutableStateFlow(GroupSearchUiState())
     val state: StateFlow<GroupSearchUiState> = _state
 
     init {
-        // 진입 시 기본값(전체)으로 목록 로드
+        // 검색어 인자(예: 홈에서 책 탭)가 있으면 검색 모드로 시작, 없으면 기본 목록
+        val keyword = savedStateHandle.get<String>(GroupDestinations.ARG_KEYWORD).orEmpty().trim()
+        if (keyword.isNotEmpty()) {
+            _state.update { it.copy(query = keyword, searchKeyword = keyword) }
+        }
         load()
     }
 

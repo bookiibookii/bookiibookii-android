@@ -95,7 +95,7 @@ private fun BookCarouselSection(
         modifier = Modifier
             .fillMaxWidth()
             .background(BookiiBookiiTheme.colors.white)
-            .padding(top = 16.dp, bottom = 16.dp),
+            .padding(top = 16.dp, bottom = 24.dp),
     ) {
         HomeSectionHeader(
             title = section.title,

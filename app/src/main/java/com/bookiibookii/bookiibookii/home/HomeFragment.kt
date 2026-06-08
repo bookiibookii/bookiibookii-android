@@ -63,6 +63,16 @@ class HomeFragment : Fragment() {
                             .addToBackStack(null)
                             .commit()
                     },
+                    // 책 탭 → 해당 책 제목으로 그룹 검색 진입
+                    onBookClick = { keyword ->
+                        parentFragmentManager.beginTransaction()
+                            .replace(
+                                R.id.fragmentContainer,
+                                GroupFragment.newInstance(GroupDestinations.search(keyword)),
+                            )
+                            .addToBackStack(null)
+                            .commit()
+                    },
                 )
             }
         }

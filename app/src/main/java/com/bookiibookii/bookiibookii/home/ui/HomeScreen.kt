@@ -49,6 +49,7 @@ fun HomeRoute(
     onCreateGroupClick: () -> Unit,
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onBookClick: (String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     HomeScreen(
@@ -59,6 +60,8 @@ fun HomeRoute(
         onCreateGroupClick = onCreateGroupClick,
         onNotificationClick = onNotificationClick,
         onProfileClick = onProfileClick,
+        // 책 탭 → 그 책 제목(searchKeyword)으로 그룹 검색
+        onBookClick = { item -> onBookClick(item.searchKeyword ?: item.title.orEmpty()) },
     )
 }
 
@@ -74,6 +77,7 @@ internal fun HomeScreen(
     onCreateGroupClick: () -> Unit,
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onBookClick: (HomeSectionItem) -> Unit = {},
 ) {
     val lazyListState = rememberLazyListState()
 
@@ -147,6 +151,7 @@ internal fun HomeScreen(
                 HomeTab.RECOMMEND -> homeRecommendContent(
                     sections = uiState.recommendSections,
                     onGroupClick = onGroupClick,
+                    onBookClick = onBookClick,
                 )
                 HomeTab.MY_GROUPS -> homeMyGroupsContent(
                     myGroups = uiState.myGroups,
