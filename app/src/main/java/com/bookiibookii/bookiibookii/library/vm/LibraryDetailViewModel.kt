@@ -31,10 +31,14 @@ class LibraryDetailViewModel : ViewModel() {
     private val _event = MutableSharedFlow<String>()
     val event: SharedFlow<String> = _event.asSharedFlow()
 
-    fun fetchGroupCards(groupId: Int) {
+    // 그룹 카드 목록 API는 그룹 전체 멤버·전체 책의 카드를 한 번에 반환한다.
+    // 상세 화면은 한 권(=bookTitle)에 대한 '모든 멤버'의 카드를 보여줘야 하므로 bookTitle로 추려낸다.
+    // memberBookId는 현재 사용자의 '내 책' 한 권만 가리켜 다른 멤버 카드가 빠지므로 사용하지 않는다.
+    // (응답에 bookId가 없어 bookTitle이 유일한 책 식별자. '내 독서카드만 보기'는 화면에서 isMine으로 다시 거른다.)
+    fun fetchGroupCards(groupId: Int, bookTitle: String = "") {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            Log.d("LibraryDetail", "fetchGroupCards 시작 — groupId=$groupId")
+            Log.d("LibraryDetail", "fetchGroupCards 시작 — groupId=$groupId, bookTitle=$bookTitle")
             try {
                 val response = RetrofitClient.libApi().getGroupCards(groupId)
                 Log.d("LibraryDetail", "응답 코드: ${response.code()}")
@@ -43,13 +47,14 @@ class LibraryDetailViewModel : ViewModel() {
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
-                    Log.d("LibraryDetail", "result: $result")
-                    Log.d("LibraryDetail", "cards 개수: ${result?.cards?.size}")
-                    result?.cards?.forEachIndexed { i, card ->
-                        Log.d("LibraryDetail", "  card[$i] id=${card.cardId} type=${card.cardType} memo=${card.memo?.take(20)}")
+                    val allCards = result?.cards ?: emptyList()
+                    val bookCards = if (bookTitle.isNotBlank()) {
+                        allCards.filter { it.bookTitle == bookTitle }
+                    } else {
+                        allCards
                     }
-                    val cards = result?.cards?.map { it.toReadingCard() } ?: emptyList()
-                    Log.d("LibraryDetail", "변환된 ReadingCard 개수: ${cards.size}")
+                    Log.d("LibraryDetail", "그룹 전체 ${allCards.size}개 중 '$bookTitle' 카드 ${bookCards.size}개")
+                    val cards = bookCards.map { it.toReadingCard() }
                     _uiState.update { it.copy(isLoading = false, cards = cards) }
                 } else {
                     val errBody = response.errorBody()?.string()

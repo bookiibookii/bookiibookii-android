@@ -132,7 +132,7 @@ class LibraryDetailFragment : BaseLibraryFragment() {
 
     override fun onResume() {
         super.onResume()
-        if (groupId != -1) vm.fetchGroupCards(groupId)
+        if (groupId != -1) vm.fetchGroupCards(groupId, bookTitle)
         // 대표책 상태 조회 (bookTitle로 북쉘프 매칭)
         if (memberBookId != -1 && bookTitle.isNotBlank()) {
             vm.checkRepresentativeStatus(memberBookId, bookTitle)
