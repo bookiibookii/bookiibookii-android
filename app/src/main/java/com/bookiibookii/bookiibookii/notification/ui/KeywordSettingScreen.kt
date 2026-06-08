@@ -160,7 +160,7 @@ private fun KeywordInputSection(
     }
 }
 
-// 키워드 입력 필드 — 비대칭 라운드(좌20/우30) + 우측 ⊕ 등록 버튼
+// 키워드 입력 필드
 @Composable
 private fun KeywordInputField(
     value: String,

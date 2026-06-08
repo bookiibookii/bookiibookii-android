@@ -43,12 +43,6 @@
             android:name=".onboarding.login.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".home.notification.ui.NotificationActivity"
-            android:exported="false" />
-        <activity
-            android:name=".home.notification.ui.NotificationKeywordSettingActivity"
-            android:exported="false" />
-        <activity
             android:name=".onboarding.steps.OnbStepActivity"
             android:exported="false" />
         <activity
