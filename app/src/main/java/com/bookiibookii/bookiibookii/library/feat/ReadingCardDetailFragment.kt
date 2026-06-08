@@ -1,6 +1,8 @@
 package com.bookiibookii.bookiibookii.library.feat
 
 import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -24,6 +26,12 @@ import com.bookiibookii.bookiibookii.library.ui.ReadingCard
 import com.bookiibookii.bookiibookii.library.ui.ReadingCardDetailScreen
 import com.bookiibookii.bookiibookii.library.ui.ShareableCard
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.kakao.sdk.share.ShareClient
+import com.kakao.sdk.share.WebSharerClient
+import com.kakao.sdk.template.model.Button
+import com.kakao.sdk.template.model.Content
+import com.kakao.sdk.template.model.FeedTemplate
+import com.kakao.sdk.template.model.Link
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
@@ -75,7 +83,101 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
                         }
                     },
                     onInstaShare = { card -> shareCardToInstagram(card) },
+                    onCopyLink   = { card -> copyShareLink(card) },
+                    onKakaoShare = { card -> shareToKakao(card) },
+                    onXShare     = { card -> shareToX(card) },
                 )
+            }
+        }
+    }
+
+    // ── 공유 토큰 발급 (링크 복사 / 카카오 / X 공통) ──────────────────────────
+    // POST .../share-token 호출 → 응답 shareUrl을 Main 스레드 콜백으로 전달 (실패 시 null)
+
+    private fun fetchShareUrl(card: ReadingCard, onResult: (String?) -> Unit) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val shareUrl = try {
+                RetrofitClient.libApi().createShareToken(card.cardId).body()?.result?.shareUrl
+            } catch (_: Exception) {
+                null
+            }
+            withContext(Dispatchers.Main) {
+                if (!isAdded) return@withContext
+                onResult(shareUrl)
+            }
+        }
+    }
+
+    // ── 링크 복사 ────────────────────────────────────────────────────────────
+
+    private fun copyShareLink(card: ReadingCard) {
+        val context = requireContext()
+        fetchShareUrl(card) { shareUrl ->
+            if (shareUrl.isNullOrBlank()) {
+                context.showCustomToast("링크 복사에 실패했어요", false)
+            } else {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("독서카드 링크", shareUrl))
+                context.showCustomToast("링크를 복사했어요", true)
+            }
+        }
+    }
+
+    // ── 카카오톡 공유 (피드 템플릿) ───────────────────────────────────────────
+    // 카카오톡 설치 시 ShareClient, 미설치 시 WebSharerClient(웹) 폴백
+
+    private fun shareToKakao(card: ReadingCard) {
+        val context = requireContext()
+        fetchShareUrl(card) { shareUrl ->
+            if (shareUrl.isNullOrBlank()) {
+                context.showCustomToast("공유에 실패했어요", false)
+                return@fetchShareUrl
+            }
+            val link = Link(webUrl = shareUrl, mobileWebUrl = shareUrl)
+            val feed = FeedTemplate(
+                content = Content(
+                    title = card.bookTitle.ifBlank { "독서카드" },
+                    description = card.quotation.ifBlank { card.content },
+                    imageUrl = card.imageUrl.orEmpty(),
+                    link = link,
+                ),
+                buttons = listOf(Button("보러가기", link)),
+            )
+
+            if (ShareClient.instance.isKakaoTalkSharingAvailable(context)) {
+                ShareClient.instance.shareDefault(context, feed) { result, error ->
+                    when {
+                        error != null -> context.showCustomToast("공유에 실패했어요", false)
+                        result != null -> startActivity(result.intent)
+                    }
+                }
+            } else {
+                // 카카오톡 미설치 → 웹 공유 폴백
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, WebSharerClient.instance.makeDefaultUrl(feed)))
+                } catch (_: Exception) {
+                    context.showCustomToast("카카오톡을 열 수 없어요", false)
+                }
+            }
+        }
+    }
+
+    // ── X 공유 (작성화면 인텐트) ──────────────────────────────────────────────
+
+    private fun shareToX(card: ReadingCard) {
+        val context = requireContext()
+        fetchShareUrl(card) { shareUrl ->
+            if (shareUrl.isNullOrBlank()) {
+                context.showCustomToast("공유에 실패했어요", false)
+                return@fetchShareUrl
+            }
+            val text = card.bookTitle.ifBlank { "독서카드" }
+            val intentUrl = "https://twitter.com/intent/tweet?text=" +
+                Uri.encode(text) + "&url=" + Uri.encode(shareUrl)
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(intentUrl)))
+            } catch (_: Exception) {
+                context.showCustomToast("X를 열 수 없어요", false)
             }
         }
     }

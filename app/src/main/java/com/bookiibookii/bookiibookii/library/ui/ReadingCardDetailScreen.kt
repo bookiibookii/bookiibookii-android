@@ -141,6 +141,9 @@ fun ReadingCardDetailScreen(
     onBookmarkToggle: (cardId: Long) -> Unit = {},
     onReactionToggle: (cardId: Long, reaction: String) -> Unit = { _, _ -> },
     onInstaShare: (card: ReadingCard) -> Unit = {},
+    onCopyLink: (card: ReadingCard) -> Unit = {},
+    onKakaoShare: (card: ReadingCard) -> Unit = {},
+    onXShare: (card: ReadingCard) -> Unit = {},
 ) {
     val pagerState    = rememberPagerState(initialPage = initialIndex) { cards.size }
     val coroutineScope = rememberCoroutineScope()
@@ -260,9 +263,21 @@ fun ReadingCardDetailScreen(
     if (showShareSheet) {
         ReadingCardShareBottomSheet(
             onDismiss    = { showShareSheet = false },
+            onKakaoClick = {
+                showShareSheet = false
+                currentCard?.let { onKakaoShare(it) }
+            },
             onInstaClick = {
                 showShareSheet = false
                 currentCard?.let { onInstaShare(it) }
+            },
+            onXClick = {
+                showShareSheet = false
+                currentCard?.let { onXShare(it) }
+            },
+            onCopyLinkClick = {
+                showShareSheet = false
+                currentCard?.let { onCopyLink(it) }
             },
         )
     }
