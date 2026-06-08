@@ -41,6 +41,15 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         fetchNotificationDot()
     }
 
+    // 화면 복귀(onResume) 시 현재 선택된 탭만 다시 불러옴 — 수락 후 상태 변경 반영
+    fun refreshCurrentTab() {
+        when (_uiState.value.selectedTab) {
+            HomeTab.MY_GROUPS -> fetchMyGroups()
+            HomeTab.APPLIED -> fetchAppliedGroups()
+            HomeTab.RECOMMEND -> fetchRecommendedGroups()
+        }
+    }
+
     fun selectTab(tab: HomeTab) {
         _uiState.update { it.copy(selectedTab = tab) }
         when (tab) {
@@ -96,7 +105,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 RetrofitClient.grpApi().getMyHostedGroups()
             }.onSuccess { response ->
                 val groups = response.body()?.result
-                    ?.filter { it.groupStatus == "RECRUITING" } ?: return@onSuccess
+                    ?.filter { it.displayStatus == "BEFORE_MATCHING" } ?: return@onSuccess
                 _uiState.update { it.copy(myGroups = groups) }
             }
         }
@@ -108,8 +117,8 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 RetrofitClient.grpApi().getAppliedGroups()
             }.onSuccess { response ->
                 val groups = response.body()?.result?.applicationList
-                    ?.map { it.toGroupItem() }
-                    ?.filter { it.groupStatus == "RECRUITING" } ?: return@onSuccess
+                    ?.filter { it.applicationStatus == "PENDING" }
+                    ?.map { it.toGroupItem() } ?: return@onSuccess
                 _uiState.update { it.copy(appliedGroups = groups) }
             }.onFailure { e ->
                 Log.e("HomeVM", "fetchAppliedGroups error", e)

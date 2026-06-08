@@ -8,7 +8,7 @@ data class GroupItem(
     @SerializedName(value = "title", alternate = ["bookTitle"]) val title: String?,
     @SerializedName("author") val author: String?,
     @SerializedName("genre") val genre: String?,
-    @SerializedName("bookImage") val bookImage: String?,
+    @SerializedName(value = "bookImage", alternate = ["bookCoverImageUrl"]) val bookImage: String?,
     @SerializedName("hostNickname") val hostNickname: String?,
     @SerializedName("hostProfileImageUrl") val hostProfileImageUrl: String?,
     @SerializedName("groupStatus") val groupStatus: String,
@@ -18,5 +18,7 @@ data class GroupItem(
     val isHot: Boolean,
     val tradeType: String?,
     @SerializedName("readingPeriod") val readingPeriod: Int,
-    @SerializedName("pictureBadge") val pictureBadge: String?
+    @SerializedName("pictureBadge") val pictureBadge: String?,
+    @SerializedName("groupType") val groupType: String? = null,
+    @SerializedName("displayStatus") val displayStatus: String? = null,
 )

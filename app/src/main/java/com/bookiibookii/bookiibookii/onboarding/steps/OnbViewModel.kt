@@ -119,14 +119,23 @@ class OnbViewModel : ViewModel() {
 
     fun setLifeBook(slotIndex: Int, book: BookItem) {
         val books = currentState().lifeBooks.toMutableList()
-        books[slotIndex] = book
+        // 빈 슬롯에 추가하는 경우 클릭한 위치와 무관하게 항상 첫 번째 빈 칸을 채움
+        val targetIndex = if (books[slotIndex] == null) {
+            books.indexOfFirst { it == null }.takeIf { it >= 0 } ?: slotIndex
+        } else {
+            slotIndex
+        }
+        books[targetIndex] = book
         updateState(currentState().copy(lifeBooks = books))
     }
 
     fun removeLifeBook(slotIndex: Int) {
         val books = currentState().lifeBooks.toMutableList()
         books[slotIndex] = null
-        updateState(currentState().copy(lifeBooks = books))
+        // 중간을 삭제해도 남은 책을 앞으로 당김
+        val packed = books.filterNotNull()
+        val result = (packed + List(books.size - packed.size) { null })
+        updateState(currentState().copy(lifeBooks = result))
     }
 
     fun searchBooks(query: String) {

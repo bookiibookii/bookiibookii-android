@@ -26,7 +26,9 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -152,6 +154,7 @@ private fun WheelPickerColumn(
     val itemTotalHeightPx = with(density) { (itemHeightDp + itemGapDp).toPx() }
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     val snapBehavior = rememberSnapFlingBehavior(lazyListState = listState)
+    val scope = rememberCoroutineScope()
     val selectedIndex by remember {
         derivedStateOf {
             val first = listState.firstVisibleItemIndex
@@ -170,6 +173,7 @@ private fun WheelPickerColumn(
     ) {
         itemsIndexed(paddedItems) { index, item ->
             val isSelected = index == selectedIndex + paddingCount
+            val realIndex = index - paddingCount
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -177,6 +181,13 @@ private fun WheelPickerColumn(
                     .then(
                         if (isSelected) Modifier.background(colors.uiMainPale, selectedItemShape)
                         else Modifier
+                    )
+                    .then(
+                        if (item.isNotBlank() && !isSelected) {
+                            Modifier.clickable {
+                                scope.launch { listState.animateScrollToItem(realIndex) }
+                            }
+                        } else Modifier
                     ),
                 contentAlignment = Alignment.Center
             ) {

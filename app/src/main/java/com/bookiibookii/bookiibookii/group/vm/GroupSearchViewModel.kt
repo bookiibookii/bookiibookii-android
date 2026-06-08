@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class GroupSearchViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
+class GroupSearchViewModel(
+    private val savedStateHandle: SavedStateHandle,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(GroupSearchUiState())
     val state: StateFlow<GroupSearchUiState> = _state
@@ -24,6 +26,15 @@ class GroupSearchViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
             _state.update { it.copy(query = keyword, searchKeyword = keyword) }
         }
         load()
+        // 상세 등에서 복귀하며 재조회 신호가 오면 현재 모드(검색/필터) 그대로 첫 페이지 리로드
+        viewModelScope.launch {
+            savedStateHandle.getStateFlow(GroupDestinations.RESULT_REFRESH, false).collect { refresh ->
+                if (refresh) {
+                    savedStateHandle[GroupDestinations.RESULT_REFRESH] = false
+                    load()
+                }
+            }
+        }
     }
 
     // 첫 페이지 로드. 검색어 있으면 searchGroups, 없으면 필터 기반 getGroupList

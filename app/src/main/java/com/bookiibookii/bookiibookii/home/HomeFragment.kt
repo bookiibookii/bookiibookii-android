@@ -19,6 +19,19 @@ class HomeFragment : Fragment() {
 
     private val vm: HomeViewModel by viewModels()
 
+    // 최초 진입은 ViewModel init/탭 선택이 이미 로드하므로 첫 onResume은 건너뜀.
+    // 이후 복귀(상세에서 수락 후 등) 때마다 현재 탭 재조회.
+    private var skipNextResumeRefresh = true
+
+    override fun onResume() {
+        super.onResume()
+        if (skipNextResumeRefresh) {
+            skipNextResumeRefresh = false
+            return
+        }
+        vm.refreshCurrentTab()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
