@@ -71,9 +71,15 @@ fun TrackerDetailRoute(
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
 
-    // 하위 화면(서재/리뷰 등)에서 복귀할 때마다 상세 재조회
+    // 최초 진입은 VM init에서 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
+    // 하위 화면(서재/리뷰 등)에서 복귀할 때만 상세를 재조회한다. (rememberSaveable로 백스택 복귀 시에도 유지)
+    var isFirstResume by rememberSaveable { mutableStateOf(true) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.load()
+        if (isFirstResume) {
+            isFirstResume = false
+        } else {
+            viewModel.load()
+        }
     }
 
     // 장소 검색 화면에서 선택한 결과를 약속 장소로 반영 (복귀 시 step 2 다이얼로그 유지됨)

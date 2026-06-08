@@ -457,9 +457,15 @@ fun TrackerMainRoute(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.state.collectAsStateWithLifecycle()
-    // 상세 화면 등에서 복귀할 때마다 목록 재조회
+    // 최초 진입은 VM init에서 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
+    // 상세 화면 등에서 복귀할 때만 목록을 재조회한다. (rememberSaveable로 백스택 복귀 시에도 유지)
+    var isFirstResume by rememberSaveable { mutableStateOf(true) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.load()
+        if (isFirstResume) {
+            isFirstResume = false
+        } else {
+            viewModel.load()
+        }
     }
     var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
