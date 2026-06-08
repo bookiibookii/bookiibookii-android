@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.UserBookDto
@@ -289,6 +290,9 @@ private fun BookSpineItem(title: String, isOrange: Boolean, modifier: Modifier =
     val textColor = if (isOrange) BookiiBookiiTheme.colors.uiMain     else BookiiBookiiTheme.colors.uiMainSub
     val archHeight = 15.dp
 
+    // 12글자 이상이면 11자 + …
+    val displayTitle = if (title.length >= 12) title.take(11) + "…" else title
+
     Box(modifier = modifier, contentAlignment = Alignment.TopCenter) {
         Box(
             modifier = Modifier
@@ -298,7 +302,7 @@ private fun BookSpineItem(title: String, isOrange: Boolean, modifier: Modifier =
                 .padding(top = 24.dp, bottom = 16.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = title, style = BookiiBookiiTheme.typography.medium16, color = textColor, maxLines = 1, modifier = Modifier.verticalRotation())
+            Text(text = displayTitle, style = BookiiBookiiTheme.typography.medium16, color = textColor, maxLines = 1, modifier = Modifier.verticalRotation())
         }
         Canvas(modifier = Modifier.fillMaxWidth().height(archHeight)) {
             val path = Path().apply {
@@ -308,6 +312,65 @@ private fun BookSpineItem(title: String, isOrange: Boolean, modifier: Modifier =
                 close()
             }
             drawPath(path, color = bgColor)
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun ProfileSectionPreview() {
+    BookiiBookiiTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.uiBg)
+                .padding(vertical = 16.dp),
+        ) {
+            ProfileSection(nickname = "부키")
+        }
+    }
+}
+
+@Preview(name = "한줄소개 - 보기", showBackground = true, widthDp = 412)
+@Composable
+private fun MottoSectionPreview() {
+    BookiiBookiiTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.uiBg)
+                .padding(vertical = 16.dp),
+        ) {
+            MottoSection(
+                motto = "매일 한 챕터씩 읽는 중입니다.",
+                isEditing = false,
+                editText = "",
+                onEditTextChange = {},
+                onEditClick = {},
+                onCancelClick = {},
+                onSaveClick = {},
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun RepresentativeBooksSectionPreview() {
+    BookiiBookiiTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.uiBg)
+                .padding(vertical = 16.dp),
+        ) {
+            RepresentativeBooksSection(
+                books = listOf(
+                    UserBookDto(title = "데미안아아아가ㅏ가가가가가ㅏ가마마마ㅏ마", auth = "헤르만 헤세", image = null),
+                    UserBookDto(title = "1984", auth = "조지 오웰", image = null),
+                    UserBookDto(title = "작별인사", auth = "김영하", image = null),
+                ),
+            )
         }
     }
 }

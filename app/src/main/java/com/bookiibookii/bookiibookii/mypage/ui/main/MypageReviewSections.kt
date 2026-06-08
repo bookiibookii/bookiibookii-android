@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.DateUtils
@@ -211,6 +212,75 @@ private fun MypageStarRating(rating: Int) {
                 tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
                 modifier = Modifier.size(16.dp),
             )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun WrittenReviewsSectionPreview() {
+    BookiiBookiiTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.uiBg)
+                .padding(vertical = 16.dp),
+        ) {
+            WrittenReviewsSection(
+                reviewCount = 3,
+                reviews = listOf(
+                    BookReviewSummaryDto(
+                        bookTitle = "데미안",
+                        bookAuthor = "헤르만 헤세",
+                        tradeType = "DELIVERY",
+                        rating = 4.0,
+                        comment = "성장에 대해 다시 생각하게 한 책.",
+                        reviewDate = "2026. 05. 01.",
+                    ),
+                ),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun ReceivedReviewsSectionPreview() {
+    BookiiBookiiTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.uiBg)
+                .padding(vertical = 16.dp),
+        ) {
+            ReceivedReviewsSection(
+                boomUpCount = 5,
+                nickname = "부키",
+                reviews = listOf(
+                    ReceivedMemberReviewDto(
+                        reviewerNickname = "noshel",
+                        reviewerProfileUrl = null,
+                        reaction = "BOOM_UP",
+                        comment = "교환 매너가 좋았어요!",
+                        createdAt = "2026. 05. 02.",
+                    ),
+                ),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun ReviewsSectionEmptyPreview() {
+    BookiiBookiiTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.uiBg)
+                .padding(vertical = 16.dp),
+        ) {
+            WrittenReviewsSection(reviewCount = 0, reviews = emptyList())
         }
     }
 }
