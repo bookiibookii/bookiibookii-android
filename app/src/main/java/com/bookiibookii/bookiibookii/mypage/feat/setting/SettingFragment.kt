@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.bookiibookii.bookiibookii.common.openPrivacyPolicy
+import com.bookiibookii.bookiibookii.common.openTermsOfService
 import com.bookiibookii.bookiibookii.mypage.BaseMypageFragment
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.mypage.ui.setting.SettingScreen
@@ -37,18 +39,8 @@ class SettingFragment : BaseMypageFragment() {
                             .addToBackStack(null)
                             .commit()
                     },
-                    onTermsClick = {
-                        parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, WebViewFragment.newInstance("서비스 이용 약관", "service_terms.html"))
-                            .addToBackStack(null)
-                            .commit()
-                    },
-                    onPrivacyClick = {
-                        parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, WebViewFragment.newInstance("개인정보 처리 방침", "privacy_policy.html"))
-                            .addToBackStack(null)
-                            .commit()
-                    },
+                    onTermsClick = { requireContext().openTermsOfService() },
+                    onPrivacyClick = { requireContext().openPrivacyPolicy() },
                     onWithdrawClick = {
                         parentFragmentManager.beginTransaction()
                             .replace(R.id.fragmentContainer, WithdrawFragment())
