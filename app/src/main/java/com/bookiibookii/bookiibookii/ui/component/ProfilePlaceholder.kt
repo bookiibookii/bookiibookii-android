@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -37,7 +36,7 @@ private val ProfileSquircleShape: Shape = GenericShape { size, _ ->
 
 // 프로필 영역 (placeholder + 실제 이미지)
 // - 크기는 호출처에서 modifier.size()
-// - imageUrl == null/blank → profile_bg 모양에 grey500 채움 (기본 placeholder)
+// - imageUrl == null/blank → ic_profile_placeholder (grey300 squircle + 사람 실루엣)
 // - imageUrl != null → 위에 AsyncImage 오버레이
 // - innerStroke == true → 안쪽 1dp grey100 stroke. BookCover와 겹칠 때만 true 넣기
 @Composable
@@ -49,10 +48,9 @@ fun ProfilePlaceholder(
     Box(modifier = modifier.clip(ProfileSquircleShape)) {
         // 배경 placeholder — 항상 깔아둠. AsyncImage 로딩 전/실패 시 노출
         Image(
-            painter = painterResource(R.drawable.profile_bg),
+            painter = painterResource(R.drawable.ic_profile_placeholder),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.grey500),
         )
         if (!imageUrl.isNullOrBlank()) {
             AsyncImage(
