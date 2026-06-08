@@ -2,8 +2,6 @@ package com.bookiibookii.bookiibookii.mypage.feat.main
 
 import android.Manifest
 import android.content.ContentValues
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -39,7 +37,7 @@ class ProfileSettingFragment : BaseMypageFragment() {
         if (success) {
             cameraImageUri?.let { uri ->
                 selectedImageUri.value = uri
-                selectedImageFile = createCompressedImageFile(uri)
+                selectedImageFile = createUploadTempFile(uri)
             }
         }
     }
@@ -52,7 +50,7 @@ class ProfileSettingFragment : BaseMypageFragment() {
     private val pickMediaLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             selectedImageUri.value = it
-            selectedImageFile = createCompressedImageFile(it)
+            selectedImageFile = createUploadTempFile(it)
         }
     }
 
@@ -125,32 +123,14 @@ class ProfileSettingFragment : BaseMypageFragment() {
         return requireContext().contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
     }
 
-    private fun createCompressedImageFile(uri: Uri): File? {
+    // 원본 이미지를 임시 파일로 복사 (EXIF 보존).
+    // 리사이즈/압축/EXIF 회전 적용은 업로드 시 S3Uploader가 처리
+    private fun createUploadTempFile(uri: Uri): File? {
         return try {
-            val bitmap = requireContext().contentResolver.openInputStream(uri)?.use { stream ->
-                BitmapFactory.decodeStream(stream)
-            } ?: return null
-
-            val maxPx = 1600
-            val scaled = if (bitmap.width > maxPx || bitmap.height > maxPx) {
-                val ratio = maxPx.toFloat() / maxOf(bitmap.width, bitmap.height)
-                val w = (bitmap.width * ratio).toInt()
-                val h = (bitmap.height * ratio).toInt()
-                Bitmap.createScaledBitmap(bitmap, w, h, true).also { bitmap.recycle() }
-            } else {
-                bitmap
-            }
-
             val tempFile = File.createTempFile("profile_", ".jpg", requireContext().cacheDir)
-            var quality = 80
-            do {
-                tempFile.outputStream().use { out ->
-                    scaled.compress(Bitmap.CompressFormat.JPEG, quality, out)
-                }
-                quality -= 10
-            } while (tempFile.length() > 1_048_576L && quality > 20)
-
-            scaled.recycle()
+            requireContext().contentResolver.openInputStream(uri)?.use { input ->
+                tempFile.outputStream().use { output -> input.copyTo(output) }
+            } ?: return null
             tempFile
         } catch (e: Exception) {
             null
