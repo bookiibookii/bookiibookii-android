@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.common.showCustomToast
@@ -39,16 +40,39 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
         uri?.let { selectedImageUri = it }
     }
 
-    private val takePhotoLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        bitmap ?: return@registerForActivityResult
-        // 카메라 비트맵 → 캐시 파일로 저장 후 Uri 변환
-        val file = java.io.File(requireContext().cacheDir, "camera_${System.currentTimeMillis()}.jpg")
-        file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
-        selectedImageUri = android.net.Uri.fromFile(file)
+    // 카메라가 풀해상도 원본을 기록할 대상 파일 URI (FileProvider)
+    private var cameraImageUri: Uri? = null
+
+    // TakePicture: 카메라가 풀해상도 원본을 지정한 파일 URI에 직접 저장한다.
+    // (TakePicturePreview는 저해상도 썸네일 비트맵만 반환해 화질이 크게 떨어짐)
+    private val takePhotoLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success) cameraImageUri?.let { selectedImageUri = it }
     }
 
     private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) takePhotoLauncher.launch(null)
+        if (granted) launchCamera()
+    }
+
+    private fun launchCamera() {
+        val uri = createCameraUri() ?: run {
+            requireContext().showCustomToast("카메라를 실행할 수 없습니다.", false)
+            return
+        }
+        cameraImageUri = uri
+        takePhotoLauncher.launch(uri)
+    }
+
+    // 카메라 출력 = 앱 내부 캐시(cache/camera) 파일의 FileProvider URI
+    private fun createCameraUri(): Uri? = try {
+        val cameraDir = java.io.File(requireContext().cacheDir, "camera").apply { mkdirs() }
+        val file = java.io.File(cameraDir, "card_${System.currentTimeMillis()}.jpg")
+        FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.fileprovider",
+            file,
+        )
+    } catch (e: Exception) {
+        null
     }
 
     override fun onCreateView(
