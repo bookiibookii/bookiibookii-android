@@ -1,9 +1,11 @@
 package com.bookiibookii.bookiibookii.library.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -40,9 +43,10 @@ internal fun LibraryCardPreviewDialog(
     memo: String,
     onDismiss: () -> Unit,
     imageUri: android.net.Uri? = null,
+    bookTitle: String = "",
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        LibraryCardPreviewContent(mode = mode, quote = quote, memo = memo, imageUri = imageUri)
+        LibraryCardPreviewContent(mode = mode, quote = quote, memo = memo, imageUri = imageUri, bookTitle = bookTitle)
     }
 }
 
@@ -53,6 +57,7 @@ private fun LibraryCardPreviewContent(
     quote: String,
     memo: String,
     imageUri: android.net.Uri? = null,
+    bookTitle: String = "",
 ) {
     Box(
         modifier = Modifier
@@ -62,15 +67,49 @@ private fun LibraryCardPreviewContent(
             .background(BookiiBookiiTheme.colors.white),
     ) {
         when (mode) {
-            AddCardMode.TEXT -> QuoteCardPreview(quote = quote, memo = memo)
-            AddCardMode.PHOTO -> PhotoCardPreview(memo = memo, imageUri = imageUri)
+            AddCardMode.TEXT -> QuoteCardPreview(quote = quote, memo = memo, bookTitle = bookTitle)
+            AddCardMode.PHOTO -> PhotoCardPreview(memo = memo, imageUri = imageUri, bookTitle = bookTitle)
         }
+    }
+}
+
+// 좌상단 책제목 칩 — [B 심볼] + 책제목. 미리보기·공유 카드 공용
+// solidBackground=true(이미지 카드): 주황 채움 / false(텍스트 카드): 투명 + main_pale 테두리
+@Composable
+internal fun BookTitleChip(title: String, solidBackground: Boolean) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .then(
+                if (solidBackground) {
+                    Modifier.background(BookiiBookiiTheme.colors.uiMain)
+                } else {
+                    Modifier.border(1.dp, BookiiBookiiTheme.colors.uiMainPale, RoundedCornerShape(8.dp))
+                }
+            )
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_logo_symbol),
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(
+            text = title,
+            style = BookiiBookiiTheme.typography.medium16,
+            color = Color.White,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
 // 인용구 카드 v2: 선명한 오렌지 그라데이션 + 하단 메모 영역
 @Composable
-private fun QuoteCardPreview(quote: String, memo: String) {
+private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -85,21 +124,26 @@ private fun QuoteCardPreview(quote: String, memo: String) {
                 ),
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_quote),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp),
-                )
-                Text(
-                    text = "\"${quote.ifBlank { "인용구를 입력해주세요." }}\"",
-                    style = BookiiBookiiTheme.typography.semibold20,
-                    color = Color.White,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (bookTitle.isNotBlank()) {
+                    BookTitleChip(title = bookTitle, solidBackground = false)
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_quote),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp),
+                    )
+                    Text(
+                        text = "\"${quote.ifBlank { "인용구를 입력해주세요." }}\"",
+                        style = BookiiBookiiTheme.typography.semibold20,
+                        color = Color.White,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
         Box(
@@ -123,7 +167,7 @@ private fun QuoteCardPreview(quote: String, memo: String) {
 
 // 사진 카드 v2: 사진 상단 배경 + 하단 메모 영역
 @Composable
-private fun PhotoCardPreview(memo: String, imageUri: android.net.Uri? = null) {
+private fun PhotoCardPreview(memo: String, imageUri: android.net.Uri? = null, bookTitle: String) {
     Column(modifier = Modifier.fillMaxSize()) {
         // 사진 영역 (업로드된 사진 또는 placeholder)
         Box(
@@ -139,6 +183,11 @@ private fun PhotoCardPreview(memo: String, imageUri: android.net.Uri? = null) {
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
+            }
+            if (bookTitle.isNotBlank()) {
+                Box(modifier = Modifier.align(Alignment.TopStart).padding(20.dp)) {
+                    BookTitleChip(title = bookTitle, solidBackground = true)
+                }
             }
         }
         // 메모 영역
@@ -168,6 +217,7 @@ private fun LibraryCardPreviewContentTextPreview() {
             mode = AddCardMode.TEXT,
             quote = "내 안에서 솟아 나오려는 것, 바로 그것을 나는 살아 보려고 했다.",
             memo = "헤르만 헤세의 데미안 중에서",
+            bookTitle = "데미안",
         )
     }
 }
@@ -180,6 +230,7 @@ private fun LibraryCardPreviewContentPhotoPreview() {
             mode = AddCardMode.PHOTO,
             quote = "",
             memo = "오늘 읽은 페이지의 한 장면",
+            bookTitle = "데미안",
         )
     }
 }

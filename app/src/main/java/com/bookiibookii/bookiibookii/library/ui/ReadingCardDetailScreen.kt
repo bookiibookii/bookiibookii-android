@@ -514,27 +514,7 @@ private fun PhotoCard(
                             modifier           = Modifier.matchParentSize(),
                         )
                     }
-                    // 책 제목 배지 (좌상단 오버레이)
-                    if (card.bookTitle.isNotBlank()) {
-                        Row(
-                            modifier = Modifier
-                                .padding(start = 16.dp, top = 16.dp)
-                                .clip(RoundedCornerShape(5.dp))
-                                .background(Color(0xFFFFF3E0))
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            Text("B", color = BookiiBookiiTheme.colors.uiMain, fontSize = 12.sp, fontWeight = FontWeight.Black)
-                            Text(
-                                text = card.bookTitle,
-                                style = BookiiBookiiTheme.typography.medium14,
-                                color = BookiiBookiiTheme.colors.uiMain,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
+                    // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
                 }
                 // 하단 흰 텍스트 영역
                 Box(
@@ -588,18 +568,8 @@ private fun PhotoCard(
                     )
                 )
             )
-            // 책 제목 (좌상단)
-            if (card.bookTitle.isNotBlank()) {
-                Text(
-                    text = card.bookTitle,
-                    style = BookiiBookiiTheme.typography.medium12,
-                    color = BookiiBookiiTheme.colors.uiMain,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 24.dp, end = 40.dp),
-                )
-            }
-            // 메모 텍스트 (좌상단 제목 아래)
+            // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
+            // 메모 텍스트 (좌상단)
             if (card.content.isNotBlank()) {
                 Text(
                     text = card.content,
@@ -673,27 +643,7 @@ private fun QuoteCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Spacer(modifier = Modifier.height(20.dp))
-                    // 책 제목 (좌상단)
-                    if (card.bookTitle.isNotBlank()) {
-                        if (cardVersion == 1) {
-                            // v1: 배지 스타일 (pale orange bg)
-                            Row(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(5.dp))
-                                    .background(Color(0xFFFFF3E0))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Text("B", color = BookiiBookiiTheme.colors.uiMain, fontSize = 11.sp, fontWeight = FontWeight.Black)
-                                Text(card.bookTitle, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.uiMain, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                        } else {
-                            // v2: 일반 텍스트 (흰색)
-                            Text(card.bookTitle, style = BookiiBookiiTheme.typography.medium12, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
                     Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
                     Text(text = "\"$quotationText\"", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
                 }
@@ -757,8 +707,9 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
                         )
                     )
                     if (card.bookTitle.isNotBlank()) {
-                        Text(card.bookTitle, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.uiMain, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 24.dp, end = 40.dp))
+                        Box(modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 40.dp)) {
+                            BookTitleChip(title = card.bookTitle, solidBackground = true)
+                        }
                     }
                     if (card.content.isNotBlank()) {
                         Text(card.content, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
@@ -784,7 +735,7 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Spacer(modifier = Modifier.height(20.dp))
                             if (card.bookTitle.isNotBlank()) {
-                                Text(card.bookTitle, style = BookiiBookiiTheme.typography.medium12, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                BookTitleChip(title = card.bookTitle, solidBackground = false)
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))

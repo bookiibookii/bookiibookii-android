@@ -67,6 +67,7 @@ fun LibraryAddCardScreen(
     initialPage: String = "",
     initialMemo: String = "",
     initialImageUrl: String? = null,   // 수정 모드: 기존 사진(원격 URL)
+    bookTitle: String = "",            // 미리보기 칩에 표시할 책제목
     onImagePick: () -> Unit = {},      // 갤러리
     onImageCapture: () -> Unit = {},   // 카메라
     onBackClick: () -> Unit = {},
@@ -200,6 +201,24 @@ fun LibraryAddCardScreen(
                                     contentScale       = androidx.compose.ui.layout.ContentScale.Crop,
                                     modifier           = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp)),
                                 )
+                                // 사진이 있으면 우상단에 편집(사진 변경) 배지
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(16.dp)
+                                        .size(width = 32.dp, height = 33.dp)
+                                        .clip(RoundedCornerShape(30.dp))
+                                        .background(BookiiBookiiTheme.colors.white)
+                                        .border(1.dp, BookiiBookiiTheme.colors.grey200, RoundedCornerShape(30.dp)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_edit),
+                                        contentDescription = "사진 변경",
+                                        tint = BookiiBookiiTheme.colors.grey500,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
                             } else {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -337,7 +356,8 @@ fun LibraryAddCardScreen(
             quote = quote,
             memo = memo,
             onDismiss = { showPreview = false },
-            imageUri = selectedImageUri,
+            imageUri = selectedImageUri ?: initialImageUrl?.let(android.net.Uri::parse),
+            bookTitle = bookTitle,
         )
     }
 }
