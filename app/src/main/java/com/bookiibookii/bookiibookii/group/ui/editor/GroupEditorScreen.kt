@@ -612,16 +612,37 @@ private fun AddressSection(
     onPlaceSelect: (Long) -> Unit,
     onManageAddress: (ExchangeType) -> Unit,
 ) {
-    if (places.isEmpty()) {
-        AddressEmpty(tradeType = tradeType, onManageAddress = onManageAddress)
-    } else {
-        AddressList(
-            tradeType = tradeType,
-            places = places,
-            selectedPlaceId = selectedPlaceId,
-            onPlaceSelect = onPlaceSelect,
-        )
+    Column(
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (places.isEmpty()) {
+            AddressEmpty(tradeType = tradeType, onManageAddress = onManageAddress)
+        } else {
+            AddressList(
+                tradeType = tradeType,
+                places = places,
+                selectedPlaceId = selectedPlaceId,
+                onPlaceSelect = onPlaceSelect,
+            )
+        }
+        ManageAddressLink(tradeType = tradeType, onManageAddress = onManageAddress)
     }
+}
+
+// "주소지 관리" 링크
+@Composable
+private fun ManageAddressLink(
+    tradeType: ExchangeType,
+    onManageAddress: (ExchangeType) -> Unit,
+) {
+    Text(
+        text = "주소지 관리",
+        style = BookiiBookiiTheme.typography.regular14,
+        color = BookiiBookiiTheme.colors.grey400,
+        textDecoration = TextDecoration.Underline,
+        modifier = Modifier.clickable { onManageAddress(tradeType) },
+    )
 }
 
 private fun addressLabel(tradeType: ExchangeType) = when (tradeType) {
@@ -639,39 +660,27 @@ private fun AddressEmpty(
         ExchangeType.DIRECT -> "희망 교환 장소를 등록해주세요"
         ExchangeType.DELIVERY -> "배송지를 등록해주세요"
     }
-    Column(
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            FieldLabel(text = addressLabel(tradeType), required = true)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(BookiiBookiiTheme.shape.round16)
-                    .background(BookiiBookiiTheme.colors.grey200)
-                    .border(
-                        width = 1.dp,
-                        color = BookiiBookiiTheme.colors.grey300,
-                        shape = BookiiBookiiTheme.shape.round16,
-                    )
-                    .clickable { onManageAddress(tradeType) }
-                    .padding(16.dp),
-            ) {
-                Text(
-                    text = placeholder,
-                    style = BookiiBookiiTheme.typography.regular16,
-                    color = BookiiBookiiTheme.colors.grey400,
+    Column(modifier = Modifier.fillMaxWidth()) {
+        FieldLabel(text = addressLabel(tradeType), required = true)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(BookiiBookiiTheme.shape.round16)
+                .background(BookiiBookiiTheme.colors.grey200)
+                .border(
+                    width = 1.dp,
+                    color = BookiiBookiiTheme.colors.grey300,
+                    shape = BookiiBookiiTheme.shape.round16,
                 )
-            }
+                .clickable { onManageAddress(tradeType) }
+                .padding(16.dp),
+        ) {
+            Text(
+                text = placeholder,
+                style = BookiiBookiiTheme.typography.regular16,
+                color = BookiiBookiiTheme.colors.grey400,
+            )
         }
-        Text(
-            text = "주소지 관리",
-            style = BookiiBookiiTheme.typography.regular14,
-            color = BookiiBookiiTheme.colors.grey400,
-            textDecoration = TextDecoration.Underline,
-            modifier = Modifier.clickable { onManageAddress(tradeType) },
-        )
     }
 }
 

@@ -59,21 +59,21 @@ class GroupReviewViewModel : ViewModel() {
                         )
                     }
 
-                    // 도서별 리뷰 (내 리뷰 + 파트너 리뷰 매칭)
-                    val myBookReviews      = bookReviews.filter { it.writerNickname == myNickname }
-                    val partnerBookReviews = bookReviews.filter { it.writerNickname != myNickname }
+                    // 도서별 리뷰 (내 책 리뷰 + 파트너 책 리뷰 매칭, reviewType 기준)
+                    val myBookReviews      = bookReviews.filter { it.reviewType == "MY_BOOK" }
+                    val partnerBookReviews = bookReviews.filter { it.reviewType == "PARTNER_BOOK" }
 
                     val mappedReviews = myBookReviews.map { my ->
                         val partner = partnerBookReviews.firstOrNull { it.bookId == my.bookId }
                         BookReviewItem(
-                            bookTitle     = my.bookTitle,
+                            bookTitle     = my.bookTitle.orEmpty(),
                             bookAuthor    = my.bookAuthor.orEmpty(),
                             bookGenre     = "",
-                            myRating      = my.star.toInt().coerceIn(0, 5),
-                            myReview      = my.comment.orEmpty(),
-                            myDate        = my.createdAt.take(10),
-                            partnerRating = partner?.star?.toInt()?.coerceIn(0, 5) ?: 0,
-                            partnerReview = partner?.comment.orEmpty(),
+                            myRating      = (my.rating ?: 0.0).toInt().coerceIn(0, 5),
+                            myReview      = my.content.orEmpty(),
+                            myDate        = my.createdAt?.take(10).orEmpty(),
+                            partnerRating = (partner?.rating ?: 0.0).toInt().coerceIn(0, 5),
+                            partnerReview = partner?.content.orEmpty(),
                             partnerDate   = partner?.createdAt?.take(10).orEmpty(),
                         )
                     }

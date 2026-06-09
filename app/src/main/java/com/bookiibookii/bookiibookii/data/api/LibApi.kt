@@ -9,6 +9,8 @@ import com.bookiibookii.bookiibookii.data.model.library.MemberCardCreateRequestD
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardCreateResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardListResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MyBookReviewsResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.MyGroupReviewsResponseDTO
+import com.bookiibookii.bookiibookii.data.model.library.MyGroupReviewsUpdateDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardReactionToggleRequestDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardReactionToggleResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardResponseDTO
@@ -134,6 +136,13 @@ interface LibApi {
         @Path("reviewId") reviewId: Int,
         @Body request: BookReviewUpsertDTO
     ): Response<ApiResponse<String>>
+
+    // 내 그룹 리뷰(책 리뷰 여러 개 + 파트너 리뷰) 일괄 수정
+    @PATCH("api/groups/{groupId}/reviews/my-group")
+    suspend fun updateMyGroupReviews(
+        @Path("groupId") groupId: Int,
+        @Body request: MyGroupReviewsUpdateDTO
+    ): Response<ApiResponse<MyGroupReviewsResponseDTO>>
 
     // ── Trackers ───────────────────────────────────────────────────────────────
 
