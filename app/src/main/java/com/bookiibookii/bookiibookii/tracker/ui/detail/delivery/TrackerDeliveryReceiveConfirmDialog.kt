@@ -96,6 +96,7 @@ private fun TrackerDeliveryReceiveConfirmDialogContent(
                     text = "책의 상태를 확인했습니다",
                     style = BookiiBookiiTheme.typography.regular15,
                     color = BookiiBookiiTheme.colors.grey900,
+                    modifier = Modifier.clickable(onClick = { isChecked = !isChecked }),
                 )
                 Text(
                     text = "파손, 훼손, 낙서 등이 있다면 즉시 상대방에게\n댓글로 알려주세요.",

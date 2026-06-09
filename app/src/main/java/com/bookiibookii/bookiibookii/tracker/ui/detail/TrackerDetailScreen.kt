@@ -488,7 +488,7 @@ private fun TrackerDetailScreenPreview() {
         TrackerDetailScreen(
             groupName = "김영하 도장깨기 하실 분",
             dDay = "D-2",
-            statusLabel = "살인자의 기억법 · 후기 작성",
+            statusLabel = "일이삼사오육칠팔구... · 후기 작성",
             currentStepLabel = "내 책 읽기",
             currentStepLabelStyle = TrackerStepLabelStyle.Main,
             currentStepPosition = 1,

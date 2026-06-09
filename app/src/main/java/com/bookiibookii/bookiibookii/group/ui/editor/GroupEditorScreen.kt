@@ -124,8 +124,15 @@ fun GroupEditorRoute(
         onRemoveCustomRule = viewModel::onRemoveCustomRule,
         onBack = onBack,
         onSubmit = {
-            submitError = null
-            viewModel.submit()
+            if (uiState.groupName.length > 20) {
+                context.showCustomToast(
+                    message = "그룹명은 20자 이하로 작성해주세요",
+                    isSuccess = false,
+                )
+            } else {
+                submitError = null
+                viewModel.submit()
+            }
         },
         onManageAddress = onManageAddress,
         submitError = submitError,

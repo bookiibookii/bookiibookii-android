@@ -83,7 +83,7 @@ private fun TrackerNoticeBanner(
             append(nickname)
         }
         withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) {
-            append("님의\n교환독서 현황을 알려드려요")
+            append("님의\n교환독서 현황을 알려드려요.")
         }
     }
     Column(

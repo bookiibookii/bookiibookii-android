@@ -28,7 +28,7 @@ data class BookInfo(
     val image: String?,
     val totalPages: Int?,
     val currentPage: Int?,
-    val isOwnerBook: Boolean?,
+    val isMyOriginalBook: Boolean?,
     val currentReaderNickname: String?,
     val currentReaderProfileImageUrl: String?,
     val currentReadingRate: Int?
