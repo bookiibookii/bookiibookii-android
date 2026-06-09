@@ -17,6 +17,14 @@ val Pretendard = FontFamily(
     Font(R.font.pretendard_bold, FontWeight.Bold)
 )
 
+val MaruBuri = FontFamily(
+    Font(R.font.maruburi_extralight, FontWeight.ExtraLight),
+    Font(R.font.maruburi_light, FontWeight.Light),
+    Font(R.font.maruburi_regular, FontWeight.Normal),
+    Font(R.font.maruburi_semibold, FontWeight.SemiBold),
+    Font(R.font.maruburi_bold, FontWeight.Bold)
+)
+
 @Immutable
 data class BookiiTypography(
     val regular10: TextStyle,

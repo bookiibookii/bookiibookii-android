@@ -56,26 +56,38 @@ enum class AddCardMode { TEXT, PHOTO }
 
 private const val QUOTE_MAX = 140
 private const val TEXT_MEMO_MAX = 110
-private const val PHOTO_MEMO_MAX = 150
+private const val PHOTO_MEMO_MAX = 110
 
 @Composable
 fun LibraryAddCardScreen(
     mode: AddCardMode = AddCardMode.TEXT,
     selectedImageUri: android.net.Uri? = null,
+    isEdit: Boolean = false,
+    initialQuote: String = "",
+    initialPage: String = "",
+    initialMemo: String = "",
+    initialImageUrl: String? = null,   // 수정 모드: 기존 사진(원격 URL)
     onImagePick: () -> Unit = {},      // 갤러리
     onImageCapture: () -> Unit = {},   // 카메라
     onBackClick: () -> Unit = {},
     onSubmit: (page: Int, quotation: String, memo: String) -> Unit = { _, _, _ -> },
 ) {
-    var quote by remember { mutableStateOf("") }
-    var page by remember { mutableStateOf("") }
-    var memo by remember { mutableStateOf("") }
+    var quote by remember { mutableStateOf(initialQuote) }
+    var page by remember { mutableStateOf(initialPage) }
+    var memo by remember { mutableStateOf(initialMemo) }
 
     var quoteError by remember { mutableStateOf(false) }
     var pageError by remember { mutableStateOf(false) }
     var showPreview by remember { mutableStateOf(false) }
 
     val memoMax = if (mode == AddCardMode.TEXT) TEXT_MEMO_MAX else PHOTO_MEMO_MAX
+
+    // 수정 모드: 초기값 대비 변경 여부 (사진은 새로 고른 경우만 변경으로 간주)
+    val hasChanges = if (mode == AddCardMode.TEXT) {
+        quote != initialQuote || page != initialPage || memo != initialMemo
+    } else {
+        page != initialPage || memo != initialMemo || selectedImageUri != null
+    }
 
     Column(
         modifier = Modifier
@@ -105,7 +117,7 @@ fun LibraryAddCardScreen(
                     )
                 }
                 Text(
-                    text = "독서카드 추가",
+                    text = if (isEdit) "독서카드 수정" else "독서카드 추가",
                     style = BookiiBookiiTheme.typography.medium20,
                     color = BookiiBookiiTheme.colors.grey900,
                     modifier = Modifier.weight(1f),
@@ -180,9 +192,10 @@ fun LibraryAddCardScreen(
                                 .clickable { showPhotoSheet = true },
                             contentAlignment = Alignment.Center,
                         ) {
-                            if (selectedImageUri != null) {
+                            val photoModel = selectedImageUri ?: initialImageUrl
+                            if (photoModel != null) {
                                 coil.compose.AsyncImage(
-                                    model              = selectedImageUri,
+                                    model              = photoModel,
                                     contentDescription = null,
                                     contentScale       = androidx.compose.ui.layout.ContentScale.Crop,
                                     modifier           = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp)),
@@ -241,54 +254,78 @@ fun LibraryAddCardScreen(
             }
         }
 
-        // Footer 버튼
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp)
-                .navigationBarsPadding(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        // 필수값 검증 후 제출 (등록/수정 공용)
+        val submit = {
+            var valid = true
+            if (mode == AddCardMode.TEXT && quote.isBlank()) {
+                quoteError = true
+                valid = false
+            }
+            if (page.isBlank()) {
+                pageError = true
+                valid = false
+            }
+            if (valid) onSubmit(page.toIntOrNull() ?: 0, quote, memo)
+        }
+
+        if (isEdit) {
+            // 수정 모드: 단일 "수정" 버튼 — 변경된 내용이 없으면 비활성
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .navigationBarsPadding()
                     .height(56.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(BookiiBookiiTheme.colors.grey200)
-                    .clickable { showPreview = true },
+                    .background(if (hasChanges) BookiiBookiiTheme.colors.grey900 else BookiiBookiiTheme.colors.grey200)
+                    .then(if (hasChanges) Modifier.clickable(onClick = submit) else Modifier),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "미리보기",
+                    text = "수정",
                     style = BookiiBookiiTheme.typography.medium16,
-                    color = BookiiBookiiTheme.colors.grey700,
+                    color = if (hasChanges) BookiiBookiiTheme.colors.white else BookiiBookiiTheme.colors.grey500,
                 )
             }
-            Box(
+        } else {
+            // 등록 모드: 미리보기 + 등록하기
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(BookiiBookiiTheme.colors.grey900)
-                    .clickable {
-                        var valid = true
-                        if (mode == AddCardMode.TEXT && quote.isBlank()) {
-                            quoteError = true
-                            valid = false
-                        }
-                        if (page.isBlank()) {
-                            pageError = true
-                            valid = false
-                        }
-                        if (valid) onSubmit(page.toIntOrNull() ?: 0, quote, memo)
-                    },
-                contentAlignment = Alignment.Center,
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .navigationBarsPadding(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(
-                    text = "등록하기",
-                    style = BookiiBookiiTheme.typography.medium16,
-                    color = BookiiBookiiTheme.colors.white,
-                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(BookiiBookiiTheme.colors.grey200)
+                        .clickable { showPreview = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "미리보기",
+                        style = BookiiBookiiTheme.typography.medium16,
+                        color = BookiiBookiiTheme.colors.grey700,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(BookiiBookiiTheme.colors.grey900)
+                        .clickable(onClick = submit),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "등록하기",
+                        style = BookiiBookiiTheme.typography.medium16,
+                        color = BookiiBookiiTheme.colors.white,
+                    )
+                }
             }
         }
     }
@@ -300,6 +337,7 @@ fun LibraryAddCardScreen(
             quote = quote,
             memo = memo,
             onDismiss = { showPreview = false },
+            imageUri = selectedImageUri,
         )
     }
 }

@@ -63,6 +63,7 @@ enum class ReadingCardType { PHOTO, QUOTE }
 
 data class ReadingCard(
     val cardId: Long = 0L,
+    val memberBookId: Int = 0,
     val username: String,
     val content: String,
     val page: String,
@@ -72,6 +73,7 @@ data class ReadingCard(
     val bookTitle: String = "",
     val quotation: String = "",
     val imageUrl: String? = null,
+    val s3Key: String? = null,        // 기존 이미지 키 (수정 시 사진 미교체면 그대로 재전송)
     val myReactions: List<String> = emptyList(),      // 내가 누른 리액션 API key 목록
     val reactionCounts: Map<String, Int> = emptyMap(), // API key → 전체 인원 수
     val creatorProfileImageUrl: String? = null,

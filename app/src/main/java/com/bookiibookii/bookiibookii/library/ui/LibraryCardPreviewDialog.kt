@@ -39,15 +39,21 @@ internal fun LibraryCardPreviewDialog(
     quote: String,
     memo: String,
     onDismiss: () -> Unit,
+    imageUri: android.net.Uri? = null,
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        LibraryCardPreviewContent(mode = mode, quote = quote, memo = memo)
+        LibraryCardPreviewContent(mode = mode, quote = quote, memo = memo, imageUri = imageUri)
     }
 }
 
 // 카드 본문 — Dialog 래퍼와 분리해 @Preview 대상이 되도록 함
 @Composable
-private fun LibraryCardPreviewContent(mode: AddCardMode, quote: String, memo: String) {
+private fun LibraryCardPreviewContent(
+    mode: AddCardMode,
+    quote: String,
+    memo: String,
+    imageUri: android.net.Uri? = null,
+) {
     Box(
         modifier = Modifier
             .width(320.dp)
@@ -57,7 +63,7 @@ private fun LibraryCardPreviewContent(mode: AddCardMode, quote: String, memo: St
     ) {
         when (mode) {
             AddCardMode.TEXT -> QuoteCardPreview(quote = quote, memo = memo)
-            AddCardMode.PHOTO -> PhotoCardPreview(memo = memo)
+            AddCardMode.PHOTO -> PhotoCardPreview(memo = memo, imageUri = imageUri)
         }
     }
 }
@@ -117,7 +123,7 @@ private fun QuoteCardPreview(quote: String, memo: String) {
 
 // 사진 카드 v2: 사진 상단 배경 + 하단 메모 영역
 @Composable
-private fun PhotoCardPreview(memo: String) {
+private fun PhotoCardPreview(memo: String, imageUri: android.net.Uri? = null) {
     Column(modifier = Modifier.fillMaxSize()) {
         // 사진 영역 (업로드된 사진 또는 placeholder)
         Box(
@@ -125,7 +131,16 @@ private fun PhotoCardPreview(memo: String) {
                 .fillMaxWidth()
                 .weight(TOP_WEIGHT / (TOP_WEIGHT + BOTTOM_WEIGHT))
                 .background(BookiiBookiiTheme.colors.grey300),
-        )
+        ) {
+            if (imageUri != null) {
+                coil.compose.AsyncImage(
+                    model = imageUri,
+                    contentDescription = null,
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
         // 메모 영역
         Box(
             modifier = Modifier
