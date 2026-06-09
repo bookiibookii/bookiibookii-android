@@ -240,7 +240,12 @@ private fun ReviewCard(
                 iconRes = R.drawable.ic_hand_thumbs_up,
                 isSelected = rating == PartnerRating.GOOD,
                 isPositive = true,
-                onClick = { onRatingChange(PartnerRating.GOOD) },
+                // 이미 선택된 버튼을 다시 누르면 선택 취소
+                onClick = {
+                    onRatingChange(
+                        if (rating == PartnerRating.GOOD) PartnerRating.NONE else PartnerRating.GOOD,
+                    )
+                },
                 modifier = Modifier.weight(1f),
             )
             RatingButton(
@@ -248,7 +253,12 @@ private fun ReviewCard(
                 iconRes = R.drawable.ic_hand_thumbs_down,
                 isSelected = rating == PartnerRating.BAD,
                 isPositive = false,
-                onClick = { onRatingChange(PartnerRating.BAD) },
+                // 이미 선택된 버튼을 다시 누르면 선택 취소
+                onClick = {
+                    onRatingChange(
+                        if (rating == PartnerRating.BAD) PartnerRating.NONE else PartnerRating.BAD,
+                    )
+                },
                 modifier = Modifier.weight(1f),
             )
         }

@@ -78,7 +78,9 @@ fun TrackerDetailContent(
     onSecondaryActionClick: () -> Unit,
     onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
+    primaryActionEnabled: Boolean = true,
     secondaryActionEnabled: Boolean = true,
+    showReadingProgress: Boolean = true,
 ) {
     Column(
         modifier = modifier
@@ -118,12 +120,14 @@ fun TrackerDetailContent(
                     myProfile = myProfile,
                     partnerProfile = partnerProfile,
                     exchangeLabel = exchangeLabel,
+                    showReadingProgress = showReadingProgress,
                 )
                 ActionButtonsRow(
                     secondaryLabel = secondaryActionLabel,
                     primaryLabel = primaryActionLabel,
                     onSecondaryClick = onSecondaryActionClick,
                     onPrimaryClick = onPrimaryActionClick,
+                    primaryEnabled = primaryActionEnabled,
                     secondaryEnabled = secondaryActionEnabled,
                 )
             }
@@ -365,14 +369,23 @@ private fun TwoProfileSection(
     myProfile: TrackerProfileItem,
     partnerProfile: TrackerProfileItem,
     exchangeLabel: String,
+    showReadingProgress: Boolean,
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            ProfileColumn(profile = myProfile, modifier = Modifier.weight(1f))
-            ProfileColumn(profile = partnerProfile, modifier = Modifier.weight(1f))
+            ProfileColumn(
+                profile = myProfile,
+                showProgress = showReadingProgress,
+                modifier = Modifier.weight(1f),
+            )
+            ProfileColumn(
+                profile = partnerProfile,
+                showProgress = showReadingProgress,
+                modifier = Modifier.weight(1f),
+            )
         }
         ExchangeConnector(
             label = exchangeLabel,
@@ -386,6 +399,7 @@ private fun TwoProfileSection(
 @Composable
 private fun ProfileColumn(
     profile: TrackerProfileItem,
+    showProgress: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -424,18 +438,21 @@ private fun ProfileColumn(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    TrackerProgressBar(percent = profile.progressPercent)
-                    Text(
-                        text = "${profile.progressPercent}%",
-                        style = BookiiBookiiTheme.typography.regular14,
-                        color = BookiiBookiiTheme.colors.grey800,
-                    )
+                if (showProgress) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        TrackerProgressBar(percent = profile.progressPercent)
+                        Text(
+                            text = profile.progressLabelOverride
+                                ?: "${profile.progressPercent}%",
+                            style = BookiiBookiiTheme.typography.regular14,
+                            color = BookiiBookiiTheme.colors.grey800,
+                        )
+                    }
                 }
             }
         }
@@ -518,6 +535,7 @@ private fun ActionButtonsRow(
     primaryLabel: String,
     onSecondaryClick: () -> Unit,
     onPrimaryClick: () -> Unit,
+    primaryEnabled: Boolean = true,
     secondaryEnabled: Boolean = true,
 ) {
     // secondary가 없으면 primary 단일 풀폭 버튼 (예: 교환독서 후기 작성)
@@ -526,6 +544,7 @@ private fun ActionButtonsRow(
             text = primaryLabel,
             style = BottomSheetBtnStyle.Orange,
             onClick = onPrimaryClick,
+            enabled = primaryEnabled,
             modifier = Modifier.fillMaxWidth(),
         )
         return
@@ -546,6 +565,7 @@ private fun ActionButtonsRow(
             style = BottomSheetBtnStyle.Orange,
             onClick = onPrimaryClick,
             modifier = Modifier.weight(1f),
+            enabled = primaryEnabled,
         )
     }
 }
@@ -557,7 +577,7 @@ private fun TrackerDetailContentPreview() {
         TrackerDetailContent(
             groupName = "김영하 도장깨기 하실 분",
             dDay = "D-2",
-            statusLabel = "살인자의 기억법 · 후기 작성",
+            statusLabel = "살인자의 기억법... · 운송장 등록",
             currentStepLabel = "내 책 읽기",
             currentStepLabelStyle = TrackerStepLabelStyle.Main,
             currentStepPosition = 1,

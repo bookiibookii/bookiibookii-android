@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
+import com.bookiibookii.bookiibookii.tracker.model.ellipsizeTitle
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.ui.component.TrackerBookCover
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
@@ -55,10 +56,12 @@ internal fun TrackerMainCard(
         ) {
             TrackerProfileColumn(
                 profile = card.left,
+                showProgress = card.showReadingProgress,
                 modifier = Modifier.weight(1f),
             )
             TrackerProfileColumn(
                 profile = card.right,
+                showProgress = card.showReadingProgress,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -68,6 +71,7 @@ internal fun TrackerMainCard(
                 text = card.primaryAction.label,
                 style = BottomSheetBtnStyle.Orange,
                 onClick = onPrimaryAction,
+                enabled = card.primaryEnabled,
                 modifier = Modifier.fillMaxWidth(),
             )
         } else {
@@ -79,14 +83,15 @@ internal fun TrackerMainCard(
                     text = card.secondaryAction.label,
                     style = BottomSheetBtnStyle.White,
                     onClick = onSecondaryAction,
-                    // 약속 등록은 호스트 전용 — 게스트면 비활성화
-                    enabled = !(card.secondaryAction == TrackerAction.RegisterMeeting && !card.isHost),
+                    // 약속 등록 대기 상태(WAITING_HOST_MEETING_REGISTER)면 비활성화
+                    enabled = card.secondaryEnabled,
                     modifier = Modifier.weight(1f),
                 )
                 BottomSheetTwoBtnShort(
                     text = card.primaryAction.label,
                     style = BottomSheetBtnStyle.Orange,
                     onClick = onPrimaryAction,
+                    enabled = card.primaryEnabled,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -115,7 +120,7 @@ private fun TrackerCardHeader(card: TrackerCardModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = card.bookTitle,
+                        text = ellipsizeTitle(card.displayBookTitle, 18),
                         style = BookiiBookiiTheme.typography.regular14,
                         color = BookiiBookiiTheme.colors.grey500,
                     )
@@ -159,6 +164,7 @@ private fun DDayChip(text: String) {
 @Composable
 private fun TrackerProfileColumn(
     profile: TrackerProfileItem,
+    showProgress: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -197,18 +203,21 @@ private fun TrackerProfileColumn(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    TrackerProgressBar(percent = profile.progressPercent)
-                    Text(
-                        text = "${profile.progressPercent}%",
-                        style = BookiiBookiiTheme.typography.regular14,
-                        color = BookiiBookiiTheme.colors.grey800,
-                    )
+                if (showProgress) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        TrackerProgressBar(percent = profile.progressPercent)
+                        Text(
+                            text = profile.progressLabelOverride
+                                ?: "${profile.progressPercent}%",
+                            style = BookiiBookiiTheme.typography.regular14,
+                            color = BookiiBookiiTheme.colors.grey800,
+                        )
+                    }
                 }
             }
         }
@@ -247,7 +256,8 @@ private fun TrackerMainCardPreview() {
         TrackerMainCard(
             card = TrackerCardModel(
                 groupId = 0L,
-                groupName = "김영하 도장깨기 하실 분",
+                groupName = "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼",
+                displayBookTitle = "살인자의 기억법",
                 bookTitle = "살인자의 기억법",
                 progressLabel = "읽는 중",
                 dDay = "D-5",

@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.tracker.model.DeliveryCompany
 import com.bookiibookii.bookiibookii.ui.component.CloseButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -66,6 +68,7 @@ private fun TrackerDeliveryTrackingNumberDialogContent(
     onConfirm: (deliveryCompany: String, trackingNumber: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     var selectedCompany by remember { mutableStateOf<DeliveryCompany?>(null) }
     var trackingInput by remember { mutableStateOf("") }
     val canSubmit = selectedCompany != null && trackingInput.isNotBlank()
@@ -110,6 +113,13 @@ private fun TrackerDeliveryTrackingNumberDialogContent(
             enabled = canSubmit,
             onClick = {
                 val company = selectedCompany ?: return@SubmitButton
+                if (trackingInput.length < 10) {
+                    context.showCustomToast(
+                        message = "운송장 번호를 10자 이상 입력해주세요",
+                        isSuccess = false,
+                    )
+                    return@SubmitButton
+                }
                 onConfirm(company.apiValue, trackingInput)
                 onDismiss()
             },
