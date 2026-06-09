@@ -716,7 +716,7 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
                             modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 52.dp, end = 20.dp))
                     }
                     if (card.username.isNotBlank()) {
-                        Text(card.username, style = BookiiBookiiTheme.typography.regular14, color = Color.White,
+                        Text("by. ${card.username}", style = BookiiBookiiTheme.typography.regular14, color = Color.White,
                             modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 20.dp))
                     }
                     Text("B", color = Color.White.copy(alpha = 0.85f), fontSize = 20.sp, fontWeight = FontWeight.Black,
@@ -731,7 +731,8 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
                     end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
                 )
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(gradient)) {
+                    // 상단 그라디언트 — 남는 공간을 모두 채움(하단 영역이 content만큼 차지하고 남은 만큼)
+                    Box(modifier = Modifier.fillMaxWidth().weight(1f).background(gradient)) {
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Spacer(modifier = Modifier.height(20.dp))
                             if (card.bookTitle.isNotBlank()) {
@@ -742,14 +743,15 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
                             Text("\"$quotationText\"", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = Color.White, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    Box(modifier = Modifier.fillMaxWidth().weight(128f / 464f)) {
+                    // 하단 — content 길이만큼 아래로 늘어남(말줄임 없음), username은 content 바로 아래 우측 정렬
+                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
                         if (card.content.isNotBlank()) {
-                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 16.dp, end = 20.dp))
+                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800)
                         }
                         if (card.username.isNotBlank()) {
-                            Text(card.username, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400,
-                                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("by. ${card.username}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400,
+                                modifier = Modifier.align(Alignment.End))
                         }
                     }
                 }

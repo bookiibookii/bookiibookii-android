@@ -37,8 +37,10 @@ class PublicCardViewerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 링크의 마지막 경로 세그먼트가 shareToken. (내부 호출/테스트용 extra도 허용)
-        val shareToken = intent?.data?.lastPathSegment
+        // App Links(https): 마지막 경로 세그먼트가 shareToken.
+        // 카카오 공유(kakao{key}://kakaolink): executionParams가 쿼리(?shareToken=)로 전달됨.
+        val shareToken = intent?.data?.getQueryParameter("shareToken")
+            ?: intent?.data?.lastPathSegment
             ?: intent?.getStringExtra(EXTRA_SHARE_TOKEN)
 
         // 공개 조회 — 로그인 없이 누구나 열람 가능. 앱 진입은 "부키부키 앱으로 이동하기" 버튼으로.
@@ -73,9 +75,8 @@ class PublicCardViewerActivity : ComponentActivity() {
                     }
                     is ViewerState.Success -> PublicCardViewerScreen(
                         card = s.card,
-                        bookAuthor = s.author,
-                        onClose = { finish() },
-                        onOpenApp = { openApp() },
+                        onGoMain = { openApp() },
+                        onSaveImage = { /* TODO: 카드 이미지 갤러리 저장 (후속 작업) */ },
                     )
                 }
             }
