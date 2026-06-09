@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -46,7 +47,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 private val reviewInputBg = Color(0xFFF4F3F1)
 
-data class ReviewBookInfo(val title: String, val author: String, val genre: String)
+data class ReviewBookInfo(val title: String, val author: String, val genre: String, val coverUrl: String? = null)
 
 @Composable
 fun ReviewEditScreen(
@@ -56,6 +57,8 @@ fun ReviewEditScreen(
     books: List<ReviewBookInfo> = emptyList(),
     initialRatings: List<Double> = emptyList(),
     initialComments: List<String> = emptyList(),
+    initialIsPartnerGood: Boolean? = null,
+    initialPartnerComment: String = "",
     onBackClick: () -> Unit = {},
     onSubmit: (ratings: List<Double>, bookComments: List<String>, isPartnerGood: Boolean?, partnerComment: String) -> Unit = { _, _, _, _ -> },
 ) {
@@ -66,8 +69,16 @@ fun ReviewEditScreen(
     val bookComments = remember(books) {
         mutableStateListOf(*Array(books.size) { i -> initialComments.getOrElse(i) { "" } })
     }
-    var isPartnerGood by remember { mutableStateOf<Boolean?>(null) }
-    var partnerComment by remember { mutableStateOf("") }
+    var isPartnerGood by remember(initialIsPartnerGood) { mutableStateOf(initialIsPartnerGood) }
+    var partnerComment by remember(initialPartnerComment) { mutableStateOf(initialPartnerComment) }
+
+    // 프리필 대비 변경 여부 — 하나라도 바뀌면 "수정" 버튼 활성화
+    val baseRatings = remember(books) { List(books.size) { i -> initialRatings.getOrElse(i) { 0.0 } } }
+    val baseComments = remember(books) { List(books.size) { i -> initialComments.getOrElse(i) { "" } } }
+    val isModified = ratings.toList() != baseRatings ||
+        bookComments.toList() != baseComments ||
+        isPartnerGood != initialIsPartnerGood ||
+        partnerComment != initialPartnerComment
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -140,7 +151,16 @@ fun ReviewEditScreen(
                                 .height(180.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(BookiiBookiiTheme.colors.grey200),
-                        )
+                        ) {
+                            if (!book.coverUrl.isNullOrBlank()) {
+                                coil.compose.AsyncImage(
+                                    model = book.coverUrl,
+                                    contentDescription = book.title,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                        }
 
                         // "도서명에 대한 평가를 남겨주세요!"
                         Text(
@@ -276,11 +296,19 @@ fun ReviewEditScreen(
                 .padding(horizontal = 16.dp, vertical = 16.dp)
                 .height(72.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(BookiiBookiiTheme.colors.grey900)
-                .clickable { onSubmit(ratings.toList(), bookComments.toList(), isPartnerGood, partnerComment) },
+                .background(if (isModified) BookiiBookiiTheme.colors.grey900 else BookiiBookiiTheme.colors.grey200)
+                .then(
+                    if (isModified) Modifier.clickable {
+                        onSubmit(ratings.toList(), bookComments.toList(), isPartnerGood, partnerComment)
+                    } else Modifier
+                ),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = "수정", style = BookiiBookiiTheme.typography.medium18, color = BookiiBookiiTheme.colors.white)
+            Text(
+                text = "수정",
+                style = BookiiBookiiTheme.typography.medium18,
+                color = if (isModified) BookiiBookiiTheme.colors.white else BookiiBookiiTheme.colors.grey500,
+            )
         }
     }
 }

@@ -47,7 +47,7 @@ class GroupReviewFragment : BaseLibraryFragment() {
                             return@GroupReviewScreen
                         }
 
-                        // API 데이터 우선, 없으면 Fragment args 값으로 fallback
+                        // 그룹 메타만 전달. 책 목록·별점·내용은 편집 화면이 GET /reviews/book/me로 직접 프리필.
                         val resolvedGroupName = reviewData?.groupName ?: groupName
                         val resolvedDateRange = reviewData?.dateRange
                             ?: run {
@@ -60,26 +60,15 @@ class GroupReviewFragment : BaseLibraryFragment() {
                                 }
                             }
                         val resolvedPartnerName  = reviewData?.partnerUsername ?: ""
-                        // 후기 미작성 시 bookReviews = [] (빈 배열) → Fragment args로 fallback
-                        val apiBooks = reviewData?.bookReviews?.takeIf { it.isNotEmpty() }
-                        val resolvedBookTitles  = apiBooks?.map { it.bookTitle }
-                            ?: if (bookTitle.isNotBlank()) listOf(bookTitle) else emptyList()
-                        val resolvedBookAuthors = apiBooks?.map { it.bookAuthor } ?: emptyList()
-                        val resolvedRatings     = apiBooks?.map { it.myRating.toDouble() } ?: emptyList()
-                        val resolvedComments    = apiBooks?.map { it.myReview } ?: emptyList()
 
                         parentFragmentManager.beginTransaction()
                             .replace(
                                 R.id.fragmentContainer,
                                 ReviewEditFragment.newInstance(
-                                    groupId         = groupId,
-                                    groupName       = resolvedGroupName,
-                                    dateRange       = resolvedDateRange,
-                                    partnerName     = resolvedPartnerName,
-                                    bookTitles      = resolvedBookTitles,
-                                    bookAuthors     = resolvedBookAuthors,
-                                    initialRatings  = resolvedRatings,
-                                    initialComments = resolvedComments,
+                                    groupId     = groupId,
+                                    groupName   = resolvedGroupName,
+                                    dateRange   = resolvedDateRange,
+                                    partnerName = resolvedPartnerName,
                                 )
                             )
                             .addToBackStack(null)
