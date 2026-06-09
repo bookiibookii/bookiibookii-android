@@ -68,13 +68,13 @@ class LibraryDetailFragment : BaseLibraryFragment() {
                     onBackClick      = { parentFragmentManager.popBackStack() },
                     onAddTextCard    = {
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstance(AddCardMode.TEXT, memberBookId))
+                            .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstance(AddCardMode.TEXT, memberBookId, bookTitle))
                             .addToBackStack(null)
                             .commit()
                     },
                     onAddPhotoCard   = {
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstance(AddCardMode.PHOTO, memberBookId))
+                            .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstance(AddCardMode.PHOTO, memberBookId, bookTitle))
                             .addToBackStack(null)
                             .commit()
                     },

@@ -325,7 +325,12 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
             IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
                 Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
-            Text(text = title, style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
+            Text(
+                text = if (title.length > 12) title.take(12) + "…" else title,
+                style = BookiiBookiiTheme.typography.medium20,
+                color = BookiiBookiiTheme.colors.grey900,
+                maxLines = 1,
+            )
             IconButton(onClick = onMenuClick, modifier = Modifier.size(40.dp)) {
                 Icon(painter = painterResource(R.drawable.ic_hamburger), contentDescription = "메뉴", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
@@ -558,7 +563,7 @@ private val previewDetailCards = listOf(
 
 private val previewReadingBook = LibraryDetailBook(
     groupName = "숭실대 경제 독서모임",
-    title = "데미안",
+    title = "일이삼사오육칠팔구십일이...",
     author = "헤르만 헤세",
     genre = "소설",
     isDone = false,

@@ -32,9 +32,10 @@ class GroupReviewViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // 내 닉네임 조회
+                // 내 닉네임·프로필 조회
                 val mypageResp = RetrofitClient.mypApi().getMypage()
                 val myNickname = mypageResp.body()?.result?.nickname ?: ""
+                val myProfileImageUrl = mypageResp.body()?.result?.profileImageUrl
 
                 // 그룹 리뷰 조회 (신규 API)
                 val reviewResp = RetrofitClient.libApi().getGroupReviews(groupId)
@@ -43,40 +44,45 @@ class GroupReviewViewModel : ViewModel() {
                     val bookReviews   = result?.bookReviews ?: emptyList()
                     val memberReviews = result?.memberReviews ?: emptyList()
 
-                    // 파트너 닉네임
-                    val partnerNickname = memberReviews
-                        .firstOrNull { it.writerNickname != myNickname }
-                        ?.writerNickname ?: ""
+                    // 파트너 (멤버 후기 중 내가 아닌 작성자)
+                    val partnerMember = memberReviews.firstOrNull { it.writerNickname != myNickname }
+                    val partnerNickname = partnerMember?.writerNickname ?: ""
+                    val partnerProfileImageUrl = partnerMember?.writerProfileImageUrl
 
                     // 대화 메시지 (파트너 후기)
                     val messages = memberReviews.mapNotNull { review ->
                         if (review.comment.isNullOrBlank()) null
                         else ExchangeMessage(
-                            username = review.writerNickname,
-                            message  = review.comment,
-                            reaction = review.reaction.isNotBlank(),
-                            isMine   = review.writerNickname == myNickname,
+                            username        = review.writerNickname,
+                            message         = review.comment,
+                            reaction        = review.reaction,
+                            isMine          = review.writerNickname == myNickname,
+                            profileImageUrl = review.writerProfileImageUrl,
                         )
                     }
 
-                    // 도서별 리뷰 (내 책 리뷰 + 파트너 책 리뷰 매칭, reviewType 기준)
-                    val myBookReviews      = bookReviews.filter { it.reviewType == "MY_BOOK" }
-                    val partnerBookReviews = bookReviews.filter { it.reviewType == "PARTNER_BOOK" }
-
-                    val mappedReviews = myBookReviews.map { my ->
-                        val partner = partnerBookReviews.firstOrNull { it.bookId == my.bookId }
-                        BookReviewItem(
-                            bookTitle     = my.bookTitle.orEmpty(),
-                            bookAuthor    = my.bookAuthor.orEmpty(),
-                            bookGenre     = "",
-                            myRating      = (my.rating ?: 0.0).toInt().coerceIn(0, 5),
-                            myReview      = my.content.orEmpty(),
-                            myDate        = my.createdAt?.take(10).orEmpty(),
-                            partnerRating = (partner?.rating ?: 0.0).toInt().coerceIn(0, 5),
-                            partnerReview = partner?.content.orEmpty(),
-                            partnerDate   = partner?.createdAt?.take(10).orEmpty(),
-                        )
-                    }
+                    val mappedReviews = bookReviews
+                        .groupBy { it.bookId }
+                        .map { (_, reviews) ->
+                            // 작성자 구분: writerNickname 우선, 없으면 isEditable(내가 수정 가능 = 내 리뷰)
+                            val mine = reviews.firstOrNull {
+                                if (it.writerNickname != null) it.writerNickname == myNickname else it.isEditable == true
+                            }
+                            val partner = reviews.firstOrNull { it !== mine }
+                            val anyOne  = mine ?: partner
+                            BookReviewItem(
+                                bookTitle     = anyOne?.bookTitle.orEmpty(),
+                                bookAuthor    = anyOne?.bookAuthor.orEmpty(),
+                                bookGenre     = "",
+                                bookCoverUrl  = anyOne?.bookImageUrl,
+                                myRating      = (mine?.rating ?: 0.0).toInt().coerceIn(0, 5),
+                                myReview      = mine?.content.orEmpty(),
+                                myDate        = mine?.createdAt?.take(10).orEmpty(),
+                                partnerRating = (partner?.rating ?: 0.0).toInt().coerceIn(0, 5),
+                                partnerReview = partner?.content.orEmpty(),
+                                partnerDate   = partner?.createdAt?.take(10).orEmpty(),
+                            )
+                        }
 
                     val dateRange = if (endDate.isNotBlank()) "$startDate ~ $endDate" else startDate
 
@@ -85,12 +91,14 @@ class GroupReviewViewModel : ViewModel() {
                             isLoading = false,
                             myNickname = myNickname,
                             data = GroupReviewData(
-                                groupName       = groupName,
-                                dateRange       = dateRange,
-                                myUsername      = myNickname,
-                                partnerUsername = partnerNickname,
-                                messages        = messages,
-                                bookReviews     = mappedReviews,
+                                groupName              = groupName,
+                                dateRange              = dateRange,
+                                myUsername             = myNickname,
+                                partnerUsername        = partnerNickname,
+                                myProfileImageUrl      = myProfileImageUrl,
+                                partnerProfileImageUrl = partnerProfileImageUrl,
+                                messages               = messages,
+                                bookReviews            = mappedReviews,
                             )
                         )
                     }

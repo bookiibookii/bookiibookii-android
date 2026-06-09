@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.data.model.library
 
+import com.google.gson.annotations.SerializedName
+
 // ── 그룹 리뷰 조회 응답 (GET /api/groups/{groupId}/reviews) ──────────────────
 
 data class GroupReviewsResponseDTO(
@@ -7,21 +9,28 @@ data class GroupReviewsResponseDTO(
     val memberReviews: List<MemberReviewItemDTO>,
 )
 
-// 책 리뷰 항목 (스펙 BookReviewItem) — 그룹 리뷰 조회/내 책 리뷰/일괄 수정 응답 공용.
-// reviewType(MY_BOOK|PARTNER_BOOK)으로 내 책/파트너 책 리뷰를 구분.
+// 책 리뷰 항목 — 그룹 리뷰 조회/내 책 리뷰/일괄 수정 응답 공용.
+// 라이브 API는 구버전 필드명(bookImage/star/comment/writerNickname)을 쓰고 스펙은 신버전이라
+// @SerializedName alternate로 양쪽을 모두 수용한다.
 data class BookReviewItemDTO(
     val reviewId: Int,
-    val reviewType: String?,
-    val groupId: Int?,
+    val reviewType: String? = null,
+    val groupId: Int? = null,
     val bookId: Int?,
     val bookTitle: String?,
     val bookAuthor: String?,
+    @SerializedName(value = "bookImageUrl", alternate = ["bookImage"])
     val bookImageUrl: String?,
+    @SerializedName(value = "rating", alternate = ["star"])
     val rating: Double?,
+    @SerializedName(value = "content", alternate = ["comment"])
     val content: String?,
-    val isEditable: Boolean?,
-    val createdAt: String?,
-    val updatedAt: String?,
+    val isEditable: Boolean? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    // 구버전(그룹 리뷰) 응답 호환 — 작성자 정보
+    val writerNickname: String? = null,
+    val writerProfileImageUrl: String? = null,
 )
 
 data class MemberReviewItemDTO(

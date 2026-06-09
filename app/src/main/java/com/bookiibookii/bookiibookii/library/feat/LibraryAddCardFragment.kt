@@ -44,6 +44,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
     private val initialMemo: String get() = arguments?.getString(ARG_MEMO).orEmpty()
     private val initialImageUrl: String? get() = arguments?.getString(ARG_IMAGE_URL)
     private val initialS3Key: String? get() = arguments?.getString(ARG_S3KEY)
+    private val bookTitle: String get() = arguments?.getString(ARG_BOOK_TITLE).orEmpty()
 
     private var selectedImageUri by mutableStateOf<Uri?>(null)
 
@@ -102,6 +103,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
                     initialPage      = initialPage,
                     initialMemo      = initialMemo,
                     initialImageUrl  = initialImageUrl,
+                    bookTitle        = bookTitle,
                     onImagePick      = { pickImageLauncher.launch("image/*") },
                     onImageCapture   = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
                     onBackClick      = { parentFragmentManager.popBackStack() },
@@ -171,11 +173,13 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
         private const val ARG_MEMO           = "arg_memo"
         private const val ARG_IMAGE_URL      = "arg_image_url"
         private const val ARG_S3KEY          = "arg_s3key"
+        private const val ARG_BOOK_TITLE     = "arg_book_title"
 
-        fun newInstance(mode: AddCardMode, memberBookId: Int = -1) = LibraryAddCardFragment().apply {
+        fun newInstance(mode: AddCardMode, memberBookId: Int = -1, bookTitle: String = "") = LibraryAddCardFragment().apply {
             arguments = Bundle().apply {
                 putString(ARG_MODE, mode.name)
                 putInt(ARG_MEMBER_BOOK_ID, memberBookId)
+                putString(ARG_BOOK_TITLE, bookTitle)
             }
         }
 
@@ -191,6 +195,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
                 putString(ARG_MEMO, card.content)
                 putString(ARG_IMAGE_URL, card.imageUrl)
                 putString(ARG_S3KEY, card.s3Key)
+                putString(ARG_BOOK_TITLE, card.bookTitle)
             }
         }
     }
