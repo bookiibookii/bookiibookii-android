@@ -74,7 +74,10 @@ fun TrackerDetailRoute(
     // 최초 진입은 VM init에서 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
     // 하위 화면(서재/리뷰 등)에서 복귀할 때만 상세를 재조회한다. (rememberSaveable로 백스택 복귀 시에도 유지)
     var isFirstResume by rememberSaveable { mutableStateOf(true) }
+    // 장소 검색 화면으로 이동 중이면 2/3 다이얼로그를 즉시 숨김(복귀 시 ON_RESUME에서 해제)
+    var placeSearchPending by rememberSaveable { mutableStateOf(false) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        placeSearchPending = false
         if (isFirstResume) {
             isFirstResume = false
         } else {
@@ -123,9 +126,10 @@ fun TrackerDetailRoute(
         exchangeLabel = uiState.exchangeLabel,
         secondaryActionLabel = uiState.secondaryAction.label,
         primaryActionLabel = uiState.primaryAction.label,
-        // 약속 등록은 호스트 전용 — 게스트면 비활성화
-        secondaryActionEnabled =
-            !(uiState.secondaryAction == TrackerAction.RegisterMeeting && !uiState.isHost),
+        // 파트너 약속 완료 대기(WAITING_PARTNER_MEETING_COMPLETE)면 교환 완료 버튼 비활성화
+        primaryActionEnabled = uiState.primaryEnabled,
+        // 약속 등록 대기 상태(WAITING_HOST_MEETING_REGISTER)면 비활성화
+        secondaryActionEnabled = uiState.secondaryEnabled,
         steps = uiState.steps,
         isHost = uiState.isHost,
         onBackClick = onBackClick,
@@ -306,11 +310,14 @@ fun TrackerDetailRoute(
                 meetingStep = 2
             },
         )
-        2 -> TrackerDirectMeetingPlaceDialog(
+        2 -> if (!placeSearchPending) TrackerDirectMeetingPlaceDialog(
             address = meetingPlace?.address.orEmpty(),
             addressDetail = meetingAddressDetail,
             onAddressDetailChange = { meetingAddressDetail = it },
-            onSearchClick = onNavigatePlaceSearch,
+            onSearchClick = {
+                placeSearchPending = true
+                onNavigatePlaceSearch()
+            },
             onLoadMyPlaceClick = { viewModel.loadMyExchangePlace() },
             onDismiss = {
                 meetingStep = 0
@@ -426,7 +433,8 @@ private inline fun dispatchAction(
         TrackerAction.CheckShippingInfo -> onCheckShippingInfo()
         TrackerAction.ConfirmReceive -> onConfirmReceive()
         TrackerAction.WriteReadingCard -> onWriteReadingCard()
-        TrackerAction.None -> Unit
+        // 교환 완료는 비활성 버튼이라 디스패치되지 않음
+        TrackerAction.CompleteExchange, TrackerAction.None -> Unit
     }
 }
 
@@ -453,6 +461,7 @@ fun TrackerDetailScreen(
     onSecondaryActionClick: () -> Unit,
     onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
+    primaryActionEnabled: Boolean = true,
     secondaryActionEnabled: Boolean = true,
 ) {
     TrackerDetailContent(
@@ -477,6 +486,7 @@ fun TrackerDetailScreen(
         onSecondaryActionClick = onSecondaryActionClick,
         onPrimaryActionClick = onPrimaryActionClick,
         modifier = modifier,
+        primaryActionEnabled = primaryActionEnabled,
         secondaryActionEnabled = secondaryActionEnabled,
     )
 }

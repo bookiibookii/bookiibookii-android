@@ -78,6 +78,7 @@ fun TrackerDetailContent(
     onSecondaryActionClick: () -> Unit,
     onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
+    primaryActionEnabled: Boolean = true,
     secondaryActionEnabled: Boolean = true,
 ) {
     Column(
@@ -124,6 +125,7 @@ fun TrackerDetailContent(
                     primaryLabel = primaryActionLabel,
                     onSecondaryClick = onSecondaryActionClick,
                     onPrimaryClick = onPrimaryActionClick,
+                    primaryEnabled = primaryActionEnabled,
                     secondaryEnabled = secondaryActionEnabled,
                 )
             }
@@ -518,6 +520,7 @@ private fun ActionButtonsRow(
     primaryLabel: String,
     onSecondaryClick: () -> Unit,
     onPrimaryClick: () -> Unit,
+    primaryEnabled: Boolean = true,
     secondaryEnabled: Boolean = true,
 ) {
     // secondary가 없으면 primary 단일 풀폭 버튼 (예: 교환독서 후기 작성)
@@ -526,6 +529,7 @@ private fun ActionButtonsRow(
             text = primaryLabel,
             style = BottomSheetBtnStyle.Orange,
             onClick = onPrimaryClick,
+            enabled = primaryEnabled,
             modifier = Modifier.fillMaxWidth(),
         )
         return
@@ -546,6 +550,7 @@ private fun ActionButtonsRow(
             style = BottomSheetBtnStyle.Orange,
             onClick = onPrimaryClick,
             modifier = Modifier.weight(1f),
+            enabled = primaryEnabled,
         )
     }
 }

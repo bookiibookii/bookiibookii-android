@@ -28,7 +28,10 @@ data class TrackerDetailUiState(
     val exchangeLabel: String = "",
     val primaryAction: TrackerAction = TrackerAction.None,
     val secondaryAction: TrackerAction = TrackerAction.None,
-    // 호스트만 약속 등록 가능 — 게스트는 약속 등록 버튼 비활성화
+    // primary/secondary 버튼 활성화 여부 — 상태로 결정
+    val primaryEnabled: Boolean = true,
+    val secondaryEnabled: Boolean = true,
+    // 더보기 드롭다운의 "독서 기간 수정" 호스트 전용 노출 분기에 사용
     val isHost: Boolean = false,
     val steps: List<TrackerStep> = emptyList(),
     val loading: Boolean = false,

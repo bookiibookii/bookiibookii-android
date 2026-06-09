@@ -16,8 +16,10 @@ private fun displayStatusToLabel(status: String?): String = when (status) {
     "SHIPPING" -> "수령 전"
     "RETURN_TRACKING_REQUIRED" -> "수령 완료"
     "RETURNING" -> "수령 전"
-    "MEETING_REQUIRED" -> "약속 등록"
+    "MEETING_REGISTER_REQUIRED" -> "약속 등록"
+    "WAITING_HOST_MEETING_REGISTER" -> "약속 등록"
     "EXCHANGING" -> "교환 진행"
+    "WAITING_PARTNER_MEETING_COMPLETE" -> "교환 완료"
     "EXCHANGE_REVIEW_WRITING" -> "후기 작성"
     else -> ""
 }
@@ -44,6 +46,8 @@ fun TrackerListItemResDTO.toCardModel(): TrackerCardModel {
         right = partnerCurrentBook.toProfile(),
         primaryAction = primary,
         secondaryAction = secondary,
+        primaryEnabled = !isPrimaryActionDisabled(displayStatus),
+        secondaryEnabled = !isSecondaryActionDisabled(displayStatus),
         isHost = myRole == "HOST",
     )
 }

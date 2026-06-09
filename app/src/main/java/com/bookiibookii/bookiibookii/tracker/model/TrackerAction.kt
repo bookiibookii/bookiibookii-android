@@ -11,9 +11,10 @@ enum class TrackerAction(val label: String) {
     ConfirmReceive("수령 확인"),
     RegisterTrackingNumber("운송장 등록"),
     RegisterMeeting("약속 등록"),
-    GoToComments("메시지"),
+    GoToComments("메시지로 이동"),
     CheckMeeting("약속 확인"),
     ConfirmExchange("교환 확인"),
+    CompleteExchange("교환 완료"),
     WritePartnerReview("교환독서 후기 작성"),
 }
 
@@ -30,7 +31,19 @@ fun actionsForStatus(displayStatus: String?): Pair<TrackerAction, TrackerAction>
     "RETURN_TRACKING_REQUIRED" -> TrackerAction.RegisterTrackingNumber to TrackerAction.CheckDeliveryInfo
     // 배송 중: 운송장 정보 확인(좌) / 수령 확인(우)
     "SHIPPING" -> TrackerAction.ConfirmReceive to TrackerAction.CheckShippingInfo
-    "MEETING_REQUIRED" -> TrackerAction.GoToComments to TrackerAction.RegisterMeeting
+    "MEETING_REGISTER_REQUIRED" -> TrackerAction.GoToComments to TrackerAction.RegisterMeeting
+    // 호스트의 약속 등록 대기(게스트 화면) — 버튼은 동일, 약속 등록만 비활성화
+    "WAITING_HOST_MEETING_REGISTER" -> TrackerAction.GoToComments to TrackerAction.RegisterMeeting
     "EXCHANGING" -> TrackerAction.ConfirmExchange to TrackerAction.CheckMeeting
+    // 파트너의 약속 완료 대기 — 단일 "교환 완료" 버튼, 비활성화
+    "WAITING_PARTNER_MEETING_COMPLETE" -> TrackerAction.CompleteExchange to TrackerAction.None
     else -> TrackerAction.None to TrackerAction.None
 }
+
+// 약속 등록 버튼을 비활성화해야 하는 상태 (호스트의 약속 등록을 기다리는 게스트 화면)
+fun isSecondaryActionDisabled(displayStatus: String?): Boolean =
+    displayStatus == "WAITING_HOST_MEETING_REGISTER"
+
+// primary 버튼을 비활성화해야 하는 상태 (파트너의 약속 완료를 기다리는 화면)
+fun isPrimaryActionDisabled(displayStatus: String?): Boolean =
+    displayStatus == "WAITING_PARTNER_MEETING_COMPLETE"

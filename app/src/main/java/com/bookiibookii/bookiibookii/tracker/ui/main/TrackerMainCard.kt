@@ -69,6 +69,7 @@ internal fun TrackerMainCard(
                 text = card.primaryAction.label,
                 style = BottomSheetBtnStyle.Orange,
                 onClick = onPrimaryAction,
+                enabled = card.primaryEnabled,
                 modifier = Modifier.fillMaxWidth(),
             )
         } else {
@@ -80,14 +81,15 @@ internal fun TrackerMainCard(
                     text = card.secondaryAction.label,
                     style = BottomSheetBtnStyle.White,
                     onClick = onSecondaryAction,
-                    // 약속 등록은 호스트 전용 — 게스트면 비활성화
-                    enabled = !(card.secondaryAction == TrackerAction.RegisterMeeting && !card.isHost),
+                    // 약속 등록 대기 상태(WAITING_HOST_MEETING_REGISTER)면 비활성화
+                    enabled = card.secondaryEnabled,
                     modifier = Modifier.weight(1f),
                 )
                 BottomSheetTwoBtnShort(
                     text = card.primaryAction.label,
                     style = BottomSheetBtnStyle.Orange,
                     onClick = onPrimaryAction,
+                    enabled = card.primaryEnabled,
                     modifier = Modifier.weight(1f),
                 )
             }

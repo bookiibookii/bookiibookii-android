@@ -10,6 +10,9 @@ data class TrackerCardModel(
     val right: TrackerProfileItem,
     val primaryAction: TrackerAction = TrackerAction.None,
     val secondaryAction: TrackerAction = TrackerAction.None,
+    // primary/secondary 버튼 활성화 여부 — 상태로 결정
+    val primaryEnabled: Boolean = true,
+    val secondaryEnabled: Boolean = true,
     val isHost: Boolean = false,
 )
 
