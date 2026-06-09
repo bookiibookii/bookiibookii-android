@@ -26,8 +26,10 @@ fun TrackerListItemResDTO.toCardModel(): TrackerCardModel {
         bookTitle = myCurrentBook?.title.orEmpty(),
         progressLabel = displayStatusLabel.orEmpty(),
         dDay = "D-${(remainingDays ?: 0).coerceAtLeast(0)}",
-        left = myCurrentBook.toProfile(),
-        right = partnerCurrentBook.toProfile(),
+        left = myCurrentBook.toProfile()
+            .copy(progressLabelOverride = progressTextOverride(displayStatus, isMine = true)),
+        right = partnerCurrentBook.toProfile()
+            .copy(progressLabelOverride = progressTextOverride(displayStatus, isMine = false)),
         primaryAction = primary,
         secondaryAction = secondary,
         primaryEnabled = !isPrimaryActionDisabled(displayStatus),

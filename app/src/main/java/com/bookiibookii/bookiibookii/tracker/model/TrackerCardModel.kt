@@ -28,4 +28,6 @@ data class TrackerProfileItem(
     val progressPercent: Int,
     val isOwnerBook: Boolean,
     val totalPages: Int = 0,
+    // 진행률 텍스트를 "%" 대신 다른 라벨로 표시할 때 사용(예: "교환 준비 완료")
+    val progressLabelOverride: String? = null,
 )

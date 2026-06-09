@@ -212,7 +212,8 @@ private fun TrackerProfileColumn(
                     ) {
                         TrackerProgressBar(percent = profile.progressPercent)
                         Text(
-                            text = "${profile.progressPercent}%",
+                            text = profile.progressLabelOverride
+                                ?: "${profile.progressPercent}%",
                             style = BookiiBookiiTheme.typography.regular14,
                             color = BookiiBookiiTheme.colors.grey800,
                         )

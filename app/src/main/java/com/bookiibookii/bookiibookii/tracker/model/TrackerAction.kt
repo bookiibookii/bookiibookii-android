@@ -77,3 +77,12 @@ private val PROGRESS_HIDDEN_STATUSES = setOf(
 
 fun isReadingProgressHidden(displayStatus: String?): Boolean =
     displayStatus in PROGRESS_HIDDEN_STATUSES
+
+// 진행률 텍스트를 "%" 대신 다른 라벨로 표시해야 하는 상태
+fun progressTextOverride(displayStatus: String?, isMine: Boolean): String? = when (displayStatus) {
+    "TRACKING_REQUIRED" -> "운송장 등록 전" // 나·파트너 둘 다
+    "SHIPPING", "WAITING_PARTNER_TRACKING_REGISTER" -> "수령 전" // 나·파트너 둘 다
+    "WAITING_PARTNER_RECEIPT_CONFIRM" -> if (isMine) "수령 완료" else "수령 전" // 나 완료 / 파트너 전
+    "REVIEW_WAITING_PARTNER" -> if (isMine) "교환 준비 완료" else null // 내 쪽만
+    else -> null
+}

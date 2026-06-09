@@ -21,8 +21,10 @@ fun TrackerDetailResDTO.toUiState(): TrackerDetailUiState {
         currentStepLabel = currentStepStatus.toPhaseLabel(),
         currentStepLabelStyle = currentStepStatus.toPhaseStyle(),
         currentStepPosition = currentStepStatus.toPhasePosition(),
-        myProfile = myBook.toProfile(),
-        partnerProfile = partnerBook.toProfile(),
+        myProfile = myBook.toProfile()
+            .copy(progressLabelOverride = progressTextOverride(displayStatus, isMine = true)),
+        partnerProfile = partnerBook.toProfile()
+            .copy(progressLabelOverride = progressTextOverride(displayStatus, isMine = false)),
         exchangeLabel = tradeType.toExchangeLabel(),
         primaryAction = primary,
         secondaryAction = secondary,
