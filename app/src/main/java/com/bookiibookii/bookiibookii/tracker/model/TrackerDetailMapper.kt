@@ -41,28 +41,32 @@ private fun String?.toExchangeLabel(): String = when (this) {
     else -> ""
 }
 
-// 8개 step.status → 4개 phase 라벨
+// step.status(14종) → 4개 phase 라벨
 private fun String?.toPhaseLabel(): String = when (this) {
     "MY_BOOK_READING", "MY_BOOK_REVIEWING" -> "내 책 읽기"
-    "EXCHANGING", "EXCHANGED" -> "교환"
+    "EXCHANGE_TRACKING_REGISTER", "EXCHANGE_RECEIPT_CONFIRM",
+    "DIRECT_EXCHANGE_MEETING_REGISTER", "DIRECT_EXCHANGE_COMPLETE" -> "교환"
     "PARTNER_BOOK_READING", "PARTNER_BOOK_REVIEWING" -> "파트너 책 읽기"
-    "RETURNING", "RETURNED", "COMPLETED", null -> "반납"
-    else -> ""
+    // RETURN_*, DIRECT_RETURN_*, PARTNER_REVIEWING, COMPLETED, null
+    else -> "반납"
 }
 
 // 내 책 읽기 / 교환 → Main, 파트너 책 읽기 / 반납 → Sub
 private fun String?.toPhaseStyle(): TrackerStepLabelStyle = when (this) {
     "MY_BOOK_READING", "MY_BOOK_REVIEWING",
-    "EXCHANGING", "EXCHANGED" -> TrackerStepLabelStyle.Main
+    "EXCHANGE_TRACKING_REGISTER", "EXCHANGE_RECEIPT_CONFIRM",
+    "DIRECT_EXCHANGE_MEETING_REGISTER", "DIRECT_EXCHANGE_COMPLETE" -> TrackerStepLabelStyle.Main
     else -> TrackerStepLabelStyle.Sub
 }
 
 // 4단계 phase 중 현재 위치 (1: 내 책 읽기, 2: 교환, 3: 파트너 책 읽기, 4: 반납)
 private fun String?.toPhasePosition(): Int = when (this) {
     "MY_BOOK_READING", "MY_BOOK_REVIEWING" -> 1
-    "EXCHANGING", "EXCHANGED" -> 2
+    "EXCHANGE_TRACKING_REGISTER", "EXCHANGE_RECEIPT_CONFIRM",
+    "DIRECT_EXCHANGE_MEETING_REGISTER", "DIRECT_EXCHANGE_COMPLETE" -> 2
     "PARTNER_BOOK_READING", "PARTNER_BOOK_REVIEWING" -> 3
-    else -> 4 // RETURNING, COMPLETED, null
+    // RETURN_*, DIRECT_RETURN_*, PARTNER_REVIEWING, COMPLETED, null
+    else -> 4
 }
 
 // completed=true는 보여주고 나머지 false는 숨김

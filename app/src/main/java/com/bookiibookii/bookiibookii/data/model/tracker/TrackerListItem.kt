@@ -18,6 +18,8 @@ data class TrackerListItemResDTO(
     val tradeType: String?,
     val myRole: String?,
     val displayStatus: String?,
+    val displayBookTitle: String?,
+    val displayStatusLabel: String?,
     val remainingDays: Int?,
     val myCurrentBook: BookInfo?,
     val partnerCurrentBook: BookInfo?

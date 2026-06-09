@@ -879,6 +879,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
             TrackerCardModel(
                 groupId = 1L,
                 groupName = "김영하 도장깨기 하실 분",
+                displayBookTitle = "살인자의 기억법",
                 bookTitle = "살인자의 기억법",
                 progressLabel = "읽는 중",
                 dDay = "D-5",
@@ -904,6 +905,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
             TrackerCardModel(
                 groupId = 2L,
                 groupName = "김영하 도장깨기 하실 분",
+                displayBookTitle = "살인자의 기억법",
                 bookTitle = "살인자의 기억법",
                 progressLabel = "후기 작성",
                 dDay = "D-3",
@@ -929,6 +931,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
             TrackerCardModel(
                 groupId = 3L,
                 groupName = "독서 모임 셋째",
+                displayBookTitle = "데미안",
                 bookTitle = "데미안",
                 progressLabel = "교환 중",
                 dDay = "D-7",

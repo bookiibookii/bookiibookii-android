@@ -3,6 +3,8 @@ package com.bookiibookii.bookiibookii.tracker.model
 data class TrackerCardModel(
     val groupId: Long,
     val groupName: String,
+    // 헤더 "제목 · 상태" 표시용
+    val displayBookTitle: String,
     val bookTitle: String,
     val progressLabel: String,
     val dDay: String,

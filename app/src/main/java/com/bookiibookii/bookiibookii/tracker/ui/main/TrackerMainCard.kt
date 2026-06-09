@@ -120,7 +120,7 @@ private fun TrackerCardHeader(card: TrackerCardModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = ellipsizeTitle(card.bookTitle, 18),
+                        text = ellipsizeTitle(card.displayBookTitle, 18),
                         style = BookiiBookiiTheme.typography.regular14,
                         color = BookiiBookiiTheme.colors.grey500,
                     )
@@ -256,6 +256,7 @@ private fun TrackerMainCardPreview() {
             card = TrackerCardModel(
                 groupId = 0L,
                 groupName = "일이삼사오육칠팔구십일이삼사오육칠팔구십일이삼",
+                displayBookTitle = "살인자의 기억법",
                 bookTitle = "살인자의 기억법",
                 progressLabel = "읽는 중",
                 dDay = "D-5",
