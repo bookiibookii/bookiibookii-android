@@ -14,6 +14,8 @@ private fun displayStatusToLabel(status: String?): String = when (status) {
     "REVIEW_WAITING_PARTNER" -> "후기 수정"
     "TRACKING_REQUIRED" -> "운송장 등록"
     "SHIPPING" -> "수령 전"
+    "WAITING_PARTNER_TRACKING_REGISTER" -> "수령 전"
+    "WAITING_PARTNER_RECEIPT_CONFIRM" -> "수령 전"
     "RETURN_TRACKING_REQUIRED" -> "수령 완료"
     "RETURNING" -> "수령 전"
     "MEETING_REGISTER_REQUIRED" -> "약속 등록"

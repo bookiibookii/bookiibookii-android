@@ -31,6 +31,12 @@ fun actionsForStatus(displayStatus: String?): Pair<TrackerAction, TrackerAction>
     "RETURN_TRACKING_REQUIRED" -> TrackerAction.RegisterTrackingNumber to TrackerAction.CheckDeliveryInfo
     // 배송 중: 운송장 정보 확인(좌) / 수령 확인(우)
     "SHIPPING" -> TrackerAction.ConfirmReceive to TrackerAction.CheckShippingInfo
+    // 반납 배송 중 — SHIPPING과 버튼 동일
+    "RETURNING" -> TrackerAction.ConfirmReceive to TrackerAction.CheckShippingInfo
+    // 파트너 운송장 등록 대기 — SHIPPING과 버튼 동일, 둘 다 비활성화
+    "WAITING_PARTNER_TRACKING_REGISTER" -> TrackerAction.ConfirmReceive to TrackerAction.CheckShippingInfo
+    // 파트너 수령 확인 대기 — SHIPPING과 버튼 동일, 둘 다 비활성화
+    "WAITING_PARTNER_RECEIPT_CONFIRM" -> TrackerAction.ConfirmReceive to TrackerAction.CheckShippingInfo
     "MEETING_REGISTER_REQUIRED" -> TrackerAction.GoToComments to TrackerAction.RegisterMeeting
     // 호스트의 약속 등록 대기(게스트 화면) — 버튼은 동일, 약속 등록만 비활성화
     "WAITING_HOST_MEETING_REGISTER" -> TrackerAction.GoToComments to TrackerAction.RegisterMeeting
@@ -40,13 +46,25 @@ fun actionsForStatus(displayStatus: String?): Pair<TrackerAction, TrackerAction>
     else -> TrackerAction.None to TrackerAction.None
 }
 
-// 약속 등록 버튼을 비활성화해야 하는 상태 (호스트의 약속 등록을 기다리는 게스트 화면)
-fun isSecondaryActionDisabled(displayStatus: String?): Boolean =
-    displayStatus == "WAITING_HOST_MEETING_REGISTER"
+// secondary 버튼을 비활성화해야 하는 상태
+// - WAITING_HOST_MEETING_REGISTER: 호스트의 약속 등록 대기
+// - WAITING_PARTNER_TRACKING_REGISTER: 파트너 운송장 등록 대기(두 버튼 모두 비활성)
+// - WAITING_PARTNER_RECEIPT_CONFIRM: 파트너 수령 확인 대기(두 버튼 모두 비활성)
+fun isSecondaryActionDisabled(displayStatus: String?): Boolean = displayStatus in setOf(
+    "WAITING_HOST_MEETING_REGISTER",
+    "WAITING_PARTNER_TRACKING_REGISTER",
+    "WAITING_PARTNER_RECEIPT_CONFIRM",
+)
 
-// primary 버튼을 비활성화해야 하는 상태 (파트너의 약속 완료를 기다리는 화면)
-fun isPrimaryActionDisabled(displayStatus: String?): Boolean =
-    displayStatus == "WAITING_PARTNER_MEETING_COMPLETE"
+// primary 버튼을 비활성화해야 하는 상태
+// - WAITING_PARTNER_MEETING_COMPLETE: 파트너의 약속 완료 대기
+// - WAITING_PARTNER_TRACKING_REGISTER: 파트너 운송장 등록 대기(두 버튼 모두 비활성)
+// - WAITING_PARTNER_RECEIPT_CONFIRM: 파트너 수령 확인 대기(두 버튼 모두 비활성)
+fun isPrimaryActionDisabled(displayStatus: String?): Boolean = displayStatus in setOf(
+    "WAITING_PARTNER_MEETING_COMPLETE",
+    "WAITING_PARTNER_TRACKING_REGISTER",
+    "WAITING_PARTNER_RECEIPT_CONFIRM",
+)
 
 // 읽기 진행률 바·% 텍스트를 숨겨야 하는 상태 (교환 약속~교환 이후 단계)
 private val PROGRESS_HIDDEN_STATUSES = setOf(
