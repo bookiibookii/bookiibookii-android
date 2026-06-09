@@ -118,10 +118,10 @@ private fun HomeRecommendGroupCard(
         modifier = modifier
             .width(334.dp)
             .shadow(
-                elevation = 6.dp,
+                elevation = 8.dp,
                 shape = shape,
-                ambientColor = Color(0x0F000000),
-                spotColor = Color(0x0F000000),
+                ambientColor = Color(0x33000000),
+                spotColor = Color(0x33000000),
             )
             .clip(shape)
             .background(colors.white)

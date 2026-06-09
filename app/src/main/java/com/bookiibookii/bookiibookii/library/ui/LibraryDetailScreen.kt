@@ -63,6 +63,7 @@ enum class ReadingCardType { PHOTO, QUOTE }
 
 data class ReadingCard(
     val cardId: Long = 0L,
+    val memberBookId: Int = 0,
     val username: String,
     val content: String,
     val page: String,
@@ -72,6 +73,7 @@ data class ReadingCard(
     val bookTitle: String = "",
     val quotation: String = "",
     val imageUrl: String? = null,
+    val s3Key: String? = null,        // 기존 이미지 키 (수정 시 사진 미교체면 그대로 재전송)
     val myReactions: List<String> = emptyList(),      // 내가 누른 리액션 API key 목록
     val reactionCounts: Map<String, Int> = emptyMap(), // API key → 전체 인원 수
     val creatorProfileImageUrl: String? = null,
@@ -323,7 +325,12 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
             IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
                 Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
-            Text(text = title, style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
+            Text(
+                text = if (title.length > 12) title.take(12) + "…" else title,
+                style = BookiiBookiiTheme.typography.medium20,
+                color = BookiiBookiiTheme.colors.grey900,
+                maxLines = 1,
+            )
             IconButton(onClick = onMenuClick, modifier = Modifier.size(40.dp)) {
                 Icon(painter = painterResource(R.drawable.ic_hamburger), contentDescription = "메뉴", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
@@ -556,7 +563,7 @@ private val previewDetailCards = listOf(
 
 private val previewReadingBook = LibraryDetailBook(
     groupName = "숭실대 경제 독서모임",
-    title = "데미안",
+    title = "일이삼사오육칠팔구십일이...",
     author = "헤르만 헤세",
     genre = "소설",
     isDone = false,

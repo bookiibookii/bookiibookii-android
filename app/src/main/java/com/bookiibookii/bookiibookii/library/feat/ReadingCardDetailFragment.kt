@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardReactionToggleRequestDTO
@@ -108,7 +109,36 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
                     onKakaoShare = { card -> shareToKakao(card) },
                     onXShare     = { card -> shareToX(card) },
                     onDownload   = { card -> downloadCard(card) },
+                    onEditClick  = { card ->
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstanceEdit(card))
+                            .addToBackStack(null)
+                            .commit()
+                    },
+                    onDeleteConfirmed = { card -> deleteCard(card) },
                 )
+            }
+        }
+    }
+
+    // ── 카드 삭제 ──────────────────────────────────────────────────────────────
+    // DELETE .../cards/{cardId} → 성공 시 토스트 + 목록으로 복귀(목록은 onResume에서 갱신)
+
+    private fun deleteCard(card: ReadingCard) {
+        val context = requireContext()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val success = try {
+                val resp = withContext(Dispatchers.IO) { RetrofitClient.libApi().deleteCard(card.cardId) }
+                resp.isSuccessful && resp.body()?.isSuccess == true
+            } catch (_: Exception) {
+                false
+            }
+            if (!isAdded) return@launch
+            if (success) {
+                context.showCustomToast("독서카드를 삭제했어요", true)
+                parentFragmentManager.popBackStack()
+            } else {
+                context.showCustomToast("삭제에 실패했어요", false)
             }
         }
     }

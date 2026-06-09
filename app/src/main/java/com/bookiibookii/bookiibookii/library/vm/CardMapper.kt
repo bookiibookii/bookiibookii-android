@@ -10,6 +10,7 @@ import com.bookiibookii.bookiibookii.library.ui.ReadingCardType
  */
 internal fun MemberCardResponseDTO.toReadingCard() = ReadingCard(
     cardId                 = cardId.toLong(),
+    memberBookId           = memberBookId,
     username               = creatorName.orEmpty(),
     content                = memo.orEmpty(),
     page                   = page.toString(),
@@ -19,6 +20,7 @@ internal fun MemberCardResponseDTO.toReadingCard() = ReadingCard(
     bookTitle              = bookTitle.orEmpty(),
     quotation              = quotation.orEmpty(),
     imageUrl               = cardImage?.presignedGetUrl,
+    s3Key                  = cardImage?.s3Key,
     myReactions            = myReactions,
     reactionCounts         = reactionCounts.associate { it.reaction to it.count },
     creatorProfileImageUrl = creatorProfileImageUrl,

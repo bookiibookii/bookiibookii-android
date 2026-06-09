@@ -59,14 +59,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
+import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.bookiibookii.bookiibookii.ui.theme.MaruBuri
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -147,11 +156,14 @@ fun ReadingCardDetailScreen(
     onKakaoShare: (card: ReadingCard) -> Unit = {},
     onXShare: (card: ReadingCard) -> Unit = {},
     onDownload: (card: ReadingCard) -> Unit = {},
+    onEditClick: (card: ReadingCard) -> Unit = {},
+    onDeleteConfirmed: (card: ReadingCard) -> Unit = {},
 ) {
     val pagerState    = rememberPagerState(initialPage = initialIndex) { cards.size }
     val coroutineScope = rememberCoroutineScope()
-    var showShareSheet by remember { mutableStateOf(false) }
-    var cardVersion    by remember { mutableStateOf(1) }
+    var showShareSheet  by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var cardVersion     by remember { mutableStateOf(1) }
 
     // 카드별 북마크 상태 (낙관적 업데이트)
     val bookmarkStates = remember(cards) {
@@ -178,7 +190,13 @@ fun ReadingCardDetailScreen(
 
     Column(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.uiBg)) {
 
-        CardDetailHeader(onBackClick = onBackClick, onShareClick = { showShareSheet = true })
+        CardDetailHeader(
+            onBackClick = onBackClick,
+            onShareClick = { showShareSheet = true },
+            showMenu = currentCard?.isMine == true,
+            onEditClick = { currentCard?.let(onEditClick) },
+            onDeleteClick = { showDeleteDialog = true },
+        )
 
         CardInfoArea(
             card             = currentCard,
@@ -287,6 +305,86 @@ fun ReadingCardDetailScreen(
                 currentCard?.let { onCopyLink(it) }
             },
         )
+    }
+
+    if (showDeleteDialog) {
+        Dialog(onDismissRequest = { showDeleteDialog = false }) {
+            ReadingCardDeleteDialog(
+                onDismiss = { showDeleteDialog = false },
+                onConfirm = {
+                    showDeleteDialog = false
+                    currentCard?.let(onDeleteConfirmed)
+                },
+            )
+        }
+    }
+}
+
+// 독서카드 삭제 확인 다이얼로그 (그룹 삭제 다이얼로그와 동일 패턴)
+@Composable
+private fun ReadingCardDeleteDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(BookiiBookiiTheme.shape.round24)
+            .background(BookiiBookiiTheme.colors.white)
+            .padding(20.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "독서카드 삭제",
+                style = BookiiBookiiTheme.typography.bold24,
+                color = BookiiBookiiTheme.colors.grey900,
+                modifier = Modifier.weight(1f),
+            )
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(BookiiBookiiTheme.colors.grey100)
+                    .clickable(onClick = onDismiss),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = "닫기",
+                    tint = BookiiBookiiTheme.colors.grey900,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+        Text(
+            text = "독서카드를 삭제하시겠습니까? 삭제하면 즉시 사라지며, 이후 되돌릴 수 없습니다.",
+            style = BookiiBookiiTheme.typography.regular16,
+            color = BookiiBookiiTheme.colors.grey900,
+            modifier = Modifier.padding(top = 24.dp),
+        )
+        Row(
+            modifier = Modifier.padding(top = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            BottomSheetTwoBtnShort(
+                text = "취소",
+                style = BottomSheetBtnStyle.White,
+                textStyle = BookiiBookiiTheme.typography.regular16,
+                onClick = onDismiss,
+                modifier = Modifier.weight(1f),
+            )
+            BottomSheetTwoBtnShort(
+                text = "삭제",
+                style = BottomSheetBtnStyle.Red,
+                textStyle = BookiiBookiiTheme.typography.regular16,
+                onClick = onConfirm,
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 
@@ -416,27 +514,7 @@ private fun PhotoCard(
                             modifier           = Modifier.matchParentSize(),
                         )
                     }
-                    // 책 제목 배지 (좌상단 오버레이)
-                    if (card.bookTitle.isNotBlank()) {
-                        Row(
-                            modifier = Modifier
-                                .padding(start = 16.dp, top = 16.dp)
-                                .clip(RoundedCornerShape(5.dp))
-                                .background(Color(0xFFFFF3E0))
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            Text("B", color = BookiiBookiiTheme.colors.uiMain, fontSize = 12.sp, fontWeight = FontWeight.Black)
-                            Text(
-                                text = card.bookTitle,
-                                style = BookiiBookiiTheme.typography.medium14,
-                                color = BookiiBookiiTheme.colors.uiMain,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
+                    // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
                 }
                 // 하단 흰 텍스트 영역
                 Box(
@@ -490,18 +568,8 @@ private fun PhotoCard(
                     )
                 )
             )
-            // 책 제목 (좌상단)
-            if (card.bookTitle.isNotBlank()) {
-                Text(
-                    text = card.bookTitle,
-                    style = BookiiBookiiTheme.typography.medium12,
-                    color = BookiiBookiiTheme.colors.uiMain,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 24.dp, end = 40.dp),
-                )
-            }
-            // 메모 텍스트 (좌상단 제목 아래)
+            // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
+            // 메모 텍스트 (좌상단)
             if (card.content.isNotBlank()) {
                 Text(
                     text = card.content,
@@ -575,29 +643,9 @@ private fun QuoteCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Spacer(modifier = Modifier.height(20.dp))
-                    // 책 제목 (좌상단)
-                    if (card.bookTitle.isNotBlank()) {
-                        if (cardVersion == 1) {
-                            // v1: 배지 스타일 (pale orange bg)
-                            Row(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(5.dp))
-                                    .background(Color(0xFFFFF3E0))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Text("B", color = BookiiBookiiTheme.colors.uiMain, fontSize = 11.sp, fontWeight = FontWeight.Black)
-                                Text(card.bookTitle, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.uiMain, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                        } else {
-                            // v2: 일반 텍스트 (흰색)
-                            Text(card.bookTitle, style = BookiiBookiiTheme.typography.medium12, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
                     Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
-                    Text(text = "\"$quotationText\"", style = BookiiBookiiTheme.typography.semibold20, color = textColor, overflow = TextOverflow.Ellipsis)
+                    Text(text = "\"$quotationText\"", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
                 }
             }
             // 하단 메모 영역
@@ -659,8 +707,9 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
                         )
                     )
                     if (card.bookTitle.isNotBlank()) {
-                        Text(card.bookTitle, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.uiMain, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 24.dp, end = 40.dp))
+                        Box(modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 40.dp)) {
+                            BookTitleChip(title = card.bookTitle, solidBackground = true)
+                        }
                     }
                     if (card.content.isNotBlank()) {
                         Text(card.content, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
@@ -686,11 +735,11 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Spacer(modifier = Modifier.height(20.dp))
                             if (card.bookTitle.isNotBlank()) {
-                                Text(card.bookTitle, style = BookiiBookiiTheme.typography.medium12, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                BookTitleChip(title = card.bookTitle, solidBackground = false)
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
-                            Text("\"$quotationText\"", style = BookiiBookiiTheme.typography.semibold20, color = Color.White, overflow = TextOverflow.Ellipsis)
+                            Text("\"$quotationText\"", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = Color.White, overflow = TextOverflow.Ellipsis)
                         }
                     }
                     Box(modifier = Modifier.fillMaxWidth().weight(128f / 464f)) {
@@ -777,22 +826,118 @@ private fun CardVersionDot(
 // ── 헤더 ─────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun CardDetailHeader(onBackClick: () -> Unit, onShareClick: () -> Unit) {
+private fun CardDetailHeader(
+    onBackClick: () -> Unit,
+    onShareClick: () -> Unit,
+    showMenu: Boolean = false,
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
+) {
     Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
-        Row(
-            modifier            = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 8.dp),
-            verticalAlignment   = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
+        Box(modifier = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 8.dp)) {
+            IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.CenterStart).size(40.dp)) {
                 Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
-            Text(text = "독서카드", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
-            IconButton(onClick = onShareClick, modifier = Modifier.size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_share), contentDescription = "공유", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
+            Text(
+                text = "독서카드",
+                style = BookiiBookiiTheme.typography.medium20,
+                color = BookiiBookiiTheme.colors.grey900,
+                modifier = Modifier.align(Alignment.Center),
+            )
+            Row(
+                modifier = Modifier.align(Alignment.CenterEnd),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onShareClick, modifier = Modifier.size(40.dp)) {
+                    Icon(painter = painterResource(R.drawable.ic_share), contentDescription = "공유", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
+                }
+                if (showMenu) {
+                    CardDetailEditMenu(onEditClick = onEditClick, onDeleteClick = onDeleteClick)
+                }
             }
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
+    }
+}
+
+// 미트볼 아이콘 + 메뉴 팝오버 (내 카드일 때만 노출). 바깥 탭/항목 선택 시 닫힘
+@Composable
+private fun CardDetailEditMenu(
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val popupOffsetY = with(LocalDensity.current) { 56.dp.roundToPx() }
+    Box(modifier = modifier) {
+        IconButton(onClick = { expanded = true }, modifier = Modifier.size(40.dp)) {
+            Icon(
+                painter = painterResource(R.drawable.ic_meetball),
+                contentDescription = "더보기",
+                tint = BookiiBookiiTheme.colors.grey900,
+                modifier = Modifier.size(32.dp),
+            )
+        }
+        if (expanded) {
+            Popup(
+                alignment = Alignment.TopEnd,
+                offset = IntOffset(x = 0, y = popupOffsetY),
+                onDismissRequest = { expanded = false },
+                properties = PopupProperties(focusable = true),
+            ) {
+                CardDetailMenuPopover(
+                    onEditClick = {
+                        expanded = false
+                        onEditClick()
+                    },
+                    onDeleteClick = {
+                        expanded = false
+                        onDeleteClick()
+                    },
+                )
+            }
+        }
+    }
+}
+
+// 수정하기/삭제하기 카드 팝오버
+@Composable
+private fun CardDetailMenuPopover(
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .width(160.dp)
+            .shadow(elevation = 6.dp, shape = BookiiBookiiTheme.shape.round10)
+            .background(color = BookiiBookiiTheme.colors.white, shape = BookiiBookiiTheme.shape.round10)
+            .border(width = 1.dp, color = BookiiBookiiTheme.colors.grey200, shape = BookiiBookiiTheme.shape.round10)
+            .padding(vertical = 4.dp),
+    ) {
+        CardDetailMenuItem(text = "수정하기", iconRes = R.drawable.ic_edit, onClick = onEditClick)
+        HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey100)
+        CardDetailMenuItem(text = "삭제하기", iconRes = R.drawable.ic_trash, onClick = onDeleteClick)
+    }
+}
+
+@Composable
+private fun CardDetailMenuItem(text: String, iconRes: Int, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(text = text, style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey700)
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = BookiiBookiiTheme.colors.grey700,
+            modifier = Modifier.size(24.dp),
+        )
     }
 }
 

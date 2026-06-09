@@ -35,6 +35,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,7 @@ fun LibraryBookmarkScreen(
     onSortChange: (isLatest: Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onCardClick: (index: Int, bookmarkedCards: List<ReadingCard>) -> Unit = { _, _ -> },
+    onMoveToLibrary: () -> Unit = {},
 ) {
     var sortType by remember { mutableStateOf(BookmarkSortType.RECENT) }
     val bookmarkedCards = cards  // 이미 서버에서 필터된 북마크 카드
@@ -89,62 +91,108 @@ fun LibraryBookmarkScreen(
             HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
         }
 
-        // 카운트 + 정렬
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = "${bookmarkedCards.size} 개",
-                style = BookiiBookiiTheme.typography.medium16,
-                color = BookiiBookiiTheme.colors.grey900,
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        if (!isLoading && bookmarkedCards.isEmpty()) {
+            // 빈 상태: 안내 카드 + 서재 이동 버튼
+            BookmarkEmptyContent(onMoveToLibrary = onMoveToLibrary)
+        } else {
+            // 카운트 + 정렬
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Text(
-                    text = "최신순",
-                    style = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
-                    color = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
-                    modifier = Modifier.clickable { sortType = BookmarkSortType.RECENT; onSortChange(true) },
+                    text = "${bookmarkedCards.size} 개",
+                    style = BookiiBookiiTheme.typography.medium16,
+                    color = BookiiBookiiTheme.colors.grey900,
                 )
-                Text(text = " | ", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey300)
-                Text(
-                    text = "과거순",
-                    style = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
-                    color = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
-                    modifier = Modifier.clickable { sortType = BookmarkSortType.OLDEST; onSortChange(false) },
-                )
-            }
-        }
-
-        // 카드 그리드 (2열)
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .navigationBarsPadding()
-                .padding(top = 16.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            bookmarkedCards.chunked(2).forEachIndexed { rowIndex, row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    row.forEachIndexed { colIndex, card ->
-                        BookmarkCardItem(
-                            card = card,
-                            onClick = { onCardClick(rowIndex * 2 + colIndex, bookmarkedCards) },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                    if (row.size == 1) Box(modifier = Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "최신순",
+                        style = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
+                        color = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
+                        modifier = Modifier.clickable { sortType = BookmarkSortType.RECENT; onSortChange(true) },
+                    )
+                    Text(text = " | ", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey300)
+                    Text(
+                        text = "과거순",
+                        style = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
+                        color = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
+                        modifier = Modifier.clickable { sortType = BookmarkSortType.OLDEST; onSortChange(false) },
+                    )
                 }
             }
+
+            // 카드 그리드 (2열)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .navigationBarsPadding()
+                    .padding(top = 16.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                bookmarkedCards.chunked(2).forEachIndexed { rowIndex, row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        row.forEachIndexed { colIndex, card ->
+                            BookmarkCardItem(
+                                card = card,
+                                onClick = { onCardClick(rowIndex * 2 + colIndex, bookmarkedCards) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (row.size == 1) Box(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 빈 상태 안내 카드 + "서재로 이동하기" 버튼
+@Composable
+private fun BookmarkEmptyContent(
+    onMoveToLibrary: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp)
+            .clip(BookiiBookiiTheme.shape.round24)
+            .background(BookiiBookiiTheme.colors.white)
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Text(
+            text = "아직 저장된 독서카드가 없어요.\n공감되는 독서카드를 저장해보세요.",
+            style = BookiiBookiiTheme.typography.medium16,
+            color = BookiiBookiiTheme.colors.grey900,
+            textAlign = TextAlign.Center,
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clip(BookiiBookiiTheme.shape.round16)
+                .background(BookiiBookiiTheme.colors.uiMain)
+                .clickable { onMoveToLibrary() },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "서재로 이동하기",
+                style = BookiiBookiiTheme.typography.regular15,
+                color = BookiiBookiiTheme.colors.white,
+            )
         }
     }
 }
@@ -311,5 +359,13 @@ private val previewBookmarkCards = listOf(
 private fun LibraryBookmarkScreenPreview() {
     BookiiPreview {
         LibraryBookmarkScreen(cards = previewBookmarkCards)
+    }
+}
+
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+private fun LibraryBookmarkScreenEmptyPreview() {
+    BookiiPreview {
+        LibraryBookmarkScreen(cards = emptyList())
     }
 }

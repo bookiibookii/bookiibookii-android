@@ -33,6 +33,7 @@ class LibraryBookmarkFragment : BaseLibraryFragment() {
                     isLoading   = state.isLoading,
                     onSortChange = { isLatest -> vm.sortByLatest(isLatest) },
                     onBackClick = { parentFragmentManager.popBackStack() },
+                    onMoveToLibrary = { parentFragmentManager.popBackStack() },
                     onCardClick = { index, bookmarkedCards ->
                         parentFragmentManager.beginTransaction()
                             .replace(
