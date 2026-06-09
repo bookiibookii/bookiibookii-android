@@ -28,6 +28,7 @@ fun TrackerDetailResDTO.toUiState(): TrackerDetailUiState {
         secondaryAction = secondary,
         primaryEnabled = !isPrimaryActionDisabled(displayStatus),
         secondaryEnabled = !isSecondaryActionDisabled(displayStatus),
+        showReadingProgress = !isReadingProgressHidden(displayStatus),
         isHost = myRole == "HOST",
         steps = safeSteps.toUiSteps(dDayChip),
     )

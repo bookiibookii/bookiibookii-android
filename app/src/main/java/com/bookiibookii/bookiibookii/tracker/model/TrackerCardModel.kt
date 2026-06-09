@@ -13,6 +13,8 @@ data class TrackerCardModel(
     // primary/secondary 버튼 활성화 여부 — 상태로 결정
     val primaryEnabled: Boolean = true,
     val secondaryEnabled: Boolean = true,
+    // 읽기 진행률 바·% 텍스트 표시 여부 — 교환 단계 이후엔 숨김
+    val showReadingProgress: Boolean = true,
     val isHost: Boolean = false,
 )
 

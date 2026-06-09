@@ -56,10 +56,12 @@ internal fun TrackerMainCard(
         ) {
             TrackerProfileColumn(
                 profile = card.left,
+                showProgress = card.showReadingProgress,
                 modifier = Modifier.weight(1f),
             )
             TrackerProfileColumn(
                 profile = card.right,
+                showProgress = card.showReadingProgress,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -162,6 +164,7 @@ private fun DDayChip(text: String) {
 @Composable
 private fun TrackerProfileColumn(
     profile: TrackerProfileItem,
+    showProgress: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -200,18 +203,20 @@ private fun TrackerProfileColumn(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    TrackerProgressBar(percent = profile.progressPercent)
-                    Text(
-                        text = "${profile.progressPercent}%",
-                        style = BookiiBookiiTheme.typography.regular14,
-                        color = BookiiBookiiTheme.colors.grey800,
-                    )
+                if (showProgress) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        TrackerProgressBar(percent = profile.progressPercent)
+                        Text(
+                            text = "${profile.progressPercent}%",
+                            style = BookiiBookiiTheme.typography.regular14,
+                            color = BookiiBookiiTheme.colors.grey800,
+                        )
+                    }
                 }
             }
         }

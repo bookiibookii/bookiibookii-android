@@ -47,3 +47,15 @@ fun isSecondaryActionDisabled(displayStatus: String?): Boolean =
 // primary 버튼을 비활성화해야 하는 상태 (파트너의 약속 완료를 기다리는 화면)
 fun isPrimaryActionDisabled(displayStatus: String?): Boolean =
     displayStatus == "WAITING_PARTNER_MEETING_COMPLETE"
+
+// 읽기 진행률 바·% 텍스트를 숨겨야 하는 상태 (교환 약속~교환 이후 단계)
+private val PROGRESS_HIDDEN_STATUSES = setOf(
+    "MEETING_REGISTER_REQUIRED",
+    "WAITING_HOST_MEETING_REGISTER",
+    "EXCHANGING",
+    "WAITING_PARTNER_MEETING_COMPLETE",
+    "EXCHANGE_REVIEW_WRITING",
+)
+
+fun isReadingProgressHidden(displayStatus: String?): Boolean =
+    displayStatus in PROGRESS_HIDDEN_STATUSES

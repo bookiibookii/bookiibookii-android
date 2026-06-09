@@ -48,6 +48,7 @@ fun TrackerListItemResDTO.toCardModel(): TrackerCardModel {
         secondaryAction = secondary,
         primaryEnabled = !isPrimaryActionDisabled(displayStatus),
         secondaryEnabled = !isSecondaryActionDisabled(displayStatus),
+        showReadingProgress = !isReadingProgressHidden(displayStatus),
         isHost = myRole == "HOST",
     )
 }

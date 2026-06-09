@@ -80,6 +80,7 @@ fun TrackerDetailContent(
     modifier: Modifier = Modifier,
     primaryActionEnabled: Boolean = true,
     secondaryActionEnabled: Boolean = true,
+    showReadingProgress: Boolean = true,
 ) {
     Column(
         modifier = modifier
@@ -119,6 +120,7 @@ fun TrackerDetailContent(
                     myProfile = myProfile,
                     partnerProfile = partnerProfile,
                     exchangeLabel = exchangeLabel,
+                    showReadingProgress = showReadingProgress,
                 )
                 ActionButtonsRow(
                     secondaryLabel = secondaryActionLabel,
@@ -367,14 +369,23 @@ private fun TwoProfileSection(
     myProfile: TrackerProfileItem,
     partnerProfile: TrackerProfileItem,
     exchangeLabel: String,
+    showReadingProgress: Boolean,
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            ProfileColumn(profile = myProfile, modifier = Modifier.weight(1f))
-            ProfileColumn(profile = partnerProfile, modifier = Modifier.weight(1f))
+            ProfileColumn(
+                profile = myProfile,
+                showProgress = showReadingProgress,
+                modifier = Modifier.weight(1f),
+            )
+            ProfileColumn(
+                profile = partnerProfile,
+                showProgress = showReadingProgress,
+                modifier = Modifier.weight(1f),
+            )
         }
         ExchangeConnector(
             label = exchangeLabel,
@@ -388,6 +399,7 @@ private fun TwoProfileSection(
 @Composable
 private fun ProfileColumn(
     profile: TrackerProfileItem,
+    showProgress: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -426,18 +438,20 @@ private fun ProfileColumn(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    TrackerProgressBar(percent = profile.progressPercent)
-                    Text(
-                        text = "${profile.progressPercent}%",
-                        style = BookiiBookiiTheme.typography.regular14,
-                        color = BookiiBookiiTheme.colors.grey800,
-                    )
+                if (showProgress) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        TrackerProgressBar(percent = profile.progressPercent)
+                        Text(
+                            text = "${profile.progressPercent}%",
+                            style = BookiiBookiiTheme.typography.regular14,
+                            color = BookiiBookiiTheme.colors.grey800,
+                        )
+                    }
                 }
             }
         }

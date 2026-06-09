@@ -31,6 +31,8 @@ data class TrackerDetailUiState(
     // primary/secondary 버튼 활성화 여부 — 상태로 결정
     val primaryEnabled: Boolean = true,
     val secondaryEnabled: Boolean = true,
+    // 읽기 진행률 바·% 텍스트 표시 여부 — 교환 단계 이후엔 숨김
+    val showReadingProgress: Boolean = true,
     // 더보기 드롭다운의 "독서 기간 수정" 호스트 전용 노출 분기에 사용
     val isHost: Boolean = false,
     val steps: List<TrackerStep> = emptyList(),

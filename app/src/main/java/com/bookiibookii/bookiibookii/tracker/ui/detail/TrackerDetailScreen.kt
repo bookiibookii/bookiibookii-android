@@ -130,6 +130,8 @@ fun TrackerDetailRoute(
         primaryActionEnabled = uiState.primaryEnabled,
         // 약속 등록 대기 상태(WAITING_HOST_MEETING_REGISTER)면 비활성화
         secondaryActionEnabled = uiState.secondaryEnabled,
+        // 교환 단계 이후엔 읽기 진행률 바·% 숨김
+        showReadingProgress = uiState.showReadingProgress,
         steps = uiState.steps,
         isHost = uiState.isHost,
         onBackClick = onBackClick,
@@ -463,6 +465,7 @@ fun TrackerDetailScreen(
     modifier: Modifier = Modifier,
     primaryActionEnabled: Boolean = true,
     secondaryActionEnabled: Boolean = true,
+    showReadingProgress: Boolean = true,
 ) {
     TrackerDetailContent(
         groupName = groupName,
@@ -488,6 +491,7 @@ fun TrackerDetailScreen(
         modifier = modifier,
         primaryActionEnabled = primaryActionEnabled,
         secondaryActionEnabled = secondaryActionEnabled,
+        showReadingProgress = showReadingProgress,
     )
 }
 
