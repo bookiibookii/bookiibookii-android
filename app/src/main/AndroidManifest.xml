@@ -79,6 +79,18 @@
                     android:host="bookiibookii.com"
                     android:pathPrefix="/share/reading-card" />
             </intent-filter>
+
+            <!-- 카카오톡 공유 메시지 → 앱 직접 실행 (executionParams의 shareToken 수신) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="kakao${KAKAO_APP_KEY}"
+                    android:host="kakaolink" />
+            </intent-filter>
         </activity>
 
         <provider

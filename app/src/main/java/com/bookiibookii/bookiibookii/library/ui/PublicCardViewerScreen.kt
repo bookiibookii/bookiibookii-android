@@ -1,159 +1,147 @@
 package com.bookiibookii.bookiibookii.library.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
+// 배경 그라디언트
+private val BgGradientTop = Color(0xFFFCECE0)
+private val BgGradientBottom = Color(0xFFF1EDEB)
+
 // 공유 토큰으로 진입하는 공개 독서카드 뷰어 (로그인 불필요, stateless)
-// - 카드 비주얼은 기존 ShareableCard 재사용 → PHOTO/QUOTE 타입별 디자인이 그대로 분기됨
-// - 상단 로고 / 가운데 카드 / 책 정보 / 하단 CTA(앱에서 보기)
 @Composable
 fun PublicCardViewerScreen(
     card: ReadingCard,
-    bookAuthor: String = "",
-    onClose: () -> Unit = {},
-    onOpenApp: () -> Unit = {},
+    onGoMain: () -> Unit = {},
+    onSaveImage: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BookiiBookiiTheme.colors.uiBg)
+            .background(BookiiBookiiTheme.colors.white)
             .statusBarsPadding(),
     ) {
-        // 상단 바 — 닫기 + 가운데 로고
+        // 헤더
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(68.dp)
                 .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onClose),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_x),
-                    contentDescription = "닫기",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
-                )
-            }
             Icon(
-                painter = painterResource(R.drawable.ic_bookii_text),
+                painter = painterResource(R.drawable.ic_logo_wordmark),
                 contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .height(14.dp),
+                tint = BookiiBookiiTheme.colors.uiMain,
+                modifier = Modifier.height(20.dp),
             )
         }
+        HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
 
-        Column(
+        // 그라디언트 배경 + 가운데 카드
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .background(Brush.verticalGradient(listOf(BgGradientTop, BgGradientBottom))),
+            contentAlignment = Alignment.Center,
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 카드 — 공유용과 동일 비율(348:464), 타입별 디자인은 ShareableCard가 분기
+            // 카드
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .aspectRatio(348f / 464f),
+                    .widthIn(max = 320.dp)
+                    .fillMaxWidth(0.82f)
+                    .aspectRatio(320f / 520f)
+                    .shadow(elevation = 10.dp, shape = BookiiBookiiTheme.shape.round20)
+                    .clip(BookiiBookiiTheme.shape.round20),
             ) {
                 ShareableCard(card = card, modifier = Modifier.fillMaxSize())
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // 책 제목
-            Text(
-                text = card.bookTitle,
-                style = BookiiBookiiTheme.typography.semibold18,
-                color = BookiiBookiiTheme.colors.grey900,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            // 저자
-            if (bookAuthor.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = bookAuthor,
-                    style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey500,
-                    textAlign = TextAlign.Center,
-                )
-            }
-            // 작성자
-            if (card.username.isNotBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "${card.username} 님의 독서카드",
-                    style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey600,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // 하단 CTA — 앱에서 보기
-        Box(
+        // 하단 푸터
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-                .clip(BookiiBookiiTheme.shape.round16)
-                .background(BookiiBookiiTheme.colors.uiMain)
-                .clickable(onClick = onOpenApp)
-                .padding(vertical = 16.dp),
-            contentAlignment = Alignment.Center,
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = "부키부키 앱으로 이동하기",
-                style = BookiiBookiiTheme.typography.medium16,
-                color = BookiiBookiiTheme.colors.white,
+            FooterButton(
+                text = "메인으로",
+                textColor = BookiiBookiiTheme.colors.grey900,
+                backgroundColor = BookiiBookiiTheme.colors.white,
+                bordered = true,
+                onClick = onGoMain,
+                modifier = Modifier.weight(1f),
+            )
+            FooterButton(
+                text = "이미지 저장",
+                textColor = BookiiBookiiTheme.colors.white,
+                backgroundColor = BookiiBookiiTheme.colors.uiMain,
+                bordered = false,
+                onClick = onSaveImage,
+                modifier = Modifier.weight(1f),
             )
         }
+    }
+}
+
+@Composable
+private fun FooterButton(
+    text: String,
+    textColor: Color,
+    backgroundColor: Color,
+    bordered: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .height(56.dp)
+            .clip(BookiiBookiiTheme.shape.round20)
+            .background(backgroundColor)
+            .then(
+                if (bordered) Modifier.border(1.dp, BookiiBookiiTheme.colors.grey200, BookiiBookiiTheme.shape.round20)
+                else Modifier,
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = BookiiBookiiTheme.typography.medium16,
+            color = textColor,
+        )
     }
 }
 
@@ -163,14 +151,13 @@ private fun PublicCardViewerQuotePreview() {
     BookiiPreview {
         PublicCardViewerScreen(
             card = ReadingCard(
-                username = "북이",
-                content = "다시 읽어도 마음에 오래 남는 문장이었다.",
+                username = "foryxxng",
+                content = "책을 쓰지 않고 한 우물만 팠다면, 나는 그들이 원하는 자리에 앉아 행복했을까. 나는 오히려 우물을 나와서 많이 느낀다. 세상의 다양성을, 내가 보고 느낄 수 있는 것들의 가치를.",
                 page = "123",
                 type = ReadingCardType.QUOTE,
-                bookTitle = "데미안",
-                quotation = "새는 알에서 나오려고 투쟁한다.",
+                bookTitle = "나는 당신을 편애합니다",
+                quotation = "새는 알에서 나오려고 싸운다. 알은 세상이다. 태어나려는 자는 한 세계를 파괴해야 한다.",
             ),
-            bookAuthor = "헤르만 헤세",
         )
     }
 }
@@ -181,13 +168,12 @@ private fun PublicCardViewerPhotoPreview() {
     BookiiPreview {
         PublicCardViewerScreen(
             card = ReadingCard(
-                username = "부키",
+                username = "foryxxng",
                 content = "이 장면이 특히 인상 깊었어요.",
                 page = "45",
                 type = ReadingCardType.PHOTO,
-                bookTitle = "어린 왕자",
+                bookTitle = "나는 당신을 편애합니다",
             ),
-            bookAuthor = "생텍쥐페리",
         )
     }
 }

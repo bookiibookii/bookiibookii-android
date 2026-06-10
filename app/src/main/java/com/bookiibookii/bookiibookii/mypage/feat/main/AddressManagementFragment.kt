@@ -39,11 +39,11 @@ class AddressManagementFragment : BaseMypageFragment() {
                     onBackClick = { parentFragmentManager.popBackStack() },
                     onFetchDeliveries = { viewModel.fetchDeliveries() },
                     onFetchExchanges = { viewModel.fetchExchanges() },
-                    onAddDelivery = { req, onSuccess -> viewModel.addDelivery(req, onSuccess) },
-                    onUpdateDelivery = { id, req, onSuccess -> viewModel.updateDelivery(id, req, onSuccess) },
+                    onAddDelivery = { req, makeDefault, onSuccess -> viewModel.addDelivery(req, makeDefault, onSuccess) },
+                    onUpdateDelivery = { id, req, makeDefault, onSuccess -> viewModel.updateDelivery(id, req, makeDefault, onSuccess) },
                     onDeleteDelivery = { id -> viewModel.deleteDelivery(id) },
-                    onAddExchange = { req, onSuccess -> viewModel.addExchange(req, onSuccess) },
-                    onUpdateExchange = { id, req, onSuccess -> viewModel.updateExchange(id, req, onSuccess) },
+                    onAddExchange = { req, makeDefault, onSuccess -> viewModel.addExchange(req, makeDefault, onSuccess) },
+                    onUpdateExchange = { id, req, makeDefault, onSuccess -> viewModel.updateExchange(id, req, makeDefault, onSuccess) },
                     onDeleteExchange = { id -> viewModel.deleteExchange(id) },
                 )
             }

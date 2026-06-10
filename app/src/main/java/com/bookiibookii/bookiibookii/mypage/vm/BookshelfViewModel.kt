@@ -75,18 +75,25 @@ class BookshelfViewModel : ViewModel() {
     }
 
     fun fetchBookshelf() {
-        viewModelScope.launch {
-            try {
-                val response = RetrofitClient.mypApi().getBookshelf()
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    _bookshelf.value = response.body()?.result
-                } else {
-                    _eventFlow.emit(Event.ShowToast("책장 정보를 불러오지 못했습니다."))
-                }
-            } catch (e: Exception) {
-                Log.e("BookshelfViewModel", "fetchBookshelf error", e)
-                _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+        viewModelScope.launch { loadBookshelf() }
+    }
+
+    // 책장 조회 후 LiveData 갱신 + 결과 반환 (후속 처리에서 최신 목록이 필요할 때 사용)
+    private suspend fun loadBookshelf(): BookshelfResult? {
+        return try {
+            val response = RetrofitClient.mypApi().getBookshelf()
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                val result = response.body()?.result
+                _bookshelf.value = result
+                result
+            } else {
+                _eventFlow.emit(Event.ShowToast("책장 정보를 불러오지 못했습니다."))
+                null
             }
+        } catch (e: Exception) {
+            Log.e("BookshelfViewModel", "fetchBookshelf error", e)
+            _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            null
         }
     }
 
@@ -153,9 +160,14 @@ class BookshelfViewModel : ViewModel() {
     fun reorderRepresentativeBook(userBookId: Long, newOrder: Int) {
         viewModelScope.launch {
             try {
-                RetrofitClient.mypApi().reorderRepresentativeBooks(
+                val response = RetrofitClient.mypApi().reorderRepresentativeBooks(
                     UpdateRepresentativeOrderRequest(userBookId = userBookId, targetOrder = newOrder)
                 )
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    loadBookshelf()
+                } else {
+                    _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "순서 변경에 실패했습니다."))
+                }
             } catch (e: Exception) {
                 Log.e("BookshelfViewModel", "reorderRepresentativeBook error", e)
                 _eventFlow.emit(Event.ShowToast("순서 변경에 실패했습니다."))
@@ -168,7 +180,8 @@ class BookshelfViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.mypApi().addFavoriteBook(AddFavoriteBookRequest(isbn13 = isbn13))
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    fetchBookshelf()
+                    // 인생 책은 항상 대표책에도 포함돼야 함
+                    ensureFavoritesAreRepresentative()
                 } else {
                     _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "인생 책 등록에 실패했습니다."))
                 }
@@ -200,11 +213,40 @@ class BookshelfViewModel : ViewModel() {
             try {
                 RetrofitClient.mypApi().deleteFavoriteBook(oldUserBookId)
                 RetrofitClient.mypApi().addFavoriteBook(AddFavoriteBookRequest(isbn13 = isbn13))
-                fetchBookshelf()
+                // 교체한 인생 책도 대표책에 포함돼야 함
+                ensureFavoritesAreRepresentative()
             } catch (e: Exception) {
                 Log.e("BookshelfViewModel", "replaceFavoriteBook error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
             }
         }
+    }
+
+    // 인생 책은 항상 대표책에도 포함돼야 한다.
+    // 인생책 등록 API는 대표책에 자동 추가하지 않으므로, 대표책에 없는 인생 책을 userBookId로 등록한다.
+    private suspend fun ensureFavoritesAreRepresentative() {
+        val bookshelf = loadBookshelf() ?: return
+        val representativeIds = (bookshelf.representativeBooks ?: emptyList()).map { it.userBookId }.toSet()
+        val missing = (bookshelf.favoriteBooks ?: emptyList()).filter { it.userBookId !in representativeIds }
+        if (missing.isEmpty()) return
+
+        var anyAdded = false
+        for (favorite in missing) {
+            runCatching {
+                RetrofitClient.mypApi().addRepresentativeBook(
+                    AddRepresentativeBookRequest(userBookId = favorite.userBookId)
+                )
+            }.onSuccess { resp ->
+                if (resp.isSuccessful && resp.body()?.isSuccess == true) {
+                    anyAdded = true
+                } else {
+                    _eventFlow.emit(Event.ShowToast(resp.body()?.message ?: "대표 도서 등록에 실패했습니다."))
+                }
+            }.onFailure { e ->
+                Log.e("BookshelfViewModel", "ensureFavoritesAreRepresentative error", e)
+                _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            }
+        }
+        if (anyAdded) loadBookshelf()
     }
 }

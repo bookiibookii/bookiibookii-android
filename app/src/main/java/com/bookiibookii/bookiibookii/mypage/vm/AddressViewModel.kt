@@ -29,60 +29,60 @@ class AddressViewModel : ViewModel() {
         data class ShowToast(val message: String) : Event()
     }
 
-    fun fetchDeliveries() {
-        viewModelScope.launch {
-            try {
-                Log.d("AddressViewModel", "[fetchDeliveries] 배송지 목록 요청 시작")
-                val response = RetrofitClient.locationApi().getDeliveries()
-                Log.d("AddressViewModel", "[fetchDeliveries] 응답 code=${response.code()} isSuccess=${response.body()?.isSuccess}")
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val list = response.body()?.result ?: emptyList()
-                    Log.d("AddressViewModel", "[fetchDeliveries] 배송지 ${list.size}개 수신")
-                    list.forEachIndexed { i, d ->
-                        Log.d("AddressViewModel", "  [$i] id=${d.id} placeName=${d.placeName} addressDetail=${d.addressDetail}")
-                    }
-                    _deliveries.value = list
-                } else {
-                    Log.w("AddressViewModel", "[fetchDeliveries] 실패: ${response.body()?.message}")
-                    _eventFlow.emit(Event.ShowToast("배송지 목록을 불러오지 못했습니다."))
-                }
-            } catch (e: Exception) {
-                Log.e("AddressViewModel", "[fetchDeliveries] 예외 발생", e)
-                _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
-            }
+    // === 목록 로드 (LiveData 갱신 + 결과 반환) ===
+
+    private suspend fun loadDeliveries(): List<DeliveryAddress> = try {
+        val response = RetrofitClient.locationApi().getDeliveries()
+        if (response.isSuccessful && response.body()?.isSuccess == true) {
+            val list = response.body()?.result ?: emptyList()
+            _deliveries.value = list
+            list
+        } else {
+            Log.w("AddressViewModel", "[loadDeliveries] 실패: ${response.body()?.message}")
+            _eventFlow.emit(Event.ShowToast("배송지 목록을 불러오지 못했습니다."))
+            emptyList()
         }
+    } catch (e: Exception) {
+        Log.e("AddressViewModel", "[loadDeliveries] 예외", e)
+        _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+        emptyList()
     }
 
-    fun fetchExchanges() {
-        viewModelScope.launch {
-            try {
-                Log.d("AddressViewModel", "[fetchExchanges] 교환 장소 목록 요청 시작")
-                val response = RetrofitClient.locationApi().getExchanges()
-                Log.d("AddressViewModel", "[fetchExchanges] 응답 code=${response.code()} isSuccess=${response.body()?.isSuccess}")
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val list = response.body()?.result ?: emptyList()
-                    Log.d("AddressViewModel", "[fetchExchanges] 교환 장소 ${list.size}개 수신")
-                    list.forEachIndexed { i, e ->
-                        Log.d("AddressViewModel", "  [$i] id=${e.id} placeName=${e.placeName} addressDetail=${e.addressDetail}")
-                    }
-                    _exchanges.value = list
-                } else {
-                    Log.w("AddressViewModel", "[fetchExchanges] 실패: ${response.body()?.message}")
-                    _eventFlow.emit(Event.ShowToast("교환 장소 목록을 불러오지 못했습니다."))
-                }
-            } catch (e: Exception) {
-                Log.e("AddressViewModel", "[fetchExchanges] 예외 발생", e)
-                _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
-            }
+    private suspend fun loadExchanges(): List<ExchangeAddress> = try {
+        val response = RetrofitClient.locationApi().getExchanges()
+        if (response.isSuccessful && response.body()?.isSuccess == true) {
+            val list = response.body()?.result ?: emptyList()
+            _exchanges.value = list
+            list
+        } else {
+            Log.w("AddressViewModel", "[loadExchanges] 실패: ${response.body()?.message}")
+            _eventFlow.emit(Event.ShowToast("교환 장소 목록을 불러오지 못했습니다."))
+            emptyList()
         }
+    } catch (e: Exception) {
+        Log.e("AddressViewModel", "[loadExchanges] 예외", e)
+        _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+        emptyList()
     }
 
-    fun addDelivery(request: DeliveryAddressRequest, onSuccess: () -> Unit) {
+    fun fetchDeliveries() { viewModelScope.launch { loadDeliveries() } }
+    fun fetchExchanges() { viewModelScope.launch { loadExchanges() } }
+
+    // === 배송지 (택배 교환) ===
+
+    fun addDelivery(request: DeliveryAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().addDelivery(request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    fetchDeliveries()
+                    val list = loadDeliveries()
+                    // POST 응답이 새 id를 주지 않아, 방금 추가된 항목을 필드로 매칭해 대표 설정
+                    if (makeDefault) {
+                        val added = list.firstOrNull {
+                            it.placeName == request.placeName && it.address == request.address && it.phone == request.phone
+                        }
+                        if (added != null && !added.isDefault) applyDefaultDelivery(added.id)
+                    }
                     onSuccess()
                 } else {
                     _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "배송지 추가에 실패했습니다."))
@@ -94,12 +94,12 @@ class AddressViewModel : ViewModel() {
         }
     }
 
-    fun updateDelivery(id: Long, request: DeliveryAddressRequest, onSuccess: () -> Unit) {
+    fun updateDelivery(id: Long, request: DeliveryAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().updateDelivery(id, request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    fetchDeliveries()
+                    if (makeDefault) applyDefaultDelivery(id) else loadDeliveries()
                     onSuccess()
                 } else {
                     _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "배송지 수정에 실패했습니다."))
@@ -116,7 +116,7 @@ class AddressViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.locationApi().deleteDelivery(id)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    fetchDeliveries()
+                    loadDeliveries()
                 } else {
                     _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "배송지 삭제에 실패했습니다."))
                 }
@@ -127,12 +127,36 @@ class AddressViewModel : ViewModel() {
         }
     }
 
-    fun addExchange(request: ExchangeAddressRequest, onSuccess: () -> Unit) {
+    // 대표 배송지 설정 (PATCH) 후 목록 갱신
+    private suspend fun applyDefaultDelivery(id: Long) {
+        try {
+            val response = RetrofitClient.locationApi().setDefaultDelivery(id)
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                loadDeliveries()
+            } else {
+                _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "대표 배송지 설정에 실패했습니다."))
+            }
+        } catch (e: Exception) {
+            Log.e("AddressViewModel", "setDefaultDelivery error", e)
+            _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+        }
+    }
+
+    // === 희망 교환 장소 (직접 교환) ===
+
+    fun addExchange(request: ExchangeAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().addExchange(request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    fetchExchanges()
+                    val list = loadExchanges()
+                    // POST 응답이 새 id를 주지 않아, 방금 추가된 항목을 필드로 매칭해 대표 설정
+                    if (makeDefault) {
+                        val added = list.firstOrNull {
+                            it.placeName == request.placeName && it.address == request.address
+                        }
+                        if (added != null && !added.isDefault) applyDefaultExchange(added.id)
+                    }
                     onSuccess()
                 } else {
                     _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "교환 장소 추가에 실패했습니다."))
@@ -144,12 +168,12 @@ class AddressViewModel : ViewModel() {
         }
     }
 
-    fun updateExchange(id: Long, request: ExchangeAddressRequest, onSuccess: () -> Unit) {
+    fun updateExchange(id: Long, request: ExchangeAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().updateExchange(id, request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    fetchExchanges()
+                    if (makeDefault) applyDefaultExchange(id) else loadExchanges()
                     onSuccess()
                 } else {
                     _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "교환 장소 수정에 실패했습니다."))
@@ -166,7 +190,7 @@ class AddressViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.locationApi().deleteExchange(id)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    fetchExchanges()
+                    loadExchanges()
                 } else {
                     _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "교환 장소 삭제에 실패했습니다."))
                 }
@@ -174,6 +198,21 @@ class AddressViewModel : ViewModel() {
                 Log.e("AddressViewModel", "deleteExchange error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
             }
+        }
+    }
+
+    // 대표 교환 장소 설정 (PATCH) 후 목록 갱신
+    private suspend fun applyDefaultExchange(id: Long) {
+        try {
+            val response = RetrofitClient.locationApi().setDefaultExchange(id)
+            if (response.isSuccessful && response.body()?.isSuccess == true) {
+                loadExchanges()
+            } else {
+                _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "대표 교환 장소 설정에 실패했습니다."))
+            }
+        } catch (e: Exception) {
+            Log.e("AddressViewModel", "setDefaultExchange error", e)
+            _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
         }
     }
 }

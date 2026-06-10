@@ -41,6 +41,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.FavoriteBook
 import com.bookiibookii.bookiibookii.data.model.mypage.RepresentativeBook
 import com.bookiibookii.bookiibookii.mypage.vm.SortOrder
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 enum class BookViewMode { GRID, LIST }
@@ -195,9 +196,7 @@ private fun BookshelfTopBar(onBack: () -> Unit) {
                 Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
             Text(text = "나의 책장", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900, textAlign = TextAlign.Center)
-            IconButton(onClick = { }, modifier = Modifier.size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_search), contentDescription = "검색 하기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
-            }
+            Spacer(modifier = Modifier.size(40.dp))
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
     }
@@ -244,7 +243,7 @@ private fun FilterBar(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 412, heightDp = 900)
 @Composable
 private fun MyBookshelfScreenPreview() {
     val completedBooks = listOf(
@@ -261,7 +260,7 @@ private fun MyBookshelfScreenPreview() {
         RepresentativeBook(userBookId = 10, title = "데미안", displayOrder = 0, isFavorite = true),
         RepresentativeBook(userBookId = 11, title = "1984", displayOrder = 1, isFavorite = false),
     )
-    BookiiBookiiTheme {
+    BookiiPreview {
         MyBookshelfScreen(
             sortedCompletedBooks = completedBooks,
             favoriteBooks = favoriteBooks,

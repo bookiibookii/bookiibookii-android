@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -63,6 +64,8 @@ import com.bookiibookii.bookiibookii.data.model.location.DeliveryAddressRequest
 import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddress
 import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddressRequest
 import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.showCustomToast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,11 +76,11 @@ fun AddressManagementScreen(
     onBackClick: () -> Unit = {},
     onFetchDeliveries: () -> Unit = {},
     onFetchExchanges: () -> Unit = {},
-    onAddDelivery: (DeliveryAddressRequest, () -> Unit) -> Unit = { _, _ -> },
-    onUpdateDelivery: (Long, DeliveryAddressRequest, () -> Unit) -> Unit = { _, _, _ -> },
+    onAddDelivery: (DeliveryAddressRequest, Boolean, () -> Unit) -> Unit = { _, _, _ -> },
+    onUpdateDelivery: (Long, DeliveryAddressRequest, Boolean, () -> Unit) -> Unit = { _, _, _, _ -> },
     onDeleteDelivery: (Long) -> Unit = {},
-    onAddExchange: (ExchangeAddressRequest, () -> Unit) -> Unit = { _, _ -> },
-    onUpdateExchange: (Long, ExchangeAddressRequest, () -> Unit) -> Unit = { _, _, _ -> },
+    onAddExchange: (ExchangeAddressRequest, Boolean, () -> Unit) -> Unit = { _, _, _ -> },
+    onUpdateExchange: (Long, ExchangeAddressRequest, Boolean, () -> Unit) -> Unit = { _, _, _, _ -> },
     onDeleteExchange: (Long) -> Unit = {},
 ) {
     var selectedTabIndex by remember { mutableStateOf(initialTabIndex) }
@@ -213,8 +216,11 @@ fun AddressManagementScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // 배송지·희망 교환 장소 각각 최대 2개 — 다 차면 추가 버튼 비활성화
+            val canAdd = if (selectedTabIndex == 0) deliveries.size < 2 else exchanges.size < 2
             FooterButton(
                 text = "추가하기",
+                enabled = canAdd,
                 onClick = {
                     if (selectedTabIndex == 0) {
                         editDelivery = null
@@ -234,12 +240,12 @@ fun AddressManagementScreen(
             DeliveryBottomSheet(
                 editTarget = editDelivery,
                 onDismiss = { showDeliverySheet = false; editDelivery = null },
-                onSave = { req ->
+                onSave = { req, makeDefault ->
                     val target = editDelivery
                     if (target == null) {
-                        onAddDelivery(req) { showDeliverySheet = false }
+                        onAddDelivery(req, makeDefault) { showDeliverySheet = false }
                     } else {
-                        onUpdateDelivery(target.id, req) { showDeliverySheet = false; editDelivery = null }
+                        onUpdateDelivery(target.id, req, makeDefault) { showDeliverySheet = false; editDelivery = null }
                     }
                 },
             )
@@ -249,12 +255,12 @@ fun AddressManagementScreen(
             ExchangePlaceBottomSheet(
                 editTarget = editExchange,
                 onDismiss = { showExchangeSheet = false; editExchange = null },
-                onSave = { req ->
+                onSave = { req, makeDefault ->
                     val target = editExchange
                     if (target == null) {
-                        onAddExchange(req) { showExchangeSheet = false }
+                        onAddExchange(req, makeDefault) { showExchangeSheet = false }
                     } else {
-                        onUpdateExchange(target.id, req) { showExchangeSheet = false; editExchange = null }
+                        onUpdateExchange(target.id, req, makeDefault) { showExchangeSheet = false; editExchange = null }
                     }
                 },
             )
@@ -469,9 +475,10 @@ private fun ExchangePlaceCard(
 private fun DeliveryBottomSheet(
     editTarget: DeliveryAddress?,
     onDismiss: () -> Unit,
-    onSave: (DeliveryAddressRequest) -> Unit,
+    onSave: (DeliveryAddressRequest, Boolean) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
     var nickname by remember(editTarget) { mutableStateOf(editTarget?.placeName ?: "") }
     var address by remember(editTarget) { mutableStateOf(editTarget?.address ?: "") }
     var zipCode by remember(editTarget) { mutableStateOf(editTarget?.zipCode ?: "") }
@@ -480,8 +487,6 @@ private fun DeliveryBottomSheet(
     var phone by remember(editTarget) { mutableStateOf(editTarget?.phone ?: "") }
     var isPrimary by remember(editTarget) { mutableStateOf(editTarget?.isDefault ?: false) }
     var showAddressSearch by remember { mutableStateOf(false) }
-
-    var phoneError by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -570,18 +575,20 @@ private fun DeliveryBottomSheet(
                     onClick = {
                         val phoneDigits = phone.filter { it.isDigit() }
                         if (phoneDigits.length != 11 || !phoneDigits.startsWith("010")) {
-                            phoneError = true
+                            context.showCustomToast("전화번호 형식을 확인해주세요", isSuccess = false)
                             return@BottomSheetTwoBtnShort
                         }
-                        phoneError = false
-                        onSave(DeliveryAddressRequest(
-                            placeName = nickname,
-                            address = address,
-                            zipCode = zipCode,
-                            addressDetail = detail.ifBlank { "" },
-                            receiverName = recipientName,
-                            phone = phone,
-                        ))
+                        onSave(
+                            DeliveryAddressRequest(
+                                placeName = nickname,
+                                address = address,
+                                zipCode = zipCode,
+                                addressDetail = detail.ifBlank { "" },
+                                receiverName = recipientName,
+                                phone = phone,
+                            ),
+                            isPrimary,
+                        )
                     },
                     modifier = Modifier.weight(1f),
                 )
@@ -607,7 +614,7 @@ private fun DeliveryBottomSheet(
 private fun ExchangePlaceBottomSheet(
     editTarget: ExchangeAddress?,
     onDismiss: () -> Unit,
-    onSave: (ExchangeAddressRequest) -> Unit,
+    onSave: (ExchangeAddressRequest, Boolean) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var nickname by remember(editTarget) { mutableStateOf(editTarget?.placeName ?: "") }
@@ -694,14 +701,17 @@ private fun ExchangePlaceBottomSheet(
                     text = "저장",
                     style = BottomSheetBtnStyle.Dark,
                     onClick = {
-                        onSave(ExchangeAddressRequest(
-                            placeName = nickname,
-                            address = placeAddress,
-                            zipCode = zipCode,
-                            x = x,
-                            y = y,
-                            addressDetail = detail.ifBlank { "" },
-                        ))
+                        onSave(
+                            ExchangeAddressRequest(
+                                placeName = nickname,
+                                address = placeAddress,
+                                zipCode = zipCode,
+                                x = x,
+                                y = y,
+                                addressDetail = detail.ifBlank { "" },
+                            ),
+                            isPrimary,
+                        )
                     },
                     modifier = Modifier.weight(1f),
                 )
@@ -923,6 +933,50 @@ private fun AddressManagementScreenPreview() {
                     isDefault = true,
                 ),
             ),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun DeliveryBottomSheetPreview() {
+    BookiiPreview {
+        DeliveryBottomSheet(
+            editTarget = DeliveryAddress(
+                id = 1L,
+                placeName = "우리집",
+                address = "서울특별시 강남구 테헤란로 123",
+                zipCode = "06234",
+                addressDetail = "456동 789호",
+                receiverName = "북이",
+                phone = "010-1234-5678",
+                isDefault = true,
+            ),
+            onDismiss = {},
+            onSave = { _, _ -> },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun ExchangePlaceBottomSheetPreview() {
+    BookiiPreview {
+        ExchangePlaceBottomSheet(
+            editTarget = ExchangeAddress(
+                id = 1L,
+                placeName = "강남역 11번 출구",
+                address = "서울특별시 강남구 강남대로 396",
+                zipCode = "06241",
+                x = 127.027621,
+                y = 37.497942,
+                addressDetail = "스타벅스 앞",
+                isDefault = true,
+            ),
+            onDismiss = {},
+            onSave = { _, _ -> },
         )
     }
 }

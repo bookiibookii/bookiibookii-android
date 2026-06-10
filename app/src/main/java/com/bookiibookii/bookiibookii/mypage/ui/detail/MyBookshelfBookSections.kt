@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -43,6 +44,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.FavoriteBook
 import com.bookiibookii.bookiibookii.data.model.mypage.RepresentativeBook
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.component.LifeBookSearchDialog
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -211,6 +213,40 @@ internal fun LifeBookSection(
                 onClearSearch()
             },
             onDismiss = { showSearchDialog = false; editingBook = null; onClearSearch() },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun RepresentativeBookSectionPreview() {
+    BookiiPreview {
+        RepresentativeBookSection(
+            books = listOf(
+                RepresentativeBook(userBookId = 1L, title = "데미안", displayOrder = 0, isFavorite = true),
+                RepresentativeBook(userBookId = 2L, title = "1984", displayOrder = 1, isFavorite = false),
+                RepresentativeBook(userBookId = 3L, title = "사피엔스", displayOrder = 2, isFavorite = false),
+            ),
+            onEditClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun LifeBookSectionPreview() {
+    BookiiPreview {
+        LifeBookSection(
+            lifeBooks = listOf(
+                FavoriteBook(userBookId = 10L, title = "데미안", author = "헤르만 헤세", category = "(소설)", image = null),
+                FavoriteBook(userBookId = 11L, title = "1984", author = "조지 오웰", category = "(소설)", image = null),
+            ),
+            bookSearchState = null,
+            onSearchBooks = {},
+            onClearSearch = {},
+            onAddFavoriteBook = {},
+            onDeleteFavoriteBook = {},
+            onReplaceFavoriteBook = { _, _ -> },
         )
     }
 }

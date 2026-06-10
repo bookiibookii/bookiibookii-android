@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.bookiibookii.bookiibookii.R
@@ -144,26 +145,30 @@ fun BookiiDialog(
 @Preview(showBackground = true)
 @Composable
 private fun BookiiDialogTwoButtonPreview() {
-    BookiiDialog(
-        title = "로그아웃",
-        body = "로그아웃 하시겠어요?",
-        confirmText = "로그아웃",
-        confirmColor = BookiiBookiiTheme.colors.uiPointRed,
-        onConfirm = {},
-        cancelText = "취소",
-        onDismiss = {},
-    )
+    BookiiPreview {
+        BookiiDialog(
+            title = "로그아웃",
+            body = "로그아웃 하시겠어요?",
+            confirmText = "로그아웃",
+            confirmColor = BookiiBookiiTheme.colors.uiPointRed,
+            onConfirm = {},
+            cancelText = "취소",
+            onDismiss = {},
+        )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun BookiiDialogOneButtonPreview() {
-    BookiiDialog(
-        title = "탈퇴 불가",
-        body = "진행 중인 그룹이 모두 종료되어야\n탈퇴 가능합니다.",
-        confirmText = "닫기",
-        confirmColor = BookiiBookiiTheme.colors.grey900,
-        onConfirm = {},
-        onDismiss = {},
-    )
+    BookiiPreview {
+        BookiiDialog(
+            title = "탈퇴 불가",
+            body = "진행 중인 그룹이 모두 종료되어야\n탈퇴 가능합니다.",
+            confirmText = "닫기",
+            confirmColor = BookiiBookiiTheme.colors.grey900,
+            onConfirm = {},
+            onDismiss = {},
+        )
+    }
 }

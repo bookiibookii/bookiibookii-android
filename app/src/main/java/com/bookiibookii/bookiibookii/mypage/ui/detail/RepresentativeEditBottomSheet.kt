@@ -42,10 +42,12 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.RepresentativeBook
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +59,29 @@ fun RepresentativeEditBottomSheet(
     onReorder: (userBookId: Long, newOrder: Int) -> Unit = { _, _ -> },
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = BookiiBookiiTheme.colors.white,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+    ) {
+        RepresentativeEditContent(
+            bookList = bookList,
+            onRemove = onRemove,
+            onMove = onMove,
+            onReorder = onReorder,
+        )
+    }
+}
+
+@Composable
+private fun RepresentativeEditContent(
+    bookList: List<RepresentativeBook>,
+    onRemove: (RepresentativeBook) -> Unit,
+    onMove: (Int, Int) -> Unit,
+    onReorder: (userBookId: Long, newOrder: Int) -> Unit,
+) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
     var dragStartIndex by remember { mutableStateOf<Int?>(null) }
@@ -65,81 +90,82 @@ fun RepresentativeEditBottomSheet(
 
     val itemHeightPx = with(LocalDensity.current) { 80.dp.toPx() }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = BookiiBookiiTheme.colors.white,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = screenHeight * 0.7f)
+            .padding(horizontal = 20.dp),
     ) {
-        Column(
+        Text(
+            text = "나를 대표하는 책",
+            style = BookiiBookiiTheme.typography.semibold20,
+            color = BookiiBookiiTheme.colors.grey900,
+            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
+        )
+
+        LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = screenHeight * 0.7f)
-                .padding(horizontal = 20.dp),
+                .weight(1f, fill = false),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(bottom = 32.dp),
         ) {
-            Text(
-                text = "나를 대표하는 책",
-                style = BookiiBookiiTheme.typography.semibold20,
-                color = BookiiBookiiTheme.colors.grey900,
-                modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
-            )
+            itemsIndexed(bookList) { index, book ->
+                val isDragged = draggedIndex == index
+                val translationY = if (isDragged) draggingItemOffset else 0f
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f, fill = false),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 32.dp),
-            ) {
-                itemsIndexed(bookList) { index, book ->
-                    val isDragged = draggedIndex == index
-                    val translationY = if (isDragged) draggingItemOffset else 0f
-
-                    RepresentativeEditListItem(
-                        book = book,
-                        modifier = Modifier
-                            .zIndex(if (isDragged) 1f else 0f)
-                            .graphicsLayer {
-                                this.translationY = translationY
-                                scaleX = if (isDragged) 1.02f else 1f
-                                scaleY = if (isDragged) 1.02f else 1f
-                                shadowElevation = if (isDragged) 8f else 0f
-                            },
-                        onRemoveClick = { onRemove(book) },
-                        onDragStart = {
-                            dragStartIndex = index
-                            draggedIndex = index
-                            draggingItemOffset = 0f
+                RepresentativeEditListItem(
+                    book = book,
+                    modifier = Modifier
+                        .zIndex(if (isDragged) 1f else 0f)
+                        .graphicsLayer {
+                            this.translationY = translationY
+                            scaleX = if (isDragged) 1.02f else 1f
+                            scaleY = if (isDragged) 1.02f else 1f
+                            shadowElevation = if (isDragged) 8f else 0f
+                            // 그림자가 카드의 둥근 모서리(20dp)를 따르도록 shape 지정 (미지정 시 사각 그림자)
+                            shape = RoundedCornerShape(20.dp)
+                            clip = false
                         },
-                        onDragEnd = {
-                            // 드래그 종료 시점의 최종 위치로 즉시 API 호출
-                            val finalIdx = draggedIndex
-                            val startIdx = dragStartIndex
-                            if (finalIdx != null && startIdx != null && startIdx != finalIdx) {
-                                val movedBook = bookList.getOrNull(finalIdx)
-                                if (movedBook != null) {
-                                    onReorder(movedBook.userBookId, finalIdx + 1)
-                                }
+                    onRemoveClick = { onRemove(book) },
+                    onDragStart = {
+                        dragStartIndex = index
+                        draggedIndex = index
+                        draggingItemOffset = 0f
+                    },
+                    onDragEnd = {
+                        // 드래그 종료 시점의 최종 위치로 즉시 API 호출
+                        val finalIdx = draggedIndex
+                        val startIdx = dragStartIndex
+                        if (finalIdx != null && startIdx != null && startIdx != finalIdx) {
+                            val movedBook = bookList.getOrNull(finalIdx)
+                            if (movedBook != null) {
+                                onReorder(movedBook.userBookId, finalIdx + 1)
                             }
-                            dragStartIndex = null
-                            draggedIndex = null
-                            draggingItemOffset = 0f
-                        },
-                        onDrag = { dragAmount ->
+                        }
+                        dragStartIndex = null
+                        draggedIndex = null
+                        draggingItemOffset = 0f
+                    },
+                    onDrag = { dragAmount ->
+                        // 캡처된 index는 드래그 시작 위치로 고정돼 있어, 옮겨진 뒤의 실제 위치인
+                        // draggedIndex를 기준으로 계산해야 여러 칸 연속 이동이 된다
+                        val current = draggedIndex
+                        if (current != null) {
                             draggingItemOffset += dragAmount
 
-                            if (draggingItemOffset > itemHeightPx / 2 && index < bookList.lastIndex) {
-                                onMove(index, index + 1)
-                                draggedIndex = index + 1
+                            if (draggingItemOffset > itemHeightPx / 2 && current < bookList.lastIndex) {
+                                onMove(current, current + 1)
+                                draggedIndex = current + 1
                                 draggingItemOffset -= itemHeightPx
-                            } else if (draggingItemOffset < -itemHeightPx / 2 && index > 0) {
-                                onMove(index, index - 1)
-                                draggedIndex = index - 1
+                            } else if (draggingItemOffset < -itemHeightPx / 2 && current > 0) {
+                                onMove(current, current - 1)
+                                draggedIndex = current - 1
                                 draggingItemOffset += itemHeightPx
                             }
-                        },
-                    )
-                }
+                        }
+                    },
+                )
             }
         }
     }
@@ -227,5 +253,22 @@ private fun RepresentativeEditListItem(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun RepresentativeEditContentPreview() {
+    BookiiPreview {
+        RepresentativeEditContent(
+            bookList = listOf(
+                RepresentativeBook(userBookId = 1L, title = "데미안", displayOrder = 0, isFavorite = true),
+                RepresentativeBook(userBookId = 2L, title = "1984", displayOrder = 1, isFavorite = false),
+                RepresentativeBook(userBookId = 3L, title = "사피엔스", displayOrder = 2, isFavorite = false),
+            ),
+            onRemove = {},
+            onMove = { _, _ -> },
+            onReorder = { _, _ -> },
+        )
     }
 }

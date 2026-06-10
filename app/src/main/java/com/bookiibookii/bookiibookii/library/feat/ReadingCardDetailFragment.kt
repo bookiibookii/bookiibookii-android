@@ -185,7 +185,15 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
                 context.showCustomToast("공유에 실패했어요", false)
                 return@fetchShareUrl
             }
-            val link = Link(webUrl = shareUrl, mobileWebUrl = shareUrl)
+            // 공유 URL의 마지막 경로 세그먼트가 shareToken. 앱 설치 시 카카오가 웹 대신 앱을 직접 실행하도록
+            // executionParams로 전달 (미설치 시 mobileWebUrl로 폴백). PublicCardViewerActivity가 kakaolink 스킴으로 수신.
+            val shareToken = Uri.parse(shareUrl).lastPathSegment.orEmpty()
+            val link = Link(
+                webUrl = shareUrl,
+                mobileWebUrl = shareUrl,
+                androidExecutionParams = mapOf("shareToken" to shareToken),
+                iosExecutionParams = mapOf("shareToken" to shareToken),
+            )
             val feed = FeedTemplate(
                 content = Content(
                     title = card.bookTitle.ifBlank { "독서카드" },

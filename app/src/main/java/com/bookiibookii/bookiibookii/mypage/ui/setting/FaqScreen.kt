@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import kotlinx.coroutines.launch
 
 private data class FaqItem(val question: String, val answer: String)
@@ -336,5 +337,7 @@ private fun FaqItemCard(item: FaqItem, isExpanded: Boolean, onToggle: () -> Unit
 @Preview(showBackground = true, widthDp = 412)
 @Composable
 private fun FaqScreenPreview() {
-    FaqScreen()
+    BookiiPreview {
+        FaqScreen()
+    }
 }

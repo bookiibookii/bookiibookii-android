@@ -12,6 +12,5 @@ data class NotificationItem(
     val message: String,
     val isRead: Boolean,
     val createdAt: String,
-    val readAt: String?,
     val payload: Map<String, Any?>?
 )

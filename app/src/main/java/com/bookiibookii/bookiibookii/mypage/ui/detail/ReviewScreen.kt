@@ -43,6 +43,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.BookReviewSummaryDto
 import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedMemberReviewDto
 import com.bookiibookii.bookiibookii.ui.component.ExchangeTypeChip
 import com.bookiibookii.bookiibookii.ui.component.ReviewTypeChip
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.DateUtils
 
 enum class ReviewTab { WRITTEN, RECEIVED }
@@ -270,14 +271,33 @@ private fun ReviewStarRating(rating: Double) {
     }
 }
 
-@Preview(showBackground = true, widthDp = 412)
+@Preview(showBackground = true, widthDp = 412, heightDp = 800)
 @Composable
 private fun ReviewScreenWrittenPreview() {
-    ReviewScreen(initialTab = ReviewTab.WRITTEN)
+    BookiiPreview {
+        ReviewScreen(
+            initialTab = ReviewTab.WRITTEN,
+            bookReviewCount = 2,
+            writtenReviews = listOf(
+                BookReviewSummaryDto(bookTitle = "데미안", bookAuthor = "헤르만 헤세", tradeType = "DELIVERY", rating = 4.5, comment = "인생 책이에요.", reviewDate = "2026-05-01"),
+                BookReviewSummaryDto(bookTitle = "1984", bookAuthor = "조지 오웰", tradeType = "DIRECT", rating = 5.0, comment = "강렬했습니다.", reviewDate = "2026-04-20"),
+            ),
+        )
+    }
 }
 
-@Preview(showBackground = true, widthDp = 412)
+@Preview(showBackground = true, widthDp = 412, heightDp = 800)
 @Composable
 private fun ReviewScreenReceivedPreview() {
-    ReviewScreen(initialTab = ReviewTab.RECEIVED)
+    BookiiPreview {
+        ReviewScreen(
+            initialTab = ReviewTab.RECEIVED,
+            boomUpCount = 1,
+            nickname = "부키",
+            receivedReviews = listOf(
+                ReceivedMemberReviewDto(reviewerNickname = "책벌레", reviewerProfileUrl = null, reaction = "BOOM_UP", comment = "친절한 교환 감사했어요!", createdAt = "2026-05-02"),
+                ReceivedMemberReviewDto(reviewerNickname = "독서왕", reviewerProfileUrl = null, reaction = "GOOD", comment = "좋았습니다.", createdAt = "2026-04-21"),
+            ),
+        )
+    }
 }
