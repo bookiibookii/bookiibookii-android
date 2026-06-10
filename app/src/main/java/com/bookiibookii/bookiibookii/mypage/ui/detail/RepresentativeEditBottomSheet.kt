@@ -123,6 +123,9 @@ private fun RepresentativeEditContent(
                             scaleX = if (isDragged) 1.02f else 1f
                             scaleY = if (isDragged) 1.02f else 1f
                             shadowElevation = if (isDragged) 8f else 0f
+                            // 그림자가 카드의 둥근 모서리(20dp)를 따르도록 shape 지정 (미지정 시 사각 그림자)
+                            shape = RoundedCornerShape(20.dp)
+                            clip = false
                         },
                     onRemoveClick = { onRemove(book) },
                     onDragStart = {
@@ -145,16 +148,21 @@ private fun RepresentativeEditContent(
                         draggingItemOffset = 0f
                     },
                     onDrag = { dragAmount ->
-                        draggingItemOffset += dragAmount
+                        // 캡처된 index는 드래그 시작 위치로 고정돼 있어, 옮겨진 뒤의 실제 위치인
+                        // draggedIndex를 기준으로 계산해야 여러 칸 연속 이동이 된다
+                        val current = draggedIndex
+                        if (current != null) {
+                            draggingItemOffset += dragAmount
 
-                        if (draggingItemOffset > itemHeightPx / 2 && index < bookList.lastIndex) {
-                            onMove(index, index + 1)
-                            draggedIndex = index + 1
-                            draggingItemOffset -= itemHeightPx
-                        } else if (draggingItemOffset < -itemHeightPx / 2 && index > 0) {
-                            onMove(index, index - 1)
-                            draggedIndex = index - 1
-                            draggingItemOffset += itemHeightPx
+                            if (draggingItemOffset > itemHeightPx / 2 && current < bookList.lastIndex) {
+                                onMove(current, current + 1)
+                                draggedIndex = current + 1
+                                draggingItemOffset -= itemHeightPx
+                            } else if (draggingItemOffset < -itemHeightPx / 2 && current > 0) {
+                                onMove(current, current - 1)
+                                draggedIndex = current - 1
+                                draggingItemOffset += itemHeightPx
+                            }
                         }
                     },
                 )

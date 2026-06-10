@@ -196,9 +196,7 @@ private fun BookshelfTopBar(onBack: () -> Unit) {
                 Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
             Text(text = "나의 책장", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900, textAlign = TextAlign.Center)
-            IconButton(onClick = { }, modifier = Modifier.size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_search), contentDescription = "검색 하기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
-            }
+            Spacer(modifier = Modifier.size(40.dp))
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
     }
