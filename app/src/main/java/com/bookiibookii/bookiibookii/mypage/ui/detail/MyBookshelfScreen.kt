@@ -41,6 +41,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.FavoriteBook
 import com.bookiibookii.bookiibookii.data.model.mypage.RepresentativeBook
 import com.bookiibookii.bookiibookii.mypage.vm.SortOrder
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 enum class BookViewMode { GRID, LIST }
@@ -244,7 +245,7 @@ private fun FilterBar(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 412, heightDp = 900)
 @Composable
 private fun MyBookshelfScreenPreview() {
     val completedBooks = listOf(
@@ -261,7 +262,7 @@ private fun MyBookshelfScreenPreview() {
         RepresentativeBook(userBookId = 10, title = "데미안", displayOrder = 0, isFavorite = true),
         RepresentativeBook(userBookId = 11, title = "1984", displayOrder = 1, isFavorite = false),
     )
-    BookiiBookiiTheme {
+    BookiiPreview {
         MyBookshelfScreen(
             sortedCompletedBooks = completedBooks,
             favoriteBooks = favoriteBooks,

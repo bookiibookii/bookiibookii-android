@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 private data class MockSearchBook(val title: String, val authorAndGenre: String)
 
@@ -54,100 +55,107 @@ private val mockSearchResults = listOf(
 fun BookSearchBottomSheet(
     onDismiss: () -> Unit = {},
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = BookiiBookiiTheme.colors.white,
         dragHandle = null,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(20.dp),
+        BookSearchSheetContent(onDismiss = onDismiss)
+    }
+}
+
+@Composable
+private fun BookSearchSheetContent(
+    onDismiss: () -> Unit = {},
+) {
+    var searchQuery by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(20.dp),
+    ) {
+        // Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "나의 인생 책",
-                    style = BookiiBookiiTheme.typography.semibold20,
-                    color = BookiiBookiiTheme.colors.grey900,
-                )
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(BookiiBookiiTheme.colors.grey100)
-                        .clickable { onDismiss() },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_x),
-                        contentDescription = "닫기",
-                        tint = BookiiBookiiTheme.colors.grey900,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Search input
-            Row(
+            Text(
+                text = "나의 인생 책",
+                style = BookiiBookiiTheme.typography.semibold20,
+                color = BookiiBookiiTheme.colors.grey900,
+            )
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(BookiiBookiiTheme.colors.white)
-                    .border(1.dp, BookiiBookiiTheme.colors.grey300, RoundedCornerShape(16.dp))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(BookiiBookiiTheme.colors.grey100)
+                    .clickable { onDismiss() },
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_search),
-                    contentDescription = "검색",
-                    tint = BookiiBookiiTheme.colors.grey700,
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = "닫기",
+                    tint = BookiiBookiiTheme.colors.grey900,
                     modifier = Modifier.size(24.dp),
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                BasicTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier = Modifier.weight(1f),
-                    textStyle = BookiiBookiiTheme.typography.medium15.copy(color = BookiiBookiiTheme.colors.grey800),
-                    singleLine = true,
-                    decorationBox = { innerTextField ->
-                        if (searchQuery.isEmpty()) {
-                            Text(
-                                text = "책 제목을 검색하세요",
-                                style = BookiiBookiiTheme.typography.medium15,
-                                color = BookiiBookiiTheme.colors.grey400,
-                            )
-                        }
-                        innerTextField()
-                    },
-                )
             }
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Results list
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                itemsIndexed(mockSearchResults) { index, book ->
-                    if (index > 0) {
-                        HorizontalDivider(color = BookiiBookiiTheme.colors.grey100, thickness = 1.dp)
-                        Spacer(modifier = Modifier.height(12.dp))
+        // Search input
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(BookiiBookiiTheme.colors.white)
+                .border(1.dp, BookiiBookiiTheme.colors.grey300, RoundedCornerShape(16.dp))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_search),
+                contentDescription = "검색",
+                tint = BookiiBookiiTheme.colors.grey700,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            BasicTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.weight(1f),
+                textStyle = BookiiBookiiTheme.typography.medium15.copy(color = BookiiBookiiTheme.colors.grey800),
+                singleLine = true,
+                decorationBox = { innerTextField ->
+                    if (searchQuery.isEmpty()) {
+                        Text(
+                            text = "책 제목을 검색하세요",
+                            style = BookiiBookiiTheme.typography.medium15,
+                            color = BookiiBookiiTheme.colors.grey400,
+                        )
                     }
-                    SearchResultItem(book = book)
+                    innerTextField()
+                },
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Results list
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            itemsIndexed(mockSearchResults) { index, book ->
+                if (index > 0) {
+                    HorizontalDivider(color = BookiiBookiiTheme.colors.grey100, thickness = 1.dp)
                     Spacer(modifier = Modifier.height(12.dp))
                 }
+                SearchResultItem(book = book)
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
@@ -185,8 +193,10 @@ private fun SearchResultItem(book: MockSearchBook) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 412)
 @Composable
-private fun BookSearchBottomSheetPreview() {
-    BookSearchBottomSheet()
+private fun BookSearchSheetContentPreview() {
+    BookiiPreview {
+        BookSearchSheetContent()
+    }
 }

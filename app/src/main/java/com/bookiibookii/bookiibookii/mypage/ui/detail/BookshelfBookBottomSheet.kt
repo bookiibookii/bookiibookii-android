@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 @Composable
 fun BookshelfBookBottomSheet(
@@ -142,14 +143,18 @@ private fun BottomSheetMenuItem(
     )
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 412, heightDp = 500)
 @Composable
 private fun BookshelfBookBottomSheetNotRepresentativePreview() {
-    BookshelfBookBottomSheet(representativeUserBookId = null)
+    BookiiPreview {
+        BookshelfBookBottomSheet(representativeUserBookId = null)
+    }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 412, heightDp = 500)
 @Composable
 private fun BookshelfBookBottomSheetRepresentativePreview() {
-    BookshelfBookBottomSheet(representativeUserBookId = 1L)
+    BookiiPreview {
+        BookshelfBookBottomSheet(representativeUserBookId = 1L)
+    }
 }

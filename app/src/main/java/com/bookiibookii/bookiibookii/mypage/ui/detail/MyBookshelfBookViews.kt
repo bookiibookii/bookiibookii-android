@@ -25,10 +25,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.CompletedBook
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -164,5 +166,27 @@ private fun BookshelfStarIcon(starValue: Double) {
             Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = colors.uiMainSub, modifier = Modifier.size(16.dp))
         }
         else -> Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = colors.grey200, modifier = Modifier.size(16.dp))
+    }
+}
+
+private val previewBooks = listOf(
+    CompletedBook(memberBookId = 1, title = "데미안", author = "헤르만 헤세", image = null, category = "(소설)", rating = 4.5, completedAt = "2026-05-01"),
+    CompletedBook(memberBookId = 2, title = "1984", author = "조지 오웰", image = null, category = "(소설)", rating = 5.0, completedAt = "2026-04-20"),
+    CompletedBook(memberBookId = 3, title = "사피엔스", author = "유발 하라리", image = null, category = "(인문)", rating = 4.0, completedAt = "2026-04-10"),
+)
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun BookGridViewPreview() {
+    BookiiPreview {
+        BookGridView(books = previewBooks, representativeTitles = setOf("데미안"))
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412)
+@Composable
+private fun BookListViewPreview() {
+    BookiiPreview {
+        BookListView(books = previewBooks, representativeTitles = setOf("데미안"))
     }
 }
