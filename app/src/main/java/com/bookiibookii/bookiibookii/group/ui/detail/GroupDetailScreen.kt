@@ -369,11 +369,10 @@ private fun GroupDetailContent(
             GroupDetailDescriptionCard(
                 title = "그룹 소개",
                 body = detail.groupComment.orEmpty(),
-                // 임시: 장소명 자리에 address 값을 넣고 주소는 null (추후 수정 예정)
-                exchangePlaceName = detail.address,
+                // 택배 교환은 주소 정보를 노출하지 않음. 직접 교환만 희망 장소 표시
+                exchangePlaceName = if (detail.tradeType == "DELIVERY") null else detail.address,
                 exchangePlaceAddress = null,
-                // 택배 교환 그룹이면 "배송지", 직접 교환이면 "교환 희망 장소"
-                exchangePlaceLabel = if (detail.tradeType == "DELIVERY") "배송지" else "교환 희망 장소",
+                exchangePlaceLabel = "교환 희망 장소",
             )
             GroupDetailDescriptionCard(
                 title = "그룹 규칙",

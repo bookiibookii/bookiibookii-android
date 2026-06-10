@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -154,24 +155,27 @@ private fun TrackerDetailHeader(
             .fillMaxWidth()
             .background(BookiiBookiiTheme.colors.white),
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(68.dp)
                 .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            contentAlignment = Alignment.Center,
         ) {
-            IconCircleButton(
-                iconRes = R.drawable.ic_back,
-                onClick = onBackClick,
-            )
+            // 제목은 화면 정중앙 고정, 버튼들은 양 끝에 오버레이
             Text(
                 text = "교환 현황",
                 style = BookiiBookiiTheme.typography.medium20,
                 color = BookiiBookiiTheme.colors.grey900,
+                textAlign = TextAlign.Center,
+            )
+            IconCircleButton(
+                iconRes = R.drawable.ic_back,
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart),
             )
             Row(
+                modifier = Modifier.align(Alignment.CenterEnd),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

@@ -24,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bookiibookii.bookiibookii.R
 
@@ -85,11 +86,15 @@ private fun WebViewTopBar(title: String, onBackClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 private fun TermsScreenPreview() {
-    WebViewScreen(title = "서비스 이용 약관", assetFileName = "service_terms.html")
+    BookiiPreview {
+        WebViewScreen(title = "서비스 이용 약관", assetFileName = "service_terms.html")
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PrivacyScreenPreview() {
-    WebViewScreen(title = "개인정보 처리 방침", assetFileName = "privacy_policy.html")
+    BookiiPreview {
+        WebViewScreen(title = "개인정보 처리 방침", assetFileName = "privacy_policy.html")
+    }
 }

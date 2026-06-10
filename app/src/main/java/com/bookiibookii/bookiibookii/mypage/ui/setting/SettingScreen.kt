@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 @Composable
 fun SettingScreen(
@@ -288,5 +289,7 @@ private fun TextSettingCard(
 @Preview(showBackground = true)
 @Composable
 private fun SettingScreenPreview() {
-    SettingScreen()
+    BookiiPreview {
+        SettingScreen()
+    }
 }

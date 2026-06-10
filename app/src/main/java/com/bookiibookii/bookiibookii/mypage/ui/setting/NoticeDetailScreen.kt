@@ -26,8 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 @Composable
 fun NoticeDetailScreen(
@@ -92,5 +94,17 @@ fun NoticeDetailScreen(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoticeDetailScreenPreview() {
+    BookiiPreview {
+        NoticeDetailScreen(
+            title = "공지사항",
+            content = "부키부키를 이용해 주셔서 감사합니다.\n더 나은 서비스를 위해 일부 기능이 업데이트되었습니다.",
+            createdAt = "2026. 06. 10.",
+        )
     }
 }

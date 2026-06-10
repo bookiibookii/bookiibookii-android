@@ -87,7 +87,7 @@ class NotificationCenterViewModel : ViewModel() {
         }
     }
 
-    // 알림 읽음 처리 — 읽음 응답엔 isRead/readAt만 의미 있으므로 해당 아이템 상태만 갱신
+    // 알림 읽음 처리 — 읽음 응답의 isRead로 해당 아이템 상태만 갱신
     fun markAsRead(notificationId: Long) {
         viewModelScope.launch {
             runCatching {
@@ -97,7 +97,7 @@ class NotificationCenterViewModel : ViewModel() {
                 _state.update { cur ->
                     cur.copy(
                         items = cur.items.map { item ->
-                            if (item.id == notificationId) item.copy(isRead = result.isRead, readAt = result.readAt)
+                            if (item.id == notificationId) item.copy(isRead = result.isRead)
                             else item
                         },
                     )

@@ -93,7 +93,7 @@ private fun TrackerNoticeBanner(
     ) {
         Text(
             text = noticeText,
-            style = BookiiBookiiTheme.typography.regular28,
+            style = BookiiBookiiTheme.typography.regular24,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),

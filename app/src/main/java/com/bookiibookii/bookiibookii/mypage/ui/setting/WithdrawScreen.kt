@@ -45,6 +45,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 private val withdrawOptions = listOf(
     "원하는 파트너를 찾기 어려워요",
@@ -53,6 +54,16 @@ private val withdrawOptions = listOf(
     "교환독서를 자주 하지 않아요",
     "개인정보가 걱정돼요",
     "직접 입력",
+)
+
+// API에 전송할 reason enum 값 (withdrawOptions와 동일 순서)
+private val withdrawReasonCodes = listOf(
+    "HARD_TO_FIND_PARTNER",
+    "INCONVENIENT_EXCHANGE",
+    "DIFFICULT_APP_USAGE",
+    "INFREQUENT_EXCHANGE",
+    "PRIVACY_CONCERN",
+    "CUSTOM_INPUT",
 )
 
 @Composable
@@ -136,7 +147,7 @@ fun WithdrawScreen(
 
     if (showConfirmDialog) {
         val isCustom = selectedIndex == withdrawOptions.lastIndex
-        val reason = selectedIndex?.let { withdrawOptions[it] } ?: ""
+        val reason = selectedIndex?.let { withdrawReasonCodes[it] } ?: ""
         val customReason = if (isCustom) customInput.trim() else null
 
         BookiiDialog(
@@ -274,5 +285,7 @@ private fun WithdrawCustomInput(value: String, onValueChange: (String) -> Unit) 
 @Preview(showBackground = true)
 @Composable
 private fun WithdrawScreenPreview() {
-    WithdrawScreen()
+    BookiiPreview {
+        WithdrawScreen()
+    }
 }
