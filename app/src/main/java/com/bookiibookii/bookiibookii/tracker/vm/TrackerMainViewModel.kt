@@ -339,13 +339,14 @@ class TrackerMainViewModel(
                             exchangingCount = summary?.exchangingCount ?: 0,
                             reviewCount = summary?.reviewCount ?: 0,
                             loading = false,
+                            hasLoadedOnce = true,
                         )
                     }
                 } else {
-                    _state.update { it.copy(error = "트래커를 불러오지 못했어요", loading = false) }
+                    _state.update { it.copy(error = "트래커를 불러오지 못했어요", loading = false, hasLoadedOnce = true) }
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message, loading = false) }
+                _state.update { it.copy(error = e.message, loading = false, hasLoadedOnce = true) }
             }
         }
     }

@@ -808,9 +808,9 @@ fun TrackerMainScreen(
                 exchanging = uiState.exchangingCount,
                 review = uiState.reviewCount,
             )
-            if (uiState.cards.isEmpty()) {
+            if (uiState.hasLoadedOnce && uiState.cards.isEmpty()) {
                 TrackerEmptyCard(onCreateGroupClick = onCreateGroupClick)
-            } else {
+            } else if (uiState.cards.isNotEmpty()) {
                 uiState.cards.forEach { card ->
                     TrackerMainCard(
                         card = card,

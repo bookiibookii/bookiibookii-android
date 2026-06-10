@@ -8,5 +8,7 @@ data class TrackerMainUiState(
     val reviewCount: Int = 0,
     val hasNewNotification: Boolean = false,
     val loading: Boolean = false,
+    // 첫 조회(load)가 한 번이라도 끝났는지. EmptyCard는 이게 true일 때만 노출
+    val hasLoadedOnce: Boolean = false,
     val error: String? = null,
 )
