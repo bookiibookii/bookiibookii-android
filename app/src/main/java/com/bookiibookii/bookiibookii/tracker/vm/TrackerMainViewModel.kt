@@ -16,6 +16,7 @@ import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.model.toReadingCardTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
 import com.bookiibookii.bookiibookii.tracker.model.toCardModel
+import com.bookiibookii.bookiibookii.tracker.model.toNotificationItem
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -334,18 +335,21 @@ class TrackerMainViewModel(
                     _state.update {
                         it.copy(
                             cards = items.map { dto -> dto.toCardModel() },
+                            nickname = result?.nickname.orEmpty(),
+                            notifications = result?.topBanners.orEmpty().map { b -> b.toNotificationItem() },
                             totalCount = summary?.totalCount ?: 0,
                             readingCount = summary?.readingCount ?: 0,
                             exchangingCount = summary?.exchangingCount ?: 0,
                             reviewCount = summary?.reviewCount ?: 0,
                             loading = false,
+                            hasLoadedOnce = true,
                         )
                     }
                 } else {
-                    _state.update { it.copy(error = "트래커를 불러오지 못했어요", loading = false) }
+                    _state.update { it.copy(error = "트래커를 불러오지 못했어요", loading = false, hasLoadedOnce = true) }
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message, loading = false) }
+                _state.update { it.copy(error = e.message, loading = false, hasLoadedOnce = true) }
             }
         }
     }
