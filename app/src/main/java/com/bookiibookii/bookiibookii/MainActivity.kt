@@ -1,11 +1,15 @@
 package com.bookiibookii.bookiibookii
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -18,6 +22,7 @@ import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
+import com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.tracker.TrackerFragment
@@ -26,6 +31,12 @@ private enum class NavTab { HOME, TRACKER, LIBRARY }
 
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
+
+    // 안드13+ 알림 권한 요청 런처. 거부해도 앱 동작엔 지장 없음(푸시 알림만 안 옴).
+    private val requestNotificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            Log.d("FCM", "POST_NOTIFICATIONS granted=$granted")
+        }
 
     override fun getViewBinding(): ActivityMainBinding {
         return ActivityMainBinding.inflate(layoutInflater)
@@ -61,6 +72,21 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         initBottomNav()
         observeFragmentChanges()
         handleNavigationIntent(intent)
+        requestNotificationPermissionIfNeeded()
+
+        // FCM 토큰 서버 등록
+        FcmTokenRegistrar.registerCurrentToken(this)
+    }
+
+    // 안드13(TIRAMISU)+ 에서만 런타임 요청 필요
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        ) return
+        requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
     // 탑레벨 Fragment(홈·트래커·서재 메인)일 때만 BottomNav 표시
