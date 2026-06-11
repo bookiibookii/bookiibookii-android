@@ -8,18 +8,46 @@ import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.api.S3Uploader
 import com.bookiibookii.bookiibookii.data.model.mypage.MypageReqDTO
+import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedReviewItem
 import com.bookiibookii.bookiibookii.data.model.mypage.UpdateIntroductionReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
+import com.bookiibookii.bookiibookii.data.model.mypage.WrittenReviewItem
 import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.io.File
 
+private const val PAGE_SIZE = 10
+
+// 작성한 후기 페이징 상태
+data class WrittenReviewUiState(
+    val items: List<WrittenReviewItem> = emptyList(),
+    val totalCount: Long = 0,
+    val page: Int = 0,
+    val hasNext: Boolean = false,
+    val isLoading: Boolean = false,
+)
+
+// 받은 후기 페이징 상태
+data class ReceivedReviewUiState(
+    val items: List<ReceivedReviewItem> = emptyList(),
+    val positiveCount: Long = 0,
+    val page: Int = 0,
+    val hasNext: Boolean = false,
+    val isLoading: Boolean = false,
+)
+
 class MypageViewModel : ViewModel() {
 
     private val _profileData = MutableLiveData<UserProfileResDTO>()
     val profileData: LiveData<UserProfileResDTO> get() = _profileData
+
+    private val _writtenReviews = MutableLiveData(WrittenReviewUiState())
+    val writtenReviews: LiveData<WrittenReviewUiState> get() = _writtenReviews
+
+    private val _receivedReviews = MutableLiveData(ReceivedReviewUiState())
+    val receivedReviews: LiveData<ReceivedReviewUiState> get() = _receivedReviews
 
     private val _isNicknameChecked = MutableLiveData<Boolean>(true)
     val isNicknameChecked: LiveData<Boolean> get() = _isNicknameChecked
@@ -67,6 +95,66 @@ class MypageViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("MypageViewModel", "fetch error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다.", false))
+            }
+        }
+    }
+
+    // 작성한 후기 조회. reset=true면 첫 페이지부터 새로, false면 다음 페이지 추가(무한 스크롤)
+    fun fetchWrittenReviews(reset: Boolean) {
+        val state = _writtenReviews.value ?: WrittenReviewUiState()
+        if (state.isLoading) return
+        if (!reset && !state.hasNext) return
+        val nextPage = if (reset) 0 else state.page + 1
+        _writtenReviews.value = state.copy(isLoading = true)
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.mypApi().getWrittenReviews(page = nextPage, size = PAGE_SIZE)
+                val result = response.body()?.result
+                if (response.isSuccessful && response.body()?.isSuccess == true && result != null) {
+                    val base = if (reset) emptyList() else (_writtenReviews.value?.items ?: emptyList())
+                    _writtenReviews.value = WrittenReviewUiState(
+                        items = base + result.content,
+                        totalCount = result.totalCount,
+                        page = result.pageInfo.page,
+                        hasNext = result.pageInfo.hasNext,
+                        isLoading = false,
+                    )
+                } else {
+                    _writtenReviews.value = _writtenReviews.value?.copy(isLoading = false)
+                }
+            } catch (e: Exception) {
+                Log.e("MypageViewModel", "fetchWrittenReviews error", e)
+                _writtenReviews.value = _writtenReviews.value?.copy(isLoading = false)
+            }
+        }
+    }
+
+    // 받은 후기 조회. reset=true면 첫 페이지부터 새로, false면 다음 페이지 추가(무한 스크롤)
+    fun fetchReceivedReviews(reset: Boolean) {
+        val state = _receivedReviews.value ?: ReceivedReviewUiState()
+        if (state.isLoading) return
+        if (!reset && !state.hasNext) return
+        val nextPage = if (reset) 0 else state.page + 1
+        _receivedReviews.value = state.copy(isLoading = true)
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.mypApi().getReceivedReviews(page = nextPage, size = PAGE_SIZE)
+                val result = response.body()?.result
+                if (response.isSuccessful && response.body()?.isSuccess == true && result != null) {
+                    val base = if (reset) emptyList() else (_receivedReviews.value?.items ?: emptyList())
+                    _receivedReviews.value = ReceivedReviewUiState(
+                        items = base + result.content,
+                        positiveCount = result.positiveCount,
+                        page = result.pageInfo.page,
+                        hasNext = result.pageInfo.hasNext,
+                        isLoading = false,
+                    )
+                } else {
+                    _receivedReviews.value = _receivedReviews.value?.copy(isLoading = false)
+                }
+            } catch (e: Exception) {
+                Log.e("MypageViewModel", "fetchReceivedReviews error", e)
+                _receivedReviews.value = _receivedReviews.value?.copy(isLoading = false)
             }
         }
     }
