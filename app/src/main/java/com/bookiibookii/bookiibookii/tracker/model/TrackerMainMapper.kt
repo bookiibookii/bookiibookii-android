@@ -1,6 +1,5 @@
 package com.bookiibookii.bookiibookii.tracker.model
 
-import androidx.compose.ui.text.AnnotatedString
 import com.bookiibookii.bookiibookii.data.model.tracker.BookInfo
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListItemResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerTopBannerResDTO
@@ -13,7 +12,10 @@ internal fun ellipsizeTitle(title: String, maxChars: Int): String =
 fun TrackerTopBannerResDTO.toNotificationItem(): TrackerNotificationItem = TrackerNotificationItem(
     groupId = groupId ?: 0L,
     dDay = dDayLabel.orEmpty(),
-    body = AnnotatedString(title.orEmpty()),
+    template = titleTemplate ?: title.orEmpty(),
+    nickname = partnerNickname.orEmpty(),
+    bookTitle = bookTitle.orEmpty(),
+    remainingSeconds = remainingSeconds ?: 0L,
     subText = subtitle.orEmpty(),
 )
 
