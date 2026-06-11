@@ -23,10 +23,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -72,6 +74,7 @@ import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import kotlinx.coroutines.delay
 
 @Composable
 private fun TrackerNoticeBanner(
@@ -144,9 +147,8 @@ private fun TrackerNotificationCard(
                     color = BookiiBookiiTheme.colors.uiMainSub,
                 )
                 Text(
-                    text = item.body,
+                    text = rememberBannerBody(item),
                     style = BookiiBookiiTheme.typography.regular18,
-                    color = BookiiBookiiTheme.colors.grey900,
                 )
                 Text(
                     text = item.subText,
@@ -162,6 +164,64 @@ private fun TrackerNotificationCard(
                 .align(Alignment.TopEnd)
                 .padding(top = 24.dp, end = 24.dp),
         )
+    }
+}
+
+// 배너 placeholder 토큰. {remainingTime}이 있으면 1초마다 카운트다운한다.
+private val BANNER_TOKEN_REGEX = Regex("""\{(nickname|bookTitle|remainingTime)\}""")
+
+private const val SECONDS_PER_DAY = 86_400L
+
+// 남은 시간 표기: 24시간 이상이면 "N일"(올림), 24시간 미만이면 HH:MM:SS 카운트다운
+private fun formatRemainingTime(totalSeconds: Long): String {
+    val s = totalSeconds.coerceAtLeast(0)
+    if (s >= SECONDS_PER_DAY) {
+        val days = (s + SECONDS_PER_DAY - 1) / SECONDS_PER_DAY
+        return "${days}일"
+    }
+    return "%02d:%02d:%02d".format(s / 3600, (s % 3600) / 60, s % 60)
+}
+    
+// titleTemplate의 {bookTitle}/{nickname}/{remainingTime}를 실제 값으로 치환한
+// API 재조회 없이 remainingSeconds를 매초 깎아 화면에서만 갱신
+@Composable
+private fun rememberBannerBody(item: TrackerNotificationItem): AnnotatedString {
+    val hasTimer = remember(item.template) { item.template.contains("{remainingTime}") }
+    var seconds by remember(item.groupId, item.remainingSeconds) {
+        mutableStateOf(item.remainingSeconds)
+    }
+    LaunchedEffect(item.groupId, hasTimer) {
+        if (!hasTimer) return@LaunchedEffect
+        while (seconds > 0) {
+            delay(1000)
+            seconds -= 1
+        }
+    }
+    val emphasis = BookiiBookiiTheme.colors.grey900
+    val normal = BookiiBookiiTheme.colors.grey700
+    return remember(item.template, item.nickname, item.bookTitle, seconds, emphasis, normal) {
+        buildAnnotatedString {
+            var last = 0
+            for (match in BANNER_TOKEN_REGEX.findAll(item.template)) {
+                if (match.range.first > last) {
+                    withStyle(SpanStyle(color = normal)) {
+                        append(item.template.substring(last, match.range.first))
+                    }
+                }
+                val value = when (match.groupValues[1]) {
+                    "nickname" -> item.nickname
+                    "bookTitle" -> item.bookTitle
+                    else -> formatRemainingTime(seconds)
+                }
+                withStyle(SpanStyle(color = emphasis)) { append(value) }
+                last = match.range.last + 1
+            }
+            if (last < item.template.length) {
+                withStyle(SpanStyle(color = normal)) {
+                    append(item.template.substring(last))
+                }
+            }
+        }
     }
 }
 
@@ -197,46 +257,33 @@ private fun CarouselIndicator(
 @Composable
 private fun TrackerNotificationCardPreview() {
     BookiiPreview {
-        val body1 = buildAnnotatedString {
-            withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) {
-                append("noshel")
-            }
-            withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey700)) {
-                append("님께 ")
-            }
-            withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) {
-                append("살인자의 기억법")
-            }
-            withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey700)) {
-                append("을 발송해주세요")
-            }
-        }
-        val body2 = buildAnnotatedString {
-            withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) {
-                append("작별인사")
-            }
-            withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey700)) {
-                append("의 독서 진행률을 기록해보세요")
-            }
-        }
         TrackerNotificationCard(
             notifications = listOf(
                 TrackerNotificationItem(
                     groupId = 1L,
                     dDay = "D-1",
-                    body = body1,
+                    template = "{nickname}님께 {bookTitle}을 발송해주세요",
+                    nickname = "noshel",
+                    bookTitle = "살인자의 기억법",
+                    remainingSeconds = 0L,
                     subText = "책이 파손되지 않도록 꼼꼼히 포장해주세요",
                 ),
                 TrackerNotificationItem(
                     groupId = 2L,
                     dDay = "D-5",
-                    body = body2,
+                    template = "{nickname} 님과의 책 교환까지 {remainingTime} 남았어요",
+                    nickname = "noshel",
+                    bookTitle = "작별인사",
+                    remainingSeconds = 3661L,
                     subText = "오늘 읽은 페이지를 기록해주세요",
                 ),
                 TrackerNotificationItem(
                     groupId = 3L,
                     dDay = "D-3",
-                    body = buildAnnotatedString { append("샘플 알림 3") },
+                    template = "{bookTitle}을 읽고 후기를 남겨주세요",
+                    nickname = "noshel",
+                    bookTitle = "데미안",
+                    remainingSeconds = 0L,
                     subText = "샘플 서브 텍스트",
                 ),
             ),
@@ -860,30 +907,28 @@ private fun TrackerMainScreenWithGroupsPreview() {
             TrackerNotificationItem(
                 groupId = 1L,
                 dDay = "D-1",
-                body = buildAnnotatedString {
-                    withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) { append("noshel") }
-                    withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey700)) { append("님께 ") }
-                    withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) { append("살인자의 기억법") }
-                    withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey700)) { append("을 발송해주세요") }
-                },
+                template = "{nickname}님께 {bookTitle}을 발송해주세요",
+                nickname = "noshel",
+                bookTitle = "살인자의 기억법",
+                remainingSeconds = 0L,
                 subText = "책이 파손되지 않도록 꼼꼼히 포장해주세요",
             ),
             TrackerNotificationItem(
                 groupId = 2L,
                 dDay = "D-5",
-                body = buildAnnotatedString {
-                    withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) { append("작별인사") }
-                    withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey700)) { append("의 진행률을 기록해보세요") }
-                },
+                template = "{bookTitle}의 진행률을 기록해보세요",
+                nickname = "noshel",
+                bookTitle = "작별인사",
+                remainingSeconds = 0L,
                 subText = "오늘 읽은 페이지를 기록해주세요",
             ),
             TrackerNotificationItem(
                 groupId = 3L,
                 dDay = "D-3",
-                body = buildAnnotatedString {
-                    withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) { append("데미안") }
-                    withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey700)) { append("의 후기를 작성해주세요") }
-                },
+                template = "{bookTitle}의 후기를 작성해주세요",
+                nickname = "noshel",
+                bookTitle = "데미안",
+                remainingSeconds = 0L,
                 subText = "이번 주말까지 작성을 권장드려요",
             ),
         )

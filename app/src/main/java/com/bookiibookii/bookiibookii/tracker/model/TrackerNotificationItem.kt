@@ -1,10 +1,11 @@
 package com.bookiibookii.bookiibookii.tracker.model
 
-import androidx.compose.ui.text.AnnotatedString
-
 data class TrackerNotificationItem(
     val groupId: Long,
     val dDay: String,
-    val body: AnnotatedString,
+    val template: String,
+    val nickname: String,
+    val bookTitle: String,
+    val remainingSeconds: Long,
     val subText: String,
 )

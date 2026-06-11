@@ -19,15 +19,18 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,8 +44,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.data.model.mypage.BookReviewSummaryDto
-import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedMemberReviewDto
+import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedReviewItem
+import com.bookiibookii.bookiibookii.data.model.mypage.WrittenReviewItem
 import com.bookiibookii.bookiibookii.ui.component.ExchangeTypeChip
 import com.bookiibookii.bookiibookii.ui.component.ReviewTypeChip
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -55,12 +58,38 @@ fun ReviewScreen(
     initialTab: ReviewTab = ReviewTab.WRITTEN,
     onBackClick: () -> Unit = {},
     bookReviewCount: Int = 0,
-    writtenReviews: List<BookReviewSummaryDto> = emptyList(),
+    writtenReviews: List<WrittenReviewItem> = emptyList(),
+    writtenHasNext: Boolean = false,
+    onLoadMoreWritten: () -> Unit = {},
     boomUpCount: Int = 0,
-    receivedReviews: List<ReceivedMemberReviewDto> = emptyList(),
+    receivedReviews: List<ReceivedReviewItem> = emptyList(),
+    receivedHasNext: Boolean = false,
+    onLoadMoreReceived: () -> Unit = {},
     nickname: String = "",
 ) {
     var selectedTab by remember { mutableStateOf(initialTab) }
+    val listState = rememberLazyListState()
+
+    // 탭 전환 시 스크롤 위치를 맨 위로 초기화(다른 탭의 끝 위치에서 잘못된 추가 로드 방지)
+    LaunchedEffect(selectedTab) {
+        listState.scrollToItem(0)
+    }
+
+    // 리스트 끝 부근에 도달하면 다음 페이지 로드
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val total = listState.layoutInfo.totalItemsCount
+            total > 0 && lastVisible >= total - 3
+        }
+    }
+    LaunchedEffect(shouldLoadMore, selectedTab) {
+        if (!shouldLoadMore) return@LaunchedEffect
+        when (selectedTab) {
+            ReviewTab.WRITTEN -> if (writtenHasNext) onLoadMoreWritten()
+            ReviewTab.RECEIVED -> if (receivedHasNext) onLoadMoreReceived()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -75,34 +104,33 @@ fun ReviewScreen(
             ReviewTopBar(onBackClick = onBackClick)
         }
 
-        Column(
+        LazyColumn(
+            state = listState,
             modifier = Modifier
                 .weight(1f)
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            ReviewTabRow(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
-
-            Spacer(modifier = Modifier.height(16.dp))
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                ReviewTabRow(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
+                Spacer(modifier = Modifier.height(16.dp))
+                when (selectedTab) {
+                    ReviewTab.WRITTEN -> WrittenSummaryCard(count = bookReviewCount)
+                    ReviewTab.RECEIVED -> ReceivedSummaryCard(count = boomUpCount, name = nickname)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             when (selectedTab) {
-                ReviewTab.WRITTEN -> WrittenSummaryCard(count = bookReviewCount)
-                ReviewTab.RECEIVED -> ReceivedSummaryCard(count = boomUpCount, name = nickname)
+                ReviewTab.WRITTEN -> items(writtenReviews) { BookReviewCard(it) }
+                ReviewTab.RECEIVED -> items(receivedReviews) { ReceivedReviewCard(it) }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                when (selectedTab) {
-                    ReviewTab.WRITTEN -> writtenReviews.forEach { BookReviewCard(it) }
-                    ReviewTab.RECEIVED -> receivedReviews.forEach { ReceivedReviewCard(it) }
-                }
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.navigationBarsPadding())
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Spacer(modifier = Modifier.navigationBarsPadding())
         }
     }
 }
@@ -199,9 +227,9 @@ private fun ReviewEmptyCard(message: String) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BookReviewCard(review: BookReviewSummaryDto) {
-    val isDelivery = review.tradeType == "DELIVERY"
-    val displayDate = review.reviewDate?.let { DateUtils.formatDate(it) } ?: ""
+private fun BookReviewCard(review: WrittenReviewItem) {
+    val isDelivery = review.exchangeType == "DELIVERY"
+    val displayDate = review.reviewedAt?.let { DateUtils.formatDate(it) } ?: ""
 
     Column(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(BookiiBookiiTheme.colors.white).padding(16.dp),
@@ -213,7 +241,7 @@ private fun BookReviewCard(review: BookReviewSummaryDto) {
                     // 제목+저자가 길면 칩 영역을 침범하지 않고 저자(구분선 포함)가 다음 줄로 내려가도록 FlowRow 사용
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            review.bookTitle,
+                            review.bookTitle.orEmpty(),
                             style = BookiiBookiiTheme.typography.semibold16,
                             color = BookiiBookiiTheme.colors.grey900,
                             modifier = Modifier.align(Alignment.CenterVertically),
@@ -224,7 +252,7 @@ private fun BookReviewCard(review: BookReviewSummaryDto) {
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Box(modifier = Modifier.width(1.dp).height(15.dp).background(BookiiBookiiTheme.colors.grey200))
-                            Text(review.bookAuthor, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
+                            Text(review.author.orEmpty(), style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
                         }
                     }
                     ReviewStarRating(rating = review.rating)
@@ -233,8 +261,8 @@ private fun BookReviewCard(review: BookReviewSummaryDto) {
             }
             HorizontalDivider(color = BookiiBookiiTheme.colors.grey200)
         }
-        if (!review.comment.isNullOrBlank()) {
-            Text(text = review.comment, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
+        if (!review.content.isNullOrBlank()) {
+            Text(text = review.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
         }
         if (displayDate.isNotBlank()) {
             Text(text = displayDate, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
@@ -243,9 +271,9 @@ private fun BookReviewCard(review: BookReviewSummaryDto) {
 }
 
 @Composable
-private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
-    val isGood = review.reaction == "BOOM_UP"
-    val displayDate = review.createdAt?.let { DateUtils.formatDate(it) } ?: ""
+private fun ReceivedReviewCard(review: ReceivedReviewItem) {
+    val isGood = review.partnerReviewType == "BOOM_UP"
+    val displayDate = review.reviewedAt?.let { DateUtils.formatDate(it) } ?: ""
 
     Column(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(BookiiBookiiTheme.colors.white).padding(16.dp),
@@ -254,7 +282,7 @@ private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ProfilePlaceholder(modifier = Modifier.size(32.dp))
-                Text(review.reviewerNickname, style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey800)
+                Text(review.reviewerNickname.orEmpty(), style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey800)
             }
             ReviewTypeChip(isGood = isGood)
         }
@@ -294,8 +322,8 @@ private fun ReviewScreenWrittenPreview() {
             initialTab = ReviewTab.WRITTEN,
             bookReviewCount = 2,
             writtenReviews = listOf(
-                BookReviewSummaryDto(bookTitle = "데미안", bookAuthor = "헤르만 헤세", tradeType = "DELIVERY", rating = 4.5, comment = "인생 책이에요.", reviewDate = "2026-05-01"),
-                BookReviewSummaryDto(bookTitle = "1984", bookAuthor = "조지 오웰", tradeType = "DIRECT", rating = 5.0, comment = "강렬했습니다.", reviewDate = "2026-04-20"),
+                WrittenReviewItem(reviewId = 1, bookId = 1, bookTitle = "데미안", author = "헤르만 헤세", rating = 4.5, content = "인생 책이에요.", exchangeType = "DELIVERY", exchangeTypeLabel = "택배", reviewedAt = "2026-05-01"),
+                WrittenReviewItem(reviewId = 2, bookId = 2, bookTitle = "1984", author = "조지 오웰", rating = 5.0, content = "강렬했습니다.", exchangeType = "DIRECT", exchangeTypeLabel = "직거래", reviewedAt = "2026-04-20"),
             ),
         )
     }
@@ -310,8 +338,8 @@ private fun ReviewScreenReceivedPreview() {
             boomUpCount = 1,
             nickname = "부키",
             receivedReviews = listOf(
-                ReceivedMemberReviewDto(reviewerNickname = "책벌레", reviewerProfileUrl = null, reaction = "BOOM_UP", comment = "친절한 교환 감사했어요!", createdAt = "2026-05-02"),
-                ReceivedMemberReviewDto(reviewerNickname = "독서왕", reviewerProfileUrl = null, reaction = "GOOD", comment = "좋았습니다.", createdAt = "2026-04-21"),
+                ReceivedReviewItem(reviewId = 1, reviewerId = 1, reviewerNickname = "책벌레", reviewerProfileImageUrl = null, partnerReviewType = "BOOM_UP", partnerReviewLabel = "최고예요", comment = "친절한 교환 감사했어요!", reviewedAt = "2026-05-02"),
+                ReceivedReviewItem(reviewId = 2, reviewerId = 2, reviewerNickname = "독서왕", reviewerProfileImageUrl = null, partnerReviewType = "BOOM_DOWN", partnerReviewLabel = "아쉬워요", comment = "좋았습니다.", reviewedAt = "2026-04-21"),
             ),
         )
     }
