@@ -170,12 +170,18 @@ private fun TrackerNotificationCard(
 // 배너 placeholder 토큰. {remainingTime}이 있으면 1초마다 카운트다운한다.
 private val BANNER_TOKEN_REGEX = Regex("""\{(nickname|bookTitle|remainingTime)\}""")
 
-// 남은 초를 HH:MM:SS로 포맷
+private const val SECONDS_PER_DAY = 86_400L
+
+// 남은 시간 표기: 24시간 이상이면 "N일"(올림), 24시간 미만이면 HH:MM:SS 카운트다운
 private fun formatRemainingTime(totalSeconds: Long): String {
     val s = totalSeconds.coerceAtLeast(0)
+    if (s >= SECONDS_PER_DAY) {
+        val days = (s + SECONDS_PER_DAY - 1) / SECONDS_PER_DAY
+        return "${days}일"
+    }
     return "%02d:%02d:%02d".format(s / 3600, (s % 3600) / 60, s % 60)
 }
-
+    
 // titleTemplate의 {bookTitle}/{nickname}/{remainingTime}를 실제 값으로 치환한
 // API 재조회 없이 remainingSeconds를 매초 깎아 화면에서만 갱신
 @Composable
