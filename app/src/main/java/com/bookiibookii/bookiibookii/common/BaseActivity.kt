@@ -8,7 +8,9 @@ import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
 import androidx.viewbinding.ViewBinding
 
@@ -34,6 +36,30 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
 
         // 3. 시스템 바 및 키보드(IME) 침범 방지 패딩 자동 적용
         setupWindowInsets(binding.root)
+
+        // 4. 하단 시스템 네비게이션바 숨김 (몰입형 모드)
+        hideNavigationBar()
+    }
+
+    /**
+     * 하단 시스템 네비게이션바를 숨깁니다.
+     * BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE: 가장자리에서 스와이프하면 잠깐 나타났다가
+     * 다시 자동으로 사라지는 몰입형(immersive sticky) 모드입니다.
+     */
+    private fun hideNavigationBar() {
+        val controller = WindowCompat.getInsetsController(window, binding.root)
+        controller.hide(WindowInsetsCompat.Type.navigationBars())
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    }
+
+    /**
+     * 키보드를 닫거나 다른 앱에서 돌아오는 등 포커스가 다시 들어올 때
+     * 네비게이션바가 도로 나타날 수 있어 다시 숨겨줍니다.
+     */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideNavigationBar()
     }
 
     /**

@@ -2,6 +2,8 @@ package com.bookiibookii.bookiibookii.tracker.model
 
 data class TrackerMainUiState(
     val cards: List<TrackerCardModel> = emptyList(),
+    val nickname: String = "",
+    val notifications: List<TrackerNotificationItem> = emptyList(),
     val totalCount: Int = 0,
     val readingCount: Int = 0,
     val exchangingCount: Int = 0,

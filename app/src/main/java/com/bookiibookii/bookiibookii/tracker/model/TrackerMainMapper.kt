@@ -1,11 +1,21 @@
 package com.bookiibookii.bookiibookii.tracker.model
 
+import androidx.compose.ui.text.AnnotatedString
 import com.bookiibookii.bookiibookii.data.model.tracker.BookInfo
 import com.bookiibookii.bookiibookii.data.model.tracker.TrackerListItemResDTO
+import com.bookiibookii.bookiibookii.data.model.tracker.TrackerTopBannerResDTO
 
 // 제목이 maxChars(공백 포함 글자수)를 넘으면 그만큼 자르고 "..." 부착
 internal fun ellipsizeTitle(title: String, maxChars: Int): String =
     if (title.length > maxChars) title.take(maxChars) + "..." else title
+
+// 상단 배너(topBanners)
+fun TrackerTopBannerResDTO.toNotificationItem(): TrackerNotificationItem = TrackerNotificationItem(
+    groupId = groupId ?: 0L,
+    dDay = dDayLabel.orEmpty(),
+    body = AnnotatedString(title.orEmpty()),
+    subText = subtitle.orEmpty(),
+)
 
 internal fun BookInfo?.toProfile(): TrackerProfileItem = TrackerProfileItem(
     nickname = this?.currentReaderNickname.orEmpty(),

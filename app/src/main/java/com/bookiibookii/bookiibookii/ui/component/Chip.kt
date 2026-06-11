@@ -153,14 +153,14 @@ fun SmallChip(
 fun ExchangeTypeChip(isDelivery: Boolean, modifier: Modifier = Modifier) {
     if (isDelivery) {
         SmallChip(
-            text = "택배 교환",
+            text = "택배",
             bgColor = BookiiBookiiTheme.colors.uiMainPale,
             textColor = BookiiBookiiTheme.colors.uiMain,
             modifier = modifier,
         )
     } else {
         SmallChip(
-            text = "직접 교환",
+            text = "직접",
             bgColor = BookiiBookiiTheme.colors.uiMainSubPale,  // sub_pale 배경
             textColor = BookiiBookiiTheme.colors.uiMainSub,     // sub 글자
             modifier = modifier,

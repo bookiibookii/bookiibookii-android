@@ -1,7 +1,9 @@
 package com.bookiibookii.bookiibookii.data.model.tracker
 
 data class TrackerListResDTO(
+    val nickname: String?,
     val summary: TrackerSummaryDTO,
+    val topBanners: List<TrackerTopBannerResDTO>?,
     val items: List<TrackerListItemResDTO>
 )
 
@@ -10,6 +12,18 @@ data class TrackerSummaryDTO(
     val readingCount: Int,
     val exchangingCount: Int,
     val reviewCount: Int,
+)
+
+data class TrackerTopBannerResDTO(
+    val bannerType: String?,
+    val groupId: Long?,
+    val matchedMemberId: Long?,
+    val groupName: String?,
+    val title: String?,
+    val subtitle: String?,
+    val dDayLabel: String?,
+    val targetAt: String?,
+    val remainingSeconds: Long?,
 )
 
 data class TrackerListItemResDTO(

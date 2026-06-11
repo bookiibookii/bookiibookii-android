@@ -334,6 +334,8 @@ class TrackerMainViewModel(
                     _state.update {
                         it.copy(
                             cards = items.map { dto -> dto.toCardModel() },
+                            nickname = result?.nickname.orEmpty(),
+                            notifications = result?.topBanners.orEmpty().map { b -> b.toNotificationItem() },
                             totalCount = summary?.totalCount ?: 0,
                             readingCount = summary?.readingCount ?: 0,
                             exchangingCount = summary?.exchangingCount ?: 0,

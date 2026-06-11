@@ -116,6 +116,7 @@ private fun TrackerNoticeBannerPreview() {
 @Composable
 private fun TrackerNotificationCard(
     notifications: List<TrackerNotificationItem>,
+    onItemClick: (groupId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (notifications.isEmpty()) return
@@ -133,6 +134,7 @@ private fun TrackerNotificationCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable { onItemClick(item.groupId) }
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
@@ -144,6 +146,7 @@ private fun TrackerNotificationCard(
                 Text(
                     text = item.body,
                     style = BookiiBookiiTheme.typography.regular18,
+                    color = BookiiBookiiTheme.colors.grey900,
                 )
                 Text(
                     text = item.subText,
@@ -219,21 +222,25 @@ private fun TrackerNotificationCardPreview() {
         TrackerNotificationCard(
             notifications = listOf(
                 TrackerNotificationItem(
+                    groupId = 1L,
                     dDay = "D-1",
                     body = body1,
                     subText = "책이 파손되지 않도록 꼼꼼히 포장해주세요",
                 ),
                 TrackerNotificationItem(
+                    groupId = 2L,
                     dDay = "D-5",
                     body = body2,
                     subText = "오늘 읽은 페이지를 기록해주세요",
                 ),
                 TrackerNotificationItem(
+                    groupId = 3L,
                     dDay = "D-3",
                     body = buildAnnotatedString { append("샘플 알림 3") },
                     subText = "샘플 서브 텍스트",
                 ),
             ),
+            onItemClick = {},
         )
     }
 }
@@ -431,9 +438,8 @@ fun TrackerMainRoute(
     }
     TrackerMainScreen(
         uiState = uiState,
-        // TODO: 닉네임 / 알림 API 연동 전까지 placeholder
-        nickname = "",
-        notifications = emptyList(),
+        nickname = uiState.nickname,
+        notifications = uiState.notifications,
         onProfileClick = onProfileClick,
         onAlertClick = onAlertClick,
         onCreateGroupClick = onCreateGroupClick,
@@ -792,7 +798,10 @@ fun TrackerMainScreen(
             )
             TrackerNoticeBanner(nickname = nickname)
             if (uiState.cards.isNotEmpty()) {
-                TrackerNotificationCard(notifications = notifications)
+                TrackerNotificationCard(
+                    notifications = notifications,
+                    onItemClick = onCardClick,
+                )
             }
         }
         Column(
@@ -849,6 +858,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
     BookiiPreview {
         val notifications = listOf(
             TrackerNotificationItem(
+                groupId = 1L,
                 dDay = "D-1",
                 body = buildAnnotatedString {
                     withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) { append("noshel") }
@@ -859,6 +869,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
                 subText = "책이 파손되지 않도록 꼼꼼히 포장해주세요",
             ),
             TrackerNotificationItem(
+                groupId = 2L,
                 dDay = "D-5",
                 body = buildAnnotatedString {
                     withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) { append("작별인사") }
@@ -867,6 +878,7 @@ private fun TrackerMainScreenWithGroupsPreview() {
                 subText = "오늘 읽은 페이지를 기록해주세요",
             ),
             TrackerNotificationItem(
+                groupId = 3L,
                 dDay = "D-3",
                 body = buildAnnotatedString {
                     withStyle(SpanStyle(color = BookiiBookiiTheme.colors.grey900)) { append("데미안") }
