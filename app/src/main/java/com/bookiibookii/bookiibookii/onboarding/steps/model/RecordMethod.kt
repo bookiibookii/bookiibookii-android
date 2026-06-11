@@ -26,7 +26,7 @@ enum class RecordMethod(
     ),
     ANY(
         titleResId = R.string.onb_step3_record_any,
-        serverValue = "ANY",
+        serverValue = "All_ROUNDER",
         iconRes = R.drawable.ic_book
     );
 }

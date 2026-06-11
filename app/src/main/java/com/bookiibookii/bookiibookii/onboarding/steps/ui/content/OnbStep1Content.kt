@@ -78,7 +78,8 @@ private object SquircleShape : Shape {
     }
 }
 
-private val nicknameAllowedCharRegex = Regex("[가-힣ㄱ-ㅎㅏ-ㅣA-Za-z0-9._\\-_/()\\[\\]:!?]")
+// ㆍ(U+318D)·ㆎ(U+318E)는 천지인 키보드의 아래아(중간점) 조합 문자. 빠지면 천지인 모음 조합이 깨진다.
+private val nicknameAllowedCharRegex = Regex("[가-힣ㄱ-ㅎㅏ-ㅣㆍㆎA-Za-z0-9._\\-_/()\\[\\]:!?]")
 private val nicknameAllowedRegex = Regex("^[가-힣A-Za-z0-9._\\-_/()\\[\\]:!?]+$")
 
 private fun validateNicknameInput(nickname: String): Boolean {
@@ -334,7 +335,7 @@ private fun GenderSection(selectedGender: String?, onGenderSelected: (String) ->
         ) {
             GenderButton("여성", selectedGender == "FEMALE", { onGenderSelected("FEMALE") }, Modifier.width(120.dp))
             GenderButton("남성", selectedGender == "MALE", { onGenderSelected("MALE") }, Modifier.width(120.dp))
-            GenderButton("선택 안함", selectedGender == "none", { onGenderSelected("none") }, Modifier.weight(1f))
+            GenderButton("선택 안함", selectedGender == "NONE", { onGenderSelected("NONE") }, Modifier.weight(1f))
         }
     }
 }
