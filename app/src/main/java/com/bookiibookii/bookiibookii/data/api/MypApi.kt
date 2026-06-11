@@ -12,6 +12,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.MyGroupResponse
 import com.bookiibookii.bookiibookii.data.model.mypage.MypageReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.NoticeDetailResponse
 import com.bookiibookii.bookiibookii.data.model.mypage.NoticeListResponse
+import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedReviews
 import com.bookiibookii.bookiibookii.data.model.mypage.ReportCreateResponse
 import com.bookiibookii.bookiibookii.data.model.mypage.ReportListResponse
 import com.bookiibookii.bookiibookii.data.model.mypage.ReportRequest
@@ -19,6 +20,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.UpdateIntroductionReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UpdateRepresentativeOrderRequest
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.WithdrawalReqDTO
+import com.bookiibookii.bookiibookii.data.model.mypage.WrittenReviews
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -26,12 +28,27 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface MypApi {
 
     // 마이페이지 조회
     @GET("api/mypage")
     suspend fun getMypage(): Response<ApiResponse<UserProfileResDTO>>
+
+    // 작성한 후기 조회(페이징)
+    @GET("api/mypage/reviews/written")
+    suspend fun getWrittenReviews(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10,
+    ): Response<ApiResponse<WrittenReviews>>
+
+    // 받은 후기 조회(페이징)
+    @GET("api/mypage/reviews/received")
+    suspend fun getReceivedReviews(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10,
+    ): Response<ApiResponse<ReceivedReviews>>
 
     // 마이페이지 정보 수정 (닉네임, 성별, 생년월일, 프로필 이미지)
     @PATCH("api/mypage")
