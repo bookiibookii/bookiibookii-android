@@ -89,7 +89,8 @@ internal fun OnbStep2Content(vm: OnbViewModel, state: OnbState) {
     if (showSearchDialog) {
         LifeBookSearchDialog(
             bookSearchState = bookSearchState,
-            onQueryChange = { vm.searchBooks(it) },
+            onQueryChange = { vm.onBookSearchQueryChange(it) },
+            onSearch = { vm.searchBooks() },
             onBookSelected = { book ->
                 if (editingSlotIndex >= 0) vm.setLifeBook(editingSlotIndex, book)
                 showSearchDialog = false

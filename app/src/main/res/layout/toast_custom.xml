@@ -10,7 +10,6 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="24dp"
     android:background="@drawable/bg_toast_round_20"
-    android:elevation="6dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:padding="16dp">

@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.library.vm
 
+import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.PublicReadingCardResponseDTO
 import com.bookiibookii.bookiibookii.library.ui.ReadingCard
@@ -16,7 +17,7 @@ internal fun MemberCardResponseDTO.toReadingCard() = ReadingCard(
     page                   = page.toString(),
     type                   = if (cardType == "IMAGE") ReadingCardType.PHOTO else ReadingCardType.QUOTE,
     isBookmarked           = isBookmarked,
-    date                   = createdAt.take(10),
+    date                   = DateUtils.formatDate(createdAt),
     bookTitle              = bookTitle.orEmpty(),
     quotation              = quotation.orEmpty(),
     imageUrl               = cardImage?.presignedGetUrl,

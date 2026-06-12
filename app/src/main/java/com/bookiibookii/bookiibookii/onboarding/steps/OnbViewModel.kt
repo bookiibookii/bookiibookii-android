@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.common.observeSearchQuery
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.api.S3Uploader
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
@@ -17,6 +18,7 @@ import com.bookiibookii.bookiibookii.onboarding.steps.model.OnbState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.ProfileImageUploadState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.OnboardingSubmitState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.RecordMethod
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class OnbViewModel : ViewModel() {
@@ -35,6 +37,17 @@ class OnbViewModel : ViewModel() {
     private val _bookSearchState =
         MutableLiveData<BookSearchState>(BookSearchState.Idle)
     val bookSearchState: LiveData<BookSearchState> = _bookSearchState
+
+    // 실시간 도서 검색: UI 입력은 이 쿼리만 갱신하고, 실제 호출은 디바운스(공통 헬퍼)가 담당
+    private val _bookSearchQuery = MutableStateFlow("")
+
+    init {
+        observeSearchQuery(
+            queryFlow = _bookSearchQuery,
+            onBelowMinLength = { _bookSearchState.value = BookSearchState.Idle },
+            onSearch = { performBookSearch(it) },
+        )
+    }
 
     private val _onboardingSubmitState =
         MutableLiveData<OnboardingSubmitState>(OnboardingSubmitState.Idle)
@@ -138,31 +151,38 @@ class OnbViewModel : ViewModel() {
         updateState(currentState().copy(lifeBooks = result))
     }
 
-    fun searchBooks(query: String) {
-        if (query.isBlank()) {
-            _bookSearchState.value = BookSearchState.Idle
-            return
-        }
-        viewModelScope.launch {
-            _bookSearchState.value = BookSearchState.Loading
-            runCatching {
-                RetrofitClient.grpApi().searchBooks(query)
-            }.onSuccess { response ->
-                val body = response.body()
-                if (body?.isSuccess == true && body.result != null) {
-                    _bookSearchState.value = BookSearchState.Success(body.result.books)
-                } else {
-                    _bookSearchState.value =
-                        BookSearchState.Error(body?.message ?: "검색에 실패했습니다.")
-                }
-            }.onFailure { e ->
+    // UI 입력 콜백 — 쿼리만 갱신하면 디바운스 후 performBookSearch가 호출된다
+    fun onBookSearchQueryChange(query: String) {
+        _bookSearchQuery.value = query
+    }
+
+    // ic_search 클릭/키보드 검색 — 디바운스 기다리지 않고 현재 쿼리로 바로 검색
+    fun searchBooks() {
+        val query = _bookSearchQuery.value.trim()
+        if (query.isBlank()) return
+        viewModelScope.launch { performBookSearch(query) }
+    }
+
+    private suspend fun performBookSearch(query: String) {
+        _bookSearchState.value = BookSearchState.Loading
+        runCatching {
+            RetrofitClient.grpApi().searchBooks(query)
+        }.onSuccess { response ->
+            val body = response.body()
+            if (body?.isSuccess == true && body.result != null) {
+                _bookSearchState.value = BookSearchState.Success(body.result.books)
+            } else {
                 _bookSearchState.value =
-                    BookSearchState.Error(e.message ?: "네트워크 오류가 발생했습니다.")
+                    BookSearchState.Error(body?.message ?: "검색에 실패했습니다.")
             }
+        }.onFailure { e ->
+            _bookSearchState.value =
+                BookSearchState.Error(e.message ?: "네트워크 오류가 발생했습니다.")
         }
     }
 
     fun clearBookSearch() {
+        _bookSearchQuery.value = ""
         _bookSearchState.value = BookSearchState.Idle
     }
 
