@@ -182,6 +182,24 @@ private fun formatRemainingTime(totalSeconds: Long): String {
     return "%02d:%02d:%02d".format(s / 3600, (s % 3600) / 60, s % 60)
 }
     
+// 조사 첫 글자 → (받침 있을 때 form, 받침 없을 때 form)
+private val JOSA_FORMS = mapOf(
+    '을' to ('을' to '를'), '를' to ('을' to '를'),
+    '은' to ('은' to '는'), '는' to ('은' to '는'),
+    '이' to ('이' to '가'), '가' to ('이' to '가'),
+    '과' to ('과' to '와'), '와' to ('과' to '와'),
+)
+
+// 앞말(prevValue)의 마지막 글자 받침 유무에 따라 text 첫 글자의 조사를 보정
+private fun correctJosa(text: String, prevValue: String?): String {
+    if (prevValue.isNullOrEmpty() || text.isEmpty()) return text
+    val forms = JOSA_FORMS[text[0]] ?: return text
+    val code = prevValue.last().code
+    val hasBatchim = code in 0xAC00..0xD7A3 && (code - 0xAC00) % 28 != 0
+    val correct = if (hasBatchim) forms.first else forms.second
+    return correct + text.substring(1)
+}
+
 // titleTemplate의 {bookTitle}/{nickname}/{remainingTime}를 실제 값으로 치환한
 // API 재조회 없이 remainingSeconds를 매초 깎아 화면에서만 갱신
 @Composable
@@ -202,11 +220,15 @@ private fun rememberBannerBody(item: TrackerNotificationItem): AnnotatedString {
     return remember(item.template, item.nickname, item.bookTitle, seconds, emphasis, normal) {
         buildAnnotatedString {
             var last = 0
+            var prevValue: String? = null  // 직전 토큰 값(조사 보정용)
             for (match in BANNER_TOKEN_REGEX.findAll(item.template)) {
                 if (match.range.first > last) {
-                    withStyle(SpanStyle(color = normal)) {
-                        append(item.template.substring(last, match.range.first))
-                    }
+                    val literal = correctJosa(
+                        item.template.substring(last, match.range.first),
+                        prevValue,
+                    )
+                    withStyle(SpanStyle(color = normal)) { append(literal) }
+                    prevValue = null  // 조사 보정은 토큰 바로 뒤 리터럴에만
                 }
                 val value = when (match.groupValues[1]) {
                     "nickname" -> item.nickname
@@ -214,12 +236,12 @@ private fun rememberBannerBody(item: TrackerNotificationItem): AnnotatedString {
                     else -> formatRemainingTime(seconds)
                 }
                 withStyle(SpanStyle(color = emphasis)) { append(value) }
+                prevValue = value
                 last = match.range.last + 1
             }
             if (last < item.template.length) {
-                withStyle(SpanStyle(color = normal)) {
-                    append(item.template.substring(last))
-                }
+                val literal = correctJosa(item.template.substring(last), prevValue)
+                withStyle(SpanStyle(color = normal)) { append(literal) }
             }
         }
     }

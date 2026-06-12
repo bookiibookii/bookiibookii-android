@@ -11,7 +11,8 @@ internal fun ellipsizeTitle(title: String, maxChars: Int): String =
 // 상단 배너(topBanners)
 fun TrackerTopBannerResDTO.toNotificationItem(): TrackerNotificationItem = TrackerNotificationItem(
     groupId = groupId ?: 0L,
-    dDay = dDayLabel.orEmpty(),
+    // dDayLabel이 null/빈 값이면(마감 카운트다운 없음) "진행 중"으로 표시
+    dDay = dDayLabel?.takeIf { it.isNotBlank() } ?: "진행 중",
     template = titleTemplate ?: title.orEmpty(),
     nickname = partnerNickname.orEmpty(),
     bookTitle = bookTitle.orEmpty(),
