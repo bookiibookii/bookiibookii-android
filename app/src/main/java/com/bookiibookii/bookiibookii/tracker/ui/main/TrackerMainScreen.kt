@@ -901,54 +901,61 @@ fun TrackerMainScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BookiiBookiiTheme.colors.uiBg)
-            .verticalScroll(rememberScrollState()),
+            .background(BookiiBookiiTheme.colors.uiBg),
     ) {
+        // 상단 고정 헤더 (스크롤 영역 밖)
+        BookiiTopBar(
+            title = "트래커",
+            onProfileClick = onProfileClick,
+            onNotificationClick = onAlertClick,
+            hasNewNotification = uiState.hasNewNotification,
+        )
+        // 헤더 아래만 스크롤 (weight(1f)로 남은 공간 채움)
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(BookiiBookiiTheme.colors.white),
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
         ) {
-            BookiiTopBar(
-                title = "트래커",
-                onProfileClick = onProfileClick,
-                onNotificationClick = onAlertClick,
-                hasNewNotification = uiState.hasNewNotification,
-            )
-            TrackerNoticeBanner(nickname = nickname)
-            if (uiState.cards.isNotEmpty()) {
-                TrackerNotificationCard(
-                    notifications = notifications,
-                    onItemClick = onCardClick,
-                )
-            }
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            TrackerCountBoard(
-                total = uiState.totalCount,
-                reading = uiState.readingCount,
-                exchanging = uiState.exchangingCount,
-                review = uiState.reviewCount,
-            )
-            if (uiState.hasLoadedOnce && uiState.cards.isEmpty()) {
-                TrackerEmptyCard(onCreateGroupClick = onCreateGroupClick)
-            } else if (uiState.cards.isNotEmpty()) {
-                uiState.cards.forEach { card ->
-                    TrackerMainCard(
-                        card = card,
-                        onCardClick = { onCardClick(card.groupId) },
-                        onPrimaryAction = { onPrimaryAction(card.groupId) },
-                        onSecondaryAction = { onSecondaryAction(card.groupId) },
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(BookiiBookiiTheme.colors.white),
+            ) {
+                TrackerNoticeBanner(nickname = nickname)
+                if (uiState.cards.isNotEmpty()) {
+                    TrackerNotificationCard(
+                        notifications = notifications,
+                        onItemClick = onCardClick,
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(192.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                TrackerCountBoard(
+                    total = uiState.totalCount,
+                    reading = uiState.readingCount,
+                    exchanging = uiState.exchangingCount,
+                    review = uiState.reviewCount,
+                )
+                if (uiState.hasLoadedOnce && uiState.cards.isEmpty()) {
+                    TrackerEmptyCard(onCreateGroupClick = onCreateGroupClick)
+                } else if (uiState.cards.isNotEmpty()) {
+                    uiState.cards.forEach { card ->
+                        TrackerMainCard(
+                            card = card,
+                            onCardClick = { onCardClick(card.groupId) },
+                            onPrimaryAction = { onPrimaryAction(card.groupId) },
+                            onSecondaryAction = { onSecondaryAction(card.groupId) },
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(192.dp))
+            }
         }
     }
 }
