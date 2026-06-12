@@ -152,30 +152,37 @@ fun LibraryDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BookiiBookiiTheme.colors.uiBg)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 104.dp),
+                .background(BookiiBookiiTheme.colors.uiBg),
         ) {
+            // 상단 고정 헤더 (스크롤 영역 밖)
             DetailHeader(title = book?.title ?: "", onBackClick = onBackClick, onMenuClick = { showBookSheet = true })
-            Spacer(modifier = Modifier.height(16.dp))
-            if (book != null) {
-                BookInfoCard(book = book, modifier = Modifier.padding(horizontal = 16.dp))
+            // 헤더 아래만 스크롤 (weight(1f)로 남은 공간 채움)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 104.dp),
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                if (book != null) {
+                    BookInfoCard(book = book, modifier = Modifier.padding(horizontal = 16.dp))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                FilterRow(
+                    myCardsOnly = myCardsOnly,
+                    sortByLatest = sortByLatest,
+                    onMyCardsToggle = { myCardsOnly = !myCardsOnly },
+                    onSortChange = { latest -> sortByLatest = latest },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                CardGrid(
+                    cards = sortedCards,
+                    onCardClick = { index -> onCardClick(index, sortedCards, sortByLatest) },
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(modifier = Modifier.height(16.dp))
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            FilterRow(
-                myCardsOnly = myCardsOnly,
-                sortByLatest = sortByLatest,
-                onMyCardsToggle = { myCardsOnly = !myCardsOnly },
-                onSortChange = { latest -> sortByLatest = latest },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            CardGrid(
-                cards = sortedCards,
-                onCardClick = { index -> onCardClick(index, sortedCards, sortByLatest) },
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
         // FAB 메뉴 + FAB 버튼 영역
@@ -262,6 +269,7 @@ fun LibraryDetailScreen(
                 author = book.author,
                 genre = book.genre,
                 isRepresentative = isRepresentative,
+                isCompleted = book.isDone,   // 완료(groupStatus COMPLETED)일 때만 리뷰/대표/삭제 노출
                 onDismiss = { showBookSheet = false },
                 onReviewClick = {
                     showBookSheet = false
@@ -336,7 +344,7 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
                 Icon(painter = painterResource(R.drawable.ic_meetball), contentDescription = "메뉴", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
         }
-        HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
+        HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
     }
 }
 

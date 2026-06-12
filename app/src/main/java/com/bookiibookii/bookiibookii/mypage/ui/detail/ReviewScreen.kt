@@ -150,7 +150,7 @@ private fun ReviewTopBar(onBackClick: () -> Unit) {
             Text(text = "후기", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
             Box(modifier = Modifier.size(40.dp))
         }
-        HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
+        HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
     }
 }
 

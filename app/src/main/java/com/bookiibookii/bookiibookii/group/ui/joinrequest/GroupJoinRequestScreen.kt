@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -194,6 +195,7 @@ private fun GroupJoinRequestHeader(
                 modifier = Modifier.align(Alignment.Center),
             )
         }
+        HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey200)
     }
 }
 

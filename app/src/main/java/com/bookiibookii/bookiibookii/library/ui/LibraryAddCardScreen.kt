@@ -115,7 +115,7 @@ fun LibraryAddCardScreen(
                 )
                 Spacer(modifier = Modifier.size(40.dp))
             }
-            HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
+            HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
         }
 
         // Content

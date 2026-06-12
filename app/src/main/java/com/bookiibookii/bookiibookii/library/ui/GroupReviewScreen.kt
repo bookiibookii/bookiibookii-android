@@ -86,7 +86,6 @@ fun GroupReviewScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(BookiiBookiiTheme.colors.white)
-                .border(width = 1.dp, color = BookiiBookiiTheme.colors.grey200)
                 .height(68.dp)
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -103,6 +102,7 @@ fun GroupReviewScreen(
                 )
             }
         }
+        HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey200)
 
         if (data == null) return@Column
 
