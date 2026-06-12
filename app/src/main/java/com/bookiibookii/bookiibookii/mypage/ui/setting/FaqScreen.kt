@@ -113,23 +113,22 @@ fun FaqScreen(
                     .fillMaxWidth()
                     .height(72.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(BookiiBookiiTheme.colors.uiMainPale)
-                    .border(1.dp, BookiiBookiiTheme.colors.uiMain150, RoundedCornerShape(16.dp))
+                    .background(BookiiBookiiTheme.colors.white)
                     .clickable { onInquiryClick() },
                 contentAlignment = Alignment.Center,
             ) {
-                Text("1:1 문의하기", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.uiMain)
+                Text("1:1 문의", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.black)
             }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(72.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(BookiiBookiiTheme.colors.uiMain)
+                    .background(BookiiBookiiTheme.colors.uiPointRed)
                     .clickable { onReportClick() },
                 contentAlignment = Alignment.Center,
             ) {
-                Text("신고하기", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.white)
+                Text("신고", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.white)
             }
         }
     }

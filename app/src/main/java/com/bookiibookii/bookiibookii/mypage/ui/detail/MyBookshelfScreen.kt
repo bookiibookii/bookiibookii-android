@@ -258,7 +258,7 @@ private fun MyBookshelfScreenPreview() {
         FavoriteBook(userBookId = 11, title = "1984", author = "조지 오웰", category = "(소설)", image = null),
     )
     val representativeBooks = listOf(
-        RepresentativeBook(userBookId = 10, title = "데미안", displayOrder = 0, isFavorite = true),
+        RepresentativeBook(userBookId = 10, title = "일이삼사오육칠팔구십일이삼사오", displayOrder = 0, isFavorite = true),
         RepresentativeBook(userBookId = 11, title = "1984", displayOrder = 1, isFavorite = false),
     )
     BookiiPreview {

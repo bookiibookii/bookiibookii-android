@@ -79,7 +79,8 @@ internal fun RepresentativeBookSection(
             val itemWidth = (maxWidth - gap * 6) / 7
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.Bottom) {
                 books.forEachIndexed { index, book ->
-                    BookSpineItemLocal(title = book.title, isOrange = index % 2 == 0, width = itemWidth)
+                    val displayTitle = if (book.title.length > 12) book.title.take(12) + "…" else book.title
+                    BookSpineItemLocal(title = displayTitle, isOrange = index % 2 == 0, width = itemWidth)
                 }
             }
         }
