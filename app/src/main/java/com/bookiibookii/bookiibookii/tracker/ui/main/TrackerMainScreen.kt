@@ -46,6 +46,7 @@ import com.bookiibookii.bookiibookii.common.openExternalUrl
 import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.deliveryTrackingUrl
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
@@ -486,6 +487,8 @@ fun TrackerMainRoute(
     // 약속 잡기(1=일시, 2=장소, 3=확인)
     var meetingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var meetingStep by rememberSaveable { mutableStateOf(1) }
+    // 약속 수정 모드 — true면 3/3 확인에서 등록(POST) 대신 수정(PATCH) 호출
+    var meetingEditMode by rememberSaveable { mutableStateOf(false) }
     // 1/3에서 고른 약속 일시 (raw ISO, 예: 2026-05-20T14:30:00)
     var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
     // 2/3에서 입력한 상세주소 (사용자 직접 입력, 빈칸 시작)
@@ -695,6 +698,7 @@ fun TrackerMainRoute(
             1 -> TrackerDirectMeetingTimeDialog(
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingEditMode = false
                     meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
@@ -702,6 +706,8 @@ fun TrackerMainRoute(
                     meetingScheduledAt = scheduledAt
                     meetingStep = 2
                 },
+                // 수정 모드면 기존 일시 프리필
+                initialScheduledAt = if (meetingEditMode) meetingScheduledAt else null,
             )
             2 -> if (!placeSearchPending) TrackerDirectMeetingPlaceDialog(
                 address = meetingPlace?.address.orEmpty(),
@@ -714,6 +720,7 @@ fun TrackerMainRoute(
                 onLoadMyPlaceClick = { viewModel.loadMyExchangePlace() },
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingEditMode = false
                     meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
@@ -726,6 +733,7 @@ fun TrackerMainRoute(
                 addressDetail = meetingAddressDetail,
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingEditMode = false
                     meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
@@ -733,19 +741,37 @@ fun TrackerMainRoute(
                     val gid = meetingDialogGroupId
                     val place = meetingPlace
                     if (gid != null && place != null) {
-                        viewModel.registerMeeting(
-                            groupId = gid,
-                            placeName = place.placeName,
-                            address = place.address,
-                            zipCode = place.zipCode,
-                            x = place.x,
-                            y = place.y,
-                            addressDetail = meetingAddressDetail.ifBlank { null },
-                            scheduledAt = meetingScheduledAt,
-                        ) {
+                        val onDone = {
                             meetingDialogGroupId = null
+                            meetingEditMode = false
                             meetingAddressDetail = ""
                             viewModel.clearMeetingPlace()
+                        }
+                        // 수정 모드면 PATCH(editMeeting), 아니면 등록 POST(registerMeeting)
+                        if (meetingEditMode) {
+                            viewModel.editMeeting(
+                                groupId = gid,
+                                placeName = place.placeName,
+                                address = place.address,
+                                zipCode = place.zipCode,
+                                x = place.x,
+                                y = place.y,
+                                addressDetail = meetingAddressDetail.ifBlank { null },
+                                scheduledAt = meetingScheduledAt,
+                                onSuccess = onDone,
+                            )
+                        } else {
+                            viewModel.registerMeeting(
+                                groupId = gid,
+                                placeName = place.placeName,
+                                address = place.address,
+                                zipCode = place.zipCode,
+                                x = place.x,
+                                y = place.y,
+                                addressDetail = meetingAddressDetail.ifBlank { null },
+                                scheduledAt = meetingScheduledAt,
+                                onSuccess = onDone,
+                            )
                         }
                     }
                 },
@@ -759,17 +785,38 @@ fun TrackerMainRoute(
             scheduledAt = meeting.scheduledAt.orEmpty(),
             address = meeting.location?.address.orEmpty(),
             addressDetail = meeting.addressDetail.orEmpty(),
+            isHost = uiState.cards.firstOrNull { it.groupId == meetingInfoDialogGroupId }?.isHost == true,
             onDismiss = {
-                meetingInfoDialogGroupId = null
-                viewModel.clearMeeting()
-            },
-            onPreviousClick = {
                 meetingInfoDialogGroupId = null
                 viewModel.clearMeeting()
             },
             onConfirmClick = {
                 meetingInfoDialogGroupId = null
                 viewModel.clearMeeting()
+            },
+            // 수정: 등록과 동일한 3스텝 흐름 재사용, 기존 장소/일시/상세주소 프리필 후
+            // 마지막 확인에서 editMeeting(PATCH) 호출
+            onEditClick = {
+                val gid = meetingInfoDialogGroupId
+                val loc = meeting.location
+                if (loc?.x != null && loc.y != null) {
+                    viewModel.setMeetingPlace(
+                        MeetingPlace(
+                            placeName = loc.placeName.orEmpty(),
+                            address = loc.address.orEmpty(),
+                            zipCode = loc.zipCode,
+                            x = loc.x,
+                            y = loc.y,
+                        )
+                    )
+                }
+                meetingScheduledAt = meeting.scheduledAt.orEmpty()
+                meetingAddressDetail = meeting.addressDetail.orEmpty()
+                meetingInfoDialogGroupId = null
+                viewModel.clearMeeting()
+                meetingEditMode = true
+                meetingDialogGroupId = gid
+                meetingStep = 1
             },
         )
     }

@@ -103,6 +103,13 @@ class TrackerRepository(
         return api.postMeetingRegister(groupId, request)
     }
 
+    suspend fun editMeeting(
+        groupId: Long,
+        request: MeetingRegisterReqDTO,
+    ): Response<ApiResponse<MeetingResDTO>> {
+        return api.patchMeeting(groupId, request)
+    }
+
     suspend fun fetchMeeting(
         groupId: Long,
     ): Response<ApiResponse<MeetingResDTO>> {

@@ -95,6 +95,11 @@ class TrackerMainViewModel(
         _meetingPlace.value = result.toMeetingPlace()
     }
 
+    // 약속 수정 진입 시 기존 장소 프리필용
+    fun setMeetingPlace(place: MeetingPlace) {
+        _meetingPlace.value = place
+    }
+
     fun clearMeetingPlace() {
         _meetingPlace.value = null
     }
@@ -165,6 +170,42 @@ class TrackerMainViewModel(
         viewModelScope.launch {
             try {
                 val res = repository.registerMeeting(
+                    groupId,
+                    MeetingRegisterReqDTO(
+                        placeName = placeName,
+                        address = address,
+                        zipCode = zipCode,
+                        x = x,
+                        y = y,
+                        addressDetail = addressDetail,
+                        scheduledAt = scheduledAt,
+                    ),
+                )
+                if (res.isSuccessful && res.body()?.isSuccess == true) {
+                    onSuccess()
+                    load()
+                }
+            } catch (_: Exception) {
+                // 실패 시 무시
+            }
+        }
+    }
+
+    // 직접 교환 약속 수정 — 등록과 동일 body, PATCH로 호출
+    fun editMeeting(
+        groupId: Long,
+        placeName: String,
+        address: String,
+        zipCode: String?,
+        x: Double,
+        y: Double,
+        addressDetail: String?,
+        scheduledAt: String,
+        onSuccess: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            try {
+                val res = repository.editMeeting(
                     groupId,
                     MeetingRegisterReqDTO(
                         placeName = placeName,
