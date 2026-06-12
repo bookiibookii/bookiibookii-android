@@ -92,6 +92,13 @@ interface TrkApi {
         @Path("groupId") groupId: Long,
     ): Response<ApiResponse<MeetingResDTO>>
 
+    // 직접 교환 약속 수정
+    @PATCH("/api/groups/{groupId}/meetings")
+    suspend fun patchMeeting(
+        @Path("groupId") groupId: Long,
+        @Body request: MeetingRegisterReqDTO,
+    ): Response<ApiResponse<MeetingResDTO>>
+
     @PATCH("/api/groups/{groupId}/meetings/completion")
     suspend fun patchMeetingCompletion(
         @Path("groupId") groupId: Long,

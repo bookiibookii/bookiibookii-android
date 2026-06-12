@@ -21,12 +21,13 @@ data class MeetingResDTO(
     val createdBy: MeetingCreatedByDTO?,
 )
 
+// LocationInfo — 약속 장소 정보 (스펙: placeName, address, zipCode, x, y)
 data class MeetingLocationDTO(
-    val locationId: Long?,
     val placeName: String?,
     val address: String?,
     val zipCode: String?,
-    val addressDetail: String?,
+    val x: Double?,
+    val y: Double?,
 )
 
 data class MeetingCreatedByDTO(

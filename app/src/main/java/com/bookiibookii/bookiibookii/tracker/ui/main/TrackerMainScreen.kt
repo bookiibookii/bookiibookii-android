@@ -46,6 +46,7 @@ import com.bookiibookii.bookiibookii.common.openExternalUrl
 import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
+import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.deliveryTrackingUrl
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
@@ -157,13 +158,15 @@ private fun TrackerNotificationCard(
                 )
             }
         }
-        CarouselIndicator(
-            total = notifications.size,
-            current = pagerState.currentPage,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 24.dp, end = 24.dp),
-        )
+        if (notifications.size > 1) {
+            CarouselIndicator(
+                total = notifications.size,
+                current = pagerState.currentPage,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 24.dp, end = 24.dp),
+            )
+        }
     }
 }
 
@@ -182,6 +185,24 @@ private fun formatRemainingTime(totalSeconds: Long): String {
     return "%02d:%02d:%02d".format(s / 3600, (s % 3600) / 60, s % 60)
 }
     
+// 조사 첫 글자 → (받침 있을 때 form, 받침 없을 때 form)
+private val JOSA_FORMS = mapOf(
+    '을' to ('을' to '를'), '를' to ('을' to '를'),
+    '은' to ('은' to '는'), '는' to ('은' to '는'),
+    '이' to ('이' to '가'), '가' to ('이' to '가'),
+    '과' to ('과' to '와'), '와' to ('과' to '와'),
+)
+
+// 앞말(prevValue)의 마지막 글자 받침 유무에 따라 text 첫 글자의 조사를 보정
+private fun correctJosa(text: String, prevValue: String?): String {
+    if (prevValue.isNullOrEmpty() || text.isEmpty()) return text
+    val forms = JOSA_FORMS[text[0]] ?: return text
+    val code = prevValue.last().code
+    val hasBatchim = code in 0xAC00..0xD7A3 && (code - 0xAC00) % 28 != 0
+    val correct = if (hasBatchim) forms.first else forms.second
+    return correct + text.substring(1)
+}
+
 // titleTemplate의 {bookTitle}/{nickname}/{remainingTime}를 실제 값으로 치환한
 // API 재조회 없이 remainingSeconds를 매초 깎아 화면에서만 갱신
 @Composable
@@ -202,11 +223,15 @@ private fun rememberBannerBody(item: TrackerNotificationItem): AnnotatedString {
     return remember(item.template, item.nickname, item.bookTitle, seconds, emphasis, normal) {
         buildAnnotatedString {
             var last = 0
+            var prevValue: String? = null  // 직전 토큰 값(조사 보정용)
             for (match in BANNER_TOKEN_REGEX.findAll(item.template)) {
                 if (match.range.first > last) {
-                    withStyle(SpanStyle(color = normal)) {
-                        append(item.template.substring(last, match.range.first))
-                    }
+                    val literal = correctJosa(
+                        item.template.substring(last, match.range.first),
+                        prevValue,
+                    )
+                    withStyle(SpanStyle(color = normal)) { append(literal) }
+                    prevValue = null  // 조사 보정은 토큰 바로 뒤 리터럴에만
                 }
                 val value = when (match.groupValues[1]) {
                     "nickname" -> item.nickname
@@ -214,12 +239,12 @@ private fun rememberBannerBody(item: TrackerNotificationItem): AnnotatedString {
                     else -> formatRemainingTime(seconds)
                 }
                 withStyle(SpanStyle(color = emphasis)) { append(value) }
+                prevValue = value
                 last = match.range.last + 1
             }
             if (last < item.template.length) {
-                withStyle(SpanStyle(color = normal)) {
-                    append(item.template.substring(last))
-                }
+                val literal = correctJosa(item.template.substring(last), prevValue)
+                withStyle(SpanStyle(color = normal)) { append(literal) }
             }
         }
     }
@@ -327,6 +352,7 @@ private fun CountColumn(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = label,
@@ -461,6 +487,8 @@ fun TrackerMainRoute(
     // 약속 잡기(1=일시, 2=장소, 3=확인)
     var meetingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var meetingStep by rememberSaveable { mutableStateOf(1) }
+    // 약속 수정 모드 — true면 3/3 확인에서 등록(POST) 대신 수정(PATCH) 호출
+    var meetingEditMode by rememberSaveable { mutableStateOf(false) }
     // 1/3에서 고른 약속 일시 (raw ISO, 예: 2026-05-20T14:30:00)
     var meetingScheduledAt by rememberSaveable { mutableStateOf("") }
     // 2/3에서 입력한 상세주소 (사용자 직접 입력, 빈칸 시작)
@@ -670,6 +698,7 @@ fun TrackerMainRoute(
             1 -> TrackerDirectMeetingTimeDialog(
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingEditMode = false
                     meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
@@ -677,6 +706,8 @@ fun TrackerMainRoute(
                     meetingScheduledAt = scheduledAt
                     meetingStep = 2
                 },
+                // 수정 모드면 기존 일시 프리필
+                initialScheduledAt = if (meetingEditMode) meetingScheduledAt else null,
             )
             2 -> if (!placeSearchPending) TrackerDirectMeetingPlaceDialog(
                 address = meetingPlace?.address.orEmpty(),
@@ -689,6 +720,7 @@ fun TrackerMainRoute(
                 onLoadMyPlaceClick = { viewModel.loadMyExchangePlace() },
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingEditMode = false
                     meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
@@ -701,6 +733,7 @@ fun TrackerMainRoute(
                 addressDetail = meetingAddressDetail,
                 onDismiss = {
                     meetingDialogGroupId = null
+                    meetingEditMode = false
                     meetingAddressDetail = ""
                     viewModel.clearMeetingPlace()
                 },
@@ -708,19 +741,37 @@ fun TrackerMainRoute(
                     val gid = meetingDialogGroupId
                     val place = meetingPlace
                     if (gid != null && place != null) {
-                        viewModel.registerMeeting(
-                            groupId = gid,
-                            placeName = place.placeName,
-                            address = place.address,
-                            zipCode = place.zipCode,
-                            x = place.x,
-                            y = place.y,
-                            addressDetail = meetingAddressDetail.ifBlank { null },
-                            scheduledAt = meetingScheduledAt,
-                        ) {
+                        val onDone = {
                             meetingDialogGroupId = null
+                            meetingEditMode = false
                             meetingAddressDetail = ""
                             viewModel.clearMeetingPlace()
+                        }
+                        // 수정 모드면 PATCH(editMeeting), 아니면 등록 POST(registerMeeting)
+                        if (meetingEditMode) {
+                            viewModel.editMeeting(
+                                groupId = gid,
+                                placeName = place.placeName,
+                                address = place.address,
+                                zipCode = place.zipCode,
+                                x = place.x,
+                                y = place.y,
+                                addressDetail = meetingAddressDetail.ifBlank { null },
+                                scheduledAt = meetingScheduledAt,
+                                onSuccess = onDone,
+                            )
+                        } else {
+                            viewModel.registerMeeting(
+                                groupId = gid,
+                                placeName = place.placeName,
+                                address = place.address,
+                                zipCode = place.zipCode,
+                                x = place.x,
+                                y = place.y,
+                                addressDetail = meetingAddressDetail.ifBlank { null },
+                                scheduledAt = meetingScheduledAt,
+                                onSuccess = onDone,
+                            )
                         }
                     }
                 },
@@ -734,17 +785,38 @@ fun TrackerMainRoute(
             scheduledAt = meeting.scheduledAt.orEmpty(),
             address = meeting.location?.address.orEmpty(),
             addressDetail = meeting.addressDetail.orEmpty(),
+            isHost = uiState.cards.firstOrNull { it.groupId == meetingInfoDialogGroupId }?.isHost == true,
             onDismiss = {
-                meetingInfoDialogGroupId = null
-                viewModel.clearMeeting()
-            },
-            onPreviousClick = {
                 meetingInfoDialogGroupId = null
                 viewModel.clearMeeting()
             },
             onConfirmClick = {
                 meetingInfoDialogGroupId = null
                 viewModel.clearMeeting()
+            },
+            // 수정: 등록과 동일한 3스텝 흐름 재사용, 기존 장소/일시/상세주소 프리필 후
+            // 마지막 확인에서 editMeeting(PATCH) 호출
+            onEditClick = {
+                val gid = meetingInfoDialogGroupId
+                val loc = meeting.location
+                if (loc?.x != null && loc.y != null) {
+                    viewModel.setMeetingPlace(
+                        MeetingPlace(
+                            placeName = loc.placeName.orEmpty(),
+                            address = loc.address.orEmpty(),
+                            zipCode = loc.zipCode,
+                            x = loc.x,
+                            y = loc.y,
+                        )
+                    )
+                }
+                meetingScheduledAt = meeting.scheduledAt.orEmpty()
+                meetingAddressDetail = meeting.addressDetail.orEmpty()
+                meetingInfoDialogGroupId = null
+                viewModel.clearMeeting()
+                meetingEditMode = true
+                meetingDialogGroupId = gid
+                meetingStep = 1
             },
         )
     }

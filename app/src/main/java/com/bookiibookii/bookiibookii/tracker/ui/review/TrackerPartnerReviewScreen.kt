@@ -6,14 +6,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -106,6 +110,12 @@ fun TrackerPartnerReviewScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                // imePadding을 verticalScroll '앞'에 둬서 스크롤 컨테이너 높이 자체를 키보드만큼 줄임
+                // → 포커스된 입력창이 줄어든 뷰포트 아래로 밀려 bring-into-view로 자동 스크롤됨.
+                // 버튼(bottomBar)은 하단 고정
+                .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -275,7 +285,7 @@ private fun ReviewCard(
         ) {
             if (comment.isEmpty()) {
                 Text(
-                    text = "후기를 자유롭게 남겨주세요.",
+                    text = "파트너에게 소중한 후기를 남겨주세요.",
                     style = BookiiBookiiTheme.typography.regular16,
                     color = BookiiBookiiTheme.colors.grey500,
                 )
@@ -315,21 +325,17 @@ private fun TrackerCard(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = groupName,
                 style = BookiiBookiiTheme.typography.medium16,
                 color = BookiiBookiiTheme.colors.grey800,
-                modifier = Modifier.align(Alignment.CenterStart),
             )
+            // 디바이더
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .padding(top = 10.dp)
                     .height(0.8.dp)
                     .background(BookiiBookiiTheme.colors.grey100),
             )

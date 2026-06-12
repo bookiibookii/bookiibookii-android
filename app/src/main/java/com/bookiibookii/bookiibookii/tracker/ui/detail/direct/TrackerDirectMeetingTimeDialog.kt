@@ -39,6 +39,7 @@ import com.bookiibookii.bookiibookii.ui.component.CloseButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 
 private val WEEKDAY_LABELS = listOf("일", "월", "화", "수", "목", "금", "토")
@@ -49,10 +50,12 @@ private data class DayCell(
 )
 
 // 직접교환 약속 잡기 1/3 - 일시 선택
+// initialScheduledAt: 수정 진입 시 기존 일시(ISO) 프리필용 (등록은 null)
 @Composable
 fun TrackerDirectMeetingTimeDialog(
     onDismiss: () -> Unit,
     onNextClick: (scheduledAt: String) -> Unit,
+    initialScheduledAt: String? = null,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -61,6 +64,7 @@ fun TrackerDirectMeetingTimeDialog(
         TrackerDirectMeetingTimeDialogContent(
             onDismiss = onDismiss,
             onNextClick = onNextClick,
+            initialScheduledAt = initialScheduledAt,
         )
     }
 }
@@ -70,13 +74,22 @@ private fun TrackerDirectMeetingTimeDialogContent(
     onDismiss: () -> Unit,
     onNextClick: (scheduledAt: String) -> Unit,
     modifier: Modifier = Modifier,
+    initialScheduledAt: String? = null,
 ) {
     val today = remember { LocalDate.now() }
-    var displayMonth by remember { mutableStateOf(YearMonth.from(today)) }
-    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
-    var isAm by remember { mutableStateOf(true) }
-    var hour by remember { mutableStateOf(6) }
-    var minute by remember { mutableStateOf(0) }
+    // 기존 일시 파싱(수정 모드). 실패하거나 없으면 null → 기본값 사용
+    val initial = remember(initialScheduledAt) {
+        initialScheduledAt?.takeIf { it.isNotBlank() }?.let {
+            runCatching { LocalDateTime.parse(it) }.getOrNull()
+        }
+    }
+    var displayMonth by remember {
+        mutableStateOf(YearMonth.from(initial?.toLocalDate() ?: today))
+    }
+    var selectedDate by remember { mutableStateOf(initial?.toLocalDate()) }
+    var isAm by remember { mutableStateOf(initial == null || initial.hour < 12) }
+    var hour by remember { mutableStateOf(initial?.let { to12Hour(it.hour) } ?: 6) }
+    var minute by remember { mutableStateOf(initial?.minute ?: 0) }
 
     Column(
         modifier = modifier
@@ -231,6 +244,11 @@ private fun TrackerDirectMeetingTimeDialogContent(
 }
 
 // 선택값(날짜 + 오전/오후 + 12시간제 시 + 분)을 ISO date-time 문자열로 조립
+private fun to12Hour(hour24: Int): Int = when (val h = hour24 % 12) {
+    0 -> 12
+    else -> h
+}
+
 private fun buildScheduledAt(date: LocalDate, isAm: Boolean, hour12: Int, minute: Int): String {
     val hour24 = when {
         isAm && hour12 == 12 -> 0        // 오전 12시 → 00시
@@ -386,6 +404,8 @@ private fun TimeBox(
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
+                // 기본 surface 톤 대신 흰 배경으로 고정
+                containerColor = BookiiBookiiTheme.colors.white,
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(

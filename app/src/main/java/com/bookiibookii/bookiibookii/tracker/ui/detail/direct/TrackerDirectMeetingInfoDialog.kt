@@ -21,6 +21,7 @@ import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.component.CloseButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -30,9 +31,10 @@ fun TrackerDirectMeetingInfoDialog(
     scheduledAt: String,
     address: String,
     addressDetail: String,
+    isHost: Boolean,
     onDismiss: () -> Unit,
-    onPreviousClick: () -> Unit,
     onConfirmClick: () -> Unit,
+    onEditClick: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -42,9 +44,10 @@ fun TrackerDirectMeetingInfoDialog(
             scheduledAt = scheduledAt,
             address = address,
             addressDetail = addressDetail,
+            isHost = isHost,
             onDismiss = onDismiss,
-            onPreviousClick = onPreviousClick,
             onConfirmClick = onConfirmClick,
+            onEditClick = onEditClick,
         )
     }
 }
@@ -54,9 +57,10 @@ private fun TrackerDirectMeetingInfoDialogContent(
     scheduledAt: String,
     address: String,
     addressDetail: String,
+    isHost: Boolean,
     onDismiss: () -> Unit,
-    onPreviousClick: () -> Unit,
     onConfirmClick: () -> Unit,
+    onEditClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -91,25 +95,41 @@ private fun TrackerDirectMeetingInfoDialogContent(
             value = if (addressDetail.isBlank()) address else "$address $addressDetail",
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            CardButton(
-                text = "이전",
-                style = CardButtonStyle.White,
-                onClick = onPreviousClick,
-                modifier = Modifier.weight(1f),
-            )
+        // 호스트 + 약속까지 12시간 이상 남음 → [수정][확인]. 게스트이거나 12시간 미만이면 [확인] 단일 버튼
+        if (isHost && isMeetingEditable(scheduledAt)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                CardButton(
+                    text = "수정",
+                    style = CardButtonStyle.White,
+                    onClick = onEditClick,
+                    modifier = Modifier.weight(1f),
+                )
+                CardButton(
+                    text = "확인",
+                    style = CardButtonStyle.Main,
+                    onClick = onConfirmClick,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        } else {
             CardButton(
                 text = "확인",
                 style = CardButtonStyle.Main,
                 onClick = onConfirmClick,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
 }
+
+// 현재 시각 기준 약속까지 12시간 이상 남았는지(수정 가능 여부). 파싱 실패 시 수정 불가로 간주.
+private fun isMeetingEditable(scheduledAt: String): Boolean =
+    runCatching {
+        Duration.between(LocalDateTime.now(), LocalDateTime.parse(scheduledAt)).toHours() >= 12
+    }.getOrDefault(false)
 
 private val MEETING_INFO_FORMATTER = DateTimeFormatter.ofPattern("yyyy. MM. dd. HH:mm")
 
@@ -159,9 +179,10 @@ private fun TrackerDirectMeetingInfoDialogPreview() {
             scheduledAt = "2026-05-20T14:30:00",
             address = "서울특별시 강남구 강남대로 396",
             addressDetail = "2층 창가 자리",
+            isHost = true,
             onDismiss = {},
-            onPreviousClick = {},
             onConfirmClick = {},
+            onEditClick = {},
         )
     }
 }

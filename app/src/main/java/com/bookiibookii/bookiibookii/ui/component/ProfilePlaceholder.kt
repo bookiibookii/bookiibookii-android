@@ -57,7 +57,9 @@ fun ProfilePlaceholder(
                 model = imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(ProfileSquircleShape),
             )
         }
         // 안쪽 stroke

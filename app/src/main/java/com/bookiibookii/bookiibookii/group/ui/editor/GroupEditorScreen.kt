@@ -179,7 +179,7 @@ fun GroupEditorScreen(
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             Column(
@@ -246,8 +246,7 @@ fun GroupEditorScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(BookiiBookiiTheme.colors.white)
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (submitError != null) {
@@ -819,7 +818,6 @@ private fun ReadingPeriodTrack(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             repeat(count) { index ->
-                val isSelected = index == selectedIndex
                 val isFilled = index <= selectedIndex
                 Box(
                     modifier = Modifier
@@ -838,7 +836,8 @@ private fun ReadingPeriodTrack(
                         ) { onSelect(index) },
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (isSelected) {
+                    // 채워진 점(선택 지점까지)은 모두 가운데 흰 원 표시
+                    if (isFilled) {
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
