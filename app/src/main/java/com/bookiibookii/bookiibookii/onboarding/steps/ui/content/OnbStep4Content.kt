@@ -73,7 +73,7 @@ internal fun OnbStep4Content(vm: OnbViewModel, state: OnbState) {
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                singleLine = true,
+                singleLine = false,
                 decorationBox = { innerTextField ->
                     Box {
                         if (state.selfIntro.isEmpty()) {
