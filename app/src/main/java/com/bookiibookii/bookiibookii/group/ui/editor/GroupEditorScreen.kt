@@ -819,7 +819,6 @@ private fun ReadingPeriodTrack(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             repeat(count) { index ->
-                val isSelected = index == selectedIndex
                 val isFilled = index <= selectedIndex
                 Box(
                     modifier = Modifier
@@ -838,7 +837,8 @@ private fun ReadingPeriodTrack(
                         ) { onSelect(index) },
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (isSelected) {
+                    // 채워진 점(선택 지점까지)은 모두 가운데 흰 원 표시
+                    if (isFilled) {
                         Box(
                             modifier = Modifier
                                 .size(6.dp)

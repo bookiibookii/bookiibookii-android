@@ -157,13 +157,15 @@ private fun TrackerNotificationCard(
                 )
             }
         }
-        CarouselIndicator(
-            total = notifications.size,
-            current = pagerState.currentPage,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 24.dp, end = 24.dp),
-        )
+        if (notifications.size > 1) {
+            CarouselIndicator(
+                total = notifications.size,
+                current = pagerState.currentPage,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 24.dp, end = 24.dp),
+            )
+        }
     }
 }
 
@@ -349,6 +351,7 @@ private fun CountColumn(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = label,

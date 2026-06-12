@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.runtime.Composable
@@ -57,7 +58,11 @@ fun ProfilePlaceholder(
                 model = imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
+                // 원본을 1dp 줄이고 다시 clip → 사각 모서리가 squircle 밖으로 삐져나오는 깨짐 방지 (BookCover와 동일)
+                modifier = Modifier
+                    .padding(1.dp)
+                    .fillMaxSize()
+                    .clip(ProfileSquircleShape),
             )
         }
         // 안쪽 stroke
