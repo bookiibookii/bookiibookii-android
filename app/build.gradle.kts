@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -115,6 +116,10 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     implementation("com.kakao.sdk:v2-all:2.20.1")
+
+    // Firebase Cloud Messaging (푸시 알림)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 

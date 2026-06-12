@@ -211,7 +211,13 @@ class OnbViewModel : ViewModel() {
                         name = state.nickname,
                         gender = state.gender,
                         birth = state.birthdate,
-                        tags = state.recordMethods.map { it.serverValue }.distinct(),
+                        // "잘 모르겠어요"(isUnknownMethod)는 recordMethods가 비므로 서버 NO_IDEA로 매핑.
+                        // 서버 tags는 required + minItems 1이라 빈 배열이면 400.
+                        tags = if (state.isUnknownMethod) {
+                            listOf("NO_IDEA")
+                        } else {
+                            state.recordMethods.map { it.serverValue }.distinct()
+                        },
                         s3Key = state.profileS3Key,
                         userBooks = state.lifeBooks.filterNotNull().map { OnboardingBook(it.isbn13) },
                         introduction = state.selfIntro
