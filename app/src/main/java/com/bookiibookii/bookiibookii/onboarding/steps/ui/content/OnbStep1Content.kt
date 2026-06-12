@@ -78,8 +78,6 @@ private object SquircleShape : Shape {
     }
 }
 
-// ㆍ(U+318D)·ㆎ(U+318E)는 천지인 키보드의 아래아(중간점) 조합 문자. 빠지면 천지인 모음 조합이 깨진다.
-private val nicknameAllowedCharRegex = Regex("[가-힣ㄱ-ㅎㅏ-ㅣㆍㆎA-Za-z0-9._\\-_/()\\[\\]:!?]")
 private val nicknameAllowedRegex = Regex("^[가-힣A-Za-z0-9._\\-_/()\\[\\]:!?]+$")
 
 private fun validateNicknameInput(nickname: String): Boolean {
@@ -138,15 +136,7 @@ fun OnbStep1Content(
 
         NicknameSection(
             nickname = state.nickname,
-            onNicknameChange = { new ->
-                val filtered = new
-                    .filter { ch ->
-                        !ch.isWhitespace() && !Character.isSurrogate(ch) &&
-                                nicknameAllowedCharRegex.matches(ch.toString())
-                    }
-                    .take(10)
-                vm.setNickname(filtered)
-            },
+            onNicknameChange = { new -> vm.setNickname(new) },
             nicknameState = nicknameCheckState,
             isCheckEnabled = isCheckEnabled,
             onCheckClick = { vm.checkNickname(state.nickname.trim()) }
@@ -174,6 +164,7 @@ fun OnbStep1Content(
 
     if (showBirthdateSheet) {
         BirthdatePickerBottomSheet(
+            initialDate = state.birthdate,
             onDone = { year, month, day ->
                 vm.setBirthdate("%04d-%02d-%02d".format(year, month, day))
                 showBirthdateSheet = false

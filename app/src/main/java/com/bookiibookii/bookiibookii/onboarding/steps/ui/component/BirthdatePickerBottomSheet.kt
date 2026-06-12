@@ -33,9 +33,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -44,6 +49,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 internal fun BirthdatePickerBottomSheet(
     onDone: (year: Int, month: Int, day: Int) -> Unit,
     onDismiss: () -> Unit,
+    initialDate: String? = null,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -52,25 +58,45 @@ internal fun BirthdatePickerBottomSheet(
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         dragHandle = null
     ) {
-        BirthdatePickerContent(onDone = onDone)
+        BirthdatePickerContent(onDone = onDone, initialDate = initialDate)
     }
 }
 
 @Composable
 private fun BirthdatePickerContent(
     onDone: (year: Int, month: Int, day: Int) -> Unit = { _, _, _ -> },
+    initialDate: String? = null,
 ) {
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
 
-    val currentYear = remember { java.util.Calendar.getInstance().get(java.util.Calendar.YEAR) }
+    val today = remember { java.util.Calendar.getInstance() }
+    val currentYear = remember { today.get(java.util.Calendar.YEAR) }
+    val currentMonth = remember { today.get(java.util.Calendar.MONTH) + 1 }
+    val currentDay = remember { today.get(java.util.Calendar.DAY_OF_MONTH) }
     val years = remember { (1924..currentYear).map { "${it}년" } }
     val months = remember { (1..12).map { "${it}월" } }
     val days = remember { (1..31).map { "${it}일" } }
 
-    var selectedYearIndex by remember { mutableStateOf(years.size - 1) }
-    var selectedMonthIndex by remember { mutableStateOf(0) }
-    var selectedDayIndex by remember { mutableStateOf(0) }
+    // "yyyy-MM-dd" 형식의 이전 선택값을 각 휠의 초기 인덱스로 변환. 없거나 파싱 실패 시 기본값.
+    val initial = remember(initialDate) {
+        initialDate?.split("-")?.takeIf { it.size == 3 }?.let { parts ->
+            val y = parts[0].toIntOrNull()
+            val m = parts[1].toIntOrNull()
+            val d = parts[2].toIntOrNull()
+            if (y != null && m != null && d != null) Triple(y, m, d) else null
+        }
+    }
+
+    var selectedYearIndex by remember {
+        mutableStateOf(initial?.first?.let { (it - 1924).coerceIn(0, years.size - 1) } ?: (years.size - 1))
+    }
+    var selectedMonthIndex by remember {
+        mutableStateOf(initial?.second?.let { (it - 1).coerceIn(0, months.size - 1) } ?: 0)
+    }
+    var selectedDayIndex by remember {
+        mutableStateOf(initial?.third?.let { (it - 1).coerceIn(0, days.size - 1) } ?: 0)
+    }
 
     Column(
         modifier = Modifier
@@ -93,22 +119,43 @@ private fun BirthdatePickerContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("생년월일", style = typography.semibold20, color = colors.grey900)
+            // 선택값이 오늘 이후면 미래 날짜이므로 완료를 막는다.
+            val selYear = 1924 + selectedYearIndex
+            val selMonth = selectedMonthIndex + 1
+            val selDay = selectedDayIndex + 1
+            val isFuture = selYear > currentYear ||
+                    (selYear == currentYear && selMonth > currentMonth) ||
+                    (selYear == currentYear && selMonth == currentMonth && selDay > currentDay)
             Text(
                 text = "완료",
                 style = typography.regular20,
-                color = colors.grey500,
-                modifier = Modifier.clickable {
-                    onDone(
-                        years[selectedYearIndex].removeSuffix("년").toInt(),
-                        months[selectedMonthIndex].removeSuffix("월").toInt(),
-                        days[selectedDayIndex].removeSuffix("일").toInt()
-                    )
+                color = if (isFuture) colors.grey300 else colors.grey500,
+                modifier = if (isFuture) Modifier else Modifier.clickable {
+                    onDone(selYear, selMonth, selDay)
                 }
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
+        // 휠에서 발생한 스크롤/플링이 시트로 전파돼 시트가 따라 내려가는 걸 막는다.
+        // 남은 델타를 모두 소비(available 반환)해 부모인 ModalBottomSheet로 넘기지 않는다.
+        val blockSheetDragConnection = remember {
+            object : NestedScrollConnection {
+                override fun onPostScroll(
+                    consumed: Offset,
+                    available: Offset,
+                    source: NestedScrollSource
+                ): Offset = available
+
+                override suspend fun onPostFling(
+                    consumed: Velocity,
+                    available: Velocity
+                ): Velocity = available
+            }
+        }
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .nestedScroll(blockSheetDragConnection),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             WheelPickerColumn(
@@ -208,5 +255,17 @@ private fun WheelPickerColumn(
 private fun BirthdatePickerContentPreview() {
     BookiiBookiiTheme {
         BirthdatePickerContent()
+    }
+}
+
+@Preview(showBackground = true, name = "날짜 피커 - 바텀시트(드래그)")
+@Composable
+private fun BirthdatePickerBottomSheetPreview() {
+    BookiiBookiiTheme {
+        BirthdatePickerBottomSheet(
+            onDone = { _, _, _ -> },
+            onDismiss = {},
+            initialDate = "1995-07-15"
+        )
     }
 }
