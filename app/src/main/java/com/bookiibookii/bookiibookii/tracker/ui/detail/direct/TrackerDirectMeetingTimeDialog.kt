@@ -386,6 +386,8 @@ private fun TimeBox(
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
+                // 기본 surface 톤 대신 흰 배경으로 고정
+                containerColor = BookiiBookiiTheme.colors.white,
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(

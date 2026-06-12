@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -173,6 +174,7 @@ private fun TrackerDetailHeader(
                 iconRes = R.drawable.ic_back,
                 onClick = onBackClick,
                 modifier = Modifier.align(Alignment.CenterStart),
+                iconSize = 24.dp,
             )
             Row(
                 modifier = Modifier.align(Alignment.CenterEnd),
@@ -231,6 +233,7 @@ private fun IconCircleButton(
     iconRes: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    iconSize: Dp = 32.dp,
 ) {
     Box(
         modifier = modifier
@@ -242,7 +245,7 @@ private fun IconCircleButton(
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(iconSize),
             tint = Color.Unspecified,
         )
     }
