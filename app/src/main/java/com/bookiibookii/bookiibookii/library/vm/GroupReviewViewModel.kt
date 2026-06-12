@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.library.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.library.ui.BookReviewItem
 import com.bookiibookii.bookiibookii.library.ui.ExchangeMessage
@@ -55,7 +56,7 @@ class GroupReviewViewModel : ViewModel() {
                         else ExchangeMessage(
                             username        = review.writerNickname,
                             message         = review.comment,
-                            reaction        = review.reaction,
+                            reaction        = review.reaction.orEmpty(),   // null=반응 없음 → 배지 미표시
                             isMine          = review.writerNickname == myNickname,
                             profileImageUrl = review.writerProfileImageUrl,
                         )
@@ -77,14 +78,19 @@ class GroupReviewViewModel : ViewModel() {
                                 bookCoverUrl  = anyOne?.bookImageUrl,
                                 myRating      = (mine?.rating ?: 0.0).toInt().coerceIn(0, 5),
                                 myReview      = mine?.content.orEmpty(),
-                                myDate        = mine?.createdAt?.take(10).orEmpty(),
+                                myDate        = DateUtils.formatDate(mine?.createdAt),
                                 partnerRating = (partner?.rating ?: 0.0).toInt().coerceIn(0, 5),
                                 partnerReview = partner?.content.orEmpty(),
-                                partnerDate   = partner?.createdAt?.take(10).orEmpty(),
+                                partnerDate   = DateUtils.formatDate(partner?.createdAt),
                             )
                         }
 
-                    val dateRange = if (endDate.isNotBlank()) "$startDate ~ $endDate" else startDate
+                    // 기간 표기 "yyyy. MM. dd. ~ yyyy. MM. dd."
+                    val dateRange = if (endDate.isNotBlank()) {
+                        "${DateUtils.formatDate(startDate)} ~ ${DateUtils.formatDate(endDate)}"
+                    } else {
+                        DateUtils.formatDate(startDate)
+                    }
 
                     _uiState.update {
                         it.copy(

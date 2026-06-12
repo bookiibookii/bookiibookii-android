@@ -39,7 +39,7 @@ data class MemberReviewItemDTO(
     val writerId: Int,
     val writerNickname: String,
     val writerProfileImageUrl: String?,
-    val reaction: String,
+    val reaction: String? = null,
     val comment: String?,
 )
 
