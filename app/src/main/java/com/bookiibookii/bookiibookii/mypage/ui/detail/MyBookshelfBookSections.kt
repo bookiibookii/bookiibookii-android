@@ -124,6 +124,7 @@ internal fun LifeBookSection(
     onAddFavoriteBook: (String) -> Unit,
     onDeleteFavoriteBook: (Long) -> Unit,
     onReplaceFavoriteBook: (Long, String) -> Unit,
+    onSearch: () -> Unit = {},
 ) {
     var showSearchDialog by remember { mutableStateOf(false) }
     var editingBook by remember { mutableStateOf<FavoriteBook?>(null) }
@@ -204,6 +205,7 @@ internal fun LifeBookSection(
         LifeBookSearchDialog(
             bookSearchState = bookSearchState,
             onQueryChange = onSearchBooks,
+            onSearch = onSearch,
             onBookSelected = { selectedBook ->
                 val editing = editingBook
                 if (editing != null) onReplaceFavoriteBook(editing.userBookId, selectedBook.isbn13)

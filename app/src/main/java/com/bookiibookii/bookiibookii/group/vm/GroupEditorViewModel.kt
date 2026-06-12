@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.group.vm
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.common.observeSearchQuery
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.data.model.group.GroupCreateRequest
@@ -46,9 +47,20 @@ class GroupEditorViewModel(
         data class PrefillFailed(val message: String) : Event()
     }
 
+    // 실시간 도서 검색: 타이핑은 이 쿼리만 갱신하고 디바운스(공통 헬퍼)가 검색을 호출.
+    // ic_search 버튼/키보드 액션은 searchBooks()로 즉시 검색(둘 다 지원)
+    private val _bookSearchQuery = MutableStateFlow("")
+
     init {
         // 수정 모드면 기존 그룹 데이터를 폼에 프리필
         groupId?.let { loadGroupForEdit(it) }
+        observeSearchQuery(
+            queryFlow = _bookSearchQuery,
+            onBelowMinLength = {
+                _state.update { it.copy(bookSearchResults = emptyList(), bookSearchError = null) }
+            },
+            onSearch = { performBookSearch(it) },
+        )
     }
 
     // 수정 진입 시 기존 그룹 데이터를 폼에 채움
@@ -97,34 +109,41 @@ class GroupEditorViewModel(
         return style to customs
     }
 
-    // 입력 텍스트 변경. 텍스트를 수정하면 기존 선택은 해제
-    fun onBookSearchQueryChange(value: String) =
+    // 입력 텍스트 변경. 텍스트를 수정하면 기존 선택은 해제.
+    // 쿼리를 디바운스 플로우에도 흘려 타이핑 검색이 동작하게 함
+    fun onBookSearchQueryChange(value: String) {
         _state.update { it.copy(bookSearchQuery = value, isbn13 = null) }
+        _bookSearchQuery.value = value
+    }
 
-    // ic_search 클릭 또는 키보드 검색 액션으로 호출
+    // ic_search 클릭 또는 키보드 검색 액션 — 디바운스 기다리지 않고 즉시 검색
     fun searchBooks() {
-        val q = _state.value.bookSearchQuery
+        val q = _state.value.bookSearchQuery.trim()
         if (q.isBlank()) return
-        viewModelScope.launch {
-            _state.update { it.copy(bookSearchLoading = true, bookSearchError = null) }
-            try {
-                val res = RetrofitClient.grpApi().searchBooks(q, page = 1, size = 10)
-                if (res.isSuccessful && res.body()?.isSuccess == true) {
-                    _state.update {
-                        it.copy(
-                            bookSearchResults = res.body()?.result?.books.orEmpty(),
-                            bookSearchLoading = false,
-                        )
-                    }
-                } else {
-                    _state.update {
-                        it.copy(bookSearchError = "검색에 실패했어요", bookSearchLoading = false)
-                    }
-                }
-            } catch (e: Exception) {
+        viewModelScope.launch { performBookSearch(q) }
+    }
+
+    private suspend fun performBookSearch(query: String) {
+        // 이미 책을 고른 뒤 늦게 도착한 디바운스 검색이 선택을 덮어쓰지 않도록 가드
+        if (_state.value.isbn13 != null) return
+        _state.update { it.copy(bookSearchLoading = true, bookSearchError = null) }
+        try {
+            val res = RetrofitClient.grpApi().searchBooks(query, page = 1, size = 10)
+            if (res.isSuccessful && res.body()?.isSuccess == true) {
                 _state.update {
-                    it.copy(bookSearchError = "네트워크 오류가 발생했어요", bookSearchLoading = false)
+                    it.copy(
+                        bookSearchResults = res.body()?.result?.books.orEmpty(),
+                        bookSearchLoading = false,
+                    )
                 }
+            } else {
+                _state.update {
+                    it.copy(bookSearchError = "검색에 실패했어요", bookSearchLoading = false)
+                }
+            }
+        } catch (e: Exception) {
+            _state.update {
+                it.copy(bookSearchError = "네트워크 오류가 발생했어요", bookSearchLoading = false)
             }
         }
     }
@@ -138,13 +157,16 @@ class GroupEditorViewModel(
     }
 
     // ic_x 클릭. 텍스트 모두 초기화
-    fun onClearBookSearch() = _state.update {
-        it.copy(
-            bookSearchQuery = "",
-            isbn13 = null,
-            bookSearchResults = emptyList(),
-            bookSearchError = null,
-        )
+    fun onClearBookSearch() {
+        _bookSearchQuery.value = ""
+        _state.update {
+            it.copy(
+                bookSearchQuery = "",
+                isbn13 = null,
+                bookSearchResults = emptyList(),
+                bookSearchError = null,
+            )
+        }
     }
 
     fun onGroupNameChange(value: String) =

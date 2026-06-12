@@ -52,6 +52,7 @@ internal fun LifeBookSearchDialog(
     onQueryChange: (String) -> Unit,
     onBookSelected: (BookItem) -> Unit,
     onDismiss: () -> Unit,
+    onSearch: () -> Unit = {},
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -62,6 +63,7 @@ internal fun LifeBookSearchDialog(
             onQueryChange = onQueryChange,
             onBookSelected = onBookSelected,
             onDismiss = onDismiss,
+            onSearch = onSearch,
         )
     }
 }
@@ -72,6 +74,7 @@ private fun LifeBookSearchDialogContent(
     onQueryChange: (String) -> Unit,
     onBookSelected: (BookItem) -> Unit,
     onDismiss: () -> Unit,
+    onSearch: () -> Unit = {},
 ) {
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
@@ -116,6 +119,7 @@ private fun LifeBookSearchDialogContent(
         // 검색 입력
         SearchInputField(
             onQueryChange = onQueryChange,
+            onSearch = onSearch,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -173,6 +177,7 @@ private fun LifeBookSearchDialogContent(
 private fun SearchInputField(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onSearch: () -> Unit = {},
 ) {
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
@@ -191,9 +196,14 @@ private fun SearchInputField(
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_search),
-            contentDescription = null,
+            contentDescription = "검색",
             tint = colors.grey500,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier
+                .size(24.dp)
+                .clickable {
+                    focusManager.clearFocus()
+                    onSearch()
+                }
         )
         BasicTextField(
             value = query,
@@ -205,7 +215,10 @@ private fun SearchInputField(
             textStyle = typography.regular16.copy(color = colors.grey900),
             cursorBrush = SolidColor(colors.uiMain),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+            keyboardActions = KeyboardActions(onSearch = {
+                focusManager.clearFocus()
+                onSearch()
+            }),
             singleLine = true,
             decorationBox = { innerTextField ->
                 if (query.isEmpty()) {
