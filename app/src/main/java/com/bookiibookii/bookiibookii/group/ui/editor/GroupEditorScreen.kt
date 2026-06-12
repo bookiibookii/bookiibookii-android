@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -164,7 +165,9 @@ fun GroupEditorScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BookiiBookiiTheme.colors.white),
+            .background(BookiiBookiiTheme.colors.white)
+            // 키보드가 올라오면 폼 전체를 그만큼 위로 올림
+            .imePadding(),
     ) {
         GroupEditorHeader(
             title = if (uiState.isEdit) "그룹 수정" else "그룹 만들기",
@@ -255,9 +258,10 @@ fun GroupEditorScreen(
                 )
             }
             FooterButton(
-                text = if (uiState.isEdit) "수정하기" else "그룹 만들기",
+                text = if (uiState.isEdit) "그룹 수정" else "그룹 만들기",
                 onClick = onSubmit,
-                enabled = uiState.canSubmit && !uiState.submitting,
+                // 수정 모드는 변경사항이 있을 때만 활성화(isDirty). 비활성 시 FooterButton이 자동 grey 처리
+                enabled = uiState.canSubmit && uiState.isDirty && !uiState.submitting,
             )
         }
     }
@@ -581,14 +585,14 @@ private fun ExchangeTypeCard(
     }
     Column(
         modifier = modifier
-            .height(76.dp)
             .clip(shape)
             .background(containerColor)
             .border(width = 1.dp, color = borderColor, shape = shape)
             .clickable(onClick = onClick)
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+        // 디자인: 텍스트 왼끝정렬 + 텍스트간 세로간격 2 + height hug(내용 높이만큼)
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
             text = title,
@@ -716,8 +720,11 @@ private fun ReadingPeriodSection(
     val periods = GroupEditorUiState.PERIODS
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
-            modifier = Modifier.padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            // 디자인: 값("14일")을 제목 옆이 아니라 행 오른쪽 끝에 정렬
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -727,7 +734,7 @@ private fun ReadingPeriodSection(
             )
             Text(
                 text = "${periods[selectedIndex]}일",
-                style = BookiiBookiiTheme.typography.regular16,
+                style = BookiiBookiiTheme.typography.medium16,
                 color = BookiiBookiiTheme.colors.uiMain,
             )
         }
@@ -746,6 +753,7 @@ private fun ReadingPeriodSection(
             ) {
                 periods.forEachIndexed { index, days ->
                     val isSelected = index == selectedIndex
+                    val isFilled = index <= selectedIndex
                     Text(
                         text = "${days}일",
                         style = if (isSelected) {
@@ -753,7 +761,7 @@ private fun ReadingPeriodSection(
                         } else {
                             BookiiBookiiTheme.typography.regular14
                         },
-                        color = if (isSelected) {
+                        color = if (isFilled) {
                             BookiiBookiiTheme.colors.uiMain
                         } else {
                             BookiiBookiiTheme.colors.grey400

@@ -20,8 +20,20 @@ data class GroupEditorUiState(
     val customRules: List<String> = emptyList(),  // CUSTOM 항목, 최대 4개
     val submitting: Boolean = false,              // 그룹 생성/수정 요청 중
     val isEdit: Boolean = false,                  // 수정 모드 (groupId로 진입). 생성=false
+    val editOriginal: EditOriginal? = null,       // 수정 모드 프리필 원본(변경 여부 판정용). 생성=null
 ) {
     val readingPeriod: Int get() = PERIODS[readingPeriodIndex]
+
+    // 수정 가능 필드(그룹명/독서기간/소개/규칙)가 프리필 원본과 달라졌는지.
+    // 생성 모드(editOriginal=null)는 항상 true라 버튼 활성 조건에 영향 없음.
+    val isDirty: Boolean
+        get() = editOriginal?.let { o ->
+            groupName != o.groupName ||
+                readingPeriodIndex != o.readingPeriodIndex ||
+                groupComment != o.groupComment ||
+                ruleStyle != o.ruleStyle ||
+                customRules.filter { it.isNotBlank() } != o.customRules.filter { it.isNotBlank() }
+        } ?: true
 
     // 수정 모드는 PATCH 가능 필드(그룹명/독서기간/소개/규칙)만 검증 — 도서/교환유형/주소는 수정 불가
     val canSubmit: Boolean
@@ -39,6 +51,15 @@ data class GroupEditorUiState(
                 ruleStyle != null &&
                 (1 + customRules.count { it.isNotBlank() }) in 1..5
         }
+
+    // 수정 모드 변경 여부 비교용 원본 스냅샷
+    data class EditOriginal(
+        val groupName: String,
+        val readingPeriodIndex: Int,
+        val groupComment: String,
+        val ruleStyle: ReadingStyle?,
+        val customRules: List<String>,
+    )
 
     companion object {
         val PERIODS = listOf(3, 7, 14, 21, 28)

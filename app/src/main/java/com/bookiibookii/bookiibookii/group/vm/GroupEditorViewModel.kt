@@ -69,6 +69,14 @@ class GroupEditorViewModel(
                             groupComment = detail.groupComment.orEmpty(),
                             ruleStyle = ruleStyle,
                             customRules = customRules,
+                            // 변경 여부 판정용 원본 스냅샷
+                            editOriginal = GroupEditorUiState.EditOriginal(
+                                groupName = detail.groupName,
+                                readingPeriodIndex = periodIndex,
+                                groupComment = detail.groupComment.orEmpty(),
+                                ruleStyle = ruleStyle,
+                                customRules = customRules,
+                            ),
                         )
                     }
                 } else {

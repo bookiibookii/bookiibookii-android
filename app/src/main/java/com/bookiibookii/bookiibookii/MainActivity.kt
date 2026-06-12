@@ -92,13 +92,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     // 탑레벨 Fragment(홈·트래커·서재 메인)일 때만 BottomNav 표시
     private fun observeFragmentChanges() {
         supportFragmentManager.addOnBackStackChangedListener {
-            val current = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
-            val isTopLevel = current is HomeFragment
-                    || current is TrackerFragment
-                    || current is LibraryFragment
-            binding.bottomNav.root.visibility = if (isTopLevel) View.VISIBLE else View.GONE
-            updateBottomNavSelection(current)
+            refreshBottomNavVisibility()
+            updateBottomNavSelection(supportFragmentManager.findFragmentById(R.id.fragmentContainer))
         }
+    }
+
+    // fragmentContainer의 현재 프래그먼트가 top-level(홈·트래커·서재)일 때만 BottomNav 표시.
+    // 백스택 복귀 시 콜백 순서(onDetach vs onBackStackChanged)와 무관하게 항상 올바른 값으로
+    // 맞추기 위해 Base*Fragment.onDetach 에서도 이 메서드를 호출한다.
+    fun refreshBottomNavVisibility() {
+        val current = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+        val isTopLevel = current is HomeFragment
+                || current is TrackerFragment
+                || current is LibraryFragment
+        binding.bottomNav.root.visibility = if (isTopLevel) View.VISIBLE else View.GONE
     }
 
     override fun onNewIntent(intent: Intent) {

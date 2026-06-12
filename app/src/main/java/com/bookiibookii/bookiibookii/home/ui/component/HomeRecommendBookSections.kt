@@ -23,6 +23,14 @@ import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
+// 알라딘 author는 "한강 (지은이)", "한강 (지은이), 데보라 스미스 (옮긴이)" 형태로 옴.
+// 역할 표기 "(지은이)" 제거 + 그로 인해 생기는 잔여 콤마/공백 정리.
+private fun String.removeAuthorRole(): String =
+    replace("(지은이)", "")
+        .replace(Regex("""\s*,\s*$"""), "")
+        .replace(Regex("""\s{2,}"""), " ")
+        .trim()
+
 // 캐러셀/그리드 공용. 너비는 호출처에서 modifier로 지정
 @Composable
 internal fun BookThumbnail(
@@ -51,7 +59,7 @@ internal fun BookThumbnail(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = book.author.orEmpty(),
+                text = book.author.orEmpty().removeAuthorRole(),
                 style = typography.regular14,
                 color = colors.grey500,
                 maxLines = 1,

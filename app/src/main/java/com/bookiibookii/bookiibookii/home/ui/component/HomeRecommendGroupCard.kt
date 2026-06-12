@@ -1,8 +1,9 @@
 package com.bookiibookii.bookiibookii.home.ui.component
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,15 +14,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +34,6 @@ import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
-import kotlin.math.abs
 
 @Composable
 internal fun RecommendGroupRow(
@@ -43,38 +41,29 @@ internal fun RecommendGroupRow(
     onGroupClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val listState = rememberLazyListState()
-    // 뷰포트 중앙에 가장 가까운 카드를 활성 인덱스로 — snap 위치와 일치(이전 카드 sliver 오차 제거)
-    val currentIndex by remember {
-        derivedStateOf {
-            val layoutInfo = listState.layoutInfo
-            val visibleItems = layoutInfo.visibleItemsInfo
-            if (visibleItems.isEmpty()) {
-                0
-            } else {
-                val viewportCenter =
-                    (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
-                visibleItems.minByOrNull { item ->
-                    abs((item.offset + item.size / 2) - viewportCenter)
-                }?.index ?: 0
-            }
-        }
-    }
+    val pagerState = rememberPagerState(pageCount = { groups.size })
 
     Column(modifier = modifier) {
-        LazyRow(
-            state = listState,
-            // 세로 여백을 줘야 LazyRow가 카드 위아래 그림자를 자르지 않음
+        HorizontalPager(
+            state = pagerState,
+            pageSize = PageSize.Fixed(334.dp),
+            pageSpacing = 12.dp,
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
-        ) {
-            items(groups, key = { it.groupId }) { group ->
-                HomeRecommendGroupCard(
-                    group = group,
-                    onClick = { onGroupClick(group.groupId) },
-                )
-            }
+            // 한 번 스와이프 = 한 장씩(Pager 기본) + 느리고 묵직한 스냅으로 무게감.
+            // 더 빠르게/덜 묵직하게 하려면 stiffness를 올리면 됨(StiffnessLow→MediumLow→Medium).
+            flingBehavior = PagerDefaults.flingBehavior(
+                state = pagerState,
+                snapAnimationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessLow,
+                ),
+            ),
+        ) { page ->
+            val group = groups[page]
+            HomeRecommendGroupCard(
+                group = group,
+                onClick = { onGroupClick(group.groupId) },
+            )
         }
 
         // 페이지 인디케이터 dot — 카드가 2개 이상일 때만 노출
@@ -86,7 +75,7 @@ internal fun RecommendGroupRow(
                 horizontalArrangement = Arrangement.Center,
             ) {
                 groups.indices.forEach { index ->
-                    val isSelected = index == currentIndex
+                    val isSelected = index == pagerState.currentPage
                     Box(
                         modifier = Modifier
                             .padding(horizontal = 3.dp)
