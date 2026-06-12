@@ -27,6 +27,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,6 +68,7 @@ fun LibraryAddCardScreen(
     onImagePick: () -> Unit = {},      // 갤러리
     onImageCapture: () -> Unit = {},   // 카메라
     onBackClick: () -> Unit = {},
+    isLoading: Boolean = false,        // 등록/수정 통신 진행 여부 — 중복 제출 차단용
     onSubmit: (page: Int, quotation: String, memo: String) -> Unit = { _, _, _ -> },
 ) {
     var quote by remember { mutableStateOf(initialQuote) }
@@ -262,8 +264,14 @@ fun LibraryAddCardScreen(
             }
         }
 
+        // 중복 제출 가드: 재구성 타이밍에 의존하지 않도록 stable MutableState로 즉시 차단
+        val submitting = remember { mutableStateOf(false) }
+        // 통신 종료(에러로 화면이 남은 경우 포함) 시 다시 누를 수 있도록 리셋
+        LaunchedEffect(isLoading) { if (!isLoading) submitting.value = false }
+
         // 필수값 검증 후 제출 (등록/수정 공용)
-        val submit = {
+        val submit = submit@{
+            if (submitting.value) return@submit
             var valid = true
             if (mode == AddCardMode.TEXT && quote.isBlank()) {
                 quoteError = true
@@ -273,7 +281,10 @@ fun LibraryAddCardScreen(
                 pageError = true
                 valid = false
             }
-            if (valid) onSubmit(page.toIntOrNull() ?: 0, quote, memo)
+            if (valid) {
+                submitting.value = true
+                onSubmit(page.toIntOrNull() ?: 0, quote, memo)
+            }
         }
 
         if (isEdit) {

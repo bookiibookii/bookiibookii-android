@@ -96,59 +96,64 @@ fun ProfileShareDialog(
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Header
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                            .weight(1f, fill = false)
+                            .verticalScroll(rememberScrollState()),
                     ) {
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Header
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                text = "프로필 공유",
-                                style = BookiiBookiiTheme.typography.semibold20,
-                                color = if (isDark) BookiiBookiiTheme.colors.white else BookiiBookiiTheme.colors.grey900,
-                            )
-                            DayNightToggle(isDark = isDark, onToggle = { isDark = it })
-                        }
-                        Box(
                             modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(BookiiBookiiTheme.colors.grey100)
-                                .clickable { onDismiss() },
-                            contentAlignment = Alignment.Center,
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_x),
-                                contentDescription = "닫기",
-                                tint = BookiiBookiiTheme.colors.grey900,
-                                modifier = Modifier.size(24.dp),
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Text(
+                                    text = "프로필 공유",
+                                    style = BookiiBookiiTheme.typography.semibold20,
+                                    color = if (isDark) BookiiBookiiTheme.colors.white else BookiiBookiiTheme.colors.grey900,
+                                )
+                                DayNightToggle(isDark = isDark, onToggle = { isDark = it })
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(BookiiBookiiTheme.colors.grey100)
+                                    .clickable { onDismiss() },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_x),
+                                    contentDescription = "닫기",
+                                    tint = BookiiBookiiTheme.colors.grey900,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        ProfileShareCardContent(
+                            name = name,
+                            motto = motto,
+                            imageUrl = imageUrl,
+                            representativeBooks = representativeBooks,
+                            isDark = isDark,
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    ProfileShareCardContent(
-                        name = name,
-                        motto = motto,
-                        imageUrl = imageUrl,
-                        representativeBooks = representativeBooks,
-                        isDark = isDark,
-                    )
-
-                    // Share actions
+                    // Share actions — 스크롤과 무관하게 하단 고정
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

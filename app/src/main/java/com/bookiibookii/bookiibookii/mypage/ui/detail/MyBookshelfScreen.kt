@@ -195,9 +195,11 @@ private fun BookshelfTopBar(onBack: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            BookiiBackButton(onClick = onBack)
+            Row(modifier = Modifier.width(88.dp), verticalAlignment = Alignment.CenterVertically) {
+                BookiiBackButton(onClick = onBack)
+            }
             Text(text = "나의 책장", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900, textAlign = TextAlign.Center)
-            Spacer(modifier = Modifier.size(40.dp))
+            Spacer(modifier = Modifier.width(88.dp))
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
     }
@@ -258,7 +260,7 @@ private fun MyBookshelfScreenPreview() {
         FavoriteBook(userBookId = 11, title = "1984", author = "조지 오웰", category = "(소설)", image = null),
     )
     val representativeBooks = listOf(
-        RepresentativeBook(userBookId = 10, title = "데미안", displayOrder = 0, isFavorite = true),
+        RepresentativeBook(userBookId = 10, title = "일이삼사오육칠팔구십일이삼사오", displayOrder = 0, isFavorite = true),
         RepresentativeBook(userBookId = 11, title = "1984", displayOrder = 1, isFavorite = false),
     )
     BookiiPreview {

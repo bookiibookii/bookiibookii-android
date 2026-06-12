@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.FileProvider
@@ -95,6 +96,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             BookiiBookiiTheme {
+                val uiState by vm.uiState.collectAsStateWithLifecycle()
                 LibraryAddCardScreen(
                     mode             = mode,
                     selectedImageUri = selectedImageUri,
@@ -107,6 +109,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
                     onImagePick      = { pickImageLauncher.launch("image/*") },
                     onImageCapture   = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
                     onBackClick      = { parentFragmentManager.popBackStack() },
+                    isLoading        = uiState.isLoading,
                     onSubmit         = { page, quotation, memo ->
                         if (memberBookId == -1) {
                             requireContext().showCustomToast("책 정보를 찾을 수 없습니다.", false)

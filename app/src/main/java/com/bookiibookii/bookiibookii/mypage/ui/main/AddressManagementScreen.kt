@@ -154,7 +154,7 @@ fun AddressManagementScreen(
 
                 if (selectedTabIndex == 0) {
                     if (deliveries.isEmpty()) {
-                        AddressEmptyState("등록된 주소가 없습니다.\n택배 교환 그룹에 참여하려면 배송지를 등록하세요")
+                        AddressEmptyState("등록한 주소가 존재하지 않아요.\n택배 교환 그룹에 참여하려면 배송지를 등록해주세요.")
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             deliveries.forEach { address ->
@@ -180,7 +180,7 @@ fun AddressManagementScreen(
                     }
                 } else {
                     if (exchanges.isEmpty()) {
-                        AddressEmptyState("등록된 주소가 없습니다.\n직접 교환 그룹에 참여하려면 장소를 등록하세요")
+                        AddressEmptyState("등록한 주소가 존재하지 않아요.\n직접 교환 그룹에 참여하려면 장소를 등록해주세요.")
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             exchanges.forEach { place ->
@@ -329,9 +329,9 @@ private fun DeliveryAddressCard(
                 DropdownMenu(
                     expanded = isMenuExpanded,
                     onDismissRequest = onMenuDismiss,
-                    modifier = Modifier
-                        .width(160.dp)
-                        .background(BookiiBookiiTheme.colors.white),
+                    shape = RoundedCornerShape(20.dp),
+                    containerColor = BookiiBookiiTheme.colors.white,
+                    modifier = Modifier.width(160.dp),
                 ) {
                     Row(
                         modifier = Modifier
@@ -425,9 +425,9 @@ private fun ExchangePlaceCard(
                 DropdownMenu(
                     expanded = isMenuExpanded,
                     onDismissRequest = onMenuDismiss,
-                    modifier = Modifier
-                        .width(160.dp)
-                        .background(BookiiBookiiTheme.colors.white),
+                    shape = RoundedCornerShape(20.dp),
+                    containerColor = BookiiBookiiTheme.colors.white,
+                    modifier = Modifier.width(160.dp),
                 ) {
                     Row(
                         modifier = Modifier
@@ -557,6 +557,8 @@ private fun DeliveryBottomSheet(
             }
             Spacer(modifier = Modifier.height(24.dp))
 
+            // 필수값(주소·수령인·전화번호)이 모두 채워져야 저장 활성화
+            val isValid = address.isNotBlank() && recipientName.isNotBlank() && phone.isNotBlank()
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -565,6 +567,7 @@ private fun DeliveryBottomSheet(
                 BottomSheetTwoBtnShort(
                     text = "저장",
                     style = BottomSheetBtnStyle.Dark,
+                    enabled = isValid,
                     onClick = {
                         val phoneDigits = phone.filter { it.isDigit() }
                         if (phoneDigits.length != 11 || !phoneDigits.startsWith("010")) {
@@ -573,7 +576,8 @@ private fun DeliveryBottomSheet(
                         }
                         onSave(
                             DeliveryAddressRequest(
-                                placeName = nickname,
+                                // 별명은 선택값이지만 API는 필수 → 비우면 주소로 대체
+                                placeName = nickname.ifBlank { address },
                                 address = address,
                                 zipCode = zipCode,
                                 addressDetail = detail.ifBlank { "" },
@@ -685,6 +689,8 @@ private fun ExchangePlaceBottomSheet(
             }
             Spacer(modifier = Modifier.height(24.dp))
 
+            // 필수값(장소)이 채워져야 저장 활성화
+            val isValid = placeAddress.isNotBlank()
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -693,10 +699,12 @@ private fun ExchangePlaceBottomSheet(
                 BottomSheetTwoBtnShort(
                     text = "저장",
                     style = BottomSheetBtnStyle.Dark,
+                    enabled = isValid,
                     onClick = {
                         onSave(
                             ExchangeAddressRequest(
-                                placeName = nickname,
+                                // 별명은 선택값이지만 API는 필수 → 비우면 장소로 대체
+                                placeName = nickname.ifBlank { placeAddress },
                                 address = placeAddress,
                                 zipCode = zipCode,
                                 x = x,

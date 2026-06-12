@@ -214,6 +214,12 @@ class BookshelfViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.mypApi().deleteFavoriteBook(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    // 인생 책은 항상 대표책에도 포함되므로, 삭제 시 같은 책을 대표책에서도 제거
+                    val isRepresentative = _bookshelf.value?.representativeBooks
+                        ?.any { it.userBookId == userBookId } == true
+                    if (isRepresentative) {
+                        runCatching { RetrofitClient.mypApi().deleteRepresentativeBook(userBookId) }
+                    }
                     fetchBookshelf()
                 } else {
                     _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "인생 책 삭제에 실패했습니다."))
