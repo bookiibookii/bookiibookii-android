@@ -10,16 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -81,40 +73,17 @@ internal fun HomeScreen(
 ) {
     val lazyListState = rememberLazyListState()
 
-    // 스크롤 입력 자체를 감지 (layout shift 영향 없어 깜빡임 없음)
-    var isScrollingUp by remember { mutableStateOf(false) }
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y != 0f) isScrollingUp = available.y > 0f
-                return Offset.Zero
-            }
-        }
-    }
-
-    // 검색창 표시 조건:
-    //   - 맨 위(WelcomeSection 보임): 항상 표시
-    //   - 위로 스크롤 중 + WelcomeSection이 사라진 상태: 표시
-    //   - 아래로 스크롤 중: 숨김
-    val showStickySearchBar by remember {
-        derivedStateOf {
-            lazyListState.firstVisibleItemIndex == 0 ||
-                (isScrollingUp && lazyListState.firstVisibleItemIndex > 0)
-        }
-    }
-
-    // 탭 전환 시 stickyHeader 위치(index 1)로 자동 스크롤
+    // 탭 전환 시 sticky 탭바 위치(index 2)로 자동 스크롤 — 새 탭 콘텐츠를 상단부터 보이게
     LaunchedEffect(uiState.selectedTab) {
-        if (lazyListState.firstVisibleItemIndex > 1) {
-            lazyListState.animateScrollToItem(1)
+        if (lazyListState.firstVisibleItemIndex > 2) {
+            lazyListState.animateScrollToItem(2)
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BookiiBookiiTheme.colors.uiBg)
-            .nestedScroll(nestedScrollConnection),
+            .background(BookiiBookiiTheme.colors.uiBg),
     ) {
         BookiiTopBar(
             title = "탐색",
@@ -134,18 +103,18 @@ internal fun HomeScreen(
             // [0] 웰컴섹션 — 맨 위에서만 보임
             item { HomeWelcomeSection(nickname = uiState.nickname) }
 
-            // stickyHeader: 검색창(조건부) + 탭바
-            // 애니메이션 없이 즉시 전환 → stickyHeader 높이 변화로 인한 버벅임 제거
+            // [1] 검색창+그룹생성 — 일반 아이템: 맨 위에서만 보이고 스크롤하면 자연스럽게 사라짐
+            // (sticky에서 빼서 헤더 높이를 고정 → 스크롤 점프/자동 스크롤 현상 제거)
+            item {
+                HomeSearchCreateRow(
+                    onSearchClick = onSearchClick,
+                    onCreateGroupClick = onCreateGroupClick,
+                )
+            }
+
+            // [2] stickyHeader: 탭바만 고정 — 높이가 변하지 않아 스크롤 점프 없음
             stickyHeader {
-                Column {
-                    if (showStickySearchBar) {
-                        HomeSearchCreateRow(
-                            onSearchClick = onSearchClick,
-                            onCreateGroupClick = onCreateGroupClick,
-                        )
-                    }
-                    HomeTabRow(selectedTab = uiState.selectedTab, onTabSelect = onTabSelect)
-                }
+                HomeTabRow(selectedTab = uiState.selectedTab, onTabSelect = onTabSelect)
             }
 
             when (uiState.selectedTab) {
