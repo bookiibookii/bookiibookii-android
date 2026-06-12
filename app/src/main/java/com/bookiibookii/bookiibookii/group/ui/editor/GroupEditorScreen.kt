@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -164,7 +165,9 @@ fun GroupEditorScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BookiiBookiiTheme.colors.white),
+            .background(BookiiBookiiTheme.colors.white)
+            // 키보드가 올라오면 폼 전체를 그만큼 위로 올림
+            .imePadding(),
     ) {
         GroupEditorHeader(
             title = if (uiState.isEdit) "그룹 수정" else "그룹 만들기",
@@ -255,9 +258,10 @@ fun GroupEditorScreen(
                 )
             }
             FooterButton(
-                text = if (uiState.isEdit) "수정하기" else "그룹 만들기",
+                text = if (uiState.isEdit) "그룹 수정" else "그룹 만들기",
                 onClick = onSubmit,
-                enabled = uiState.canSubmit && !uiState.submitting,
+                // 수정 모드는 변경사항이 있을 때만 활성화(isDirty). 비활성 시 FooterButton이 자동 grey 처리
+                enabled = uiState.canSubmit && uiState.isDirty && !uiState.submitting,
             )
         }
     }

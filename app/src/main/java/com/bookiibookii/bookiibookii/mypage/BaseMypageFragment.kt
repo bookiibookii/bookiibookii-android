@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.mypage
 
 import android.view.View
 import androidx.fragment.app.Fragment
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 
 abstract class BaseMypageFragment : Fragment() {
@@ -24,10 +25,11 @@ abstract class BaseMypageFragment : Fragment() {
 
     override fun onDetach() {
         super.onDetach()
-        // Fragment가 백스택에서 pop되거나 완전히 제거될 때 nav 복원
-        // 백스택 이동(replace+addToBackStack) 시엔 onDetach가 호출되지 않으므로 안전
+        // Fragment가 백스택에서 pop될 때 바텀네비 복원.
+        // 무조건 VISIBLE로 덮으면 그룹 에디터처럼 비-top-level 화면으로 복귀 시
+        // 시스템 백 콜백 순서 레이스로 바텀네비가 잘못 노출됨 → 복귀 화면 기준으로 재계산.
         if (activity?.isFinishing == false) {
-            activity?.findViewById<View>(R.id.bottomNav)?.visibility = View.VISIBLE
+            (activity as? MainActivity)?.refreshBottomNavVisibility()
         }
     }
 
