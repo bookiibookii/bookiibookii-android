@@ -35,8 +35,8 @@ class LibraryMainViewModel : ViewModel() {
                 val response = RetrofitClient.libApi().getLibraryBooks()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val results = response.body()?.result ?: emptyList()
-                    rawReadingBooks = results.filter { it.progressRate < 100 }.map { it.toUiModel() }
-                    rawDoneBooks   = results.filter { it.progressRate >= 100 }.map { it.toUiModel() }
+                    rawReadingBooks = results.filterNot { it.isDone() }.map { it.toUiModel() }
+                    rawDoneBooks   = results.filter { it.isDone() }.map { it.toUiModel() }
                     applySorting()
                 } else {
                     _uiState.update { it.copy(isLoading = false, errorMessage = "목록을 불러오는 데 실패했습니다.") }
@@ -71,6 +71,9 @@ class LibraryMainViewModel : ViewModel() {
     }
 }
 
+// 완료 그룹(COMPLETED)이면 "다 읽었어요"(별점), 그 외는 "읽는 중"(진행률 바)
+private fun BookResult.isDone() = groupStatus == "COMPLETED"
+
 private fun BookResult.toUiModel() = LibraryBook(
     groupId      = groupId,
     memberBookId = memberBookId,
@@ -78,8 +81,8 @@ private fun BookResult.toUiModel() = LibraryBook(
     title        = title,
     author       = author,
     coverUrl     = image,
-    progress     = if (progressRate < 100) progressRate / 100f else null,
-    rating       = if (progressRate >= 100) rating.toInt().coerceIn(0, 5) else null,
+    progress     = if (!isDone()) progressRate / 100f else null,
+    rating       = if (isDone()) rating.toInt().coerceIn(0, 5) else null,
     startDate    = startDate,
     endDate      = endDate,
 )

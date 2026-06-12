@@ -18,8 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,14 +26,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.group.ui.search.SearchInputField
 import com.bookiibookii.bookiibookii.placesearch.model.PlaceSearchUiState
@@ -85,17 +82,10 @@ private fun PlaceSearchContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로가기",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
-                )
-            }
+            BookiiBackButton(onClick = onBackClick)
             Text(
                 text = "장소 검색",
                 style = BookiiBookiiTheme.typography.semibold18,

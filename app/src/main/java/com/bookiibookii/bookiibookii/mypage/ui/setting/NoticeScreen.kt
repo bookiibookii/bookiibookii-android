@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -35,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 @Composable
@@ -76,14 +76,7 @@ private fun NoticeTopBar(onBackClick: () -> Unit) {
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로 가기",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(32.dp),
-                )
-            }
+            BookiiBackButton(onClick = onBackClick)
             Text(
                 text = "공지사항",
                 style = BookiiBookiiTheme.typography.medium20,

@@ -25,7 +25,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,16 +36,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import kotlinx.coroutines.delay
@@ -106,17 +102,10 @@ fun LibraryAddCardScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(68.dp)
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_back),
-                        contentDescription = "뒤로 가기",
-                        tint = BookiiBookiiTheme.colors.grey900,
-                        modifier = Modifier.size(32.dp),
-                    )
-                }
+                BookiiBackButton(onClick = onBackClick)
                 Text(
                     text = if (isEdit) "독서카드 수정" else "독서카드 추가",
                     style = BookiiBookiiTheme.typography.medium20,
@@ -126,7 +115,7 @@ fun LibraryAddCardScreen(
                 )
                 Spacer(modifier = Modifier.size(40.dp))
             }
-            HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
+            HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
         }
 
         // Content

@@ -30,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.notification.model.KeywordUiModel
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -91,21 +92,10 @@ private fun KeywordSettingHeader(onBackClick: () -> Unit) {
                 .background(BookiiBookiiTheme.colors.white)
                 .padding(horizontal = 16.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onBackClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
-                )
-            }
+            BookiiBackButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart),
+            )
             Text(
                 text = "키워드 알림 설정",
                 style = BookiiBookiiTheme.typography.medium20,

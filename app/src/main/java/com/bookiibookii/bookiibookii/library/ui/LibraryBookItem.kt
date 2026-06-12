@@ -52,7 +52,7 @@ internal fun LibraryBookGridItem(book: LibraryBook, modifier: Modifier = Modifie
 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "[${book.groupName}]",
+                text = "${book.groupName}",
                 style = BookiiBookiiTheme.typography.regular14,
                 color = BookiiBookiiTheme.colors.grey600,
                 maxLines = 1,

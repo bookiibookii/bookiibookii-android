@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -85,20 +86,12 @@ fun GroupReviewScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(BookiiBookiiTheme.colors.white)
-                .border(width = 1.dp, color = BookiiBookiiTheme.colors.grey200)
                 .height(68.dp)
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로 가기",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(32.dp),
-                )
-            }
+            BookiiBackButton(onClick = onBackClick)
             Text(text = "후기", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
             IconButton(onClick = onEditClick, modifier = Modifier.size(40.dp)) {
                 Icon(
@@ -109,6 +102,7 @@ fun GroupReviewScreen(
                 )
             }
         }
+        HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey200)
 
         if (data == null) return@Column
 
@@ -125,13 +119,14 @@ fun GroupReviewScreen(
             MemberReviewCard(data = data)
 
             // 도서별 리뷰 카드
-            data.bookReviews.forEach { review ->
+            data.bookReviews.forEachIndexed { index, review ->
                 BookReviewCard(
                     review = review,
                     myUsername = data.myUsername,
                     partnerUsername = data.partnerUsername,
                     myProfileImageUrl = data.myProfileImageUrl,
                     partnerProfileImageUrl = data.partnerProfileImageUrl,
+                    reverse = index % 2 == 1,
                 )
             }
         }
@@ -249,6 +244,7 @@ private fun BookReviewCard(
     partnerUsername: String,
     myProfileImageUrl: String? = null,
     partnerProfileImageUrl: String? = null,
+    reverse: Boolean = false,   // true면 상대 리뷰가 위로
 ) {
     Column(
         modifier = Modifier
@@ -291,10 +287,20 @@ private fun BookReviewCard(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // 상대방 리뷰 (오른쪽 정렬)
-            ReviewBlock(username = partnerUsername, profileImageUrl = partnerProfileImageUrl, rating = review.partnerRating, date = review.partnerDate, review = review.partnerReview, alignEnd = true)
-            // 내 리뷰 (왼쪽 정렬)
-            ReviewBlock(username = myUsername, profileImageUrl = myProfileImageUrl, rating = review.myRating, date = review.myDate, review = review.myReview, alignEnd = false)
+            // 정렬측은 고정(내것=오른쪽 / 상대=왼쪽), reverse면 세로 순서만 뒤집어 상대를 위로
+            val myBlock: @Composable () -> Unit = {
+                ReviewBlock(username = myUsername, profileImageUrl = myProfileImageUrl, rating = review.myRating, date = review.myDate, review = review.myReview, alignEnd = true)
+            }
+            val partnerBlock: @Composable () -> Unit = {
+                ReviewBlock(username = partnerUsername, profileImageUrl = partnerProfileImageUrl, rating = review.partnerRating, date = review.partnerDate, review = review.partnerReview, alignEnd = false)
+            }
+            if (reverse) {
+                partnerBlock()
+                myBlock()
+            } else {
+                myBlock()
+                partnerBlock()
+            }
         }
     }
 }
@@ -313,6 +319,7 @@ private fun ReviewBlock(username: String, profileImageUrl: String?, rating: Int,
         }
         Column(
             modifier = Modifier
+                .widthIn(max = 308.dp)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
                 .background(chatBubbleBg)
@@ -365,7 +372,7 @@ private fun GroupReviewScreenPreview() {
         GroupReviewScreen(
             data = GroupReviewData(
                 groupName = "함께 읽는 소설 모임",
-                dateRange = "2026.05.01 ~ 2026.05.31",
+                dateRange = "2026. 05. 01. ~ 2026. 05. 31.",
                 myUsername = "북이",
                 partnerUsername = "부키",
                 messages = listOf(
@@ -389,10 +396,21 @@ private fun GroupReviewScreenPreview() {
                         bookGenre = "인문",
                         myRating = 5,
                         myReview = "인류의 역사를 큰 흐름으로 볼 수 있어 좋았습니다.",
-                        myDate = "2026.05.20",
+                        myDate = "2026. 05. 20.",
                         partnerRating = 4,
                         partnerReview = "내용이 방대해서 읽는 데 시간이 걸렸지만 유익했어요.",
-                        partnerDate = "2026.05.18",
+                        partnerDate = "2026. 05. 18.",
+                    ),
+                    BookReviewItem(
+                        bookTitle = "나는 나를 파괴할 권리가 있다",
+                        bookAuthor = "김영하",
+                        bookGenre = "소설",
+                        myRating = 4,
+                        myReview = "작가는 우리 삶의 민낯을 얼마나 깊게 보여주고 싶었을까?",
+                        myDate = "2026. 04. 15.",
+                        partnerRating = 4,
+                        partnerReview = "작가는 우리 삶의 민낯을 얼마나 깊게 보여주고 싶었을까?",
+                        partnerDate = "2026. 04. 05.",
                     ),
                 ),
             ),

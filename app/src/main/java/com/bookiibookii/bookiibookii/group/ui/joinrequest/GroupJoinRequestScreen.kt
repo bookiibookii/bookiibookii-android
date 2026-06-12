@@ -16,8 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +37,7 @@ import com.bookiibookii.bookiibookii.data.model.group.GroupAppItem
 import com.bookiibookii.bookiibookii.group.model.ApplicationListUiState
 import com.bookiibookii.bookiibookii.group.vm.JoinRequestViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -182,18 +183,11 @@ private fun GroupJoinRequestHeader(
                 .height(68.dp)
                 .padding(horizontal = 16.dp),
         ) {
-            IconButton(
+            BookiiBackButton(
                 onClick = onBack,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로가기",
-                    tint = BookiiBookiiTheme.colors.black,
-                )
-            }
+                modifier = Modifier.align(Alignment.CenterStart),
+                tint = BookiiBookiiTheme.colors.black,
+            )
             Text(
                 text = "참여 요청 관리 ($requestCount)",
                 style = BookiiBookiiTheme.typography.medium20,
@@ -201,6 +195,7 @@ private fun GroupJoinRequestHeader(
                 modifier = Modifier.align(Alignment.Center),
             )
         }
+        HorizontalDivider(thickness = 1.dp, color = BookiiBookiiTheme.colors.grey200)
     }
 }
 

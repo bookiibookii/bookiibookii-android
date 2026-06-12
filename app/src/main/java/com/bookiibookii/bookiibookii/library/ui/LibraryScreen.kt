@@ -86,55 +86,62 @@ fun LibraryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BookiiBookiiTheme.colors.uiBg)
-            .verticalScroll(rememberScrollState()),
+            .background(BookiiBookiiTheme.colors.uiBg),
     ) {
+        // 상단 고정 헤더 (스크롤 영역 밖)
         LibraryHeader(onProfileClick = onProfileClick, onBookmarkClick = onBookmarkClick)
 
-        LibrarySearchBar(
-            query = searchQuery,
-            onQueryChange = { searchQuery = it },
+        // 헤더 아래만 스크롤 (weight(1f)로 남은 공간 채움)
+        Column(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = 16.dp),
-        )
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            LibrarySearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp),
+            )
 
-        if (isSearchActive) {
-            LibrarySearchResults(
-                books = filteredBooks,
-                viewType = viewType,
-                onBookClick = onBookClick,
-            )
-        } else {
-            LibraryFilterBar(
-                bookCount = allBooks.size,
-                sortType = sortType,
-                viewType = viewType,
-                onSortChange = { onSortChange(it) },
-                onViewToggle = {
-                    viewType = if (viewType == LibraryViewType.GRID) LibraryViewType.LIST else LibraryViewType.GRID
-                },
-            )
-            if (readingBooks.isNotEmpty()) {
-                LibraryBookSection(
-                    title = "읽는 중",
-                    books = readingBooks,
+            if (isSearchActive) {
+                LibrarySearchResults(
+                    books = filteredBooks,
                     viewType = viewType,
                     onBookClick = onBookClick,
                 )
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-            if (doneBooks.isNotEmpty()) {
-                LibraryBookSection(
-                    title = "다 읽었어요",
-                    books = doneBooks,
+            } else {
+                LibraryFilterBar(
+                    bookCount = allBooks.size,
+                    sortType = sortType,
                     viewType = viewType,
-                    onBookClick = onBookClick,
+                    onSortChange = { onSortChange(it) },
+                    onViewToggle = {
+                        viewType = if (viewType == LibraryViewType.GRID) LibraryViewType.LIST else LibraryViewType.GRID
+                    },
                 )
+                if (readingBooks.isNotEmpty()) {
+                    LibraryBookSection(
+                        title = "읽는 중",
+                        books = readingBooks,
+                        viewType = viewType,
+                        onBookClick = onBookClick,
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+                if (doneBooks.isNotEmpty()) {
+                    LibraryBookSection(
+                        title = "다 읽었어요",
+                        books = doneBooks,
+                        viewType = viewType,
+                        onBookClick = onBookClick,
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(192.dp))
         }
-
-        Spacer(modifier = Modifier.height(192.dp))
     }
 }
 

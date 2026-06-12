@@ -31,6 +31,7 @@ fun LibraryBookBottomSheet(
     author: String = "스즈키 유이",
     genre: String = "소설",
     isRepresentative: Boolean = false,
+    isCompleted: Boolean = false,   // groupStatus == "COMPLETED" 일 때만 리뷰/대표/삭제 노출
     onDismiss: () -> Unit = {},
     onReviewClick: () -> Unit = {},
     onToggleRepresentativeClick: () -> Unit = {},
@@ -66,14 +67,18 @@ fun LibraryBookBottomSheet(
             }
 
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                BottomSheetItem(label = "교환독서 리뷰 확인", color = BookiiBookiiTheme.colors.grey800, onClick = onReviewClick)
-                BottomSheetItem(
-                    label = if (isRepresentative) "대표 도서 등록 해제" else "대표 도서 등록",
-                    color = if (isRepresentative) BookiiBookiiTheme.colors.uiPointRed else BookiiBookiiTheme.colors.grey800,
-                    onClick = onToggleRepresentativeClick,
-                )
+                if (isCompleted) {
+                    BottomSheetItem(label = "교환독서 리뷰 확인", color = BookiiBookiiTheme.colors.grey800, onClick = onReviewClick)
+                    BottomSheetItem(
+                        label = if (isRepresentative) "대표 도서 등록 해제" else "대표 도서 등록",
+                        color = if (isRepresentative) BookiiBookiiTheme.colors.uiPointRed else BookiiBookiiTheme.colors.grey800,
+                        onClick = onToggleRepresentativeClick,
+                    )
+                }
                 BottomSheetItem(label = "알라딘으로 이동", color = BookiiBookiiTheme.colors.grey800, onClick = onAladinClick)
-                BottomSheetItem(label = "서재 삭제", color = BookiiBookiiTheme.colors.uiPointRed, onClick = onDeleteClick)
+                if (isCompleted) {
+                    BottomSheetItem(label = "서재 삭제", color = BookiiBookiiTheme.colors.uiPointRed, onClick = onDeleteClick)
+                }
             }
         }
     }
@@ -88,6 +93,6 @@ private fun BottomSheetItem(label: String, color: Color, onClick: () -> Unit) {
 @Composable
 private fun LibraryBookBottomSheetPreview() {
     BookiiPreview {
-        LibraryBookBottomSheet(isRepresentative = false)
+        LibraryBookBottomSheet(isRepresentative = false, isCompleted = true)
     }
 }

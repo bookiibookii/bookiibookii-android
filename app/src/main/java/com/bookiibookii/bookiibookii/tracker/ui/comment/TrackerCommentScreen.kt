@@ -80,6 +80,7 @@ import com.bookiibookii.bookiibookii.data.model.group.CommentItem
 import com.bookiibookii.bookiibookii.data.model.group.CommentWriter
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerCommentViewModel
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.DeletePopover
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -374,21 +375,10 @@ private fun TrackerCommentHeader(
                 .background(BookiiBookiiTheme.colors.white)
                 .padding(horizontal = 16.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onBackClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
-                )
-            }
+            BookiiBackButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart),
+            )
             Text(
                 text = title,
                 style = BookiiBookiiTheme.typography.medium20,
