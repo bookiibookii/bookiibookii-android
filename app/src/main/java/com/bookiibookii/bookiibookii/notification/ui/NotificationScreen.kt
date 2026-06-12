@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.notification.model.NotificationIconStyle
 import com.bookiibookii.bookiibookii.notification.model.NotificationTab
 import com.bookiibookii.bookiibookii.notification.model.NotificationUiModel
@@ -105,9 +106,7 @@ private fun NotificationHeader(
                 .background(BookiiBookiiTheme.colors.white)
                 .padding(horizontal = 16.dp),
         ) {
-            HeaderIconButton(
-                iconRes = R.drawable.ic_back,
-                contentDescription = "뒤로",
+            BookiiBackButton(
                 onClick = onBackClick,
                 modifier = Modifier.align(Alignment.CenterStart),
             )

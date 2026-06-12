@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -49,6 +50,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.font.FontFamily
@@ -58,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.bookiibookii.bookiibookii.ui.theme.MaruBuri
 
 enum class ReadingCardType { PHOTO, QUOTE }
 
@@ -318,13 +321,11 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
             modifier = Modifier
                 .fillMaxWidth()
                 .height(68.dp)
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
-            }
+            BookiiBackButton(onClick = onBackClick)
             Text(
                 text = if (title.length > 12) title.take(12) + "…" else title,
                 style = BookiiBookiiTheme.typography.medium20,
@@ -332,7 +333,7 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
                 maxLines = 1,
             )
             IconButton(onClick = onMenuClick, modifier = Modifier.size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_hamburger), contentDescription = "메뉴", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
+                Icon(painter = painterResource(R.drawable.ic_meetball), contentDescription = "메뉴", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
             }
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
@@ -376,7 +377,7 @@ private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier)
 
         Column(modifier = Modifier.weight(1f).height(146.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(text = "[${book.groupName}]", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey600, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = "${book.groupName}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey600, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(text = book.title, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 // 장르가 오면 "(장르)" 추가, 현재 API 미제공으로 저자명만 표시
                 Text(
@@ -532,7 +533,7 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
                     Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = BookiiBookiiTheme.colors.white, modifier = Modifier.size(16.dp))
                     val displayText = card.quotation.ifBlank { card.content }
                     if (displayText.isNotBlank()) {
-                        Text(text = "\"$displayText\"", style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.white, maxLines = 5, overflow = TextOverflow.Ellipsis)
+                        Text(text = "\"$displayText\"", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 12.sp), color = BookiiBookiiTheme.colors.white, maxLines = 5, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }

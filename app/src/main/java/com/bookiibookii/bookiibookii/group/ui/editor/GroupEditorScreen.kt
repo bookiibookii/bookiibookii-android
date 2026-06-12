@@ -41,7 +41,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.TextRange
 import java.text.Normalizer
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,6 +70,7 @@ import com.bookiibookii.bookiibookii.group.model.SelectablePlace
 import com.bookiibookii.bookiibookii.group.ui.component.BookSearchDropdown
 import com.bookiibookii.bookiibookii.group.vm.GroupEditorViewModel
 import com.bookiibookii.bookiibookii.ui.component.AddressButton
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -279,18 +279,10 @@ private fun GroupEditorHeader(
                 .background(BookiiBookiiTheme.colors.white)
                 .padding(horizontal = 16.dp),
         ) {
-            IconButton(
+            BookiiBackButton(
                 onClick = onBack,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로가기",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                )
-            }
+                modifier = Modifier.align(Alignment.CenterStart),
+            )
             Text(
                 text = title,
                 style = BookiiBookiiTheme.typography.medium20,

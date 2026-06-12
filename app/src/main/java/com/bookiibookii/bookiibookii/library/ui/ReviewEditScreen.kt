@@ -22,7 +22,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,6 +41,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -94,18 +94,11 @@ fun ReviewEditScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(68.dp)
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_back),
-                            contentDescription = "뒤로 가기",
-                            tint = BookiiBookiiTheme.colors.grey900,
-                            modifier = Modifier.size(32.dp),
-                        )
-                    }
+                    BookiiBackButton(onClick = onBackClick)
                     Text(text = "후기 수정", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
                     Spacer(modifier = Modifier.size(40.dp))
                 }

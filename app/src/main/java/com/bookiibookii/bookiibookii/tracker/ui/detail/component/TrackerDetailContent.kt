@@ -47,6 +47,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
 import com.bookiibookii.bookiibookii.tracker.ui.component.TrackerBookCover
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -170,11 +171,10 @@ private fun TrackerDetailHeader(
                 color = BookiiBookiiTheme.colors.grey900,
                 textAlign = TextAlign.Center,
             )
-            IconCircleButton(
-                iconRes = R.drawable.ic_back,
+            BookiiBackButton(
                 onClick = onBackClick,
                 modifier = Modifier.align(Alignment.CenterStart),
-                iconSize = 24.dp,
+                tint = Color.Unspecified,
             )
             Row(
                 modifier = Modifier.align(Alignment.CenterEnd),

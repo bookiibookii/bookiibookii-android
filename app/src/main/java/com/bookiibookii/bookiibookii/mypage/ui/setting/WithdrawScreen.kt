@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.mypage.ui.setting
 
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 
 import androidx.compose.foundation.background
@@ -28,7 +29,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,13 +38,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
 private val withdrawOptions = listOf(
@@ -185,14 +183,7 @@ private fun WithdrawTopBar(onBackClick: () -> Unit) {
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로 가기",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(32.dp),
-                )
-            }
+            BookiiBackButton(onClick = onBackClick)
             Text(
                 text = "회원 탈퇴",
                 style = BookiiBookiiTheme.typography.medium20,

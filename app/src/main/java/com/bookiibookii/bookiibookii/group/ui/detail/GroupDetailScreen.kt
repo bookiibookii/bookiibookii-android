@@ -69,6 +69,7 @@ import com.bookiibookii.bookiibookii.group.ui.joinrequest.GroupApplyDialog
 import com.bookiibookii.bookiibookii.group.vm.GroupDetailViewModel
 import com.bookiibookii.bookiibookii.group.vm.JoinRequestViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -405,18 +406,11 @@ private fun GroupDetailHeader(
                 .height(68.dp)
                 .padding(horizontal = 16.dp),
         ) {
-            IconButton(
+            BookiiBackButton(
                 onClick = onBack,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로가기",
-                    tint = BookiiBookiiTheme.colors.black,
-                )
-            }
+                modifier = Modifier.align(Alignment.CenterStart),
+                tint = BookiiBookiiTheme.colors.black,
+            )
             Text(
                 text = "그룹 상세",
                 style = BookiiBookiiTheme.typography.medium20,

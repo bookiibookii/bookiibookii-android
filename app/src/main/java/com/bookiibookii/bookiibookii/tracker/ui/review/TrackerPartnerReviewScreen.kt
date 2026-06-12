@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -43,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerPartnerReviewViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -450,21 +450,10 @@ private fun TrackerPartnerReviewHeader(
                 .background(BookiiBookiiTheme.colors.white)
                 .padding(horizontal = 16.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onBackClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
-                )
-            }
+            BookiiBackButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart),
+            )
             Text(
                 text = "교환독서 후기",
                 style = BookiiBookiiTheme.typography.medium20,

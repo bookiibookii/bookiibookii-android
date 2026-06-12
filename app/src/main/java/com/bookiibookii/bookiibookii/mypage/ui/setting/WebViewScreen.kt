@@ -14,19 +14,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import androidx.compose.ui.viewinterop.AndroidView
-import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 
 @Composable
 fun WebViewScreen(
@@ -59,17 +56,10 @@ private fun WebViewTopBar(title: String, onBackClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(68.dp)
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로 가기",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(24.dp),
-                )
-            }
+            BookiiBackButton(onClick = onBackClick)
             Text(
                 text = title,
                 style = BookiiBookiiTheme.typography.medium20,

@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.mypage.ui.main
 
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
@@ -30,7 +31,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -102,14 +102,7 @@ fun AddressManagementScreen(
                     modifier = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_back),
-                            contentDescription = "뒤로가기",
-                            tint = BookiiBookiiTheme.colors.grey900,
-                            modifier = Modifier.size(32.dp),
-                        )
-                    }
+                    BookiiBackButton(onClick = onBackClick)
                     Text(
                         text = "주소지 관리",
                         style = BookiiBookiiTheme.typography.medium20,
@@ -781,14 +774,7 @@ private fun AddressSearchDialog(
                     .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onDismiss, modifier = Modifier.size(40.dp)) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_back),
-                        contentDescription = "뒤로가기",
-                        tint = BookiiBookiiTheme.colors.grey900,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
+                BookiiBackButton(onClick = onDismiss)
                 Text(
                     text = "주소 검색",
                     style = BookiiBookiiTheme.typography.semibold18,

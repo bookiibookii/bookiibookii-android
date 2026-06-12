@@ -70,6 +70,7 @@ import androidx.compose.ui.window.PopupProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -836,10 +837,8 @@ private fun CardDetailHeader(
     onDeleteClick: () -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
-        Box(modifier = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 8.dp)) {
-            IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.CenterStart).size(40.dp)) {
-                Icon(painter = painterResource(R.drawable.ic_back), contentDescription = "뒤로 가기", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
-            }
+        Box(modifier = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 16.dp)) {
+            BookiiBackButton(onClick = onBackClick, modifier = Modifier.align(Alignment.CenterStart))
             Text(
                 text = "독서카드",
                 style = BookiiBookiiTheme.typography.medium20,

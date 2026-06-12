@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -87,18 +88,11 @@ fun GroupReviewScreen(
                 .background(BookiiBookiiTheme.colors.white)
                 .border(width = 1.dp, color = BookiiBookiiTheme.colors.grey200)
                 .height(68.dp)
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로 가기",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(32.dp),
-                )
-            }
+            BookiiBackButton(onClick = onBackClick)
             Text(text = "후기", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
             IconButton(onClick = onEditClick, modifier = Modifier.size(40.dp)) {
                 Icon(

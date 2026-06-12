@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.mypage.ui.main
 
 import android.net.Uri
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 
@@ -35,7 +36,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -127,14 +127,7 @@ fun ProfileSettingScreen(
                 modifier = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBackClick, modifier = Modifier.size(40.dp)) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_back),
-                        contentDescription = "뒤로가기",
-                        tint = BookiiBookiiTheme.colors.grey900,
-                        modifier = Modifier.size(32.dp),
-                    )
-                }
+                BookiiBackButton(onClick = onBackClick)
                 Text(
                     text = "내 프로필",
                     style = BookiiBookiiTheme.typography.medium20,
