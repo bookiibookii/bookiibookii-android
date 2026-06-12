@@ -275,7 +275,7 @@ private fun ReviewCard(
         ) {
             if (comment.isEmpty()) {
                 Text(
-                    text = "후기를 자유롭게 남겨주세요.",
+                    text = "파트너에게 소중한 후기를 남겨주세요.",
                     style = BookiiBookiiTheme.typography.regular16,
                     color = BookiiBookiiTheme.colors.grey500,
                 )
@@ -315,21 +315,17 @@ private fun TrackerCard(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = groupName,
                 style = BookiiBookiiTheme.typography.medium16,
                 color = BookiiBookiiTheme.colors.grey800,
-                modifier = Modifier.align(Alignment.CenterStart),
             )
+            // 디바이더
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .padding(top = 10.dp)
                     .height(0.8.dp)
                     .background(BookiiBookiiTheme.colors.grey100),
             )

@@ -26,13 +26,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -223,11 +224,11 @@ fun TrackerCommentScreen(
                 onSubmit = onSubmit,
                 modifier = Modifier
                     .imePadding()
-                    .background(BookiiBookiiTheme.colors.white)
+                    .background(BookiiBookiiTheme.colors.uiBg)
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
             )
         },
-        containerColor = BookiiBookiiTheme.colors.white,
+        containerColor = BookiiBookiiTheme.colors.uiBg,
     ) { innerPadding ->
         // 당김량만큼 리스트를 위로 밀어 하단에 빈 공간(gap)을 만든다. 그 공간에 reload 아이콘 배치
         val gapPx = if (isRefreshing) refreshingGapPx else pullPx.coerceAtMost(maxPullPx)
@@ -235,27 +236,55 @@ fun TrackerCommentScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .clipToBounds()
                 .nestedScroll(pullConnection),
         ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { translationY = -gapPx },
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            ) {
-                items(comments, key = { it.id }) { comment ->
-                    CommentRow(
-                        comment = comment,
-                        currentUserId = currentUserId,
-                        onDelete = onDelete,
+            if (comments.isEmpty()) {
+                EmptyCommentCard(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(16.dp),
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                        .clip(BookiiBookiiTheme.shape.round20)
+                        .background(BookiiBookiiTheme.colors.white)
+                        .clipToBounds(),
+                ) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer { translationY = -gapPx },
+                        contentPadding = PaddingValues(12.dp),
+                    ) {
+                        itemsIndexed(comments, key = { _, item -> item.id }) { index, comment ->
+                            CommentRow(
+                                comment = comment,
+                                currentUserId = currentUserId,
+                                onDelete = onDelete,
+                            )
+                            // 댓글마다 하단 divider — 마지막 댓글은 제외
+                            if (index < comments.lastIndex) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                    thickness = 1.dp,
+                                    color = BookiiBookiiTheme.colors.grey100,
+                                )
+                            }
+                        }
+                    }
+                    // 하단 빈 공간(gap) 안에 reload 아이콘 — 리스트가 위로 밀린 만큼의 영역에 중앙 배치
+                    BottomReloadIndicator(
+                        gapPx = gapPx,
+                        pullFraction = (pullPx / refreshThresholdPx).coerceIn(0f, 1f),
+                        isRefreshing = isRefreshing,
+                        modifier = Modifier.align(Alignment.BottomCenter),
                     )
                 }
-            }
 
-            if (comments.isNotEmpty()) {
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -270,14 +299,26 @@ fun TrackerCommentScreen(
                     }
                 }
             }
-            // 하단 빈 공간(gap) 안에 reload 아이콘 — 리스트가 위로 밀린 만큼의 영역에 중앙 배치
-            BottomReloadIndicator(
-                gapPx = gapPx,
-                pullFraction = (pullPx / refreshThresholdPx).coerceIn(0f, 1f),
-                isRefreshing = isRefreshing,
-                modifier = Modifier.align(Alignment.BottomCenter),
-            )
         }
+    }
+}
+
+// 빈 상태 카드
+@Composable
+private fun EmptyCommentCard(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(BookiiBookiiTheme.shape.round24)
+            .background(BookiiBookiiTheme.colors.white)
+            .padding(vertical = 24.dp, horizontal = 24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "댓글이 없어요.",
+            style = BookiiBookiiTheme.typography.regular16,
+            color = BookiiBookiiTheme.colors.grey600,
+        )
     }
 }
 
@@ -542,7 +583,7 @@ private fun ScrollChip(
             contentDescription = contentDescription,
             tint = BookiiBookiiTheme.colors.grey900,
             modifier = Modifier
-                .size(24.dp)
+                .size(32.dp)
                 .graphicsLayer { this.rotationZ = rotationZ },
         )
     }
@@ -645,6 +686,26 @@ private fun TrackerCommentScreenPreview() {
         TrackerCommentScreen(
             title = "김영하 도장깨기 하실 분",
             comments = previewComments,
+            currentUserId = 2L,
+            draft = "",
+            submitting = false,
+            isRefreshing = false,
+            onBackClick = {},
+            onDraftChange = {},
+            onSubmit = {},
+            onDelete = {},
+            onRefresh = {},
+        )
+    }
+}
+
+@Preview(widthDp = 412, heightDp = 917, showBackground = true)
+@Composable
+private fun TrackerCommentScreenEmptyPreview() {
+    BookiiPreview {
+        TrackerCommentScreen(
+            title = "김영하 도장깨기 하실 분",
+            comments = emptyList(),
             currentUserId = 2L,
             draft = "",
             submitting = false,

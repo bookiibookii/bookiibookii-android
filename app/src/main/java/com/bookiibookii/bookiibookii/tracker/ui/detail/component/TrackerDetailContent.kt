@@ -376,6 +376,12 @@ private fun TwoProfileSection(
     showReadingProgress: Boolean,
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
+        ExchangeConnector(
+            label = exchangeLabel,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 52.dp),
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -391,12 +397,6 @@ private fun TwoProfileSection(
                 modifier = Modifier.weight(1f),
             )
         }
-        ExchangeConnector(
-            label = exchangeLabel,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 52.dp),
-        )
     }
 }
 
