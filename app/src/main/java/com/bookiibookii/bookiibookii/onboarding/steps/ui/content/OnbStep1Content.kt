@@ -78,14 +78,6 @@ private object SquircleShape : Shape {
     }
 }
 
-private val nicknameAllowedRegex = Regex("^[가-힣A-Za-z0-9._\\-_/()\\[\\]:!?]+$")
-
-private fun validateNicknameInput(nickname: String): Boolean {
-    if (nickname.isBlank() || nickname.length > 10) return false
-    if (nickname.any { it.isWhitespace() || Character.isSurrogate(it) }) return false
-    return nicknameAllowedRegex.matches(nickname)
-}
-
 @Composable
 fun OnbStep1Content(
     vm: OnbViewModel,
@@ -112,8 +104,7 @@ fun OnbStep1Content(
         }
     }
 
-    val isCheckEnabled = validateNicknameInput(state.nickname) &&
-            nicknameCheckState !is NicknameCheckState.Loading
+    val isCheckEnabled = nicknameCheckState !is NicknameCheckState.Loading
 
     Column(
         modifier = Modifier
