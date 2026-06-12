@@ -285,13 +285,13 @@ internal fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: 
 }
 
 @Composable
-private fun BookSpineItem(title: String, isOrange: Boolean, modifier: Modifier = Modifier) {
+internal fun BookSpineItem(title: String, isOrange: Boolean, modifier: Modifier = Modifier) {
     val bgColor   = if (isOrange) BookiiBookiiTheme.colors.uiMain150 else BookiiBookiiTheme.colors.uiMainSubPale
     val textColor = if (isOrange) BookiiBookiiTheme.colors.uiMain     else BookiiBookiiTheme.colors.uiMainSub
     val archHeight = 15.dp
 
-    // 12글자 이상이면 11자 + …
-    val displayTitle = if (title.length >= 12) title.take(11) + "…" else title
+    // 16글자 넘으면 16자 + …
+    val displayTitle = if (title.length > 16) title.take(16) + "…" else title
 
     Box(modifier = modifier, contentAlignment = Alignment.TopCenter) {
         Box(

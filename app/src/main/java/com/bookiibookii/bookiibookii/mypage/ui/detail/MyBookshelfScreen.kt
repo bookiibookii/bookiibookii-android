@@ -195,9 +195,11 @@ private fun BookshelfTopBar(onBack: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            BookiiBackButton(onClick = onBack)
+            Row(modifier = Modifier.width(88.dp), verticalAlignment = Alignment.CenterVertically) {
+                BookiiBackButton(onClick = onBack)
+            }
             Text(text = "나의 책장", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900, textAlign = TextAlign.Center)
-            Spacer(modifier = Modifier.size(40.dp))
+            Spacer(modifier = Modifier.width(88.dp))
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
     }

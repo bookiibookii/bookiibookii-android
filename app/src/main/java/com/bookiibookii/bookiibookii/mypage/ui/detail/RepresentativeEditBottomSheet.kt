@@ -65,6 +65,19 @@ fun RepresentativeEditBottomSheet(
         sheetState = sheetState,
         containerColor = BookiiBookiiTheme.colors.white,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(44.dp).height(4.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(BookiiBookiiTheme.colors.grey200),
+                )
+            }
+        },
     ) {
         RepresentativeEditContent(
             bookList = bookList,
@@ -97,10 +110,17 @@ private fun RepresentativeEditContent(
             .padding(horizontal = 20.dp),
     ) {
         Text(
-            text = "나를 대표하는 책",
+            text = "순서 변경",
             style = BookiiBookiiTheme.typography.semibold20,
             color = BookiiBookiiTheme.colors.grey900,
-            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "나를 잘 보여주는 책을 최대 7권까지 고를 수 있어요.\n인생 책은 최소 1권 포함해주세요.",
+            style = BookiiBookiiTheme.typography.regular14,
+            color = BookiiBookiiTheme.colors.grey500,
+            modifier = Modifier.padding(bottom = 20.dp),
         )
 
         LazyColumn(
@@ -248,7 +268,7 @@ private fun RepresentativeEditListItem(
                 Icon(
                     painter = painterResource(R.drawable.ic_x),
                     contentDescription = "목록에서 제거",
-                    tint = BookiiBookiiTheme.colors.grey700,
+                    tint = BookiiBookiiTheme.colors.black,
                     modifier = Modifier.size(16.dp),
                 )
             }

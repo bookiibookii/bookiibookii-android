@@ -1,7 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.ui.detail
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,19 +28,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.FavoriteBook
 import com.bookiibookii.bookiibookii.data.model.mypage.RepresentativeBook
+import com.bookiibookii.bookiibookii.mypage.ui.main.BookSpineItem
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.component.LifeBookSearchDialog
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -79,39 +76,9 @@ internal fun RepresentativeBookSection(
             val itemWidth = (maxWidth - gap * 6) / 7
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.Bottom) {
                 books.forEachIndexed { index, book ->
-                    val displayTitle = if (book.title.length > 12) book.title.take(12) + "…" else book.title
-                    BookSpineItemLocal(title = displayTitle, isOrange = index % 2 == 0, width = itemWidth)
+                    BookSpineItem(title = book.title, isOrange = index % 2 == 0, modifier = Modifier.width(itemWidth))
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun BookSpineItemLocal(title: String, isOrange: Boolean, width: Dp) {
-    val bgColor   = if (isOrange) BookiiBookiiTheme.colors.uiMain150 else BookiiBookiiTheme.colors.uiMainSubPale
-    val textColor = if (isOrange) BookiiBookiiTheme.colors.uiMain     else BookiiBookiiTheme.colors.uiMainSub
-    val archHeight = 15.dp
-
-    Box(contentAlignment = Alignment.TopCenter) {
-        Box(
-            modifier = Modifier
-                .padding(top = archHeight / 2)
-                .width(width)
-                .background(color = bgColor, shape = RoundedCornerShape(bottomStart = 5.dp, bottomEnd = 5.dp))
-                .padding(top = 24.dp, bottom = 16.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(text = title, style = BookiiBookiiTheme.typography.medium16, color = textColor, maxLines = 1, modifier = Modifier.verticalRotation())
-        }
-        Canvas(modifier = Modifier.width(width).height(archHeight)) {
-            val path = Path().apply {
-                arcTo(rect = Rect(0f, 0f, size.width, size.height), startAngleDegrees = 180f, sweepAngleDegrees = 180f, forceMoveTo = true)
-                lineTo(size.width, size.height)
-                lineTo(0f, size.height)
-                close()
-            }
-            drawPath(path, color = bgColor)
         }
     }
 }
