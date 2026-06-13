@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 도서 검색 결과 드롭다운
@@ -73,7 +74,7 @@ private fun BookCard(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
-                text = book.title,
+                text = book.title.stripBookSubtitle(),
                 style = BookiiBookiiTheme.typography.medium16,
                 color = BookiiBookiiTheme.colors.grey800,
                 maxLines = 1,

@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.ui.detail
 
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 import androidx.compose.foundation.BorderStroke
@@ -168,19 +169,22 @@ private fun RepresentativeEditContent(
                         draggingItemOffset = 0f
                     },
                     onDrag = { dragAmount ->
-                        // 캡처된 index는 드래그 시작 위치로 고정돼 있어, 옮겨진 뒤의 실제 위치인
-                        // draggedIndex를 기준으로 계산해야 여러 칸 연속 이동이 된다
-                        val current = draggedIndex
-                        if (current != null) {
+                        // draggedIndex(옮겨진 뒤의 실제 위치) 기준으로 계산해 여러 칸 연속 이동 지원.
+                        // while로 처리해 한 이벤트에서 여러 칸 넘어가는 빠른 드래그도 모두 반영(끊김 방지)
+                        if (draggedIndex != null) {
                             draggingItemOffset += dragAmount
+                            var current = draggedIndex!!
 
-                            if (draggingItemOffset > itemHeightPx / 2 && current < bookList.lastIndex) {
+                            while (draggingItemOffset > itemHeightPx / 2 && current < bookList.lastIndex) {
                                 onMove(current, current + 1)
-                                draggedIndex = current + 1
+                                current += 1
+                                draggedIndex = current
                                 draggingItemOffset -= itemHeightPx
-                            } else if (draggingItemOffset < -itemHeightPx / 2 && current > 0) {
+                            }
+                            while (draggingItemOffset < -itemHeightPx / 2 && current > 0) {
                                 onMove(current, current - 1)
-                                draggedIndex = current - 1
+                                current -= 1
+                                draggedIndex = current
                                 draggingItemOffset += itemHeightPx
                             }
                         }
@@ -239,7 +243,7 @@ private fun RepresentativeEditListItem(
             ) {
                 // 상단: 책 제목 semibold14 grey900
                 Text(
-                    text = book.title,
+                    text = book.title.stripBookSubtitle(),
                     style = BookiiBookiiTheme.typography.semibold14,
                     color = BookiiBookiiTheme.colors.grey900,
                     maxLines = 1,

@@ -42,6 +42,7 @@ import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 신청자 명단 화면 — VM 주입/상태 수집 (stateful)
@@ -300,7 +301,7 @@ private fun JoinRequestBookRow(
         )
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = title,
+                text = title.stripBookSubtitle(),
                 style = BookiiBookiiTheme.typography.medium15,
                 color = BookiiBookiiTheme.colors.grey800,
             )

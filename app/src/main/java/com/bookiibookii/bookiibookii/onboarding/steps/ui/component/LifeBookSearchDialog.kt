@@ -44,6 +44,7 @@ import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -276,7 +277,7 @@ private fun BookResultItem(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
-                text = book.title,
+                text = book.title.stripBookSubtitle(),
                 style = typography.medium18,
                 color = colors.grey800,
                 maxLines = 1,

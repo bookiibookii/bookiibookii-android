@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 
@@ -67,7 +68,7 @@ fun ExploreGroupCard(
                 ) {
                     ExchangeTypeBadge(text = exchangeType)
                     Text(
-                        text = title,
+                        text = title.stripBookSubtitle(),
                         style = BookiiBookiiTheme.typography.medium16,
                         color = BookiiBookiiTheme.colors.grey900,
                         maxLines = 1,

@@ -46,6 +46,7 @@ import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 private const val COMMENT_MAX_LENGTH = 20
@@ -426,7 +427,7 @@ private fun BookColumn(
             color = BookiiBookiiTheme.colors.grey700,
         )
         Text(
-            text = bookTitle,
+            text = bookTitle.stripBookSubtitle(),
             style = BookiiBookiiTheme.typography.medium16,
             color = BookiiBookiiTheme.colors.grey800,
             textAlign = TextAlign.Center,

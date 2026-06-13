@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.ui.detail
 
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 import androidx.compose.foundation.background
@@ -77,7 +78,7 @@ fun BookshelfBookBottomSheet(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Text(
-                            text = title,
+                            text = title.stripBookSubtitle(),
                             style = BookiiBookiiTheme.typography.semibold20,
                             color = BookiiBookiiTheme.colors.grey900,
                         )

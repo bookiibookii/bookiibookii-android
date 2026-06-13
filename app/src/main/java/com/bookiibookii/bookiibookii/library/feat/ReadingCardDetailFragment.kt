@@ -34,6 +34,7 @@ import com.bookiibookii.bookiibookii.library.BaseLibraryFragment
 import com.bookiibookii.bookiibookii.library.ui.ReadingCard
 import com.bookiibookii.bookiibookii.library.ui.ReadingCardDetailScreen
 import com.bookiibookii.bookiibookii.library.ui.ShareableCard
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import com.kakao.sdk.share.ShareClient
 import com.kakao.sdk.share.WebSharerClient
@@ -231,7 +232,7 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
                 context.showCustomToast("공유에 실패했어요", false)
                 return@fetchShareUrl
             }
-            val text = card.bookTitle.ifBlank { "독서카드" }
+            val text = card.bookTitle.stripBookSubtitle().ifBlank { "독서카드" }
             val intentUrl = "https://twitter.com/intent/tweet?text=" +
                 Uri.encode(text) + "&url=" + Uri.encode(shareUrl)
             try {

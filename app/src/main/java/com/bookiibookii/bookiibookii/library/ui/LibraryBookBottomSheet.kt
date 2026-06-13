@@ -1,5 +1,6 @@
 ﻿package com.bookiibookii.bookiibookii.library.ui
 
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,7 +59,7 @@ fun LibraryBookBottomSheet(
                 }
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(text = title, style = BookiiBookiiTheme.typography.semibold20, color = BookiiBookiiTheme.colors.grey900)
+                        Text(text = title.stripBookSubtitle(), style = BookiiBookiiTheme.typography.semibold20, color = BookiiBookiiTheme.colors.grey900)
                         Text(text = "$author ($genre)", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey700)
                     }
                     Spacer(modifier = Modifier.height(12.dp))

@@ -52,6 +52,7 @@ import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 private val OuterCardPadding = 20.dp
@@ -438,7 +439,7 @@ private fun ProfileColumn(
                         color = BookiiBookiiTheme.colors.grey700,
                     )
                     Text(
-                        text = profile.bookTitle,
+                        text = profile.bookTitle.stripBookSubtitle(),
                         style = BookiiBookiiTheme.typography.medium16,
                         color = BookiiBookiiTheme.colors.grey800,
                         maxLines = 1,
