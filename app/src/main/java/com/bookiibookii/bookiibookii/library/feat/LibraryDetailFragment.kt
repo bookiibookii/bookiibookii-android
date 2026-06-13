@@ -31,9 +31,11 @@ class LibraryDetailFragment : BaseLibraryFragment() {
     private val groupName: String   get() = arguments?.getString(ARG_GROUP_NAME, "") ?: ""
     private val bookTitle: String   get() = arguments?.getString(ARG_BOOK_TITLE, "") ?: ""
     private val author: String      get() = arguments?.getString(ARG_AUTHOR, "") ?: ""
+    private val genre: String       get() = arguments?.getString(ARG_GENRE, "") ?: ""
     private val coverUrl: String    get() = arguments?.getString(ARG_COVER_URL, "") ?: ""
     private val startDate: String   get() = arguments?.getString(ARG_START_DATE, "") ?: ""
     private val endDate: String     get() = arguments?.getString(ARG_END_DATE, "") ?: ""
+    private val completedAt: String get() = arguments?.getString(ARG_COMPLETED_AT, "") ?: ""
     private val rating: Double      get() = arguments?.getDouble(ARG_RATING, 0.0) ?: 0.0
     private val isDone: Boolean     get() = arguments?.getBoolean(ARG_IS_DONE, false) ?: false
     private val progressRate: Int   get() = arguments?.getInt(ARG_PROGRESS_RATE, 0) ?: 0
@@ -44,12 +46,14 @@ class LibraryDetailFragment : BaseLibraryFragment() {
         groupName    = groupName,
         title        = bookTitle,
         author       = author,
+        genre        = genre,
         coverUrl     = coverUrl.ifBlank { null },
         isDone       = isDone,
         progressRate = progressRate,
         rating       = rating,
         startDate    = startDate,
         endDate      = endDate.ifBlank { null },
+        completedAt  = completedAt.ifBlank { null },
     ) else null
 
     override fun onCreateView(
@@ -145,9 +149,11 @@ class LibraryDetailFragment : BaseLibraryFragment() {
         private const val ARG_GROUP_NAME     = "arg_group_name"
         private const val ARG_BOOK_TITLE     = "arg_book_title"
         private const val ARG_AUTHOR         = "arg_author"
+        private const val ARG_GENRE          = "arg_genre"
         private const val ARG_COVER_URL      = "arg_cover_url"
         private const val ARG_START_DATE     = "arg_start_date"
         private const val ARG_END_DATE       = "arg_end_date"
+        private const val ARG_COMPLETED_AT   = "arg_completed_at"
         private const val ARG_RATING         = "arg_rating"
         private const val ARG_IS_DONE        = "arg_is_done"
         private const val ARG_PROGRESS_RATE  = "arg_progress_rate"
@@ -158,9 +164,11 @@ class LibraryDetailFragment : BaseLibraryFragment() {
             groupName: String = "",
             bookTitle: String = "",
             author: String = "",
+            genre: String = "",
             coverUrl: String = "",
             startDate: String = "",
             endDate: String = "",
+            completedAt: String = "",
             rating: Double = 0.0,
             isDone: Boolean = false,
             progressRate: Int = 0,
@@ -171,9 +179,11 @@ class LibraryDetailFragment : BaseLibraryFragment() {
                 putString(ARG_GROUP_NAME, groupName)
                 putString(ARG_BOOK_TITLE, bookTitle)
                 putString(ARG_AUTHOR, author)
+                putString(ARG_GENRE, genre)
                 putString(ARG_COVER_URL, coverUrl)
                 putString(ARG_START_DATE, startDate)
                 putString(ARG_END_DATE, endDate)
+                putString(ARG_COMPLETED_AT, completedAt)
                 putDouble(ARG_RATING, rating)
                 putBoolean(ARG_IS_DONE, isDone)
                 putInt(ARG_PROGRESS_RATE, progressRate)

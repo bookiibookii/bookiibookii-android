@@ -73,6 +73,9 @@ data class ReadingCard(
     val type: ReadingCardType,
     val isBookmarked: Boolean = false,
     val date: String = "",
+    val completedAt: String? = null,  // 독서 종료일 (책 정보 보강용)
+    val genre: String = "",           // 장르 (책 정보 보강용)
+    val totalPages: Int? = null,      // 전체 페이지 수
     val bookTitle: String = "",
     val quotation: String = "",
     val imageUrl: String? = null,
@@ -99,13 +102,14 @@ data class LibraryDetailBook(
     val groupName: String,
     val title: String,
     val author: String,
-    val genre: String = "",         // 서재 API 미제공 — 향후 그룹 상세 API 연동 시
+    val genre: String = "",         // 서재 목록 API(getLibraryBooks)에서 전달
     val coverUrl: String? = null,
     val isDone: Boolean = false,    // true: 완료(별점), false: 읽는 중(프로그래스바)
     val progressRate: Int = 0,      // 0-100 (isDone=false 일 때 사용)
     val rating: Double = 0.0,       // 0-5 (isDone=true 일 때 사용)
     val startDate: String = "",
     val endDate: String? = null,    // 완료됐을 때만 값 존재
+    val completedAt: String? = null, // 독서 종료일 — 표시용 종료일은 이 값을 사용
 )
 
 @Composable
@@ -165,6 +169,7 @@ fun LibraryDetailScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 if (book != null) {
+                    // genre·시작/종료 날짜 모두 서재 목록 API(getLibraryBooks)에서 args로 전달됨
                     BookInfoCard(book = book, modifier = Modifier.padding(horizontal = 16.dp))
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -351,8 +356,9 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
 @Composable
 private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier) {
     val startFmt = DateUtils.formatDate(book.startDate)
-    val dateText = if (book.isDone && !book.endDate.isNullOrBlank()) {
-        "$startFmt ~ ${DateUtils.formatDate(book.endDate)}"
+    // 종료일은 completedAt 사용 — 값 있으면 "시작 ~ 종료", 없으면 "시작 ~"
+    val dateText = if (!book.completedAt.isNullOrBlank()) {
+        "$startFmt ~ ${DateUtils.formatDate(book.completedAt)}"
     } else {
         "$startFmt ~"
     }
@@ -595,7 +601,7 @@ private fun LibraryDetailScreenReadingPreview() {
 private fun LibraryDetailScreenDonePreview() {
     BookiiPreview {
         LibraryDetailScreen(
-            book = previewReadingBook.copy(isDone = true, rating = 4.5, endDate = "2026-06-01"),
+            book = previewReadingBook.copy(isDone = true, rating = 4.5, completedAt = "2026-06-01"),
             cards = previewDetailCards,
         )
     }

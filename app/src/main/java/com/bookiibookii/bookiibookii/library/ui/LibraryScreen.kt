@@ -53,11 +53,13 @@ data class LibraryBook(
     val groupName: String,
     val title: String,
     val author: String = "",
+    val genre: String = "",
     val coverUrl: String? = null,
     val progress: Float? = null,
     val rating: Int? = null,
     val startDate: String = "",
     val endDate: String? = null,
+    val completedAt: String? = null,
 )
 
 @Composable
