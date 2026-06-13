@@ -26,6 +26,8 @@ fun actionsForStatus(displayStatus: String?): Pair<TrackerAction, TrackerAction>
     "REVIEW_WAITING_PARTNER" -> TrackerAction.EditBookReview to TrackerAction.WriteReadingCard
     // 교환독서 후기 작성: 단일 버튼 → 파트너 리뷰 화면
     "EXCHANGE_REVIEW_WRITING" -> TrackerAction.WritePartnerReview to TrackerAction.None
+    // 파트너 후기 작성 대기 — 버튼 동일, 비활성화
+    "EXCHANGE_REVIEW_WAITING_PARTNER" -> TrackerAction.WritePartnerReview to TrackerAction.None
     "TRACKING_REQUIRED" -> TrackerAction.RegisterTrackingNumber to TrackerAction.CheckDeliveryInfo
     // 반납 단계 운송장 등록: TRACKING_REQUIRED와 버튼·동작 동일
     "RETURN_TRACKING_REQUIRED" -> TrackerAction.RegisterTrackingNumber to TrackerAction.CheckDeliveryInfo
@@ -60,10 +62,12 @@ fun isSecondaryActionDisabled(displayStatus: String?): Boolean = displayStatus i
 // - WAITING_PARTNER_MEETING_COMPLETE: 파트너의 약속 완료 대기
 // - WAITING_PARTNER_TRACKING_REGISTER: 파트너 운송장 등록 대기(두 버튼 모두 비활성)
 // - WAITING_PARTNER_RECEIPT_CONFIRM: 파트너 수령 확인 대기(두 버튼 모두 비활성)
+// - EXCHANGE_REVIEW_WAITING_PARTNER: 파트너 후기 작성 대기(교환독서 후기 작성 비활성)
 fun isPrimaryActionDisabled(displayStatus: String?): Boolean = displayStatus in setOf(
     "WAITING_PARTNER_MEETING_COMPLETE",
     "WAITING_PARTNER_TRACKING_REGISTER",
     "WAITING_PARTNER_RECEIPT_CONFIRM",
+    "EXCHANGE_REVIEW_WAITING_PARTNER",
 )
 
 // 읽기 진행률 바·% 텍스트를 숨겨야 하는 상태 (교환 약속~교환 이후 단계)
@@ -72,7 +76,6 @@ private val PROGRESS_HIDDEN_STATUSES = setOf(
     "WAITING_HOST_MEETING_REGISTER",
     "EXCHANGING",
     "WAITING_PARTNER_MEETING_COMPLETE",
-    "EXCHANGE_REVIEW_WRITING",
 )
 
 fun isReadingProgressHidden(displayStatus: String?): Boolean =
@@ -85,5 +88,8 @@ fun progressTextOverride(displayStatus: String?, isMine: Boolean): String? = whe
     "SHIPPING", "WAITING_PARTNER_TRACKING_REGISTER", "RETURNING" -> "수령 전" // 나·파트너 둘 다
     "WAITING_PARTNER_RECEIPT_CONFIRM" -> if (isMine) "수령 완료" else "수령 전" // 나 완료 / 파트너 전
     "REVIEW_WAITING_PARTNER" -> if (isMine) "교환 준비 완료" else null // 내 쪽만
+    // 교환독서 후기 단계 — 진행률 바는 유지하고 텍스트만 교체
+    "EXCHANGE_REVIEW_WRITING" -> "수령 완료" // 나·파트너 둘 다
+    "EXCHANGE_REVIEW_WAITING_PARTNER" -> if (isMine) "교환독서 완료" else "수령 완료" // 나 완료 / 파트너 수령
     else -> null
 }

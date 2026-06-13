@@ -9,6 +9,7 @@ data class GroupDetailResponse(
     val tradeType: String,          // DIRECT, DELIVERY
     val placeName: String,
     val address: String,
+    val detailAddress: String,      // 상세주소 (없으면 "")
 
     // 2. 도서 상세 정보
     val title: String,

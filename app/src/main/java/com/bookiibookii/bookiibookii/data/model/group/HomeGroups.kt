@@ -30,6 +30,8 @@ data class HomeSectionItem(
     @SerializedName("hostProfileImageUrl") val hostProfileImageUrl: String? = null,
     @SerializedName("bookTitle") val bookTitle: String? = null,
     @SerializedName("readingPeriod") val readingPeriod: Int? = null,
+    @SerializedName("tradeType") val tradeType: String? = null,   // "DIRECT" / "DELIVERY"
+    @SerializedName("genre") val genre: String? = null,
 )
 
 object HomeLayoutType {

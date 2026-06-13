@@ -372,8 +372,7 @@ private fun GroupDetailContent(
                 body = detail.groupComment.orEmpty(),
                 // 택배 교환은 주소 정보를 노출하지 않음. 직접 교환만 희망 장소 표시
                 exchangePlaceName = if (detail.tradeType == "DELIVERY") null else detail.address,
-                // TODO: 백엔드에서 상세주소(detailAddress) 필드 추가되면 GroupDetailResponse에 넣고 여기 연결
-                exchangePlaceAddress = null,
+                exchangePlaceAddress = detail.detailAddress.takeIf { it.isNotBlank() },
                 exchangePlaceLabel = "교환 희망 장소",
             )
             GroupDetailDescriptionCard(
@@ -922,6 +921,7 @@ private fun GroupDetailScreenPreview() {
                     tradeType = "DELIVERY",
                     placeName = "자취방",
                     address = "서울특별시",
+                    detailAddress = "",
                     title = "녹나무의 여신",
                     bookImage = null,
                     author = "히가시노 게이고",

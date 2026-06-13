@@ -135,13 +135,12 @@ private fun BookGridSection(
 }
 
 // 홈 그룹 아이템 → 추천 카드(GroupItem) 매핑.
-// TODO: 백엔드에 tradeType/genre 추가되면 it.tradeType / it.genre 로 교체.
 private fun HomeSectionItem.toGroupItem(): GroupItem = GroupItem(
     groupId = groupId ?: 0L,
     groupName = groupName.orEmpty(),
     title = bookTitle,
     author = author,
-    genre = "소설", // 임시 더미
+    genre = genre.orEmpty(),
     bookImage = bookImage,
     hostNickname = hostNickname,
     hostProfileImageUrl = hostProfileImageUrl,
@@ -150,7 +149,7 @@ private fun HomeSectionItem.toGroupItem(): GroupItem = GroupItem(
     maxCapacity = 0,
     waitingCount = 0,
     isHot = false,
-    tradeType = "DIRECT", // 임시 더미 (→ "직접" 뱃지)
+    tradeType = tradeType, // "DIRECT"/"DELIVERY" → 카드에서 한글 뱃지 변환
     readingPeriod = readingPeriod ?: 0,
     pictureBadge = null,
 )
