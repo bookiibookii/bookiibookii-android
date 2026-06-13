@@ -87,4 +87,5 @@ private fun BookResult.toUiModel() = LibraryBook(
     startDate    = startDate,
     endDate      = endDate,
     completedAt  = completedAt,
+    totalPages   = totalPages,
 )

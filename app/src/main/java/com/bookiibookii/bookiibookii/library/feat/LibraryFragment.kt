@@ -65,6 +65,7 @@ class LibraryFragment : Fragment() {
                                     rating       = book.rating?.toDouble() ?: 0.0,
                                     isDone       = book.rating != null,
                                     progressRate = ((book.progress ?: 0f) * 100).toInt(),
+                                    totalPages   = book.totalPages ?: 0,
                                 ),
                             )
                             .addToBackStack(null)

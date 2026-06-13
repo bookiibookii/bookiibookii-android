@@ -39,6 +39,7 @@ class LibraryDetailFragment : BaseLibraryFragment() {
     private val rating: Double      get() = arguments?.getDouble(ARG_RATING, 0.0) ?: 0.0
     private val isDone: Boolean     get() = arguments?.getBoolean(ARG_IS_DONE, false) ?: false
     private val progressRate: Int   get() = arguments?.getInt(ARG_PROGRESS_RATE, 0) ?: 0
+    private val totalPages: Int     get() = arguments?.getInt(ARG_TOTAL_PAGES, 0) ?: 0
 
     private fun buildBook() = if (bookTitle.isNotBlank()) LibraryDetailBook(
         groupId      = groupId,
@@ -72,13 +73,13 @@ class LibraryDetailFragment : BaseLibraryFragment() {
                     onBackClick      = { parentFragmentManager.popBackStack() },
                     onAddTextCard    = {
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstance(AddCardMode.TEXT, memberBookId, bookTitle))
+                            .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstance(AddCardMode.TEXT, memberBookId, bookTitle, totalPages))
                             .addToBackStack(null)
                             .commit()
                     },
                     onAddPhotoCard   = {
                         parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstance(AddCardMode.PHOTO, memberBookId, bookTitle))
+                            .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstance(AddCardMode.PHOTO, memberBookId, bookTitle, totalPages))
                             .addToBackStack(null)
                             .commit()
                     },
@@ -157,6 +158,7 @@ class LibraryDetailFragment : BaseLibraryFragment() {
         private const val ARG_RATING         = "arg_rating"
         private const val ARG_IS_DONE        = "arg_is_done"
         private const val ARG_PROGRESS_RATE  = "arg_progress_rate"
+        private const val ARG_TOTAL_PAGES    = "arg_total_pages"
 
         fun newInstance(
             groupId: Int,
@@ -172,6 +174,7 @@ class LibraryDetailFragment : BaseLibraryFragment() {
             rating: Double = 0.0,
             isDone: Boolean = false,
             progressRate: Int = 0,
+            totalPages: Int = 0,
         ) = LibraryDetailFragment().apply {
             arguments = Bundle().apply {
                 putInt(ARG_GROUP_ID, groupId)
@@ -187,6 +190,7 @@ class LibraryDetailFragment : BaseLibraryFragment() {
                 putDouble(ARG_RATING, rating)
                 putBoolean(ARG_IS_DONE, isDone)
                 putInt(ARG_PROGRESS_RATE, progressRate)
+                putInt(ARG_TOTAL_PAGES, totalPages)
             }
         }
     }

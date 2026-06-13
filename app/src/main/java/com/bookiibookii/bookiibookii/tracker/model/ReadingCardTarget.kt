@@ -18,6 +18,7 @@ data class ReadingCardTarget(
     val rating: Double,
     val isDone: Boolean,
     val progressRate: Int,
+    val totalPages: Int?,
 )
 
 // 서재 목록 응답 항목 → 진입 인자. isDone 판정은 서재와 동일
@@ -35,4 +36,5 @@ fun BookResult.toReadingCardTarget() = ReadingCardTarget(
     rating = rating,
     isDone = progressRate >= 100,
     progressRate = progressRate,
+    totalPages = totalPages,
 )

@@ -60,6 +60,7 @@ data class LibraryBook(
     val startDate: String = "",
     val endDate: String? = null,
     val completedAt: String? = null,
+    val totalPages: Int? = null,
 )
 
 @Composable

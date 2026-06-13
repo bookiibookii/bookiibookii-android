@@ -71,6 +71,7 @@ class TrackerFragment : Fragment() {
                                     rating = target.rating,
                                     isDone = target.isDone,
                                     progressRate = target.progressRate,
+                                    totalPages = target.totalPages ?: 0,
                                 ),
                             )
                             .addToBackStack(null)
