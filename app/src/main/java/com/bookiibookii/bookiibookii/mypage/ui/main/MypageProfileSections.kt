@@ -96,23 +96,24 @@ internal fun ProfileSection(
             ) {
                 Text(text = "주소지 관리", style = BookiiBookiiTheme.typography.semibold15, color = BookiiBookiiTheme.colors.grey900, maxLines = 1)
             }
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(btnShape)
-                    .background(BookiiBookiiTheme.colors.white)
-                    .border(1.dp, BookiiBookiiTheme.colors.grey200, btnShape)
-                    .clickable(onClick = onProfileShareClick)
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_share),
-                    contentDescription = "공유",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
+            // TODO: 공유하기 기능 구현 후 복구. 기능 미완성으로 임시 숨김
+            // Box(
+            //     modifier = Modifier
+            //         .size(48.dp)
+            //         .clip(btnShape)
+            //         .background(BookiiBookiiTheme.colors.white)
+            //         .border(1.dp, BookiiBookiiTheme.colors.grey200, btnShape)
+            //         .clickable(onClick = onProfileShareClick)
+            //         .padding(12.dp),
+            //     contentAlignment = Alignment.Center,
+            // ) {
+            //     Icon(
+            //         painter = painterResource(R.drawable.ic_share),
+            //         contentDescription = "공유",
+            //         tint = BookiiBookiiTheme.colors.grey900,
+            //         modifier = Modifier.fillMaxSize(),
+            //     )
+            // }
         }
     }
 }
