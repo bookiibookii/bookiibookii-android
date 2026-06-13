@@ -46,6 +46,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
     private val initialImageUrl: String? get() = arguments?.getString(ARG_IMAGE_URL)
     private val initialS3Key: String? get() = arguments?.getString(ARG_S3KEY)
     private val bookTitle: String get() = arguments?.getString(ARG_BOOK_TITLE).orEmpty()
+    private val totalPages: Int get() = arguments?.getInt(ARG_TOTAL_PAGES, 0) ?: 0
 
     private var selectedImageUri by mutableStateOf<Uri?>(null)
 
@@ -106,6 +107,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
                     initialMemo      = initialMemo,
                     initialImageUrl  = initialImageUrl,
                     bookTitle        = bookTitle,
+                    totalPages       = totalPages.takeIf { it > 0 },
                     onImagePick      = { pickImageLauncher.launch("image/*") },
                     onImageCapture   = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
                     onBackClick      = { parentFragmentManager.popBackStack() },
@@ -177,12 +179,14 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
         private const val ARG_IMAGE_URL      = "arg_image_url"
         private const val ARG_S3KEY          = "arg_s3key"
         private const val ARG_BOOK_TITLE     = "arg_book_title"
+        private const val ARG_TOTAL_PAGES    = "arg_total_pages"
 
-        fun newInstance(mode: AddCardMode, memberBookId: Int = -1, bookTitle: String = "") = LibraryAddCardFragment().apply {
+        fun newInstance(mode: AddCardMode, memberBookId: Int = -1, bookTitle: String = "", totalPages: Int = 0) = LibraryAddCardFragment().apply {
             arguments = Bundle().apply {
                 putString(ARG_MODE, mode.name)
                 putInt(ARG_MEMBER_BOOK_ID, memberBookId)
                 putString(ARG_BOOK_TITLE, bookTitle)
+                putInt(ARG_TOTAL_PAGES, totalPages)
             }
         }
 
@@ -199,6 +203,7 @@ class LibraryAddCardFragment : BaseLibraryFragment() {
                 putString(ARG_IMAGE_URL, card.imageUrl)
                 putString(ARG_S3KEY, card.s3Key)
                 putString(ARG_BOOK_TITLE, card.bookTitle)
+                putInt(ARG_TOTAL_PAGES, card.totalPages ?: 0)
             }
         }
     }

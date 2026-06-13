@@ -57,12 +57,15 @@ class LibraryFragment : Fragment() {
                                     groupName    = book.groupName,
                                     bookTitle    = book.title,
                                     author       = book.author,
+                                    genre        = book.genre,
                                     coverUrl     = book.coverUrl ?: "",
                                     startDate    = book.startDate,
                                     endDate      = book.endDate ?: "",
+                                    completedAt  = book.completedAt ?: "",
                                     rating       = book.rating?.toDouble() ?: 0.0,
                                     isDone       = book.rating != null,
                                     progressRate = ((book.progress ?: 0f) * 100).toInt(),
+                                    totalPages   = book.totalPages ?: 0,
                                 ),
                             )
                             .addToBackStack(null)

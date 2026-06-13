@@ -65,6 +65,7 @@ fun LibraryAddCardScreen(
     initialMemo: String = "",
     initialImageUrl: String? = null,   // 수정 모드: 기존 사진(원격 URL)
     bookTitle: String = "",            // 미리보기 칩에 표시할 책제목
+    totalPages: Int? = null,           // 전체 페이지 수 — 입력값이 초과하면 이 값으로 자동 보정
     onImagePick: () -> Unit = {},      // 갤러리
     onImageCapture: () -> Unit = {},   // 카메라
     onBackClick: () -> Unit = {},
@@ -74,6 +75,12 @@ fun LibraryAddCardScreen(
     var quote by remember { mutableStateOf(initialQuote) }
     var page by remember { mutableStateOf(initialPage) }
     var memo by remember { mutableStateOf(initialMemo) }
+
+    // 페이지 입력이 전체 페이지 수를 초과하면 전체 페이지로 자동 보정
+    fun clampPage(input: String): String {
+        val n = input.toIntOrNull() ?: return input
+        return if (totalPages != null && totalPages > 0 && n > totalPages) totalPages.toString() else input
+    }
 
     var quoteError by remember { mutableStateOf(false) }
     var pageError by remember { mutableStateOf(false) }
@@ -152,7 +159,7 @@ fun LibraryAddCardScreen(
                         required = true,
                         value = page,
                         onValueChange = {
-                            page = it
+                            page = clampPage(it)
                             pageError = false
                         },
                         placeholder = "페이지를 입력해주세요.",
@@ -243,7 +250,7 @@ fun LibraryAddCardScreen(
                         required = true,
                         value = page,
                         onValueChange = {
-                            page = it
+                            page = clampPage(it)
                             pageError = false
                         },
                         placeholder = "페이지를 입력해주세요.",

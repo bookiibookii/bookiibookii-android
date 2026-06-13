@@ -63,12 +63,15 @@ class TrackerFragment : Fragment() {
                                     groupName = target.groupName,
                                     bookTitle = target.bookTitle,
                                     author = target.author,
+                                    genre = target.genre,
                                     coverUrl = target.coverUrl,
                                     startDate = target.startDate,
                                     endDate = target.endDate,
+                                    completedAt = target.completedAt,
                                     rating = target.rating,
                                     isDone = target.isDone,
                                     progressRate = target.progressRate,
+                                    totalPages = target.totalPages ?: 0,
                                 ),
                             )
                             .addToBackStack(null)

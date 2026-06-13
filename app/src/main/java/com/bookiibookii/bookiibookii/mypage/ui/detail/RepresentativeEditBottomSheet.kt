@@ -255,6 +255,12 @@ private fun RepresentativeEditListItem(
                 )
             }
 
+            // 완독책(rating 있음)만 별점 표시. 인생책(rating null)은 미표시
+            book.rating?.let { rating ->
+                Spacer(modifier = Modifier.width(12.dp))
+                RepresentativeStarRatingRow(rating = rating)
+            }
+
             Spacer(modifier = Modifier.width(12.dp))
 
             Box(
@@ -276,15 +282,41 @@ private fun RepresentativeEditListItem(
     }
 }
 
+// 대표책 편집 행 별점 (16dp). 완독책에만 표시
+@Composable
+private fun RepresentativeStarRatingRow(rating: Double) {
+    Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
+        for (i in 1..5) {
+            RepresentativeStarIcon(starValue = (rating - (i - 1)).coerceIn(0.0, 1.0))
+        }
+    }
+}
+
+@Composable
+private fun RepresentativeStarIcon(starValue: Double) {
+    val colors = BookiiBookiiTheme.colors
+    when {
+        // 가득 채운 별
+        starValue >= 0.75 -> Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = colors.uiMainSub, modifier = Modifier.size(16.dp))
+        // 반 별: 외곽선 MainSub + 안쪽 MainSubPale
+        starValue >= 0.25 -> Box(modifier = Modifier.size(16.dp)) {
+            Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = colors.uiMainSubPale, modifier = Modifier.size(16.dp))
+            Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = colors.uiMainSub, modifier = Modifier.size(16.dp))
+        }
+        // 빈 별
+        else -> Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = colors.grey200, modifier = Modifier.size(16.dp))
+    }
+}
+
 @Preview(showBackground = true, widthDp = 412)
 @Composable
 private fun RepresentativeEditContentPreview() {
     BookiiPreview {
         RepresentativeEditContent(
             bookList = listOf(
-                RepresentativeBook(userBookId = 1L, title = "데미안", displayOrder = 0, isFavorite = true),
-                RepresentativeBook(userBookId = 2L, title = "1984", displayOrder = 1, isFavorite = false),
-                RepresentativeBook(userBookId = 3L, title = "사피엔스", displayOrder = 2, isFavorite = false),
+                RepresentativeBook(userBookId = 1L, title = "데미안", displayOrder = 0, isFavorite = true, rating = null),
+                RepresentativeBook(userBookId = 2L, title = "1984", displayOrder = 1, isFavorite = false, rating = 4.0),
+                RepresentativeBook(userBookId = 3L, title = "사피엔스", displayOrder = 2, isFavorite = false, rating = 3.5),
             ),
             onRemove = {},
             onMove = { _, _ -> },

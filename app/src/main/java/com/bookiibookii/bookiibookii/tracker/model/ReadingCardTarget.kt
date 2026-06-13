@@ -10,12 +10,15 @@ data class ReadingCardTarget(
     val groupName: String,
     val bookTitle: String,
     val author: String,
+    val genre: String,
     val coverUrl: String,
     val startDate: String,
     val endDate: String,
+    val completedAt: String,
     val rating: Double,
     val isDone: Boolean,
     val progressRate: Int,
+    val totalPages: Int?,
 )
 
 // 서재 목록 응답 항목 → 진입 인자. isDone 판정은 서재와 동일
@@ -25,10 +28,13 @@ fun BookResult.toReadingCardTarget() = ReadingCardTarget(
     groupName = groupName,
     bookTitle = title,
     author = author,
+    genre = genre.orEmpty(),
     coverUrl = image.orEmpty(),
     startDate = startDate,
     endDate = endDate.orEmpty(),
+    completedAt = completedAt.orEmpty(),
     rating = rating,
     isDone = progressRate >= 100,
     progressRate = progressRate,
+    totalPages = totalPages,
 )

@@ -80,9 +80,12 @@ private fun BookResult.toUiModel() = LibraryBook(
     groupName    = groupName,
     title        = title,
     author       = author,
+    genre        = genre.orEmpty(),
     coverUrl     = image,
     progress     = if (!isDone()) progressRate / 100f else null,
     rating       = if (isDone()) rating.toInt().coerceIn(0, 5) else null,
     startDate    = startDate,
     endDate      = endDate,
+    completedAt  = completedAt,
+    totalPages   = totalPages,
 )
