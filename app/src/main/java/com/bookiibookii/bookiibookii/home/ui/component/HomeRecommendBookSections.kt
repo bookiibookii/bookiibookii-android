@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.data.model.group.HomeSectionItem
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 알라딘 author는 "한강 (지은이)", "한강 (지은이), 데보라 스미스 (옮긴이)" 형태로 옴.
@@ -52,7 +53,7 @@ internal fun BookThumbnail(
         )
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = book.title.orEmpty(),
+                text = book.title.stripBookSubtitle(),
                 style = typography.regular14,
                 color = colors.grey900,
                 maxLines = 1,

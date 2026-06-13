@@ -75,6 +75,7 @@ import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import com.bookiibookii.bookiibookii.ui.theme.MaruBuri
 import kotlinx.coroutines.delay
@@ -999,7 +1000,7 @@ private fun CardInfoArea(
                     verticalAlignment     = Alignment.CenterVertically,
                     modifier              = Modifier.weight(1f),
                 ) {
-                    Text(text = card?.bookTitle ?: "", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey800, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(text = (card?.bookTitle).stripBookSubtitle(), style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey800, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (pageText.isNotBlank()) {
                         Text(text = pageText, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey500)
                     }

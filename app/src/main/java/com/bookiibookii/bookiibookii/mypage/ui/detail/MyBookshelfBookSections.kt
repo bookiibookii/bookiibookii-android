@@ -42,6 +42,7 @@ import com.bookiibookii.bookiibookii.mypage.ui.main.BookSpineItem
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.component.LifeBookSearchDialog
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -148,7 +149,7 @@ internal fun LifeBookSection(
                             }
                         }
                         Column(modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(text = book.title, style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(text = book.title.stripBookSubtitle(), style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(text = book.author ?: "", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey700, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }

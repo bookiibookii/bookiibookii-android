@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.ui.detail
 
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 import androidx.compose.foundation.BorderStroke
@@ -239,7 +240,7 @@ private fun RepresentativeEditListItem(
             ) {
                 // 상단: 책 제목 semibold14 grey900
                 Text(
-                    text = book.title,
+                    text = book.title.stripBookSubtitle(),
                     style = BookiiBookiiTheme.typography.semibold14,
                     color = BookiiBookiiTheme.colors.grey900,
                     maxLines = 1,

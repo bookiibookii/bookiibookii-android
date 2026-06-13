@@ -30,6 +30,7 @@ import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -120,7 +121,7 @@ private fun TrackerCardHeader(card: TrackerCardModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = ellipsizeTitle(card.displayBookTitle, 18),
+                        text = ellipsizeTitle(card.displayBookTitle.stripBookSubtitle(), 18),
                         style = BookiiBookiiTheme.typography.regular14,
                         color = BookiiBookiiTheme.colors.grey500,
                     )
@@ -196,7 +197,7 @@ private fun TrackerProfileColumn(
                         color = BookiiBookiiTheme.colors.grey700,
                     )
                     Text(
-                        text = profile.bookTitle,
+                        text = profile.bookTitle.stripBookSubtitle(),
                         style = BookiiBookiiTheme.typography.medium16,
                         color = BookiiBookiiTheme.colors.grey800,
                         maxLines = 1,

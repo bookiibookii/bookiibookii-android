@@ -41,6 +41,7 @@ import com.bookiibookii.bookiibookii.onboarding.steps.OnbViewModel
 import com.bookiibookii.bookiibookii.onboarding.steps.model.OnbState
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.component.OnbSubHeadCard
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.component.LifeBookSearchDialog
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -151,7 +152,7 @@ private fun LifeBookSlot(
                 }
             }
             Text(
-                text = book.title,
+                text = book.title.stripBookSubtitle(),
                 style = typography.semibold14,
                 color = colors.grey900,
                 maxLines = 1,

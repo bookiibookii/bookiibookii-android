@@ -36,6 +36,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedMemberReviewDto
 import com.bookiibookii.bookiibookii.ui.component.ExchangeTypeChip
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.component.ReviewTypeChip
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -110,7 +111,7 @@ private fun WrittenReviewCard(review: BookReviewSummaryDto) {
                 // 제목+저자가 길면 칩 영역을 침범하지 않고 저자(구분선 포함)가 다음 줄로 내려가도록 FlowRow 사용
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = review.bookTitle,
+                        text = review.bookTitle.stripBookSubtitle(),
                         style = BookiiBookiiTheme.typography.semibold16,
                         color = BookiiBookiiTheme.colors.grey900,
                         modifier = Modifier.align(Alignment.CenterVertically),

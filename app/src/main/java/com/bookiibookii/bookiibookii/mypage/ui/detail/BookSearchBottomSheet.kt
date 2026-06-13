@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.ui.detail
 
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 import androidx.compose.foundation.background
@@ -177,7 +178,7 @@ private fun SearchResultItem(book: MockSearchBook) {
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = book.title,
+                text = book.title.stripBookSubtitle(),
                 style = BookiiBookiiTheme.typography.medium18,
                 color = BookiiBookiiTheme.colors.grey800,
                 maxLines = 1,

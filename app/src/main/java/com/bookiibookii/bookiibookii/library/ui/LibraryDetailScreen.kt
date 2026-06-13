@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import com.bookiibookii.bookiibookii.ui.theme.MaruBuri
 
@@ -340,7 +341,7 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
         ) {
             BookiiBackButton(onClick = onBackClick)
             Text(
-                text = if (title.length > 12) title.take(12) + "…" else title,
+                text = title.stripBookSubtitle().let { if (it.length > 12) it.take(12) + "…" else it },
                 style = BookiiBookiiTheme.typography.medium20,
                 color = BookiiBookiiTheme.colors.grey900,
                 maxLines = 1,
@@ -392,7 +393,7 @@ private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier)
         Column(modifier = Modifier.weight(1f).height(146.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(text = "${book.groupName}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey600, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = book.title, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = book.title.stripBookSubtitle(), style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 // 장르가 오면 "(장르)" 추가, 현재 API 미제공으로 저자명만 표시
                 Text(
                     text = if (book.genre.isBlank()) book.author else "${book.author} (${book.genre})",

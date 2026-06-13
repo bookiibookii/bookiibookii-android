@@ -22,6 +22,7 @@ import com.bookiibookii.bookiibookii.data.model.group.GroupItem
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -64,7 +65,7 @@ internal fun HomeGroupCard(
                         HomeExchangeBadge(text = badgeLabel)
                     }
                     Text(
-                        text = group.title.orEmpty(),
+                        text = group.title.stripBookSubtitle(),
                         style = typography.medium16,
                         color = colors.grey900,
                         maxLines = 1,

@@ -40,6 +40,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.UserBookDto
 import com.bookiibookii.bookiibookii.mypage.ui.detail.verticalRotation
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -291,8 +292,9 @@ internal fun BookSpineItem(title: String, isOrange: Boolean, modifier: Modifier 
     val textColor = if (isOrange) BookiiBookiiTheme.colors.uiMain     else BookiiBookiiTheme.colors.uiMainSub
     val archHeight = 15.dp
 
-    // 16글자 넘으면 16자 + …
-    val displayTitle = if (title.length > 16) title.take(16) + "…" else title
+    // 부제목(" - " 뒷부분) 제거 후, 16글자 넘으면 16자 + …
+    val strippedTitle = title.stripBookSubtitle()
+    val displayTitle = if (strippedTitle.length > 16) strippedTitle.take(16) + "…" else strippedTitle
 
     Box(modifier = modifier, contentAlignment = Alignment.TopCenter) {
         Box(

@@ -74,6 +74,7 @@ import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 그룹 상세 화면 — VM 주입/상태 수집 (stateful)
@@ -605,7 +606,7 @@ private fun GroupDetailBookInfo(
                 ) {
                     GroupDetailExchangeBadge(text = exchangeType)
                     Text(
-                        text = title,
+                        text = title.stripBookSubtitle(),
                         style = BookiiBookiiTheme.typography.medium16,
                         color = BookiiBookiiTheme.colors.grey900,
                         maxLines = 1,

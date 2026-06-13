@@ -40,6 +40,7 @@ import com.bookiibookii.bookiibookii.notification.model.NotificationTab
 import com.bookiibookii.bookiibookii.notification.model.NotificationUiModel
 import com.bookiibookii.bookiibookii.notification.model.notificationBody
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 알림 센터 화면 (풀스크린, stateless)
@@ -277,7 +278,7 @@ private fun NotificationCard(
                     color = BookiiBookiiTheme.colors.grey400,
                 )
                 Text(
-                    text = item.bookTitle,
+                    text = item.bookTitle.stripBookSubtitle(),
                     style = BookiiBookiiTheme.typography.regular14,
                     color = BookiiBookiiTheme.colors.grey400,
                 )

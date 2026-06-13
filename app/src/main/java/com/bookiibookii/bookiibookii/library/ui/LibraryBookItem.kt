@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -59,7 +60,7 @@ internal fun LibraryBookGridItem(book: LibraryBook, modifier: Modifier = Modifie
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = book.title,
+                text = book.title.stripBookSubtitle(),
                 style = BookiiBookiiTheme.typography.semibold15,
                 color = BookiiBookiiTheme.colors.grey900,
                 maxLines = 1,
@@ -125,7 +126,7 @@ internal fun LibraryBookListItem(book: LibraryBook, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = book.title,
+            text = book.title.stripBookSubtitle(),
             style = BookiiBookiiTheme.typography.semibold16,
             color = BookiiBookiiTheme.colors.grey900,
             maxLines = 1,

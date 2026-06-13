@@ -31,6 +31,7 @@ import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.CompletedBook
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -80,7 +81,7 @@ private fun BookGridItem(
         if (book.completedAt != null) {
             Text(text = book.completedAt, style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey700)
         }
-        Text(text = book.title, style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = book.title.stripBookSubtitle(), style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(
             text = listOfNotNull(book.author, book.category).joinToString(" "),
             style = BookiiBookiiTheme.typography.regular14,
@@ -132,7 +133,7 @@ private fun BookListItem(
                         }
                         Spacer(modifier = Modifier.width(6.dp))
                     }
-                    Text(text = book.title, style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(text = book.title.stripBookSubtitle(), style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 BookshelfStarRatingRow(rating = book.rating)
             }
