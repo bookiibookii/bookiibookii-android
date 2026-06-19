@@ -101,7 +101,7 @@ private val reactionList = listOf(
 )
 
 // 리액션 라벨 → API 키 (서버 전송용).
-// "화나요"는 기존 6종에 없던 신규 라벨로, 더 이상 쓰지 않는 "힘나요"의 CHEERUP 키를 재사용한다.
+
 private val reactionToApiKey = mapOf(
     "공감해요" to "FEELYOU",
     "좋아요"  to "LIKE",
