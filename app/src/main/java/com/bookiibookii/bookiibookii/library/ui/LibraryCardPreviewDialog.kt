@@ -16,18 +16,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogWindowProvider
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -46,6 +49,11 @@ internal fun LibraryCardPreviewDialog(
     bookTitle: String = "",
 ) {
     Dialog(onDismissRequest = onDismiss) {
+        // 기본 다이얼로그 스크림보다 배경을 더 어둡게
+        val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
+        SideEffect {
+            dialogWindowProvider?.window?.setDimAmount(0.8f)
+        }
         LibraryCardPreviewContent(mode = mode, quote = quote, memo = memo, imageUri = imageUri, bookTitle = bookTitle)
     }
 }
@@ -138,7 +146,7 @@ private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
                         modifier = Modifier.size(28.dp),
                     )
                     Text(
-                        text = "\"${quote.ifBlank { "인용구를 입력해주세요." }}\"",
+                        text = "“${quote.ifBlank { "인용구를 입력해주세요." }}”",
                         style = BookiiBookiiTheme.typography.semibold20,
                         color = Color.White,
                         overflow = TextOverflow.Ellipsis,

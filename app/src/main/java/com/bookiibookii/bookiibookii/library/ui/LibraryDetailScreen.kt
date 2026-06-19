@@ -88,13 +88,15 @@ data class ReadingCard(
 )
 
 // 서재 상세 카드 아이템에서 사용 (리액션 API key → 아이콘 drawable)
+// 5종 이모지 개편(공감해요/좋아요/웃겨요/슬퍼요/화나요)에 맞춰 아이콘 갱신.
+// CHEERUP은 더 이상 "힘나요"가 아닌 "화나요" 용도로 재사용됨. AWESOME(멋져요)은 개편으로 사라진 값이라
+// 매핑에서 제외 — 개편 이전 과거 데이터에 남아있어도 목록에 아이콘이 표시되지 않는다.
 internal val reactionIconByApiKey: Map<String, Int> = mapOf(
-    "LIKE"    to R.drawable.ic_heart_empty,
-    "SAD"     to R.drawable.ic_star,
-    "CHEERUP" to R.drawable.ic_shine,
-    "FEELYOU" to R.drawable.ic_book,
-    "AWESOME" to R.drawable.ic_hand_thumbs_up,
-    "FUN"     to R.drawable.ic_smile,
+    "LIKE"    to R.drawable.ic_good,
+    "SAD"     to R.drawable.ic_sad,
+    "CHEERUP" to R.drawable.ic_angry,
+    "FEELYOU" to R.drawable.ic_empathy,
+    "FUN"     to R.drawable.ic_fun,
 )
 
 data class LibraryDetailBook(
@@ -214,37 +216,39 @@ fun LibraryDetailScreen(
                 ) {
                     // 이미지 카드 → 위쪽
                     FabMenuItem(
-                        label = "이미지 카드 추가하기",
-                        modifier = Modifier.fillMaxWidth(),
+                        label = "이미지 카드 추가",
                         onClick = {
                             showFabMenu = false
                             onAddPhotoCard()
                         },
                         icon = {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_image),
-                                contentDescription = null,
-                                tint = BookiiBookiiTheme.colors.white,
-                                modifier = Modifier.size(20.dp),
-                            )
+                            Box(modifier = Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_image),
+                                    contentDescription = null,
+                                    tint = BookiiBookiiTheme.colors.white,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
                         },
                     )
                     // 인용구 카드 → 아래쪽
                     FabMenuItem(
-                        label = "인용구 카드 추가하기",
-                        modifier = Modifier.fillMaxWidth(),
+                        label = "인용구 카드 추가",
                         onClick = {
                             showFabMenu = false
                             onAddTextCard()
                         },
                         icon = {
-                            Text(
-                                text = "T",
-                                color = BookiiBookiiTheme.colors.white,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Serif,
-                            )
+                            Box(modifier = Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "T",
+                                    color = BookiiBookiiTheme.colors.white,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily.Serif,
+                                )
+                            }
                         },
                     )
                 }
@@ -299,6 +303,7 @@ fun LibraryDetailScreen(
 }
 
 // 아이콘과 글씨가 검정 원형(pill) 배경에 함께 둘러싸인 FAB 메뉴 아이템
+// 피그마 스펙: 151x48 고정, 좌 여백 12 / 아이콘-글자 간격 8 / 글자 우 여백 16, 세로 중앙 정렬
 @Composable
 private fun FabMenuItem(
     label: String,
@@ -308,10 +313,12 @@ private fun FabMenuItem(
 ) {
     Row(
         modifier = modifier
+            .width(151.dp)
+            .height(48.dp)
             .clip(RoundedCornerShape(50.dp))
             .background(BookiiBookiiTheme.colors.grey900)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = 12.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -505,10 +512,11 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
                         .keys
                         .forEach { apiKey ->
                             reactionIconByApiKey[apiKey]?.let { iconRes ->
+                                // 풀컬러 이모지 아이콘이라 독서카드 상세와 동일하게 원래 색 그대로 표시(tint 미적용)
                                 Icon(
                                     painter = painterResource(iconRes),
                                     contentDescription = null,
-                                    tint = BookiiBookiiTheme.colors.uiMain,
+                                    tint = Color.Unspecified,
                                     modifier = Modifier.size(13.dp),
                                 )
                             }
@@ -548,7 +556,7 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
                     Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = BookiiBookiiTheme.colors.white, modifier = Modifier.size(16.dp))
                     val displayText = card.quotation.ifBlank { card.content }
                     if (displayText.isNotBlank()) {
-                        Text(text = "\"$displayText\"", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 12.sp), color = BookiiBookiiTheme.colors.white, maxLines = 5, overflow = TextOverflow.Ellipsis)
+                        Text(text = "“$displayText”", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 12.sp), color = BookiiBookiiTheme.colors.white, maxLines = 5, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }

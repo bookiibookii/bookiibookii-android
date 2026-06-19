@@ -254,10 +254,11 @@ private fun BookmarkCardItem(
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
                     card.reactionCounts.filter { it.value > 0 }.keys.forEach { apiKey ->
                         com.bookiibookii.bookiibookii.library.ui.reactionIconByApiKey[apiKey]?.let { iconRes ->
+                            // 풀컬러 이모지 아이콘이라 독서카드 상세와 동일하게 원래 색 그대로 표시(tint 미적용)
                             Icon(
                                 painter = painterResource(iconRes),
                                 contentDescription = null,
-                                tint = BookiiBookiiTheme.colors.uiMain,
+                                tint = Color.Unspecified,
                                 modifier = Modifier.size(13.dp),
                             )
                         }

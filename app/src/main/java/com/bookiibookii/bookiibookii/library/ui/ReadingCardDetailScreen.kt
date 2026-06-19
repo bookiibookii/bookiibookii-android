@@ -1,8 +1,9 @@
 package com.bookiibookii.bookiibookii.library.ui
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -46,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -81,65 +83,50 @@ import com.bookiibookii.bookiibookii.ui.theme.MaruBuri
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
-import kotlin.math.sin
 
 // ── 데이터 ──────────────────────────────────────────────────────────────────
 
 private data class Reaction(
     val iconRes: Int,
     val label: String,
-    val overlayTint: Color,
 )
 
-private val reactionUiMain = Color(0xFFFF7618)
-
+// 5종 이모지 리액션 (기존 6종 → 5종 개편)
 private val reactionList = listOf(
-    Reaction(R.drawable.ic_heart_empty,      "좋아요",  reactionUiMain),
-    Reaction(R.drawable.ic_star,             "슬퍼요",  reactionUiMain),
-    Reaction(R.drawable.ic_shine,            "힘나요",  reactionUiMain),
-    Reaction(R.drawable.ic_book,             "공감해요", reactionUiMain),
-    Reaction(R.drawable.ic_hand_thumbs_up,   "멋져요",  reactionUiMain),
-    Reaction(R.drawable.ic_smile,            "웃겨요",  reactionUiMain),
+    Reaction(R.drawable.ic_empathy, "공감해요"),
+    Reaction(R.drawable.ic_good,    "좋아요"),
+    Reaction(R.drawable.ic_fun,     "웃겨요"),
+    Reaction(R.drawable.ic_sad,     "슬퍼요"),
+    Reaction(R.drawable.ic_angry,   "화나요"),
 )
 
-// 리액션 라벨 → API 키 (서버 전송용)
+// 리액션 라벨 → API 키 (서버 전송용).
+// "화나요"는 기존 6종에 없던 신규 라벨로, 더 이상 쓰지 않는 "힘나요"의 CHEERUP 키를 재사용한다.
 private val reactionToApiKey = mapOf(
-    "좋아요"  to "LIKE",
-    "슬퍼요"  to "SAD",
-    "힘나요"  to "CHEERUP",
     "공감해요" to "FEELYOU",
-    "멋져요"  to "AWESOME",
+    "좋아요"  to "LIKE",
     "웃겨요"  to "FUN",
+    "슬퍼요"  to "SAD",
+    "화나요"  to "CHEERUP",
 )
 
 // API 키 → Reaction 객체 (myReactions 초기 활성 상태 복원용)
 private val apiKeyToReaction: Map<String, Reaction> by lazy {
     mapOf(
-        "LIKE"    to reactionList[0],
-        "SAD"     to reactionList[1],
-        "CHEERUP" to reactionList[2],
-        "FEELYOU" to reactionList[3],
-        "AWESOME" to reactionList[4],
-        "FUN"     to reactionList[5],
+        "FEELYOU" to reactionList[0],
+        "LIKE"    to reactionList[1],
+        "FUN"     to reactionList[2],
+        "SAD"     to reactionList[3],
+        "CHEERUP" to reactionList[4],
     )
 }
-
-// 파티클 색상 풀
-private val particleColors = listOf(
-    Color(0xFFFF5252), Color(0xFFFF4081), Color(0xFFE040FB),
-    Color(0xFF7C4DFF), Color(0xFF536DFE), Color(0xFF448AFF),
-    Color(0xFF40C4FF), Color(0xFF18FFFF), Color(0xFF64FFDA),
-    Color(0xFF69F0AE), Color(0xFFB2FF59), Color(0xFFEEFF41),
-    Color(0xFFFFEB3B), Color(0xFFFFC107), Color(0xFFFF9800),
-)
 
 private data class Particle(
     val id: String,
     val iconResId: Int,
-    val tint: Color,
     val sizeDp: Float,
     val targetY: Float,
-    val amplitude: Float,
+    val rotation: Float,
 )
 
 // ── 메인 스크린 ──────────────────────────────────────────────────────────────
@@ -153,11 +140,12 @@ fun ReadingCardDetailScreen(
     onBackClick: () -> Unit = {},
     onBookmarkToggle: (cardId: Long) -> Unit = {},
     onReactionToggle: (cardId: Long, reaction: String) -> Unit = { _, _ -> },
-    onInstaShare: (card: ReadingCard) -> Unit = {},
+    // 인스타/다운로드는 화면에서 직접 렌더링한 카드를 캡처하므로, 지금 보고 있는 cardVersion을 그대로 전달해 일치시킨다.
+    onInstaShare: (card: ReadingCard, cardVersion: Int) -> Unit = { _, _ -> },
     onCopyLink: (card: ReadingCard) -> Unit = {},
     onKakaoShare: (card: ReadingCard) -> Unit = {},
     onXShare: (card: ReadingCard) -> Unit = {},
-    onDownload: (card: ReadingCard) -> Unit = {},
+    onDownload: (card: ReadingCard, cardVersion: Int) -> Unit = { _, _ -> },
     onEditClick: (card: ReadingCard) -> Unit = {},
     onDeleteConfirmed: (card: ReadingCard) -> Unit = {},
 ) {
@@ -267,10 +255,9 @@ fun ReadingCardDetailScreen(
                                 Particle(
                                     id        = UUID.randomUUID().toString(),
                                     iconResId = r.iconRes,
-                                    tint      = particleColors.random(),
-                                    sizeDp    = (20..38).random().toFloat(),
-                                    targetY   = -(150..320).random().toFloat(),
-                                    amplitude = (20..60).random().toFloat(),
+                                    sizeDp    = (28..44).random().toFloat(),
+                                    targetY   = -(140..300).random().toFloat(),
+                                    rotation  = (-20..20).random().toFloat(),
                                 )
                             )
                         }
@@ -284,28 +271,15 @@ fun ReadingCardDetailScreen(
     }
 
     if (showShareSheet) {
+        // 시트 자체가 슬라이드다운 애니메이션이 끝난 뒤 onDismiss를 호출하므로 여기서 바로
+        // showShareSheet = false를 하지 않는다 (클릭 즉시 끄면 닫히는 애니메이션이 생략됨)
         ReadingCardShareBottomSheet(
             onDismiss    = { showShareSheet = false },
-            onKakaoClick = {
-                showShareSheet = false
-                currentCard?.let { onKakaoShare(it) }
-            },
-            onInstaClick = {
-                showShareSheet = false
-                currentCard?.let { onInstaShare(it) }
-            },
-            onXClick = {
-                showShareSheet = false
-                currentCard?.let { onXShare(it) }
-            },
-            onDownloadClick = {
-                showShareSheet = false
-                currentCard?.let { onDownload(it) }
-            },
-            onCopyLinkClick = {
-                showShareSheet = false
-                currentCard?.let { onCopyLink(it) }
-            },
+            onKakaoClick = { currentCard?.let { onKakaoShare(it) } },
+            onInstaClick = { currentCard?.let { onInstaShare(it, cardVersion) } },
+            onXClick     = { currentCard?.let { onXShare(it) } },
+            onDownloadClick = { currentCard?.let { onDownload(it, cardVersion) } },
+            onCopyLinkClick = { currentCard?.let { onCopyLink(it) } },
         )
     }
 
@@ -392,59 +366,48 @@ private fun ReadingCardDeleteDialog(
 
 // ── 파티클 애니메이션 ─────────────────────────────────────────────────────────
 
+// 인스타 스토리 더블탭 하트처럼: 튕기듯 팝업(스프링) → 살짝 회전하며 위로 떠오르다 페이드아웃
 @Composable
 private fun FloatingParticle(particle: Particle, onAnimationEnd: (Particle) -> Unit) {
-    var isAnimating by remember { mutableStateOf(false) }
+    val scale      = remember { Animatable(0f) }
+    val rotation   = remember { Animatable(0f) }
+    val translateY = remember { Animatable(0f) }
+    val alpha      = remember { Animatable(1f) }
 
     LaunchedEffect(Unit) {
-        isAnimating = true
-        delay(2000)
+        launch {
+            scale.animateTo(1.2f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
+            scale.animateTo(1f, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
+        }
+        launch {
+            rotation.animateTo(particle.rotation, animationSpec = tween(durationMillis = 1500, easing = LinearOutSlowInEasing))
+        }
+        launch {
+            delay(120)
+            translateY.animateTo(particle.targetY, animationSpec = tween(durationMillis = 1300, easing = LinearOutSlowInEasing))
+        }
+        launch {
+            delay(850)
+            alpha.animateTo(0f, animationSpec = tween(durationMillis = 650))
+        }
+        delay(1550)
         onAnimationEnd(particle)
     }
 
-    val scale by animateFloatAsState(
-        targetValue  = if (isAnimating) 1f else 0f,
-        animationSpec = keyframes {
-            durationMillis = 2000
-            0f   at 0
-            1.3f at 200
-            1.0f at 500
-            0.8f at 1500
-            0f   at 2000
-        },
-        label = "scale",
-    )
-    val yOffset by animateFloatAsState(
-        targetValue  = if (isAnimating) particle.targetY else 0f,
-        animationSpec = tween(durationMillis = 2000, easing = LinearOutSlowInEasing),
-        label = "yOffset",
-    )
-    val alpha by animateFloatAsState(
-        targetValue  = if (isAnimating) 0f else 1f,
-        animationSpec = keyframes {
-            durationMillis = 2000
-            1f at 0
-            1f at 1200
-            0f at 2000
-        },
-        label = "alpha",
-    )
-    val xOffset = sin(yOffset / 60f) * particle.amplitude
-
     Box(
         modifier = Modifier
-            .offset(x = xOffset.dp, y = yOffset.dp)
-            .alpha(alpha)
-            .scale(scale)
+            .offset(y = translateY.value.dp)
+            .rotate(rotation.value)
+            .scale(scale.value)
+            .alpha(alpha.value)
             .size(particle.sizeDp.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Box(modifier = Modifier.size((particle.sizeDp * 0.7f).dp).clip(CircleShape).background(particle.tint))
         Icon(
-            painter           = painterResource(particle.iconResId),
+            painter            = painterResource(particle.iconResId),
             contentDescription = null,
-            tint              = BookiiBookiiTheme.colors.grey800,
-            modifier          = Modifier.fillMaxSize(),
+            tint               = Color.Unspecified,
+            modifier           = Modifier.fillMaxSize(),
         )
     }
 }
@@ -490,8 +453,18 @@ private fun ReadingCardDetailItem(
 }
 
 // ── PHOTO 카드 ────────────────────────────────────────────────────────────────
-// v1 = Type A (shareFragment.txt): 상단 이미지 + 책 제목 배지 오버레이, 하단 메모 + 우하단 닉네임
-// v2 = Type B (shareFragment.txt): 전체 이미지 + 상단 흰 그라디언트, 좌상단 책 제목, 좌하단 닉네임, 우하단 B로고
+// v1 = Type A (shareFragment.txt): 상단 이미지 + 책 제목 배지 오버레이, 하단 메모
+// v2 = Type B (shareFragment.txt): 전체 이미지 + 상단 흰 그라디언트, 좌상단 책 제목
+// 상세 화면에서는 닉네임/B로고를 표시하지 않음 (공유용 ShareableCard에만 표시)
+
+// 사진 카드 v2 상단 화이트 그라데이션: 11%까지 흰색 100%, 41%에서 90%, 100%에서 0%로 페이드
+private val photoCardTopGradient = Brush.verticalGradient(
+    0f to Color.White,
+    0.11f to Color.White,
+    0.41f to Color.White.copy(alpha = 0.9f),
+    1f to Color.White.copy(alpha = 0f),
+)
+private const val PHOTO_GRADIENT_HEIGHT_FRACTION = 0.55f
 
 @Composable
 private fun PhotoCard(
@@ -526,20 +499,11 @@ private fun PhotoCard(
                     if (card.content.isNotBlank()) {
                         Text(
                             text = card.content,
-                            style = BookiiBookiiTheme.typography.regular14,
+                            style = BookiiBookiiTheme.typography.regular16,
                             color = BookiiBookiiTheme.colors.grey800,
                             maxLines = 4,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(start = 20.dp, top = 20.dp, end = 20.dp).align(Alignment.TopStart),
-                        )
-                    }
-                    // 닉네임 (우하단)
-                    if (card.username.isNotBlank()) {
-                        Text(
-                            text = card.username,
-                            style = BookiiBookiiTheme.typography.regular14,
-                            color = BookiiBookiiTheme.colors.grey400,
-                            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp),
                         )
                     }
                 }
@@ -561,52 +525,28 @@ private fun PhotoCard(
                 }
             }
             // 상단 흰 그라디언트 오버레이
-            Box(
-                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.4f).background(
-                    Brush.verticalGradient(
-                        0f to Color.White.copy(alpha = 0.95f),
-                        0.6f to Color.White.copy(alpha = 0.5f),
-                        1f to Color.Transparent,
-                    )
-                )
-            )
+            Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(PHOTO_GRADIENT_HEIGHT_FRACTION).background(photoCardTopGradient))
             // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
             // 메모 텍스트 (좌상단)
             if (card.content.isNotBlank()) {
                 Text(
                     text = card.content,
-                    style = BookiiBookiiTheme.typography.regular14,
+                    style = BookiiBookiiTheme.typography.regular16,
                     color = BookiiBookiiTheme.colors.grey800,
                     maxLines = 4,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 52.dp, end = 20.dp),
                 )
             }
-            // 닉네임 (좌하단)
-            if (card.username.isNotBlank()) {
-                Text(
-                    text = card.username,
-                    style = BookiiBookiiTheme.typography.regular14,
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 20.dp),
-                )
-            }
-            // B 로고 (우하단)
-            Text(
-                text = "B",
-                color = Color.White.copy(alpha = 0.85f),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Black,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 18.dp),
-            )
             ReactionOverlay(particles, onParticleEnd, Modifier.align(Alignment.BottomStart).padding(bottom = 56.dp, start = 24.dp))
         }
     }
 }
 
 // ── QUOTE 카드 ────────────────────────────────────────────────────────────────
-// v1: 흰→연한주황 그라데이션, 주황 텍스트 — 좌상단 책 제목(배지), 우하단 닉네임
-// v2: 진한 주황 그라데이션, 흰 텍스트   — 좌상단 책 제목(흰), 우하단 닉네임
+// v1: 흰→연한주황 그라데이션, 주황 텍스트 — 좌상단 책 제목(배지)
+// v2: 진한 주황 그라데이션, 흰 텍스트   — 좌상단 책 제목(흰)
+// 상세 화면에서는 닉네임을 표시하지 않음 (공유용 ShareableCard에만 표시)
 
 @Composable
 private fun QuoteCard(
@@ -647,10 +587,10 @@ private fun QuoteCard(
                     Spacer(modifier = Modifier.height(20.dp))
                     // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
                     Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
-                    Text(text = "\"$quotationText\"", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
+                    Text(text = "“$quotationText”", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
                 }
             }
-            // 하단 메모 영역
+            // 하단 메모 영역 (상세 화면에서는 닉네임 미표시 — 공유용 ShareableCard에만 표시)
             Box(
                 modifier = Modifier.fillMaxWidth().weight(128f / 464f),
             ) {
@@ -664,15 +604,6 @@ private fun QuoteCard(
                         modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 16.dp, end = 20.dp),
                     )
                 }
-                // 닉네임 (우하단)
-                if (card.username.isNotBlank()) {
-                    Text(
-                        text     = card.username,
-                        style    = BookiiBookiiTheme.typography.regular14,
-                        color    = BookiiBookiiTheme.colors.grey400,
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp),
-                    )
-                }
             }
         }
         ReactionOverlay(particles, onParticleEnd, Modifier.align(Alignment.BottomStart).padding(bottom = 24.dp, start = 24.dp))
@@ -683,11 +614,43 @@ private fun QuoteCard(
 // 실제 카드 디자인과 동일 (책 제목·닉네임·B로고 포함)
 
 @Composable
-internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
+internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Modifier = Modifier) {
     Box(modifier = modifier.clip(RoundedCornerShape(20.dp)).background(BookiiBookiiTheme.colors.white)) {
         when (card.type) {
-            ReadingCardType.PHOTO -> {
-                // Type B 디자인으로 공유 (전체 이미지 스타일)
+            ReadingCardType.PHOTO -> if (cardVersion == 1) {
+                // v1: 상단 이미지 + 책 제목 배지, 하단 메모 + 닉네임(우하단)
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(BookiiBookiiTheme.colors.grey300)) {
+                        if (!card.imageUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(card.imageUrl)
+                                    .allowHardware(false)
+                                    .build(),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.matchParentSize(),
+                            )
+                        }
+                        if (card.bookTitle.isNotBlank()) {
+                            Box(modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 40.dp)) {
+                                BookTitleChip(title = card.bookTitle, solidBackground = true)
+                            }
+                        }
+                    }
+                    Box(modifier = Modifier.fillMaxWidth().weight(128f / 464f)) {
+                        if (card.content.isNotBlank()) {
+                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 20.dp))
+                        }
+                        if (card.username.isNotBlank()) {
+                            Text(card.username, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400,
+                                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp))
+                        }
+                    }
+                }
+            } else {
+                // v2: 전체 이미지 + 상단 흰 그라디언트, 좌하단 닉네임 + 우하단 B로고
                 Box(modifier = Modifier.fillMaxSize()) {
                     Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
                         if (!card.imageUrl.isNullOrBlank()) {
@@ -703,18 +666,14 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
                             )
                         }
                     }
-                    Box(
-                        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.4f).background(
-                            Brush.verticalGradient(0f to Color.White.copy(alpha = 0.95f), 0.6f to Color.White.copy(alpha = 0.5f), 1f to Color.Transparent)
-                        )
-                    )
+                    Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(PHOTO_GRADIENT_HEIGHT_FRACTION).background(photoCardTopGradient))
                     if (card.bookTitle.isNotBlank()) {
                         Box(modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 40.dp)) {
                             BookTitleChip(title = card.bookTitle, solidBackground = true)
                         }
                     }
                     if (card.content.isNotBlank()) {
-                        Text(card.content, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                        Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 52.dp, end = 20.dp))
                     }
                     if (card.username.isNotBlank()) {
@@ -727,22 +686,32 @@ internal fun ShareableCard(card: ReadingCard, modifier: Modifier = Modifier) {
             }
             ReadingCardType.QUOTE -> {
                 val quotationText = card.quotation.ifBlank { card.content }
-                val gradient = Brush.linearGradient(
-                    colors = listOf(Color(0xFFFF4E18), Color(0xFFFF7618), Color(0xFFFFC9A4)),
-                    start  = Offset(0f, 0f),
-                    end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
-                )
+                val gradient = if (cardVersion == 1) {
+                    Brush.linearGradient(
+                        colors = listOf(Color.White, Color(0xFFFFC9A4)),
+                        start  = Offset(0f, 0f),
+                        end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
+                    )
+                } else {
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFFF4E18), Color(0xFFFF7618), Color(0xFFFFC9A4)),
+                        start  = Offset(0f, 0f),
+                        end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
+                    )
+                }
+                val iconTint  = BookiiBookiiTheme.colors.uiMain150
+                val textColor = if (cardVersion == 1) BookiiBookiiTheme.colors.uiMain else Color.White
                 Column(modifier = Modifier.fillMaxSize()) {
                     // 상단 그라디언트 — 남는 공간을 모두 채움(하단 영역이 content만큼 차지하고 남은 만큼)
                     Box(modifier = Modifier.fillMaxWidth().weight(1f).background(gradient)) {
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Spacer(modifier = Modifier.height(20.dp))
                             if (card.bookTitle.isNotBlank()) {
-                                BookTitleChip(title = card.bookTitle, solidBackground = false)
+                                BookTitleChip(title = card.bookTitle, solidBackground = cardVersion != 1)
                             }
                             Spacer(modifier = Modifier.height(4.dp))
-                            Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
-                            Text("\"$quotationText\"", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = Color.White, overflow = TextOverflow.Ellipsis)
+                            Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
+                            Text("“$quotationText”", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
                         }
                     }
                     // 하단 — content 길이만큼 아래로 늘어남(말줄임 없음), username은 content 바로 아래 우측 정렬
@@ -1027,11 +996,20 @@ private fun ReactionBar(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier            = Modifier.clickable { onReact(reaction) },
             ) {
+                // 이모지 아이콘 자체가 풀컬러라 배경은 항상 흰 원, 선택 시 테두리로 강조
                 Box(
-                    modifier         = Modifier.size(50.dp).clip(CircleShape).background(if (isSelected) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.white),
+                    modifier = Modifier
+                        .size(63.dp)
+                        .clip(CircleShape)
+                        .background(BookiiBookiiTheme.colors.white)
+                        .border(
+                            width = if (isSelected) 2.dp else 1.dp,
+                            color = if (isSelected) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey200,
+                            shape = CircleShape,
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(painter = painterResource(reaction.iconRes), contentDescription = null, tint = if (isSelected) BookiiBookiiTheme.colors.white else BookiiBookiiTheme.colors.grey700, modifier = Modifier.size(26.dp))
+                    Icon(painter = painterResource(reaction.iconRes), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(40.dp))
                 }
                 Text(text = reaction.label, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.grey800)
             }
