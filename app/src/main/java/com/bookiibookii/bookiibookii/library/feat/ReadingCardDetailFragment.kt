@@ -250,10 +250,7 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
 
     private fun captureShareableCard(card: ReadingCard, cardVersion: Int, onBitmap: (Bitmap?) -> Unit) {
         val context = requireContext()
-
-        // 카드 크기: 화면 너비의 85%, 비율 320:520 — 공개 뷰어(PublicCardViewerActivity)와 동일 비율로
-        // 통일. 기존 348:464(3:4)는 실제 상세화면에서 보던 카드보다 훨씬 squat해서 공유/다운로드한
-        // 이미지가 작아 보이는 원인이었음.
+        
         val cardWidthPx  = (resources.displayMetrics.widthPixels * 0.85f).toInt()
         val cardHeightPx = (cardWidthPx * 520f / 320f).toInt()
 
