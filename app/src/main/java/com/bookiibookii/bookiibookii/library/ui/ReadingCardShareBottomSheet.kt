@@ -47,10 +47,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// Material3 ModalBottomSheet는 내부적으로 별도의 Dialog 창을 새로 띄우면서 edge-to-edge 처리를
-// 다시 적용하는데, 그 과정에서 뒤에 있는 화면의 WindowInsets가 재계산되어 시트가 뜨고 닫힐 때
-// 배경 화면(독서카드 영역)이 같이 밀려 올라갔다 내려오는 들썩임이 발생했다. 같은 창(Popup) 안에서
-// 직접 스크림 + 슬라이드 애니메이션을 그려 별도 창 생성을 피하면 이 문제가 사라진다.
+
 @Composable
 internal fun ReadingCardShareBottomSheet(
     onDismiss: () -> Unit,
@@ -68,10 +65,7 @@ internal fun ReadingCardShareBottomSheet(
     }
     val hide: () -> Unit = { visibleState.targetState = false }
 
-    // BaseActivity가 네비게이션바를 몰입형(immersive)으로 숨겨서 평소엔 navigationBars 인셋이
-    // 0으로 잡힌다. 하지만 시트 하단을 터치/스와이프하면 네비게이션바가 "transient"로 잠깐
-    // 나타나는데, 이때는 레이아웃 패딩 없이 그냥 위에 덮어씌워져 맨 아래 라벨이 가려진다.
-    // 인셋 값과 무관하게 최소 여백을 고정으로 확보해 이를 방지한다.
+   
     val navigationBarBottomPadding = WindowInsets.navigationBars.asPaddingValues()
         .calculateBottomPadding()
         .coerceAtLeast(24.dp)
