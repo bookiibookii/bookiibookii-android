@@ -2,7 +2,7 @@ package com.bookiibookii.bookiibookii.tracker.model
 
 import com.bookiibookii.bookiibookii.data.model.library.BookResult
 
-// 트래커 "독서카드 작성" → LibraryDetailFragment 진입에 필요한 책 식별/표시 정보.
+// 트래커 "독서카드 작성" → LibraryFragment.newInstanceAtDetail 진입에 필요한 책 식별/표시 정보.
 // 트래커는 groupId만 제공, getLibraryBooks로 groupId에 해당하는 memberBookId 등을 해석
 data class ReadingCardTarget(
     val groupId: Int,

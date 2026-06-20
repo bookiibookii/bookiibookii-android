@@ -39,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -114,6 +116,86 @@ data class LibraryDetailBook(
     val endDate: String? = null,    // 완료됐을 때만 값 존재
     val completedAt: String? = null, // 독서 종료일 — 표시용 종료일은 이 값을 사용
 )
+
+// 라우트 진입점 — 구 LibraryDetailFragment의 onCreateView/onResume/onViewCreated 로직을 그대로 이식
+@Composable
+fun LibraryDetailRoute(
+    groupId: Int,
+    memberBookId: Int,
+    groupName: String,
+    bookTitle: String,
+    author: String,
+    genre: String,
+    coverUrl: String,
+    startDate: String,
+    endDate: String,
+    completedAt: String,
+    rating: Double,
+    isDone: Boolean,
+    progressRate: Int,
+    totalPages: Int,
+    onBackClick: () -> Unit,
+    onAddTextCard: () -> Unit,
+    onAddPhotoCard: () -> Unit,
+    onCardClick: (initialIndex: Int, sortedCards: List<ReadingCard>, sortByLatest: Boolean) -> Unit,
+    onReviewClick: () -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryDetailViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val state by viewModel.uiState.collectAsState()
+
+    val book = if (bookTitle.isNotBlank()) {
+        LibraryDetailBook(
+            groupId = groupId,
+            memberBookId = memberBookId,
+            groupName = groupName,
+            title = bookTitle,
+            author = author,
+            genre = genre,
+            coverUrl = coverUrl.ifBlank { null },
+            isDone = isDone,
+            progressRate = progressRate,
+            rating = rating,
+            startDate = startDate,
+            endDate = endDate.ifBlank { null },
+            completedAt = completedAt.ifBlank { null },
+        )
+    } else {
+        null
+    }
+
+    // 구 Fragment의 onResume()처럼 화면이 다시 보일 때마다(최초 진입 포함) 재조회
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        if (groupId != -1) viewModel.fetchGroupCards(groupId, bookTitle)
+        if (memberBookId != -1 && bookTitle.isNotBlank()) {
+            viewModel.checkRepresentativeStatus(memberBookId, bookTitle)
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.event.collect { msg ->
+            context.showCustomToast(msg, !msg.contains("실패") && !msg.contains("오류"))
+        }
+    }
+
+    LibraryDetailScreen(
+        book = book,
+        cards = state.cards,
+        isRepresentative = state.isRepresentative,
+        onBackClick = onBackClick,
+        onAddTextCard = onAddTextCard,
+        onAddPhotoCard = onAddPhotoCard,
+        onCardClick = onCardClick,
+        onReviewClick = onReviewClick,
+        onRepresentativeAdd = { viewModel.addRepresentative(memberBookId) },
+        onRepresentativeRemove = { viewModel.removeRepresentative(state.representativeUserBookId) },
+        onAladinClick = { title ->
+            val url = "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=${android.net.Uri.encode(title)}"
+            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+        },
+        onDeleteBook = { viewModel.deleteMemberBook(memberBookId, onBackClick) },
+    )
+}
 
 @Composable
 fun LibraryDetailScreen(

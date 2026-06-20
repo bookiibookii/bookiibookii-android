@@ -40,8 +40,40 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.openPrivacyPolicy
+import com.bookiibookii.bookiibookii.common.openTermsOfService
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+
+// 라우트 진입점 — 구 SettingFragment의 onCreateView 로직을 그대로 이식 (ViewModel 없음)
+@Composable
+fun SettingRoute(
+    onBackClick: () -> Unit,
+    onNoticeClick: () -> Unit,
+    onQuestionClick: () -> Unit,
+    onWithdrawClick: () -> Unit,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    SettingScreen(
+        onBackClick = onBackClick,
+        onNoticeClick = onNoticeClick,
+        onQuestionClick = onQuestionClick,
+        onTermsClick = { context.openTermsOfService() },
+        onPrivacyClick = { context.openPrivacyPolicy() },
+        onWithdrawClick = onWithdrawClick,
+        onLogoutClick = {
+            val ctx = context.applicationContext
+            // 인증 토큰이 살아있는 동안 FCM 토큰 해제 → 완료 후 clear + 로그인 화면
+            com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar.deactivateCurrentToken {
+                com.bookiibookii.bookiibookii.onboarding.login.TokenManager.clear(ctx)
+                val intent = android.content.Intent(ctx, com.bookiibookii.bookiibookii.onboarding.login.LoginActivity::class.java).apply {
+                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                ctx.startActivity(intent)
+            }
+        },
+    )
+}
 
 @Composable
 fun SettingScreen(

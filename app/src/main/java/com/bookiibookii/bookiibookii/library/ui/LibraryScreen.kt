@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +63,33 @@ data class LibraryBook(
     val completedAt: String? = null,
     val totalPages: Int? = null,
 )
+
+// 라우트 진입점 — 구 LibraryFragment의 onCreateView/onResume 로직을 그대로 이식
+@Composable
+fun LibraryMainRoute(
+    onProfileClick: () -> Unit,
+    onBookmarkClick: () -> Unit,
+    onBookClick: (LibraryBook) -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryMainViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    // 구 Fragment의 onResume()처럼 화면이 다시 보일 때마다(최초 진입 포함) 재조회
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        viewModel.fetchBooks()
+    }
+
+    LibraryScreen(
+        readingBooks = state.readingBooks,
+        doneBooks = state.doneBooks,
+        sortType = state.sortType,
+        isLoading = state.isLoading,
+        onSortChange = { viewModel.setSortType(it) },
+        onProfileClick = onProfileClick,
+        onBookmarkClick = onBookmarkClick,
+        onBookClick = onBookClick,
+    )
+}
 
 @Composable
 fun LibraryScreen(

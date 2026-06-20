@@ -42,9 +42,40 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.openReportChannel
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import kotlinx.coroutines.launch
+
+// 라우트 진입점 — 구 FaqFragment의 onCreateView/onViewCreated 로직을 그대로 이식
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FaqRoute(
+    onBackClick: () -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel.Event.ShowToast ->
+                    context.showCustomToast(event.message, false)
+                is com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel.Event.InquirySuccess ->
+                    context.showCustomToast("문의가 접수되었습니다.", true)
+                else -> Unit
+            }
+        }
+    }
+
+    FaqScreen(
+        onBackClick = onBackClick,
+        onPostInquiry = { title, content -> viewModel.postInquiry(title, content) },
+        onInquiryClick = { context.openReportChannel() },
+        onReportClick = { context.openReportChannel() },
+    )
+}
 
 private data class FaqItem(val question: String, val answer: String)
 

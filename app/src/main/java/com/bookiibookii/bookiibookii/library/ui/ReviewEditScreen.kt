@@ -24,6 +24,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -48,6 +50,61 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 private val reviewInputBg = Color(0xFFF4F3F1)
 
 data class ReviewBookInfo(val title: String, val author: String, val genre: String, val coverUrl: String? = null)
+
+// 라우트 진입점 — 구 ReviewEditFragment의 onCreateView/onViewCreated 로직을 그대로 이식
+@Composable
+fun ReviewEditRoute(
+    groupId: Int,
+    groupName: String,
+    dateRange: String,
+    partnerName: String,
+    onBackClick: () -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.ReviewEditViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val state by viewModel.uiState.collectAsState()
+
+    androidx.compose.runtime.LaunchedEffect(groupId) { viewModel.load(groupId) }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.event.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.library.vm.ReviewEditViewModel.ReviewEditEvent.Success -> {
+                    context.showCustomToast("후기가 저장되었습니다.", true)
+                    onBackClick()
+                }
+                is com.bookiibookii.bookiibookii.library.vm.ReviewEditViewModel.ReviewEditEvent.Error -> {
+                    context.showCustomToast(event.message, false)
+                }
+            }
+        }
+    }
+
+    ReviewEditScreen(
+        groupName = groupName,
+        dateRange = dateRange,
+        partnerName = partnerName,
+        books = state.books,
+        initialRatings = state.initialRatings,
+        initialComments = state.initialComments,
+        initialIsPartnerGood = state.initialIsPartnerGood,
+        initialPartnerComment = state.initialPartnerComment,
+        onBackClick = onBackClick,
+        onSubmit = { ratings, bookComments, isPartnerGood, partnerComment ->
+            if (groupId == -1) {
+                context.showCustomToast("그룹 정보를 찾을 수 없습니다.", false)
+                return@ReviewEditScreen
+            }
+            viewModel.submit(
+                groupId = groupId,
+                ratings = ratings,
+                bookComments = bookComments,
+                isPartnerGood = isPartnerGood,
+                partnerComment = partnerComment,
+            )
+        },
+    )
+}
 
 @Composable
 fun ReviewEditScreen(

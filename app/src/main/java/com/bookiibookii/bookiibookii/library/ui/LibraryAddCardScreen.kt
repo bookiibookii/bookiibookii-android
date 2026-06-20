@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -54,6 +56,118 @@ enum class AddCardMode { TEXT, PHOTO }
 private const val QUOTE_MAX = 140
 private const val TEXT_MEMO_MAX = 110
 private const val PHOTO_MEMO_MAX = 110
+
+// 라우트 진입점 — 구 LibraryAddCardFragment의 카메라/갤러리 launcher + onSubmit 로직을 그대로 이식
+@Composable
+fun LibraryAddCardRoute(
+    mode: AddCardMode,
+    memberBookId: Int,
+    cardId: Long,
+    initialQuote: String,
+    initialPage: String,
+    initialMemo: String,
+    initialImageUrl: String?,
+    initialS3Key: String?,
+    bookTitle: String,
+    totalPages: Int,
+    onBackClick: () -> Unit,
+    onSaved: (isEdit: Boolean) -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryAddCardViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isEdit = cardId != -1L
+    val uiState by viewModel.uiState.collectAsState()
+
+    var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var cameraImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    val pickImageLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri -> uri?.let { selectedImageUri = it } }
+
+    val takePhotoLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.TakePicture(),
+    ) { success -> if (success) cameraImageUri?.let { selectedImageUri = it } }
+
+    fun launchCamera() {
+        val uri = try {
+            val cameraDir = java.io.File(context.cacheDir, "camera").apply { mkdirs() }
+            val file = java.io.File(cameraDir, "card_${System.currentTimeMillis()}.jpg")
+            androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        } catch (e: Exception) {
+            null
+        }
+        if (uri == null) {
+            context.showCustomToast("카메라를 실행할 수 없습니다.", false)
+            return
+        }
+        cameraImageUri = uri
+        takePhotoLauncher.launch(uri)
+    }
+
+    val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted -> if (granted) launchCamera() }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.event.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.library.vm.LibraryAddCardViewModel.AddCardEvent.Success -> {
+                    context.showCustomToast(if (isEdit) "독서카드가 수정되었습니다." else "독서카드가 등록되었습니다.", true)
+                    onSaved(isEdit)
+                }
+                is com.bookiibookii.bookiibookii.library.vm.LibraryAddCardViewModel.AddCardEvent.Error -> {
+                    context.showCustomToast(event.message, false)
+                }
+            }
+        }
+    }
+
+    LibraryAddCardScreen(
+        mode = mode,
+        selectedImageUri = selectedImageUri,
+        isEdit = isEdit,
+        initialQuote = initialQuote,
+        initialPage = initialPage,
+        initialMemo = initialMemo,
+        initialImageUrl = initialImageUrl,
+        bookTitle = bookTitle,
+        totalPages = totalPages.takeIf { it > 0 },
+        onImagePick = { pickImageLauncher.launch("image/*") },
+        onImageCapture = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) },
+        onBackClick = onBackClick,
+        isLoading = uiState.isLoading,
+        onSubmit = { page, quotation, memo ->
+            if (memberBookId == -1) {
+                context.showCustomToast("책 정보를 찾을 수 없습니다.", false)
+                return@LibraryAddCardScreen
+            }
+            if (isEdit) {
+                viewModel.updateCard(
+                    cardId = cardId,
+                    memberBookId = memberBookId,
+                    mode = mode,
+                    page = page,
+                    quotation = quotation,
+                    memo = memo,
+                    newImageUri = selectedImageUri,
+                    existingS3Key = initialS3Key,
+                    contentResolver = context.contentResolver,
+                )
+            } else {
+                viewModel.createCard(
+                    memberBookId = memberBookId,
+                    mode = mode,
+                    page = page,
+                    quotation = quotation,
+                    memo = memo,
+                    imageUri = selectedImageUri,
+                    contentResolver = context.contentResolver,
+                )
+            }
+        },
+    )
+}
 
 @Composable
 fun LibraryAddCardScreen(

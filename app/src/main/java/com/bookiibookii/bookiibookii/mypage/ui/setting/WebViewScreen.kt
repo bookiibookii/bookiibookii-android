@@ -25,6 +25,20 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 
+// 라우트 진입점 — 구 WebViewFragment를 그대로 이식 (현재 실제 호출부는 없으나 기능 보존)
+@Composable
+fun WebViewRoute(
+    title: String,
+    assetFileName: String,
+    onBackClick: () -> Unit,
+) {
+    WebViewScreen(
+        title = title,
+        assetFileName = assetFileName,
+        onBackClick = onBackClick,
+    )
+}
+
 @Composable
 fun WebViewScreen(
     title: String,

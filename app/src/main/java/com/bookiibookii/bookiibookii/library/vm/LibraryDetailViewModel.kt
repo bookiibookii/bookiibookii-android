@@ -82,7 +82,9 @@ class LibraryDetailViewModel : ViewModel() {
                         )
                     }
                 }
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                Log.e("LibraryDetail", "checkRepresentativeStatus 실패: ${e.message}", e)
+            }
         }
     }
 

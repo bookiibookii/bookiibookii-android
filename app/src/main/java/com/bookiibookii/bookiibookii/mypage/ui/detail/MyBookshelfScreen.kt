@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.data.model.mypage.CompletedBook
 import com.bookiibookii.bookiibookii.data.model.mypage.FavoriteBook
@@ -46,6 +48,51 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 enum class BookViewMode { GRID, LIST }
+
+// 라우트 진입점 — 구 MyBookshelfFragment의 onViewCreated 이벤트 구독 로직을 그대로 이식
+@Composable
+fun MyBookshelfRoute(
+    onBack: () -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.BookshelfViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val sortedCompletedBooks by viewModel.sortedCompletedBooks.observeAsState(emptyList())
+    val favoriteBooks by viewModel.favoriteBooks.observeAsState(emptyList())
+    val representativeBooks by viewModel.representativeBooks.observeAsState(emptyList())
+    val representativeTitles by viewModel.representativeTitles.observeAsState(emptySet())
+    val sortOrder by viewModel.sortOrder.observeAsState(SortOrder.LATEST)
+    val bookSearchState by viewModel.bookSearchState.observeAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.mypage.vm.BookshelfViewModel.Event.ShowToast ->
+                    context.showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
+            }
+        }
+    }
+
+    MyBookshelfScreen(
+        sortedCompletedBooks = sortedCompletedBooks,
+        favoriteBooks = favoriteBooks,
+        representativeBooks = representativeBooks,
+        representativeTitles = representativeTitles,
+        sortOrder = sortOrder,
+        bookSearchState = bookSearchState,
+        onBack = onBack,
+        onSortOrderChange = { order -> viewModel.setSortOrder(order) },
+        onSearchBooks = { query -> viewModel.onBookSearchQueryChange(query) },
+        onSearchClick = { viewModel.searchBooks() },
+        onClearBookSearch = { viewModel.clearBookSearch() },
+        onDeleteRepresentativeBook = { userBookId -> viewModel.deleteRepresentativeBook(userBookId) },
+        onReorderRepresentativeBook = { userBookId, newOrder -> viewModel.reorderRepresentativeBook(userBookId, newOrder) },
+        onAddFavoriteBook = { isbn13 -> viewModel.addFavoriteBook(isbn13) },
+        onDeleteFavoriteBook = { userBookId -> viewModel.deleteFavoriteBook(userBookId) },
+        onReplaceFavoriteBook = { oldId, isbn13 -> viewModel.replaceFavoriteBook(oldId, isbn13) },
+        onAddRepresentativeBook = { memberBookId -> viewModel.addRepresentativeBook(memberBookId) },
+        onRemoveRepresentativeBook = { userBookId -> viewModel.deleteRepresentativeBook(userBookId) },
+    )
+}
 
 @Composable
 fun MyBookshelfScreen(

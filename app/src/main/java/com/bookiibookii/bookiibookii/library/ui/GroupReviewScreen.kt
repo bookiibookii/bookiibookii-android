@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -69,6 +72,57 @@ data class GroupReviewData(
     val messages: List<ExchangeMessage>,
     val bookReviews: List<BookReviewItem>,
 )
+
+// 라우트 진입점 — 구 GroupReviewFragment의 onCreateView/onResume 로직을 그대로 이식
+@Composable
+fun GroupReviewRoute(
+    groupId: Int,
+    groupName: String,
+    bookTitle: String,
+    startDate: String,
+    endDate: String,
+    onBackClick: () -> Unit,
+    onNavigateReviewEdit: (groupName: String, dateRange: String, partnerName: String) -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.GroupReviewViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val state by viewModel.uiState.collectAsState()
+
+    // 구 Fragment의 onResume()처럼 화면이 다시 보일 때마다(최초 진입 포함) 재조회
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        if (groupId != -1) {
+            viewModel.loadReview(groupId = groupId, groupName = groupName, startDate = startDate, endDate = endDate)
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(state.errorMessage) {
+        state.errorMessage?.let { context.showCustomToast(it, false) }
+    }
+
+    GroupReviewScreen(
+        data = state.data,
+        onBackClick = onBackClick,
+        onEditClick = {
+            val reviewData = state.data
+            val hasReviews = (reviewData?.messages?.isNotEmpty() == true || reviewData?.bookReviews?.isNotEmpty() == true)
+            if (!hasReviews) {
+                context.showCustomToast("작성된 후기가 없습니다.", false)
+                return@GroupReviewScreen
+            }
+            val resolvedGroupName = reviewData?.groupName ?: groupName
+            val resolvedDateRange = reviewData?.dateRange
+                ?: run {
+                    when {
+                        startDate.isBlank() -> ""
+                        endDate.isBlank() -> "$startDate ~"
+                        else -> "$startDate ~ $endDate"
+                    }
+                }
+            val resolvedPartnerName = reviewData?.partnerUsername ?: ""
+            onNavigateReviewEdit(resolvedGroupName, resolvedDateRange, resolvedPartnerName)
+        },
+    )
+}
 
 @Composable
 fun GroupReviewScreen(

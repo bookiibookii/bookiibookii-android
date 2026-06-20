@@ -17,6 +17,7 @@ data class GroupReviewUiState(
     val isLoading: Boolean = false,
     val data: GroupReviewData? = null,
     val myNickname: String = "",
+    val errorMessage: String? = null,
 )
 
 class GroupReviewViewModel : ViewModel() {
@@ -31,7 +32,7 @@ class GroupReviewViewModel : ViewModel() {
         endDate: String,
     ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 // 내 닉네임·프로필 조회
                 val mypageResp = RetrofitClient.mypApi().getMypage()
@@ -109,11 +110,11 @@ class GroupReviewViewModel : ViewModel() {
                         )
                     }
                 } else {
-                    _uiState.update { it.copy(isLoading = false) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "후기를 불러오지 못했습니다.") }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, errorMessage = "네트워크 오류가 발생했습니다.") }
             }
         }
     }

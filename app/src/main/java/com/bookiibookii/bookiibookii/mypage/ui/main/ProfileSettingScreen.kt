@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.mypage.MypageReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
@@ -77,6 +79,113 @@ private fun validateNickname(nickname: String): Boolean {
     if (nickname.isBlank() || nickname.length > 10) return false
     if (nickname.any { it.isWhitespace() || Character.isSurrogate(it) }) return false
     return nicknameAllowedRegex.matches(nickname)
+}
+
+// 라우트 진입점 — 구 ProfileSettingFragment의 카메라/갤러리 launcher + 이벤트 구독 로직을 그대로 이식.
+// MypageViewModel은 마이페이지 메인과 공유되므로(구 activityViewModels()) 호출자가 넘겨준다.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileSettingRoute(
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel,
+    onBackClick: () -> Unit,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val profile by viewModel.profileData.observeAsState()
+    val nicknameCheckState by viewModel.nicknameCheckState.observeAsState()
+
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImageFile by remember { mutableStateOf<java.io.File?>(null) }
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // 원본 이미지를 임시 파일로 복사 (EXIF 보존). 리사이즈/압축/EXIF 회전은 업로드 시 S3Uploader가 처리
+    fun createUploadTempFile(uri: Uri): java.io.File? {
+        return try {
+            val tempFile = java.io.File.createTempFile("profile_", ".jpg", context.cacheDir)
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                tempFile.outputStream().use { output -> input.copyTo(output) }
+            } ?: return null
+            tempFile
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    val takePictureLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.TakePicture(),
+    ) { success ->
+        if (success) {
+            cameraImageUri?.let { uri ->
+                selectedImageUri = uri
+                selectedImageFile = createUploadTempFile(uri)
+            }
+        }
+    }
+
+    // 카메라 출력 = 앱 내부 캐시(cache/camera) 파일의 FileProvider URI. MediaStore에 넣지 않아 갤러리에 남지 않음
+    fun createCameraUri(): Uri? = try {
+        val cameraDir = java.io.File(context.cacheDir, "camera").apply { mkdirs() }
+        val file = java.io.File(cameraDir, "profile_${System.currentTimeMillis()}.jpg")
+        androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    } catch (e: Exception) {
+        null
+    }
+
+    fun launchCamera() {
+        val uri = createCameraUri()
+        if (uri == null) {
+            context.showCustomToast("카메라를 실행할 수 없습니다. 잠시 후 다시 시도해주세요.", false)
+            return
+        }
+        cameraImageUri = uri
+        val captureIntent = android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
+        context.packageManager
+            .queryIntentActivities(captureIntent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+            .forEach { info ->
+                context.grantUriPermission(
+                    info.activityInfo.packageName,
+                    uri,
+                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION or android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }
+        takePictureLauncher.launch(uri)
+    }
+
+    val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted -> if (granted) launchCamera() }
+
+    val pickMediaLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri ->
+        uri?.let {
+            selectedImageUri = it
+            selectedImageFile = createUploadTempFile(it)
+        }
+    }
+
+    LaunchedEffect(Unit) { viewModel.resetNicknameCheckState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel.Event.NavigateBack -> onBackClick()
+                is com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel.Event.ShowToast ->
+                    context.showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
+                else -> {}
+            }
+        }
+    }
+
+    ProfileSettingScreen(
+        profile = profile,
+        profileImageUri = selectedImageUri,
+        nicknameCheckState = nicknameCheckState,
+        onBackClick = onBackClick,
+        onOpenCamera = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) },
+        onOpenGallery = { pickMediaLauncher.launch("image/*") },
+        onCheckNickname = { nickname -> viewModel.checkNickname(nickname) },
+        onSaveClick = { request -> viewModel.updateProfile(request, selectedImageFile) },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

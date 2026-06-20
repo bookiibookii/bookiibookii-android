@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,6 +36,43 @@ import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedMemberReviewDto
 import com.bookiibookii.bookiibookii.data.model.mypage.UserBookDto
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+
+// 라우트 진입점 — 구 MypageFragment의 onCreateView/onViewCreated 로직을 그대로 이식.
+// MypageViewModel은 여러 화면(메인/프로필수정/후기/탈퇴)에서 공유되므로(구 activityViewModels())
+// 호출자(MypageNavHost)가 단일 인스턴스를 만들어 파라미터로 넘겨준다.
+@Composable
+fun MypageMainRoute(
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel,
+    onBackClick: () -> Unit,
+    onSettingClick: () -> Unit,
+    onProfileSettingClick: () -> Unit,
+    onAddressManagementClick: () -> Unit,
+    onBookshelfClick: () -> Unit,
+    onWrittenReviewClick: () -> Unit,
+    onReceivedReviewClick: () -> Unit,
+    onInstagramShareClick: () -> Unit,
+) {
+    val profile by viewModel.profileData.observeAsState()
+
+    // 구 Fragment의 onViewCreated()처럼 화면이 다시 보일 때마다(최초 진입 포함) 재조회
+    // (replace+addToBackStack 구조라 마이페이지로 복귀할 때마다 onViewCreated가 다시 호출되던 것과 동일)
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        viewModel.fetchMypageData()
+    }
+
+    MypageScreen(
+        profile = profile,
+        onSaveIntroduction = { viewModel.updateIntroduction(it) },
+        onBackClick = onBackClick,
+        onSettingClick = onSettingClick,
+        onProfileSettingClick = onProfileSettingClick,
+        onAddressManagementClick = onAddressManagementClick,
+        onBookshelfClick = onBookshelfClick,
+        onWrittenReviewClick = onWrittenReviewClick,
+        onReceivedReviewClick = onReceivedReviewClick,
+        onInstagramShareClick = onInstagramShareClick,
+    )
+}
 
 @Composable
 fun MypageScreen(

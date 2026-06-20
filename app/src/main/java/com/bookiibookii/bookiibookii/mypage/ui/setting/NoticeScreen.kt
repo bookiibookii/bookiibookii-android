@@ -24,18 +24,56 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+
+// 라우트 진입점 — 구 NoticeFragment의 onCreateView/onViewCreated 로직을 그대로 이식
+@Composable
+fun NoticeRoute(
+    onBackClick: () -> Unit,
+    onNoticeClick: (noticeId: Long, title: String) -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = LocalContext.current
+    val notices by viewModel.notices.observeAsState(emptyList())
+
+    // 구 Fragment의 onViewCreated()처럼 화면이 다시 보일 때마다(최초 진입 포함) 재조회
+    // (공지 상세를 보고 돌아오면 onCreateView가 다시 호출되며 fetchNotices가 재실행되던 것과 동일)
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        viewModel.fetchNotices()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel.Event.ShowToast ->
+                    context.showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
+                else -> Unit
+            }
+        }
+    }
+
+    NoticeScreen(
+        notices = notices,
+        onBackClick = onBackClick,
+        onNoticeClick = onNoticeClick,
+    )
+}
 
 @Composable
 fun NoticeScreen(

@@ -104,8 +104,9 @@ class ReviewEditViewModel : ViewModel() {
                         initialPartnerComment = initialPartnerComment,
                     )
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
+                _event.emit(ReviewEditEvent.Error("후기 정보를 불러오지 못했습니다."))
             }
         }
     }

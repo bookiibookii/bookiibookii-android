@@ -11,7 +11,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.group.nav.GroupNavHost
-import com.bookiibookii.bookiibookii.mypage.feat.main.AddressManagementFragment
+import com.bookiibookii.bookiibookii.mypage.MypageFragment
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 class GroupFragment : Fragment() {
@@ -39,7 +39,7 @@ class GroupFragment : Fragment() {
                         parentFragmentManager.beginTransaction()
                             .replace(
                                 R.id.fragmentContainer,
-                                AddressManagementFragment.newInstance(initialTab),
+                                MypageFragment.newInstanceAtAddressManagement(initialTab),
                             )
                             .addToBackStack(null)
                             .commit()

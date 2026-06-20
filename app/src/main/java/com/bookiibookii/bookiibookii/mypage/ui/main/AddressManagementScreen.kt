@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -66,6 +67,42 @@ import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddressRequest
 import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.showCustomToast
+
+// 라우트 진입점 — 구 AddressManagementFragment의 onCreateView/onViewCreated 로직을 그대로 이식
+@Composable
+fun AddressManagementRoute(
+    initialTab: Int,
+    onBackClick: () -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.AddressViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = LocalContext.current
+    val deliveries by viewModel.deliveries.observeAsState(emptyList())
+    val exchanges by viewModel.exchanges.observeAsState(emptyList())
+
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.mypage.vm.AddressViewModel.Event.ShowToast ->
+                    context.showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
+            }
+        }
+    }
+
+    AddressManagementScreen(
+        deliveries = deliveries,
+        exchanges = exchanges,
+        initialTabIndex = initialTab,
+        onBackClick = onBackClick,
+        onFetchDeliveries = { viewModel.fetchDeliveries() },
+        onFetchExchanges = { viewModel.fetchExchanges() },
+        onAddDelivery = { req, makeDefault, onSuccess -> viewModel.addDelivery(req, makeDefault, onSuccess) },
+        onUpdateDelivery = { id, req, makeDefault, onSuccess -> viewModel.updateDelivery(id, req, makeDefault, onSuccess) },
+        onDeleteDelivery = { id -> viewModel.deleteDelivery(id) },
+        onAddExchange = { req, makeDefault, onSuccess -> viewModel.addExchange(req, makeDefault, onSuccess) },
+        onUpdateExchange = { id, req, makeDefault, onSuccess -> viewModel.updateExchange(id, req, makeDefault, onSuccess) },
+        onDeleteExchange = { id -> viewModel.deleteExchange(id) },
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

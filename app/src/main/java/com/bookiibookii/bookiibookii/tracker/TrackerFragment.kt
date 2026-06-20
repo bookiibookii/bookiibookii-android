@@ -11,7 +11,7 @@ import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
-import com.bookiibookii.bookiibookii.library.feat.LibraryDetailFragment
+import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
 import com.bookiibookii.bookiibookii.mypage.MypageFragment
 import com.bookiibookii.bookiibookii.notification.NotificationFragment
 import com.bookiibookii.bookiibookii.tracker.nav.TrackerNavHost
@@ -57,7 +57,7 @@ class TrackerFragment : Fragment() {
                         parentFragmentManager.beginTransaction()
                             .replace(
                                 R.id.fragmentContainer,
-                                LibraryDetailFragment.newInstance(
+                                LibraryFragment.newInstanceAtDetail(
                                     groupId = target.groupId,
                                     memberBookId = target.memberBookId,
                                     groupName = target.groupName,

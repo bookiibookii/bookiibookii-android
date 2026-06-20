@@ -31,7 +31,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,6 +46,42 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+
+// 라우트 진입점 — 구 WithdrawFragment의 onCreateView/onViewCreated 로직을 그대로 이식.
+// MypageViewModel은 마이페이지 메인과 공유되므로(구 activityViewModels()) 호출자가 넘겨준다.
+@Composable
+fun WithdrawRoute(
+    mypageViewModel: com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel,
+    onBackClick: () -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val withdrawFailed by viewModel.withdrawFailed.observeAsState(false)
+    val profile by mypageViewModel.profileData.observeAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel.Event.WithdrawSuccess -> {
+                    com.bookiibookii.bookiibookii.onboarding.login.TokenManager.clear(context)
+                    val intent = android.content.Intent(context, com.bookiibookii.bookiibookii.onboarding.login.LoginActivity::class.java).apply {
+                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    context.startActivity(intent)
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    WithdrawScreen(
+        userName = profile?.nickname ?: "",
+        onBackClick = onBackClick,
+        onWithdraw = { reason, customReason -> viewModel.withdraw(reason, customReason) },
+        showWithdrawFailedDialog = withdrawFailed,
+        onFailureDialogDismiss = { viewModel.clearWithdrawFailed() },
+    )
+}
 
 private val withdrawOptions = listOf(
     "원하는 파트너를 찾기 어려워요",

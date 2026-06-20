@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,6 +53,38 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.DateUtils
 
 enum class ReviewTab { WRITTEN, RECEIVED }
+
+// 라우트 진입점 — 구 ReviewFragment의 onCreateView 로직을 그대로 이식.
+// MypageViewModel은 마이페이지 메인과 공유되므로(구 activityViewModels()) 호출자가 넘겨준다.
+@Composable
+fun ReviewRoute(
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel,
+    initialTab: ReviewTab,
+    onBackClick: () -> Unit,
+) {
+    val profile by viewModel.profileData.observeAsState()
+    val writtenState by viewModel.writtenReviews.observeAsState(com.bookiibookii.bookiibookii.mypage.vm.WrittenReviewUiState())
+    val receivedState by viewModel.receivedReviews.observeAsState(com.bookiibookii.bookiibookii.mypage.vm.ReceivedReviewUiState())
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchWrittenReviews(reset = true)
+        viewModel.fetchReceivedReviews(reset = true)
+    }
+
+    ReviewScreen(
+        initialTab = initialTab,
+        onBackClick = onBackClick,
+        bookReviewCount = writtenState.totalCount.toInt(),
+        writtenReviews = writtenState.items,
+        writtenHasNext = writtenState.hasNext,
+        onLoadMoreWritten = { viewModel.fetchWrittenReviews(reset = false) },
+        boomUpCount = receivedState.positiveCount.toInt(),
+        receivedReviews = receivedState.items,
+        receivedHasNext = receivedState.hasNext,
+        onLoadMoreReceived = { viewModel.fetchReceivedReviews(reset = false) },
+        nickname = profile?.nickname ?: "",
+    )
+}
 
 @Composable
 fun ReviewScreen(

@@ -23,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,30 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 private enum class BookmarkSortType { RECENT, OLDEST }
+
+// 라우트 진입점 — 구 LibraryBookmarkFragment의 onCreateView/onResume 로직을 그대로 이식
+@Composable
+fun LibraryBookmarkRoute(
+    onBackClick: () -> Unit,
+    onCardClick: (initialIndex: Int, sortByLatest: Boolean, cards: List<ReadingCard>) -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryBookmarkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    // 구 Fragment의 onResume()처럼 화면이 다시 보일 때마다(최초 진입 포함) 재조회
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        viewModel.fetchBookmarkedCards()
+    }
+
+    LibraryBookmarkScreen(
+        cards = state.cards,
+        isLoading = state.isLoading,
+        onSortChange = { isLatest -> viewModel.sortByLatest(isLatest) },
+        onBackClick = onBackClick,
+        onMoveToLibrary = onBackClick,
+        onCardClick = { index, bookmarkedCards -> onCardClick(index, true, bookmarkedCards) },
+    )
+}
 
 @Composable
 fun LibraryBookmarkScreen(
