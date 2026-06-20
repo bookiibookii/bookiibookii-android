@@ -54,12 +54,14 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
 
     // 다운로드 권한(API 28 이하) 승인 후 저장할 카드 보관
     private var pendingDownloadCard: ReadingCard? = null
+    private var pendingDownloadVersion: Int = 2
     private val storagePermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             val card = pendingDownloadCard
+            val version = pendingDownloadVersion
             pendingDownloadCard = null
             if (granted && card != null) {
-                saveCardToGallery(card)
+                saveCardToGallery(card, version)
             } else {
                 requireContext().showCustomToast("저장 권한이 필요해요", false)
             }
@@ -105,11 +107,11 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
                             } catch (_: Exception) { }
                         }
                     },
-                    onInstaShare = { card -> shareCardToInstagram(card) },
+                    onInstaShare = { card, version -> shareCardToInstagram(card, version) },
                     onCopyLink   = { card -> copyShareLink(card) },
                     onKakaoShare = { card -> shareToKakao(card) },
                     onXShare     = { card -> shareToX(card) },
-                    onDownload   = { card -> downloadCard(card) },
+                    onDownload   = { card, version -> downloadCard(card, version) },
                     onEditClick  = { card ->
                         parentFragmentManager.beginTransaction()
                             .replace(R.id.fragmentContainer, LibraryAddCardFragment.newInstanceEdit(card))
@@ -246,19 +248,18 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
     // ── 카드 → 비트맵 캡처 (인스타 공유 / 다운로드 공통) ──────────────────────
     // 오프스크린 ComposeView로 ShareableCard를 렌더해 비트맵 생성. 결과는 Main 콜백(실패 시 null)
 
-    private fun captureShareableCard(card: ReadingCard, onBitmap: (Bitmap?) -> Unit) {
+    private fun captureShareableCard(card: ReadingCard, cardVersion: Int, onBitmap: (Bitmap?) -> Unit) {
         val context = requireContext()
-
-        // 카드 크기: 화면 너비의 80%, 비율 348:464
-        val cardWidthPx  = (resources.displayMetrics.widthPixels * 0.8f).toInt()
-        val cardHeightPx = (cardWidthPx * 464f / 348f).toInt()
+        
+        val cardWidthPx  = (resources.displayMetrics.widthPixels * 0.85f).toInt()
+        val cardHeightPx = (cardWidthPx * 520f / 320f).toInt()
 
         val cardView = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             visibility = View.INVISIBLE
             setContent {
                 BookiiBookiiTheme {
-                    ShareableCard(card = card)
+                    ShareableCard(card = card, cardVersion = cardVersion)
                 }
             }
         }
@@ -293,9 +294,9 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
 
     // ── 인스타그램 스토리 공유 ───────────────────────────────────────────────
 
-    private fun shareCardToInstagram(card: ReadingCard) {
+    private fun shareCardToInstagram(card: ReadingCard, cardVersion: Int) {
         val context = requireContext()
-        captureShareableCard(card) { bitmap ->
+        captureShareableCard(card, cardVersion) { bitmap ->
             if (bitmap == null) {
                 context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
                 return@captureShareableCard
@@ -343,7 +344,7 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
     // ── 다운로드 (갤러리 저장) ────────────────────────────────────────────────
     // API 28 이하는 WRITE_EXTERNAL_STORAGE 런타임 권한 필요, Q+는 MediaStore로 권한 불필요
 
-    private fun downloadCard(card: ReadingCard) {
+    private fun downloadCard(card: ReadingCard, cardVersion: Int) {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
             ContextCompat.checkSelfPermission(
                 requireContext(),
@@ -351,15 +352,16 @@ class ReadingCardDetailFragment : BaseLibraryFragment() {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             pendingDownloadCard = card
+            pendingDownloadVersion = cardVersion
             storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             return
         }
-        saveCardToGallery(card)
+        saveCardToGallery(card, cardVersion)
     }
 
-    private fun saveCardToGallery(card: ReadingCard) {
+    private fun saveCardToGallery(card: ReadingCard, cardVersion: Int) {
         val context = requireContext()
-        captureShareableCard(card) { bitmap ->
+        captureShareableCard(card, cardVersion) { bitmap ->
             if (bitmap == null) {
                 context.showCustomToast("저장 중 오류가 발생했어요", false)
                 return@captureShareableCard

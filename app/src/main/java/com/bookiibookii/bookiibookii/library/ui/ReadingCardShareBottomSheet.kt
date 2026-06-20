@@ -1,38 +1,53 @@
 package com.bookiibookii.bookiibookii.library.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 internal fun ReadingCardShareBottomSheet(
     onDismiss: () -> Unit,
@@ -42,34 +57,69 @@ internal fun ReadingCardShareBottomSheet(
     onDownloadClick: () -> Unit = {},
     onCopyLinkClick: () -> Unit = {},
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val visibleState = remember { MutableTransitionState(false) }
+    LaunchedEffect(Unit) { visibleState.targetState = true }
+    // 슬라이드다운 애니메이션이 끝난 뒤에야 실제 onDismiss(컴포지션에서 제거)를 호출
+    LaunchedEffect(visibleState.currentState, visibleState.targetState) {
+        if (!visibleState.targetState && !visibleState.currentState) onDismiss()
+    }
+    val hide: () -> Unit = { visibleState.targetState = false }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = BookiiBookiiTheme.colors.white,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+   
+    val navigationBarBottomPadding = WindowInsets.navigationBars.asPaddingValues()
+        .calculateBottomPadding()
+        .coerceAtLeast(24.dp)
 
-        dragHandle = {
-            Box(
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(modifier = Modifier.width(44.dp).height(4.dp).clip(RoundedCornerShape(50.dp)).background(BookiiBookiiTheme.colors.grey200))
-            }
-        },
+    Popup(
+        alignment = Alignment.BottomCenter,
+        properties = PopupProperties(focusable = true, dismissOnBackPress = true, dismissOnClickOutside = false),
+        onDismissRequest = hide,
     ) {
-        ShareSheetContent(
-            onKakaoClick = onKakaoClick,
-            onInstaClick = onInstaClick,
-            onXClick = onXClick,
-            onDownloadClick = onDownloadClick,
-            onCopyLinkClick = onCopyLinkClick,
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            val scrimAlpha by animateFloatAsState(
+                targetValue = if (visibleState.targetState) 0.5f else 0f,
+                animationSpec = tween(durationMillis = 220),
+                label = "scrim",
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = scrimAlpha))
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { hide() },
+            )
+            AnimatedVisibility(
+                visibleState = visibleState,
+                enter = slideInVertically(animationSpec = tween(durationMillis = 220)) { it },
+                exit = slideOutVertically(animationSpec = tween(durationMillis = 220)) { it },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .background(BookiiBookiiTheme.colors.white),
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(modifier = Modifier.width(44.dp).height(4.dp).clip(RoundedCornerShape(50.dp)).background(BookiiBookiiTheme.colors.grey200))
+                    }
+                    ShareSheetContent(
+                        bottomPadding = navigationBarBottomPadding,
+                        onKakaoClick = { hide(); onKakaoClick() },
+                        onInstaClick = { hide(); onInstaClick() },
+                        onXClick = { hide(); onXClick() },
+                        onDownloadClick = { hide(); onDownloadClick() },
+                        onCopyLinkClick = { hide(); onCopyLinkClick() },
+                    )
+                }
+            }
+        }
     }
 }
 
-// 시트 본문 — ModalBottomSheet 래퍼와 분리해 @Preview 대상이 되도록 함
+// 시트 본문 — 래퍼와 분리해 @Preview 대상이 되도록 함
 @Composable
 private fun ShareSheetContent(
     onKakaoClick: () -> Unit,
@@ -77,8 +127,9 @@ private fun ShareSheetContent(
     onXClick: () -> Unit,
     onDownloadClick: () -> Unit,
     onCopyLinkClick: () -> Unit,
+    bottomPadding: Dp = 0.dp,
 ) {
-    Column(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = bottomPadding)) {
         Text(
             text = "공유하기",
             style = BookiiBookiiTheme.typography.semibold20,
@@ -87,10 +138,10 @@ private fun ShareSheetContent(
         )
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 24.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            ShareOption(label = "카카오톡", onClick = onKakaoClick) {
+            ShareOption(label = "카카오톡", onClick = onKakaoClick, modifier = Modifier.weight(1f)) {
                 // 로그인 화면과 동일: 노란 원(#FEE500) + 카카오 아이콘
                 Box(
                     modifier = Modifier
@@ -107,19 +158,19 @@ private fun ShareSheetContent(
                     )
                 }
             }
-            ShareOption(label = "인스타그램", onClick = onInstaClick) {
+            ShareOption(label = "인스타그램", onClick = onInstaClick, modifier = Modifier.weight(1f)) {
                 Icon(painter = painterResource(R.drawable.ic_insta), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(56.dp))
             }
-            ShareOption(label = "X", onClick = onXClick) {
+            ShareOption(label = "X", onClick = onXClick, modifier = Modifier.weight(1f)) {
                 // 마이페이지 프로필 공유와 동일: img_share_x 56dp
                 Icon(painter = painterResource(R.drawable.img_share_x), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(56.dp))
             }
-            ShareOption(label = "다운로드", onClick = onDownloadClick) {
+            ShareOption(label = "다운로드", onClick = onDownloadClick, modifier = Modifier.weight(1f)) {
                 Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(BookiiBookiiTheme.colors.grey100), contentAlignment = Alignment.Center) {
                     Icon(painter = painterResource(R.drawable.ic_download), contentDescription = null, tint = BookiiBookiiTheme.colors.grey700, modifier = Modifier.size(24.dp))
                 }
             }
-            ShareOption(label = "링크 복사", onClick = onCopyLinkClick) {
+            ShareOption(label = "링크 복사", onClick = onCopyLinkClick, modifier = Modifier.weight(1f)) {
                 Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(BookiiBookiiTheme.colors.grey100), contentAlignment = Alignment.Center) {
                     Icon(painter = painterResource(R.drawable.ic_link), contentDescription = null, tint = BookiiBookiiTheme.colors.grey700, modifier = Modifier.size(24.dp))
                 }
@@ -132,15 +183,24 @@ private fun ShareSheetContent(
 private fun ShareOption(
     label: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     icon: @Composable () -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.clickable { onClick() },
+        modifier = modifier.clickable { onClick() },
     ) {
         Box(modifier = Modifier.size(56.dp), contentAlignment = Alignment.Center) { icon() }
-        Text(text = label, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey700)
+        Text(
+            text = label,
+            style = BookiiBookiiTheme.typography.regular12,
+            color = BookiiBookiiTheme.colors.grey700,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Visible,
+        )
     }
 }
 
