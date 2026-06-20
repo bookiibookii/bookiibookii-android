@@ -54,8 +54,6 @@ import com.bookiibookii.bookiibookii.common.DateUtils
 
 enum class ReviewTab { WRITTEN, RECEIVED }
 
-// 라우트 진입점 — 구 ReviewFragment의 onCreateView 로직을 그대로 이식.
-// MypageViewModel은 마이페이지 메인과 공유되므로(구 activityViewModels()) 호출자가 넘겨준다.
 @Composable
 fun ReviewRoute(
     viewModel: com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel,
@@ -103,12 +101,10 @@ fun ReviewScreen(
     var selectedTab by remember { mutableStateOf(initialTab) }
     val listState = rememberLazyListState()
 
-    // 탭 전환 시 스크롤 위치를 맨 위로 초기화(다른 탭의 끝 위치에서 잘못된 추가 로드 방지)
     LaunchedEffect(selectedTab) {
         listState.scrollToItem(0)
     }
 
-    // 리스트 끝 부근에 도달하면 다음 페이지 로드
     val shouldLoadMore by remember {
         derivedStateOf {
             val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
@@ -269,7 +265,6 @@ private fun BookReviewCard(review: WrittenReviewItem) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // 제목+저자가 길면 칩 영역을 침범하지 않고 저자(구분선 포함)가 다음 줄로 내려가도록 FlowRow 사용
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
                             review.bookTitle.orEmpty(),

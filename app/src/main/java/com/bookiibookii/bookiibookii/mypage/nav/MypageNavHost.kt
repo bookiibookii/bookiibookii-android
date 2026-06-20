@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
@@ -46,13 +50,10 @@ import com.bookiibookii.bookiibookii.mypage.ui.setting.WebViewRoute
 import com.bookiibookii.bookiibookii.mypage.ui.setting.WithdrawRoute
 import com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
-// 트래커/서재 모듈과 동일한 패턴: 단일 Fragment(MypageFragment) 안에서 11개 화면 전환을
-// 전부 Compose Navigation으로 처리한다.
-//
-// MypageViewModel은 메인/프로필수정/후기/탈퇴 화면에서 공유되어야 하므로(구 activityViewModels())
-// 호출자(MypageFragment)가 activityViewModels()로 생성한 단일 인스턴스를 파라미터로 받는다.
 @Composable
 fun MypageNavHost(
     mypageViewModel: MypageViewModel,
@@ -62,21 +63,39 @@ fun MypageNavHost(
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
-    // 내부 스택에 더 갈 곳이 있으면 popBackStack, 없으면(딥링크 시작점, 예: 그룹 모듈에서
-    // 주소지 관리로 바로 진입) 마이페이지 Fragment 자체를 종료한다. 그렇지 않으면 뒤로가기가
-    // 조용히 무시된다.
+    var pendingDownloadProfile by remember { mutableStateOf<UserProfileResDTO?>(null) }
+    val storagePermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        val profile = pendingDownloadProfile
+        pendingDownloadProfile = null
+        if (granted && profile != null) {
+            saveProfileCardToGallery(context, coroutineScope, profile)
+        } else {
+            context.showCustomToast("저장 권한이 필요해요", false)
+        }
+    }
+
+    fun downloadProfileCard(profile: UserProfileResDTO) {
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P &&
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            pendingDownloadProfile = profile
+            storagePermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            return
+        }
+        saveProfileCardToGallery(context, coroutineScope, profile)
+    }
+
     val popOrExit: () -> Unit = {
         if (!navController.popBackStack()) onBackClick()
     }
 
-    // 마이페이지 전체는 탑레벨이 아니므로 진입 시 바텀네비를 숨기고, 빠져나갈 때(Fragment 전체가
-    // 컴포지션을 떠날 때) 원래 상태로 복원한다. (구 BaseMypageFragment.onResume/onDetach를 대체)
     DisposableEffect(Unit) {
         val activity = context as? Activity
         activity?.findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-        // Activity의 탭 전환 동기 코드가 nav를 VISIBLE로 override할 수 있으므로
-        // 현재 메시지 큐가 처리된 다음 프레임에도 한 번 더 적용
         activity?.window?.decorView?.post {
             activity.findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
         }
@@ -89,7 +108,6 @@ fun MypageNavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
-        // 화면 전환 애니메이션 제거(기본 크로스페이드 시 이전 화면이 잔상처럼 겹쳐 보이는 현상 방지)
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -107,6 +125,9 @@ fun MypageNavHost(
                 onReceivedReviewClick = { navController.navigate(MypageDestinations.review(ReviewTab.RECEIVED)) },
                 onInstagramShareClick = {
                     mypageViewModel.profileData.value?.let { shareProfileToInstagram(context, it) }
+                },
+                onDownloadClick = {
+                    mypageViewModel.profileData.value?.let { downloadProfileCard(it) }
                 },
             )
         }
@@ -207,9 +228,11 @@ fun MypageNavHost(
     }
 }
 
-// ── 프로필 인스타그램 스토리 공유 — 구 MypageFragment.shareProfileToInstagram을 그대로 이식 ──
-
-private fun shareProfileToInstagram(context: android.content.Context, profile: UserProfileResDTO) {
+private fun captureProfileCardBitmap(
+    context: android.content.Context,
+    profile: UserProfileResDTO,
+    onBitmap: (Bitmap?) -> Unit,
+) {
     val density = context.resources.displayMetrics.density
     val cardWidth = (context.resources.displayMetrics.widthPixels - (40 * density).toInt())
 
@@ -235,24 +258,37 @@ private fun shareProfileToInstagram(context: android.content.Context, profile: U
         }
     }
 
-    val container = (context as? Activity)?.findViewById<ViewGroup>(android.R.id.content) ?: return
+    val container = (context as? Activity)?.findViewById<ViewGroup>(android.R.id.content) ?: run {
+        onBitmap(null)
+        return
+    }
     container.addView(cardView, ViewGroup.LayoutParams(cardWidth, ViewGroup.LayoutParams.WRAP_CONTENT))
 
     cardView.postDelayed({
-        try {
+        val bitmap = try {
             val w = cardView.width
             val h = cardView.height
             if (w <= 0 || h <= 0) {
-                container.removeView(cardView)
-                context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
-                return@postDelayed
+                null
+            } else {
+                Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also { bmp -> cardView.draw(Canvas(bmp)) }
             }
+        } catch (e: Exception) {
+            null
+        } finally {
+            if (cardView.isAttachedToWindow) container.removeView(cardView)
+        }
+        onBitmap(bitmap)
+    }, 500L)
+}
 
-            val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            cardView.draw(canvas)
-            container.removeView(cardView)
-
+private fun shareProfileToInstagram(context: android.content.Context, profile: UserProfileResDTO) {
+    captureProfileCardBitmap(context, profile) { bitmap ->
+        if (bitmap == null) {
+            context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
+            return@captureProfileCardBitmap
+        }
+        try {
             val imagesDir = File(context.cacheDir, "images").apply { mkdirs() }
             val file = File(imagesDir, "profile_card_${System.currentTimeMillis()}.png")
             file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -261,10 +297,55 @@ private fun shareProfileToInstagram(context: android.content.Context, profile: U
             val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
             launchInstagramStoryIntent(context, uri)
         } catch (e: Exception) {
-            if (cardView.isAttachedToWindow) container.removeView(cardView)
             context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
         }
-    }, 500L)
+    }
+}
+
+private fun saveProfileCardToGallery(
+    context: android.content.Context,
+    coroutineScope: kotlinx.coroutines.CoroutineScope,
+    profile: UserProfileResDTO,
+) {
+    captureProfileCardBitmap(context, profile) { bitmap ->
+        if (bitmap == null) {
+            context.showCustomToast("저장 중 오류가 발생했어요", false)
+            return@captureProfileCardBitmap
+        }
+        coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val saved = saveProfileBitmapToGallery(context, bitmap)
+            bitmap.recycle()
+            withContext(kotlinx.coroutines.Dispatchers.Main) {
+                if (saved) context.showCustomToast("사진을 저장했어요", true)
+                else context.showCustomToast("사진 저장에 실패했어요", false)
+            }
+        }
+    }
+}
+
+private fun saveProfileBitmapToGallery(context: android.content.Context, bitmap: Bitmap): Boolean {
+    val resolver = context.contentResolver
+    val values = android.content.ContentValues().apply {
+        put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, "bookii_profile_${System.currentTimeMillis()}.png")
+        put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "${android.os.Environment.DIRECTORY_PICTURES}/부키부키")
+            put(android.provider.MediaStore.Images.Media.IS_PENDING, 1)
+        }
+    }
+    val uri = resolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
+    return try {
+        resolver.openOutputStream(uri)?.use { out -> bitmap.compress(Bitmap.CompressFormat.PNG, 100, out) } ?: return false
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            values.clear()
+            values.put(android.provider.MediaStore.Images.Media.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        }
+        true
+    } catch (_: Exception) {
+        resolver.delete(uri, null, null)
+        false
+    }
 }
 
 private fun launchInstagramStoryIntent(context: android.content.Context, stickerUri: Uri) {

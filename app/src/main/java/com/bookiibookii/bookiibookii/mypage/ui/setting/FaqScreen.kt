@@ -48,7 +48,6 @@ import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import kotlinx.coroutines.launch
 
-// 라우트 진입점 — 구 FaqFragment의 onCreateView/onViewCreated 로직을 그대로 이식
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FaqRoute(

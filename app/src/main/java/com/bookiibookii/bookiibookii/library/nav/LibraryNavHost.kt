@@ -26,39 +26,33 @@ import com.bookiibookii.bookiibookii.library.ui.ReadingCardDetailRoute
 import com.bookiibookii.bookiibookii.library.ui.ReviewEditRoute
 import com.google.gson.Gson
 
-// 트래커(tracker) 모듈과 동일한 패턴: 단일 Fragment(LibraryFragment) 안에서
-// 7개 화면 전환을 전부 Compose Navigation으로 처리한다.
 @Composable
 fun LibraryNavHost(
     onProfileClick: () -> Unit = {},
-    // 딥링크(newInstanceAtDetail 등)로 MAIN이 아닌 화면이 시작점일 때, 내부적으로 더 pop할
-    // 곳이 없으면 이 콜백으로 Fragment 자체를 종료한다(그렇지 않으면 뒤로가기가 조용히 무시됨).
     onExitLibrary: () -> Unit = {},
+    onRouteChanged: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = LibraryDestinations.MAIN,
 ) {
     val navController = rememberNavController()
 
-    // 내부 스택에 더 갈 곳이 있으면 popBackStack, 없으면(딥링크 시작점) Fragment 종료
     val popOrExit: () -> Unit = {
         if (!navController.popBackStack()) onExitLibrary()
     }
 
-    // 바텀 네비 표시는 여기서만 제어 — MAIN에서만 표시, 그 외 화면은 숨김
-    // (구 BaseLibraryFragment.onResume/onDetach가 하던 일을 대체)
     val context = LocalContext.current
     val currentRoute by navController.currentBackStackEntryAsState()
     LaunchedEffect(currentRoute) {
         val route = currentRoute?.destination?.route ?: return@LaunchedEffect
         val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
         bottomNav?.visibility = if (route == LibraryDestinations.MAIN) View.VISIBLE else View.GONE
+        onRouteChanged(route)
     }
 
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
-        // 화면 전환 애니메이션 제거(기본 크로스페이드 시 이전 화면이 잔상처럼 겹쳐 보이는 현상 방지)
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -180,7 +174,6 @@ fun LibraryNavHost(
                 totalPages = args?.getInt(LibraryDestinations.ADD_CARD_ARG_TOTAL_PAGES) ?: 0,
                 onBackClick = popOrExit,
                 onSaved = { isEdit ->
-                    // 수정은 카드 상세(중간 화면)까지 같이 닫고 목록으로, 등록은 작성 화면만 닫고 상세로 복귀
                     navController.popBackStack()
                     if (isEdit) navController.popBackStack()
                 },

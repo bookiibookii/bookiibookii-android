@@ -48,11 +48,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-// 공유 링크(App Links) 진입점.
-// https://<공유도메인>/share/reading-card/{shareToken} → shareToken으로 공개 조회 후 뷰어 표시.
 class PublicCardViewerActivity : ComponentActivity() {
 
-    // 갤러리 저장 — API 28 이하 WRITE_EXTERNAL_STORAGE 권한 결과 대기용
     private var pendingSaveCard: ReadingCard? = null
     private val storagePermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -65,13 +62,10 @@ class PublicCardViewerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // App Links(https): 마지막 경로 세그먼트가 shareToken.
-        // 카카오 공유(kakao{key}://kakaolink): executionParams가 쿼리(?shareToken=)로 전달됨.
         val shareToken = intent?.data?.getQueryParameter("shareToken")
             ?: intent?.data?.lastPathSegment
             ?: intent?.getStringExtra(EXTRA_SHARE_TOKEN)
 
-        // 공개 조회 — 로그인 없이 누구나 열람 가능. 앱 진입은 "부키부키 앱으로 이동하기" 버튼으로.
         setContent {
             BookiiBookiiTheme {
                 var state by remember { mutableStateOf<ViewerState>(ViewerState.Loading) }
@@ -111,7 +105,6 @@ class PublicCardViewerActivity : ComponentActivity() {
         }
     }
 
-    // 공개 조회 — libApi(authed)지만 공개 엔드포인트라 토큰 유무와 무관하게 동작
     private suspend fun loadCard(shareToken: String?): ViewerState {
         if (shareToken.isNullOrBlank()) return ViewerState.Error
         return withContext(Dispatchers.IO) {
@@ -129,9 +122,6 @@ class PublicCardViewerActivity : ComponentActivity() {
             }
         }
     }
-
-    // ── 이미지 저장 (갤러리) ──────────────────────────────────────────────────
-    // API 28 이하는 WRITE_EXTERNAL_STORAGE 런타임 권한 필요, Q+는 MediaStore로 권한 불필요
 
     private fun saveImage(card: ReadingCard) {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
@@ -161,7 +151,6 @@ class PublicCardViewerActivity : ComponentActivity() {
         }
     }
 
-    // 오프스크린 ComposeView로 ShareableCard를 렌더해 비트맵 생성 (뷰어 카드와 동일한 320:520 비율)
     private fun captureCard(card: ReadingCard, onBitmap: (Bitmap?) -> Unit) {
         val maxWidthPx = (320 * resources.displayMetrics.density).toInt()
         val cardWidthPx = (resources.displayMetrics.widthPixels * 0.82f).toInt().coerceAtMost(maxWidthPx)
@@ -183,7 +172,6 @@ class PublicCardViewerActivity : ComponentActivity() {
         }
         container.addView(cardView, ViewGroup.LayoutParams(cardWidthPx, cardHeightPx))
 
-        // 레이아웃/컴포지션(이미지 로드 포함) 완료 대기 후 캡처
         cardView.postDelayed({
             val bitmap = try {
                 val w = cardView.width
@@ -204,7 +192,6 @@ class PublicCardViewerActivity : ComponentActivity() {
         }, 500L)
     }
 
-    // 비트맵을 갤러리(Pictures/부키부키)에 저장. 성공 여부 반환
     private fun saveBitmapToGallery(bitmap: Bitmap): Boolean {
         val resolver = contentResolver
         val values = ContentValues().apply {
@@ -233,7 +220,6 @@ class PublicCardViewerActivity : ComponentActivity() {
         }
     }
 
-    // "앱에서 보기" — 런처(LoginIntroActivity)로 진입해 정상 라우팅에 맡김
     private fun openApp() {
         startActivity(
             Intent(this, LoginIntroActivity::class.java).apply {

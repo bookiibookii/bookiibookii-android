@@ -108,7 +108,6 @@ private fun WrittenReviewCard(review: BookReviewSummaryDto) {
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // 제목+저자가 길면 칩 영역을 침범하지 않고 저자(구분선 포함)가 다음 줄로 내려가도록 FlowRow 사용
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = review.bookTitle.stripBookSubtitle(),
@@ -220,7 +219,6 @@ private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
 private fun MypageStarRating(rating: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
         repeat(5) { index ->
-            // 채운 별: ic_star_fill + uiMainSub / 빈 별: ic_star + grey200
             val filled = index < rating
             Icon(
                 painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star),

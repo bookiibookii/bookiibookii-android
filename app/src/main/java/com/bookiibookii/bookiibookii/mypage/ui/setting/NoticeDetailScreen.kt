@@ -33,8 +33,6 @@ import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
-// 라우트 진입점 — 구 NoticeDetailFragment의 onCreateView/onViewCreated 로직을 그대로 이식.
-// 공지 상세는 한 번 들어가면 다시 안으로 진입하지 않는 leaf 화면이라 noticeId 기준 1회 조회로 충분.
 @Composable
 fun NoticeDetailRoute(
     noticeId: Long,

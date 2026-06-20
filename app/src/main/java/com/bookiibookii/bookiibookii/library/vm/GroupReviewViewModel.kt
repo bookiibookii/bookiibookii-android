@@ -34,30 +34,26 @@ class GroupReviewViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                // 내 닉네임·프로필 조회
                 val mypageResp = RetrofitClient.mypApi().getMypage()
                 val myNickname = mypageResp.body()?.result?.nickname ?: ""
                 val myProfileImageUrl = mypageResp.body()?.result?.profileImageUrl
 
-                // 그룹 리뷰 조회 (신규 API)
                 val reviewResp = RetrofitClient.libApi().getGroupReviews(groupId)
                 if (reviewResp.isSuccessful && reviewResp.body()?.isSuccess == true) {
                     val result = reviewResp.body()?.result
                     val bookReviews   = result?.bookReviews ?: emptyList()
                     val memberReviews = result?.memberReviews ?: emptyList()
 
-                    // 파트너 (멤버 후기 중 내가 아닌 작성자)
                     val partnerMember = memberReviews.firstOrNull { it.writerNickname != myNickname }
                     val partnerNickname = partnerMember?.writerNickname ?: ""
                     val partnerProfileImageUrl = partnerMember?.writerProfileImageUrl
 
-                    // 대화 메시지 (파트너 후기)
                     val messages = memberReviews.mapNotNull { review ->
                         if (review.comment.isNullOrBlank()) null
                         else ExchangeMessage(
                             username        = review.writerNickname,
                             message         = review.comment,
-                            reaction        = review.reaction.orEmpty(),   // null=반응 없음 → 배지 미표시
+                            reaction        = review.reaction.orEmpty(),
                             isMine          = review.writerNickname == myNickname,
                             profileImageUrl = review.writerProfileImageUrl,
                         )
@@ -66,7 +62,6 @@ class GroupReviewViewModel : ViewModel() {
                     val mappedReviews = bookReviews
                         .groupBy { it.bookId }
                         .map { (_, reviews) ->
-                            // 작성자 구분: writerNickname 우선, 없으면 isEditable(내가 수정 가능 = 내 리뷰)
                             val mine = reviews.firstOrNull {
                                 if (it.writerNickname != null) it.writerNickname == myNickname else it.isEditable == true
                             }
@@ -86,7 +81,6 @@ class GroupReviewViewModel : ViewModel() {
                             )
                         }
 
-                    // 기간 표기 "yyyy. MM. dd. ~ yyyy. MM. dd."
                     val dateRange = if (endDate.isNotBlank()) {
                         "${DateUtils.formatDate(startDate)} ~ ${DateUtils.formatDate(endDate)}"
                     } else {

@@ -45,7 +45,6 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 private enum class BookmarkSortType { RECENT, OLDEST }
 
-// 라우트 진입점 — 구 LibraryBookmarkFragment의 onCreateView/onResume 로직을 그대로 이식
 @Composable
 fun LibraryBookmarkRoute(
     onBackClick: () -> Unit,
@@ -54,7 +53,6 @@ fun LibraryBookmarkRoute(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    // 구 Fragment의 onResume()처럼 화면이 다시 보일 때마다(최초 진입 포함) 재조회
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
         viewModel.fetchBookmarkedCards()
     }
@@ -79,14 +77,13 @@ fun LibraryBookmarkScreen(
     onMoveToLibrary: () -> Unit = {},
 ) {
     var sortType by remember { mutableStateOf(BookmarkSortType.RECENT) }
-    val bookmarkedCards = cards  // 이미 서버에서 필터된 북마크 카드
+    val bookmarkedCards = cards
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
-        // 헤더
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -102,17 +99,14 @@ fun LibraryBookmarkScreen(
             ) {
                 BookiiBackButton(onClick = onBackClick)
                 Text(text = "북마크", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
-                // 정렬 아이콘 자리
                 Box(modifier = Modifier.size(40.dp))
             }
             HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
         }
 
         if (!isLoading && bookmarkedCards.isEmpty()) {
-            // 빈 상태: 안내 카드 + 서재 이동 버튼
             BookmarkEmptyContent(onMoveToLibrary = onMoveToLibrary)
         } else {
-            // 카운트 + 정렬
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -143,7 +137,6 @@ fun LibraryBookmarkScreen(
                 }
             }
 
-            // 카드 그리드 (2열)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -173,7 +166,6 @@ fun LibraryBookmarkScreen(
     }
 }
 
-// 빈 상태 안내 카드 + "서재로 이동하기" 버튼
 @Composable
 private fun BookmarkEmptyContent(
     onMoveToLibrary: () -> Unit,
@@ -227,7 +219,6 @@ private fun BookmarkCardItem(
             .background(BookiiBookiiTheme.colors.white)
             .clickable { onClick() },
     ) {
-        // 상단 텍스트 영역
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -275,11 +266,9 @@ private fun BookmarkCardItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                // 리액션 아이콘
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
                     card.reactionCounts.filter { it.value > 0 }.keys.forEach { apiKey ->
                         com.bookiibookii.bookiibookii.library.ui.reactionIconByApiKey[apiKey]?.let { iconRes ->
-                            // 풀컬러 이모지 아이콘이라 독서카드 상세와 동일하게 원래 색 그대로 표시(tint 미적용)
                             Icon(
                                 painter = painterResource(iconRes),
                                 contentDescription = null,
@@ -297,7 +286,6 @@ private fun BookmarkCardItem(
             }
         }
 
-        // 하단 비주얼 영역
         when (card.type) {
             ReadingCardType.PHOTO -> Box(
                 modifier = Modifier

@@ -49,7 +49,6 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 enum class BookViewMode { GRID, LIST }
 
-// 라우트 진입점 — 구 MyBookshelfFragment의 onViewCreated 이벤트 구독 로직을 그대로 이식
 @Composable
 fun MyBookshelfRoute(
     onBack: () -> Unit,
@@ -137,8 +136,6 @@ fun MyBookshelfScreen(
         Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 항상 로컬 리스트를 소스로 사용 — 편집 중 즉시 반영되고, 닫을 때 소스 전환(백엔드)으로 인한
-            // 순서 튐이 없다. editable은 백엔드 갱신 시 LaunchedEffect(닫힌 상태)에서 조용히 동기화됨
             RepresentativeBookSection(
                 books = editableRepresentativeBooks,
                 onEditClick = { showEditBottomSheet = true },
@@ -168,7 +165,6 @@ fun MyBookshelfScreen(
             )
 
             if (sortedCompletedBooks.isEmpty()) {
-                // 책 0권: 빈 상태 카드
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -206,8 +202,6 @@ fun MyBookshelfScreen(
         RepresentativeEditBottomSheet(
             bookList = editableRepresentativeBooks,
             onDismiss = {
-                // 변경은 드래그마다 PATCH로 이미 저장됨 → 닫을 때 editable을 백엔드로 강제 리셋하지 않는다.
-                // (리셋하면 재조회 전 stale 값으로 순서가 튐). 백엔드 동기화는 LaunchedEffect가 처리
                 showEditBottomSheet = false
             },
             onRemove = { book -> editableRepresentativeBooks.remove(book); onDeleteRepresentativeBook(book.userBookId) },

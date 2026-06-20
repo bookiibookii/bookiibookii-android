@@ -71,7 +71,6 @@ class LibraryMainViewModel : ViewModel() {
     }
 }
 
-// 완료 그룹(COMPLETED)이면 "다 읽었어요"(별점), 그 외는 "읽는 중"(진행률 바)
 private fun BookResult.isDone() = groupStatus == "COMPLETED"
 
 private fun BookResult.toUiModel() = LibraryBook(

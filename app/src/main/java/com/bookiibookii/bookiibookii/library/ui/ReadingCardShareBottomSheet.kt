@@ -47,7 +47,6 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-
 @Composable
 internal fun ReadingCardShareBottomSheet(
     onDismiss: () -> Unit,
@@ -59,13 +58,11 @@ internal fun ReadingCardShareBottomSheet(
 ) {
     val visibleState = remember { MutableTransitionState(false) }
     LaunchedEffect(Unit) { visibleState.targetState = true }
-    // 슬라이드다운 애니메이션이 끝난 뒤에야 실제 onDismiss(컴포지션에서 제거)를 호출
     LaunchedEffect(visibleState.currentState, visibleState.targetState) {
         if (!visibleState.targetState && !visibleState.currentState) onDismiss()
     }
     val hide: () -> Unit = { visibleState.targetState = false }
 
-   
     val navigationBarBottomPadding = WindowInsets.navigationBars.asPaddingValues()
         .calculateBottomPadding()
         .coerceAtLeast(24.dp)
@@ -119,7 +116,6 @@ internal fun ReadingCardShareBottomSheet(
     }
 }
 
-// 시트 본문 — 래퍼와 분리해 @Preview 대상이 되도록 함
 @Composable
 private fun ShareSheetContent(
     onKakaoClick: () -> Unit,
@@ -142,7 +138,6 @@ private fun ShareSheetContent(
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             ShareOption(label = "카카오톡", onClick = onKakaoClick, modifier = Modifier.weight(1f)) {
-                // 로그인 화면과 동일: 노란 원(#FEE500) + 카카오 아이콘
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -162,7 +157,6 @@ private fun ShareSheetContent(
                 Icon(painter = painterResource(R.drawable.ic_insta), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(56.dp))
             }
             ShareOption(label = "X", onClick = onXClick, modifier = Modifier.weight(1f)) {
-                // 마이페이지 프로필 공유와 동일: img_share_x 56dp
                 Icon(painter = painterResource(R.drawable.img_share_x), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(56.dp))
             }
             ShareOption(label = "다운로드", onClick = onDownloadClick, modifier = Modifier.weight(1f)) {

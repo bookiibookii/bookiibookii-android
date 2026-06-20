@@ -49,7 +49,6 @@ internal fun CardImagePickerBottomSheet(
     }
 }
 
-// 시트 본문 — ModalBottomSheet 래퍼와 분리해 @Preview 대상이 되도록 함
 @Composable
 private fun CardImagePickerContent(onCamera: () -> Unit, onGallery: () -> Unit) {
     Column(
@@ -70,7 +69,6 @@ private fun CardImagePickerContent(onCamera: () -> Unit, onGallery: () -> Unit) 
         Spacer(modifier = Modifier.height(20.dp))
         Text("독서 카드 이미지 추가", style = BookiiBookiiTheme.typography.semibold20, color = BookiiBookiiTheme.colors.grey900)
         Spacer(modifier = Modifier.height(16.dp))
-        // 카메라 버튼
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -87,7 +85,6 @@ private fun CardImagePickerContent(onCamera: () -> Unit, onGallery: () -> Unit) 
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        // 갤러리 버튼
         Box(
             modifier = Modifier
                 .fillMaxWidth()

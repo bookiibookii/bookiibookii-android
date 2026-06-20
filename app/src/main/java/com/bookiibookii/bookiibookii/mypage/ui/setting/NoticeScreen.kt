@@ -42,7 +42,6 @@ import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
-// 라우트 진입점 — 구 NoticeFragment의 onCreateView/onViewCreated 로직을 그대로 이식
 @Composable
 fun NoticeRoute(
     onBackClick: () -> Unit,
@@ -52,8 +51,6 @@ fun NoticeRoute(
     val context = LocalContext.current
     val notices by viewModel.notices.observeAsState(emptyList())
 
-    // 구 Fragment의 onViewCreated()처럼 화면이 다시 보일 때마다(최초 진입 포함) 재조회
-    // (공지 상세를 보고 돌아오면 onCreateView가 다시 호출되며 fetchNotices가 재실행되던 것과 동일)
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
         viewModel.fetchNotices()
     }

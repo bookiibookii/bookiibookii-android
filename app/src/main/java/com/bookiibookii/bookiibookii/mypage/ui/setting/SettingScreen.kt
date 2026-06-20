@@ -45,7 +45,6 @@ import com.bookiibookii.bookiibookii.common.openTermsOfService
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
-// 라우트 진입점 — 구 SettingFragment의 onCreateView 로직을 그대로 이식 (ViewModel 없음)
 @Composable
 fun SettingRoute(
     onBackClick: () -> Unit,
@@ -63,7 +62,6 @@ fun SettingRoute(
         onWithdrawClick = onWithdrawClick,
         onLogoutClick = {
             val ctx = context.applicationContext
-            // 인증 토큰이 살아있는 동안 FCM 토큰 해제 → 완료 후 clear + 로그인 화면
             com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar.deactivateCurrentToken {
                 com.bookiibookii.bookiibookii.onboarding.login.TokenManager.clear(ctx)
                 val intent = android.content.Intent(ctx, com.bookiibookii.bookiibookii.onboarding.login.LoginActivity::class.java).apply {

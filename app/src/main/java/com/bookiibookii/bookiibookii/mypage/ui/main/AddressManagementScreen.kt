@@ -68,7 +68,6 @@ import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.showCustomToast
 
-// 라우트 진입점 — 구 AddressManagementFragment의 onCreateView/onViewCreated 로직을 그대로 이식
 @Composable
 fun AddressManagementRoute(
     initialTab: Int,
@@ -158,7 +157,6 @@ fun AddressManagementScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             ) {
-                // 탭
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -246,7 +244,6 @@ fun AddressManagementScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // 배송지·희망 교환 장소 각각 최대 2개 — 다 차면 추가 버튼 비활성화
             val canAdd = if (selectedTabIndex == 0) deliveries.size < 2 else exchanges.size < 2
             FooterButton(
                 text = "추가하기",
@@ -362,7 +359,6 @@ private fun DeliveryAddressCard(
                     tint = BookiiBookiiTheme.colors.grey400,
                     modifier = Modifier.size(24.dp).clickable { onMenuClick() },
                 )
-                // 총 160×88, 각 항목 44 높이, 좌우 패딩 16, 아이콘 24
                 DropdownMenu(
                     expanded = isMenuExpanded,
                     onDismissRequest = onMenuDismiss,
@@ -458,7 +454,6 @@ private fun ExchangePlaceCard(
                     tint = BookiiBookiiTheme.colors.grey400,
                     modifier = Modifier.size(24.dp).clickable { onMenuClick() },
                 )
-                // 총 160×88, 각 항목 44 높이, 좌우 패딩 16, 아이콘 24
                 DropdownMenu(
                     expanded = isMenuExpanded,
                     onDismissRequest = onMenuDismiss,
@@ -594,7 +589,6 @@ private fun DeliveryBottomSheet(
             }
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 필수값(주소·수령인·전화번호)이 모두 채워져야 저장 활성화
             val isValid = address.isNotBlank() && recipientName.isNotBlank() && phone.isNotBlank()
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -613,7 +607,6 @@ private fun DeliveryBottomSheet(
                         }
                         onSave(
                             DeliveryAddressRequest(
-                                // 별명은 선택값이지만 API는 필수 → 비우면 주소로 대체
                                 placeName = nickname.ifBlank { address },
                                 address = address,
                                 zipCode = zipCode,
@@ -656,7 +649,6 @@ private fun ExchangePlaceBottomSheet(
     var zipCode by remember(editTarget) { mutableStateOf(editTarget?.zipCode ?: "") }
     var detail by remember(editTarget) { mutableStateOf(editTarget?.addressDetail ?: "") }
     var isPrimary by remember(editTarget) { mutableStateOf(editTarget?.isDefault ?: false) }
-    // 카카오 장소검색으로 채워지는 좌표 (수정 모드면 기존 값 프리필)
     var x by remember(editTarget) { mutableStateOf(editTarget?.x ?: 0.0) }
     var y by remember(editTarget) { mutableStateOf(editTarget?.y ?: 0.0) }
     var showAddressSearch by remember { mutableStateOf(false) }
@@ -726,7 +718,6 @@ private fun ExchangePlaceBottomSheet(
             }
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 필수값(장소)이 채워져야 저장 활성화
             val isValid = placeAddress.isNotBlank()
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -740,7 +731,6 @@ private fun ExchangePlaceBottomSheet(
                     onClick = {
                         onSave(
                             ExchangeAddressRequest(
-                                // 별명은 선택값이지만 API는 필수 → 비우면 장소로 대체
                                 placeName = nickname.ifBlank { placeAddress },
                                 address = placeAddress,
                                 zipCode = zipCode,
@@ -763,7 +753,6 @@ private fun ExchangePlaceBottomSheet(
             onDismissRequest = { showAddressSearch = false },
             properties = DialogProperties(usePlatformDefaultWidth = false),
         ) {
-            // Dialog 윈도우를 MATCH_PARENT로 강제 — 풀스크린
             val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
             SideEffect {
                 dialogWindowProvider?.window?.setLayout(
@@ -774,7 +763,6 @@ private fun ExchangePlaceBottomSheet(
             PlaceSearchScreen(
                 onBackClick = { showAddressSearch = false },
                 onPlaceClick = { result ->
-                    // 카카오 장소 선택
                     if (nickname.isBlank()) nickname = result.placeName
                     placeAddress = result.address
                     zipCode = ""
@@ -797,7 +785,6 @@ private fun AddressSearchDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        // Dialog 윈도우를 MATCH_PARENT로 강제 설정 — 이렇게 해야 fillMaxSize()가 풀스크린으로 동작
         val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
         SideEffect {
             dialogWindowProvider?.window?.setLayout(

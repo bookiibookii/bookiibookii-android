@@ -13,18 +13,14 @@ import com.bookiibookii.bookiibookii.library.nav.LibraryNavHost
 import com.bookiibookii.bookiibookii.mypage.MypageFragment
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// 서재 모듈의 단일 진입점 — 트래커(tracker) 모듈과 동일한 패턴.
-// 내부 화면 전환은 모두 LibraryNavHost(Compose Navigation)가 담당하고,
-// 이 Fragment는 모듈 밖으로 나가는 네비게이션(마이페이지 등)과 시작 라우트 지정만 담당한다.
 class LibraryFragment : Fragment() {
 
     private val startDestination: String
         get() = arguments?.getString(ARG_START_DESTINATION) ?: LibraryDestinations.MAIN
 
-    // MainActivity.refreshBottomNavVisibility()가 "이 Fragment가 탑레벨(목록) 화면인지"를
-    // 판단할 때 사용. 단일 Fragment 구조라 LibraryFragment 자체는 항상 같은 클래스이므로,
-    // 내부적으로 어떤 라우트로 시작했는지(MAIN vs 딥링크인 상세 등)로 구분해야 한다.
-    fun isAtMainRoute(): Boolean = startDestination == LibraryDestinations.MAIN
+    private var currentRoute: String = LibraryDestinations.MAIN
+
+    fun isAtMainRoute(): Boolean = currentRoute == LibraryDestinations.MAIN
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,6 +28,7 @@ class LibraryFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        currentRoute = startDestination
         setContent {
             BookiiBookiiTheme {
                 LibraryNavHost(
@@ -42,6 +39,7 @@ class LibraryFragment : Fragment() {
                             .addToBackStack(null)
                             .commit()
                     },
+                    onRouteChanged = { currentRoute = it },
                     startDestination = startDestination,
                 )
             }
@@ -51,8 +49,6 @@ class LibraryFragment : Fragment() {
     companion object {
         private const val ARG_START_DESTINATION = "arg_start_destination"
 
-        // 트래커 모듈 등 외부에서 "독서카드 작성" 흐름으로 서재 상세에 바로 진입할 때 사용
-        // (구 LibraryDetailFragment.newInstance를 직접 호출하던 자리를 대체)
         fun newInstanceAtDetail(
             groupId: Int,
             memberBookId: Int,

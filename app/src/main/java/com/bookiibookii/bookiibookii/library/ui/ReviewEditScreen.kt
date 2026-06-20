@@ -51,7 +51,6 @@ private val reviewInputBg = Color(0xFFF4F3F1)
 
 data class ReviewBookInfo(val title: String, val author: String, val genre: String, val coverUrl: String? = null)
 
-// 라우트 진입점 — 구 ReviewEditFragment의 onCreateView/onViewCreated 로직을 그대로 이식
 @Composable
 fun ReviewEditRoute(
     groupId: Int,
@@ -119,7 +118,6 @@ fun ReviewEditScreen(
     onBackClick: () -> Unit = {},
     onSubmit: (ratings: List<Double>, bookComments: List<String>, isPartnerGood: Boolean?, partnerComment: String) -> Unit = { _, _, _, _ -> },
 ) {
-    // 0.0 / 0.5 / 1.0 / ... / 5.0 (0.5 단위) — 기존 후기 있으면 초기값으로 채움
     val ratings = remember(books) {
         mutableStateListOf(*Array(books.size) { i -> initialRatings.getOrElse(i) { 0.0 } })
     }
@@ -129,7 +127,6 @@ fun ReviewEditScreen(
     var isPartnerGood by remember(initialIsPartnerGood) { mutableStateOf(initialIsPartnerGood) }
     var partnerComment by remember(initialPartnerComment) { mutableStateOf(initialPartnerComment) }
 
-    // 프리필 대비 변경 여부 — 하나라도 바뀌면 "수정" 버튼 활성화
     val baseRatings = remember(books) { List(books.size) { i -> initialRatings.getOrElse(i) { 0.0 } } }
     val baseComments = remember(books) { List(books.size) { i -> initialComments.getOrElse(i) { "" } } }
     val isModified = ratings.toList() != baseRatings ||
@@ -139,13 +136,11 @@ fun ReviewEditScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // ── 본문 스크롤 영역 ────────────────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(BookiiBookiiTheme.colors.uiBg),
         ) {
-            // 헤더
             Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
                 Row(
                     modifier = Modifier
@@ -170,7 +165,6 @@ fun ReviewEditScreen(
                     .padding(top = 16.dp, bottom = 104.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                // 그룹 정보 카드
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -183,7 +177,6 @@ fun ReviewEditScreen(
                     Text(text = dateRange, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
                 }
 
-                // 도서별 평가 카드
                 books.forEachIndexed { index, book ->
                     Column(
                         modifier = Modifier
@@ -194,7 +187,6 @@ fun ReviewEditScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        // 책 커버 (중앙 상단)
                         Box(
                             modifier = Modifier
                                 .width(122.dp)
@@ -212,7 +204,6 @@ fun ReviewEditScreen(
                             }
                         }
 
-                        // "도서명에 대한 평가를 남겨주세요!"
                         Text(
                             text = buildAnnotatedString {
                                 withStyle(SpanStyle(color = BookiiBookiiTheme.colors.uiMain)) { append(book.title) }
@@ -221,7 +212,6 @@ fun ReviewEditScreen(
                             style = BookiiBookiiTheme.typography.medium16,
                         )
 
-                        // 별점 3상태: 0=빈별(grey) / 0.5=sub_pale채움+sub stroke / 1=sub채움
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             for (i in 1..5) {
                                 val rating = ratings[index]
@@ -245,7 +235,6 @@ fun ReviewEditScreen(
                             }
                         }
 
-                        // 감상평 입력
                         BasicTextField(
                             value = bookComments[index],
                             onValueChange = { bookComments[index] = it },
@@ -268,7 +257,6 @@ fun ReviewEditScreen(
                     }
                 }
 
-                // 파트너 평가 카드
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -277,7 +265,6 @@ fun ReviewEditScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    // 파트너명 + 질문
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -292,7 +279,6 @@ fun ReviewEditScreen(
                         )
                     }
 
-                    // 좋았어요 / 별로였어요 버튼
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -313,7 +299,6 @@ fun ReviewEditScreen(
                         )
                     }
 
-                    // 파트너 후기 입력
                     BasicTextField(
                         value = partnerComment,
                         onValueChange = { partnerComment = it },
@@ -337,7 +322,6 @@ fun ReviewEditScreen(
             }
         }
 
-        // ── 하단 수정 버튼 (고정) ───────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -362,8 +346,6 @@ fun ReviewEditScreen(
         }
     }
 }
-
-// ── 평가 버튼 (좋았어요 / 별로였어요) ─────────────────────────────────────────
 
 @Composable
 private fun EvaluationButton(

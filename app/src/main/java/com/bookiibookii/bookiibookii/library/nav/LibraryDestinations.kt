@@ -5,12 +5,9 @@ import com.bookiibookii.bookiibookii.library.ui.AddCardMode
 import com.bookiibookii.bookiibookii.library.ui.ReadingCard
 import com.bookiibookii.bookiibookii.library.ui.ReadingCardType
 
-// 트래커(tracker) 모듈과 동일한 패턴: 라우트 상수 + 인자 키 상수 + 빌더 함수.
-// 기존 각 Fragment의 newInstance(...)가 Bundle에 넣던 값을 그대로 query 인자로 옮긴다.
 object LibraryDestinations {
     const val MAIN = "main"
 
-    // ── 책 상세 (구 LibraryDetailFragment) ──────────────────────────────────
     const val DETAIL_ARG_GROUP_ID = "groupId"
     const val DETAIL_ARG_MEMBER_BOOK_ID = "memberBookId"
     const val DETAIL_ARG_GROUP_NAME = "groupName"
@@ -69,7 +66,6 @@ object LibraryDestinations {
         "&$DETAIL_ARG_PROGRESS_RATE=$progressRate" +
         "&$DETAIL_ARG_TOTAL_PAGES=$totalPages"
 
-    // ── 독서카드 작성/수정 (구 LibraryAddCardFragment) ──────────────────────
     const val ADD_CARD_ARG_MODE = "mode"
     const val ADD_CARD_ARG_MEMBER_BOOK_ID = "memberBookId"
     const val ADD_CARD_ARG_CARD_ID = "cardId"
@@ -91,7 +87,6 @@ object LibraryDestinations {
         "&$ADD_CARD_ARG_BOOK_TITLE={$ADD_CARD_ARG_BOOK_TITLE}" +
         "&$ADD_CARD_ARG_TOTAL_PAGES={$ADD_CARD_ARG_TOTAL_PAGES}"
 
-    // 신규 등록
     fun addCard(
         mode: AddCardMode,
         memberBookId: Int,
@@ -107,7 +102,6 @@ object LibraryDestinations {
         "&$ADD_CARD_ARG_BOOK_TITLE=${Uri.encode(bookTitle)}" +
         "&$ADD_CARD_ARG_TOTAL_PAGES=$totalPages"
 
-    // 수정 — 기존 카드 정보 프리필
     fun addCardEdit(card: ReadingCard): String {
         val mode = if (card.type == ReadingCardType.PHOTO) AddCardMode.PHOTO else AddCardMode.TEXT
         return "addCard/${mode.name}/${card.memberBookId}" +
@@ -121,7 +115,6 @@ object LibraryDestinations {
             "&$ADD_CARD_ARG_TOTAL_PAGES=${card.totalPages ?: 0}"
     }
 
-    // ── 독서카드 상세 (구 ReadingCardDetailFragment) ─────────────────────────
     const val CARD_DETAIL_ARG_INDEX = "initialIndex"
     const val CARD_DETAIL_ARG_SORT = "sortByLatest"
     const val CARD_DETAIL_ARG_CARDS = "cards"
@@ -129,11 +122,9 @@ object LibraryDestinations {
     const val CARD_DETAIL_ROUTE = "cardDetail/{$CARD_DETAIL_ARG_INDEX}/{$CARD_DETAIL_ARG_SORT}" +
         "?$CARD_DETAIL_ARG_CARDS={$CARD_DETAIL_ARG_CARDS}"
 
-    // cardsJson: Gson().toJson(cards) — 기존 Fragment Bundle 인자와 동일하게 JSON 문자열로 직렬화해 전달
     fun cardDetail(initialIndex: Int, sortByLatest: Boolean, cardsJson: String): String =
         "cardDetail/$initialIndex/$sortByLatest?$CARD_DETAIL_ARG_CARDS=${Uri.encode(cardsJson)}"
 
-    // ── 그룹 후기 조회 (구 GroupReviewFragment) ──────────────────────────────
     const val GROUP_REVIEW_ARG_GROUP_ID = "groupId"
     const val GROUP_REVIEW_ARG_GROUP_NAME = "groupName"
     const val GROUP_REVIEW_ARG_BOOK_TITLE = "bookTitle"
@@ -158,7 +149,6 @@ object LibraryDestinations {
         "&$GROUP_REVIEW_ARG_START_DATE=${Uri.encode(startDate)}" +
         "&$GROUP_REVIEW_ARG_END_DATE=${Uri.encode(endDate)}"
 
-    // ── 그룹 후기 편집 (구 ReviewEditFragment) ───────────────────────────────
     const val REVIEW_EDIT_ARG_GROUP_ID = "groupId"
     const val REVIEW_EDIT_ARG_GROUP_NAME = "groupName"
     const val REVIEW_EDIT_ARG_DATE_RANGE = "dateRange"
@@ -179,6 +169,5 @@ object LibraryDestinations {
         "&$REVIEW_EDIT_ARG_DATE_RANGE=${Uri.encode(dateRange)}" +
         "&$REVIEW_EDIT_ARG_PARTNER_NAME=${Uri.encode(partnerName)}"
 
-    // ── 북마크 목록 (구 LibraryBookmarkFragment) ─────────────────────────────
     const val BOOKMARK = "bookmark"
 }

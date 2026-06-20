@@ -106,7 +106,6 @@ fun ProfileShareDialog(
                     ) {
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Header
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -153,7 +152,6 @@ fun ProfileShareDialog(
                         )
                     }
 
-                    // Share actions — 스크롤과 무관하게 하단 고정
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -199,7 +197,6 @@ fun ProfileShareDialog(
     }
 }
 
-// Card content extracted so MypageFragment can render it off-screen for bitmap capture
 @Composable
 internal fun ProfileShareCardContent(
     name: String,
@@ -222,11 +219,9 @@ internal fun ProfileShareCardContent(
         bookCount == 6 -> Pair(3, 3)
         else -> Pair(3, minOf(bookCount - 3, 4))
     }
-    // 1권도 7권(최대 4열) 기준과 동일 크기로 고정
     val maxRowCount = maxOf(row1Count, row2Count, 4)
 
     Column(modifier = Modifier.fillMaxWidth().background(cardBg)) {
-        // Logo
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -243,7 +238,6 @@ internal fun ProfileShareCardContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Profile photo + name
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -261,7 +255,6 @@ internal fun ProfileShareCardContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Motto box
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -287,7 +280,6 @@ internal fun ProfileShareCardContent(
             )
         }
 
-        // 나를 대표하는 책 label
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -452,7 +444,6 @@ private fun ShareActionItem(
     }
 }
 
-// Preview용 더미 대표책 (이미지 없음 → grey200 placeholder로 렌더)
 private val previewBooks: List<UserBookDto> = List(5) { index ->
     UserBookDto(title = "책 제목 ${index + 1}", auth = "저자", image = null)
 }

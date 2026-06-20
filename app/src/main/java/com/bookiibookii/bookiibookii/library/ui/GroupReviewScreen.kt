@@ -44,7 +44,7 @@ private val chatBubbleBg = androidx.compose.ui.graphics.Color(0xFFF4F3F1)
 data class ExchangeMessage(
     val username: String,
     val message: String,
-    val reaction: String,   // "BOOM_UP" | "BOOM_DOWN" | "" (없음)
+    val reaction: String,
     val isMine: Boolean,
     val profileImageUrl: String? = null,
 )
@@ -73,7 +73,6 @@ data class GroupReviewData(
     val bookReviews: List<BookReviewItem>,
 )
 
-// 라우트 진입점 — 구 GroupReviewFragment의 onCreateView/onResume 로직을 그대로 이식
 @Composable
 fun GroupReviewRoute(
     groupId: Int,
@@ -88,7 +87,6 @@ fun GroupReviewRoute(
     val context = androidx.compose.ui.platform.LocalContext.current
     val state by viewModel.uiState.collectAsState()
 
-    // 구 Fragment의 onResume()처럼 화면이 다시 보일 때마다(최초 진입 포함) 재조회
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
         if (groupId != -1) {
             viewModel.loadReview(groupId = groupId, groupName = groupName, startDate = startDate, endDate = endDate)
@@ -135,7 +133,6 @@ fun GroupReviewScreen(
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
-        // 헤더
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -169,10 +166,8 @@ fun GroupReviewScreen(
                 .padding(top = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(23.dp),
         ) {
-            // 독서 후기 카드 (그룹 헤더 + 멤버별 코멘트)
             MemberReviewCard(data = data)
 
-            // 도서별 리뷰 카드
             data.bookReviews.forEachIndexed { index, review ->
                 BookReviewCard(
                     review = review,
@@ -187,7 +182,6 @@ fun GroupReviewScreen(
     }
 }
 
-// 독서 후기 카드: 그룹명·기간 헤더 + 멤버별 코멘트(따봉 + 말풍선)
 @Composable
 private fun MemberReviewCard(data: GroupReviewData) {
     Column(
@@ -198,7 +192,6 @@ private fun MemberReviewCard(data: GroupReviewData) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // 헤더 (그룹명 + 기간)
         Column(
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -227,7 +220,6 @@ private fun MemberReviewCard(data: GroupReviewData) {
     }
 }
 
-// 멤버 코멘트 한 줄: 프로필·이름 + (따봉 + 말풍선). 내 것은 오른쪽, 상대는 왼쪽 정렬
 @Composable
 private fun MemberMessageRow(msg: ExchangeMessage) {
     val hasReaction = msg.reaction == "BOOM_UP" || msg.reaction == "BOOM_DOWN"
@@ -253,7 +245,6 @@ private fun MemberMessageRow(msg: ExchangeMessage) {
     }
 }
 
-// 멤버 코멘트 말풍선 (채팅형) — 내 것은 grey100, 상대는 sub_pale(파랑)
 @Composable
 private fun MemberBubble(text: String, mine: Boolean) {
     Box(
@@ -298,7 +289,7 @@ private fun BookReviewCard(
     partnerUsername: String,
     myProfileImageUrl: String? = null,
     partnerProfileImageUrl: String? = null,
-    reverse: Boolean = false,   // true면 상대 리뷰가 위로
+    reverse: Boolean = false,
 ) {
     Column(
         modifier = Modifier
@@ -308,7 +299,6 @@ private fun BookReviewCard(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // 헤더: 책 썸네일 + 제목/저자
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -341,7 +331,6 @@ private fun BookReviewCard(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // 정렬측은 고정(내것=오른쪽 / 상대=왼쪽), reverse면 세로 순서만 뒤집어 상대를 위로
             val myBlock: @Composable () -> Unit = {
                 ReviewBlock(username = myUsername, profileImageUrl = myProfileImageUrl, rating = review.myRating, date = review.myDate, review = review.myReview, alignEnd = true)
             }
@@ -359,7 +348,6 @@ private fun BookReviewCard(
     }
 }
 
-// 도서 리뷰 한 블록: 프로필·이름 + 말풍선(별점·날짜 + 리뷰 텍스트)
 @Composable
 private fun ReviewBlock(username: String, profileImageUrl: String?, rating: Int, date: String, review: String, alignEnd: Boolean) {
     Column(

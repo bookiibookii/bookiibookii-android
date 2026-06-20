@@ -31,10 +31,6 @@ class LibraryDetailViewModel : ViewModel() {
     private val _event = MutableSharedFlow<String>()
     val event: SharedFlow<String> = _event.asSharedFlow()
 
-    // 그룹 카드 목록 API는 그룹 전체 멤버·전체 책의 카드를 한 번에 반환한다.
-    // 상세 화면은 한 권(=bookTitle)에 대한 '모든 멤버'의 카드를 보여줘야 하므로 bookTitle로 추려낸다.
-    // memberBookId는 현재 사용자의 '내 책' 한 권만 가리켜 다른 멤버 카드가 빠지므로 사용하지 않는다.
-    // (응답에 bookId가 없어 bookTitle이 유일한 책 식별자. '내 독서카드만 보기'는 화면에서 isMine으로 다시 거른다.)
     fun fetchGroupCards(groupId: Int, bookTitle: String = "") {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -149,4 +145,3 @@ class LibraryDetailViewModel : ViewModel() {
         }
     }
 }
-

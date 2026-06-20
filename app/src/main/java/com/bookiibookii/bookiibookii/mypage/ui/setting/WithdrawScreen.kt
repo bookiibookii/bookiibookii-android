@@ -47,8 +47,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
-// 라우트 진입점 — 구 WithdrawFragment의 onCreateView/onViewCreated 로직을 그대로 이식.
-// MypageViewModel은 마이페이지 메인과 공유되므로(구 activityViewModels()) 호출자가 넘겨준다.
 @Composable
 fun WithdrawRoute(
     mypageViewModel: com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel,
@@ -92,7 +90,6 @@ private val withdrawOptions = listOf(
     "직접 입력",
 )
 
-// API에 전송할 reason enum 값 (withdrawOptions와 동일 순서)
 private val withdrawReasonCodes = listOf(
     "HARD_TO_FIND_PARTNER",
     "INCONVENIENT_EXCHANGE",

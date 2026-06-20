@@ -81,8 +81,6 @@ private fun validateNickname(nickname: String): Boolean {
     return nicknameAllowedRegex.matches(nickname)
 }
 
-// 라우트 진입점 — 구 ProfileSettingFragment의 카메라/갤러리 launcher + 이벤트 구독 로직을 그대로 이식.
-// MypageViewModel은 마이페이지 메인과 공유되므로(구 activityViewModels()) 호출자가 넘겨준다.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSettingRoute(
@@ -97,7 +95,6 @@ fun ProfileSettingRoute(
     var selectedImageFile by remember { mutableStateOf<java.io.File?>(null) }
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // 원본 이미지를 임시 파일로 복사 (EXIF 보존). 리사이즈/압축/EXIF 회전은 업로드 시 S3Uploader가 처리
     fun createUploadTempFile(uri: Uri): java.io.File? {
         return try {
             val tempFile = java.io.File.createTempFile("profile_", ".jpg", context.cacheDir)
@@ -121,7 +118,6 @@ fun ProfileSettingRoute(
         }
     }
 
-    // 카메라 출력 = 앱 내부 캐시(cache/camera) 파일의 FileProvider URI. MediaStore에 넣지 않아 갤러리에 남지 않음
     fun createCameraUri(): Uri? = try {
         val cameraDir = java.io.File(context.cacheDir, "camera").apply { mkdirs() }
         val file = java.io.File(cameraDir, "profile_${System.currentTimeMillis()}.jpg")
@@ -254,7 +250,6 @@ fun ProfileSettingScreen(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // 프로필 이미지
             Box(
                 modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 24.dp),
                 contentAlignment = Alignment.Center,
@@ -306,7 +301,6 @@ fun ProfileSettingScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(32.dp),
             ) {
-                // 닉네임 (중복 확인 포함)
                 NicknameFieldWithCheck(
                     value = nickname,
                     onValueChange = { filtered ->
@@ -458,7 +452,6 @@ private fun GenderField(selectedIndex: Int?, onSelect: (Int) -> Unit) {
     val options = listOf("여성", "남성", "선택 안함")
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = "성별", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
-        // 여성/남성: 큰 버튼 고정 너비, 선택 안함: 작은 버튼 (온보딩과 동일)
         Row(
             modifier = Modifier.fillMaxWidth().height(48.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -490,7 +483,6 @@ private fun GenderField(selectedIndex: Int?, onSelect: (Int) -> Unit) {
     }
 }
 
-// gender
 private fun genderIndexFromCode(code: String?): Int? = when (code) {
     "FEMALE" -> 0
     "MALE" -> 1
@@ -498,7 +490,6 @@ private fun genderIndexFromCode(code: String?): Int? = when (code) {
     else -> null
 }
 
-// "yyyy-MM-dd"
 private fun parseBirthDate(birthDate: String?): Triple<Int, Int, Int>? {
     val parts = birthDate?.split("-") ?: return null
     if (parts.size != 3) return null
