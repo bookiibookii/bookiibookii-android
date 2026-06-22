@@ -4,21 +4,23 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import com.bookiibookii.bookiibookii.R
-import com.bookiibookii.bookiibookii.library.ui.LibraryScreen
-import com.bookiibookii.bookiibookii.library.vm.LibraryMainViewModel
+import com.bookiibookii.bookiibookii.library.nav.LibraryDestinations
+import com.bookiibookii.bookiibookii.library.nav.LibraryNavHost
 import com.bookiibookii.bookiibookii.mypage.MypageFragment
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 class LibraryFragment : Fragment() {
 
-    private val vm: LibraryMainViewModel by viewModels()
+    private val startDestination: String
+        get() = arguments?.getString(ARG_START_DESTINATION) ?: LibraryDestinations.MAIN
+
+    private var currentRoute: String = LibraryDestinations.MAIN
+
+    fun isAtMainRoute(): Boolean = currentRoute == LibraryDestinations.MAIN
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -26,58 +28,64 @@ class LibraryFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        currentRoute = startDestination
         setContent {
-            val state by vm.uiState.collectAsState()
             BookiiBookiiTheme {
-                LibraryScreen(
-                    readingBooks  = state.readingBooks,
-                    doneBooks     = state.doneBooks,
-                    sortType      = state.sortType,
-                    isLoading     = state.isLoading,
-                    onSortChange  = { vm.setSortType(it) },
+                LibraryNavHost(
+                    onExitLibrary = { parentFragmentManager.popBackStack() },
                     onProfileClick = {
                         parentFragmentManager.beginTransaction()
                             .replace(R.id.fragmentContainer, MypageFragment())
                             .addToBackStack(null)
                             .commit()
                     },
-                    onBookmarkClick = {
-                        parentFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, LibraryBookmarkFragment())
-                            .addToBackStack(null)
-                            .commit()
-                    },
-                    onBookClick = { book ->
-                        parentFragmentManager.beginTransaction()
-                            .replace(
-                                R.id.fragmentContainer,
-                                LibraryDetailFragment.newInstance(
-                                    groupId      = book.groupId,
-                                    memberBookId = book.memberBookId,
-                                    groupName    = book.groupName,
-                                    bookTitle    = book.title,
-                                    author       = book.author,
-                                    genre        = book.genre,
-                                    coverUrl     = book.coverUrl ?: "",
-                                    startDate    = book.startDate,
-                                    endDate      = book.endDate ?: "",
-                                    completedAt  = book.completedAt ?: "",
-                                    rating       = book.rating?.toDouble() ?: 0.0,
-                                    isDone       = book.rating != null,
-                                    progressRate = ((book.progress ?: 0f) * 100).toInt(),
-                                    totalPages   = book.totalPages ?: 0,
-                                ),
-                            )
-                            .addToBackStack(null)
-                            .commit()
-                    },
+                    onRouteChanged = { currentRoute = it },
+                    startDestination = startDestination,
                 )
             }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        vm.fetchBooks()
+    companion object {
+        private const val ARG_START_DESTINATION = "arg_start_destination"
+
+        fun newInstanceAtDetail(
+            groupId: Int,
+            memberBookId: Int,
+            groupName: String = "",
+            bookTitle: String = "",
+            author: String = "",
+            genre: String = "",
+            coverUrl: String = "",
+            startDate: String = "",
+            endDate: String = "",
+            completedAt: String = "",
+            rating: Double = 0.0,
+            isDone: Boolean = false,
+            progressRate: Int = 0,
+            totalPages: Int = 0,
+        ) = LibraryFragment().apply {
+            arguments = Bundle().apply {
+                putString(
+                    ARG_START_DESTINATION,
+                    LibraryDestinations.detail(
+                        groupId = groupId,
+                        memberBookId = memberBookId,
+                        groupName = groupName,
+                        bookTitle = bookTitle,
+                        author = author,
+                        genre = genre,
+                        coverUrl = coverUrl,
+                        startDate = startDate,
+                        endDate = endDate,
+                        completedAt = completedAt,
+                        rating = rating,
+                        isDone = isDone,
+                        progressRate = progressRate,
+                        totalPages = totalPages,
+                    ),
+                )
+            }
+        }
     }
 }

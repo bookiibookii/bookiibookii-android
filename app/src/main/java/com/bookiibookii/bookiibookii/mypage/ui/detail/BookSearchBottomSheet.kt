@@ -78,7 +78,6 @@ private fun BookSearchSheetContent(
             .navigationBarsPadding()
             .padding(20.dp),
     ) {
-        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -108,7 +107,6 @@ private fun BookSearchSheetContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Search input
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -146,7 +144,6 @@ private fun BookSearchSheetContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Results list
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
         ) {

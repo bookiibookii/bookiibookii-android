@@ -29,8 +29,6 @@ class AddressViewModel : ViewModel() {
         data class ShowToast(val message: String) : Event()
     }
 
-    // === 목록 로드 (LiveData 갱신 + 결과 반환) ===
-
     private suspend fun loadDeliveries(): List<DeliveryAddress> = try {
         val response = RetrofitClient.locationApi().getDeliveries()
         if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -68,15 +66,12 @@ class AddressViewModel : ViewModel() {
     fun fetchDeliveries() { viewModelScope.launch { loadDeliveries() } }
     fun fetchExchanges() { viewModelScope.launch { loadExchanges() } }
 
-    // === 배송지 (택배 교환) ===
-
     fun addDelivery(request: DeliveryAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().addDelivery(request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = loadDeliveries()
-                    // POST 응답이 새 id를 주지 않아, 방금 추가된 항목을 필드로 매칭해 대표 설정
                     if (makeDefault) {
                         val added = list.firstOrNull {
                             it.placeName == request.placeName && it.address == request.address && it.phone == request.phone
@@ -127,7 +122,6 @@ class AddressViewModel : ViewModel() {
         }
     }
 
-    // 대표 배송지 설정 (PATCH) 후 목록 갱신
     private suspend fun applyDefaultDelivery(id: Long) {
         try {
             val response = RetrofitClient.locationApi().setDefaultDelivery(id)
@@ -142,15 +136,12 @@ class AddressViewModel : ViewModel() {
         }
     }
 
-    // === 희망 교환 장소 (직접 교환) ===
-
     fun addExchange(request: ExchangeAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().addExchange(request)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val list = loadExchanges()
-                    // POST 응답이 새 id를 주지 않아, 방금 추가된 항목을 필드로 매칭해 대표 설정
                     if (makeDefault) {
                         val added = list.firstOrNull {
                             it.placeName == request.placeName && it.address == request.address
@@ -201,7 +192,6 @@ class AddressViewModel : ViewModel() {
         }
     }
 
-    // 대표 교환 장소 설정 (PATCH) 후 목록 갱신
     private suspend fun applyDefaultExchange(id: Long) {
         try {
             val response = RetrofitClient.locationApi().setDefaultExchange(id)

@@ -57,7 +57,11 @@ class LibraryAddCardViewModel : ViewModel() {
                         _event.emit(AddCardEvent.Error("이미지 업로드 URL을 가져오지 못했습니다."))
                         return@launch
                     }
-                    val presignedData = urlResponse.body()?.result!!
+                    val presignedData = urlResponse.body()?.result ?: run {
+                        _uiState.update { it.copy(isLoading = false) }
+                        _event.emit(AddCardEvent.Error("이미지 업로드 URL을 가져오지 못했습니다."))
+                        return@launch
+                    }
                     s3Key = presignedData.s3Key
 
                     val uploadResult = S3Uploader.uploadImage(contentResolver, imageUri, presignedData.presignedPutUrl)
@@ -93,7 +97,6 @@ class LibraryAddCardViewModel : ViewModel() {
         }
     }
 
-    // 독서카드 수정. newImageUri는 새로 고른 사진만(null이면 기존 사진 유지 → s3Key 미전송)
     fun updateCard(
         cardId: Long,
         memberBookId: Int,
@@ -102,13 +105,12 @@ class LibraryAddCardViewModel : ViewModel() {
         quotation: String,
         memo: String,
         newImageUri: Uri?,
-        existingS3Key: String?,   // 기존 이미지 키 (사진 미교체 시 그대로 재전송)
+        existingS3Key: String?,
         contentResolver: ContentResolver,
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // 사진 카드는 항상 s3Key 유지: 새로 골랐으면 업로드한 키, 아니면 기존 키. TEXT는 null
                 var s3Key: String? = if (mode == AddCardMode.PHOTO) existingS3Key else null
 
                 if (mode == AddCardMode.PHOTO && newImageUri != null) {
@@ -118,7 +120,11 @@ class LibraryAddCardViewModel : ViewModel() {
                         _event.emit(AddCardEvent.Error("이미지 업로드 URL을 가져오지 못했습니다."))
                         return@launch
                     }
-                    val presignedData = urlResponse.body()?.result!!
+                    val presignedData = urlResponse.body()?.result ?: run {
+                        _uiState.update { it.copy(isLoading = false) }
+                        _event.emit(AddCardEvent.Error("이미지 업로드 URL을 가져오지 못했습니다."))
+                        return@launch
+                    }
 
                     val uploadResult = S3Uploader.uploadImage(contentResolver, newImageUri, presignedData.presignedPutUrl)
                     if (uploadResult.isFailure) {

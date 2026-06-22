@@ -31,7 +31,6 @@ class BookshelfViewModel : ViewModel() {
     private val _bookSearchState = MutableLiveData<BookSearchState>(BookSearchState.Idle)
     val bookSearchState: LiveData<BookSearchState> get() = _bookSearchState
 
-    // 실시간 도서 검색: UI 입력은 이 쿼리만 갱신하고, 실제 호출은 디바운스(공통 헬퍼)가 담당
     private val _bookSearchQuery = MutableStateFlow("")
 
     private val _sortOrder = MutableLiveData<SortOrder>(SortOrder.LATEST)
@@ -88,7 +87,6 @@ class BookshelfViewModel : ViewModel() {
         viewModelScope.launch { loadBookshelf() }
     }
 
-    // 책장 조회 후 LiveData 갱신 + 결과 반환 (후속 처리에서 최신 목록이 필요할 때 사용)
     private suspend fun loadBookshelf(): BookshelfResult? {
         return try {
             val response = RetrofitClient.mypApi().getBookshelf()
@@ -107,12 +105,10 @@ class BookshelfViewModel : ViewModel() {
         }
     }
 
-    // UI 입력 콜백 — 쿼리만 갱신하면 디바운스 후 performBookSearch가 호출된다
     fun onBookSearchQueryChange(query: String) {
         _bookSearchQuery.value = query
     }
 
-    // ic_search 클릭/키보드 검색 — 디바운스 기다리지 않고 현재 쿼리로 바로 검색
     fun searchBooks() {
         val query = _bookSearchQuery.value.trim()
         if (query.isBlank()) return
@@ -197,7 +193,6 @@ class BookshelfViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.mypApi().addFavoriteBook(AddFavoriteBookRequest(isbn13 = isbn13))
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    // 인생 책은 항상 대표책에도 포함돼야 함
                     ensureFavoritesAreRepresentative()
                 } else {
                     _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "인생 책 등록에 실패했습니다."))
@@ -214,7 +209,6 @@ class BookshelfViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.mypApi().deleteFavoriteBook(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    // 인생 책은 항상 대표책에도 포함되므로, 삭제 시 같은 책을 대표책에서도 제거
                     val isRepresentative = _bookshelf.value?.representativeBooks
                         ?.any { it.userBookId == userBookId } == true
                     if (isRepresentative) {
@@ -236,7 +230,6 @@ class BookshelfViewModel : ViewModel() {
             try {
                 RetrofitClient.mypApi().deleteFavoriteBook(oldUserBookId)
                 RetrofitClient.mypApi().addFavoriteBook(AddFavoriteBookRequest(isbn13 = isbn13))
-                // 교체한 인생 책도 대표책에 포함돼야 함
                 ensureFavoritesAreRepresentative()
             } catch (e: Exception) {
                 Log.e("BookshelfViewModel", "replaceFavoriteBook error", e)
@@ -245,8 +238,6 @@ class BookshelfViewModel : ViewModel() {
         }
     }
 
-    // 인생 책은 항상 대표책에도 포함돼야 한다.
-    // 인생책 등록 API는 대표책에 자동 추가하지 않으므로, 대표책에 없는 인생 책을 userBookId로 등록한다.
     private suspend fun ensureFavoritesAreRepresentative() {
         val bookshelf = loadBookshelf() ?: return
         val representativeIds = (bookshelf.representativeBooks ?: emptyList()).map { it.userBookId }.toSet()

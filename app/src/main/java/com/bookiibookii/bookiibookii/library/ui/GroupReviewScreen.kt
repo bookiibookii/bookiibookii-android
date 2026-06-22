@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -41,7 +44,7 @@ private val chatBubbleBg = androidx.compose.ui.graphics.Color(0xFFF4F3F1)
 data class ExchangeMessage(
     val username: String,
     val message: String,
-    val reaction: String,   // "BOOM_UP" | "BOOM_DOWN" | "" (없음)
+    val reaction: String,
     val isMine: Boolean,
     val profileImageUrl: String? = null,
 )
@@ -71,6 +74,55 @@ data class GroupReviewData(
 )
 
 @Composable
+fun GroupReviewRoute(
+    groupId: Int,
+    groupName: String,
+    bookTitle: String,
+    startDate: String,
+    endDate: String,
+    onBackClick: () -> Unit,
+    onNavigateReviewEdit: (groupName: String, dateRange: String, partnerName: String) -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.GroupReviewViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val state by viewModel.uiState.collectAsState()
+
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        if (groupId != -1) {
+            viewModel.loadReview(groupId = groupId, groupName = groupName, startDate = startDate, endDate = endDate)
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(state.errorMessage) {
+        state.errorMessage?.let { context.showCustomToast(it, false) }
+    }
+
+    GroupReviewScreen(
+        data = state.data,
+        onBackClick = onBackClick,
+        onEditClick = {
+            val reviewData = state.data
+            val hasReviews = (reviewData?.messages?.isNotEmpty() == true || reviewData?.bookReviews?.isNotEmpty() == true)
+            if (!hasReviews) {
+                context.showCustomToast("작성된 후기가 없습니다.", false)
+                return@GroupReviewScreen
+            }
+            val resolvedGroupName = reviewData?.groupName ?: groupName
+            val resolvedDateRange = reviewData?.dateRange
+                ?: run {
+                    when {
+                        startDate.isBlank() -> ""
+                        endDate.isBlank() -> "$startDate ~"
+                        else -> "$startDate ~ $endDate"
+                    }
+                }
+            val resolvedPartnerName = reviewData?.partnerUsername ?: ""
+            onNavigateReviewEdit(resolvedGroupName, resolvedDateRange, resolvedPartnerName)
+        },
+    )
+}
+
+@Composable
 fun GroupReviewScreen(
     data: GroupReviewData? = null,
     onBackClick: () -> Unit = {},
@@ -81,7 +133,6 @@ fun GroupReviewScreen(
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
-        // 헤더
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -115,10 +166,8 @@ fun GroupReviewScreen(
                 .padding(top = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(23.dp),
         ) {
-            // 독서 후기 카드 (그룹 헤더 + 멤버별 코멘트)
             MemberReviewCard(data = data)
 
-            // 도서별 리뷰 카드
             data.bookReviews.forEachIndexed { index, review ->
                 BookReviewCard(
                     review = review,
@@ -133,7 +182,6 @@ fun GroupReviewScreen(
     }
 }
 
-// 독서 후기 카드: 그룹명·기간 헤더 + 멤버별 코멘트(따봉 + 말풍선)
 @Composable
 private fun MemberReviewCard(data: GroupReviewData) {
     Column(
@@ -144,7 +192,6 @@ private fun MemberReviewCard(data: GroupReviewData) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // 헤더 (그룹명 + 기간)
         Column(
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -173,7 +220,6 @@ private fun MemberReviewCard(data: GroupReviewData) {
     }
 }
 
-// 멤버 코멘트 한 줄: 프로필·이름 + (따봉 + 말풍선). 내 것은 오른쪽, 상대는 왼쪽 정렬
 @Composable
 private fun MemberMessageRow(msg: ExchangeMessage) {
     val hasReaction = msg.reaction == "BOOM_UP" || msg.reaction == "BOOM_DOWN"
@@ -199,7 +245,6 @@ private fun MemberMessageRow(msg: ExchangeMessage) {
     }
 }
 
-// 멤버 코멘트 말풍선 (채팅형) — 내 것은 grey100, 상대는 sub_pale(파랑)
 @Composable
 private fun MemberBubble(text: String, mine: Boolean) {
     Box(
@@ -244,7 +289,7 @@ private fun BookReviewCard(
     partnerUsername: String,
     myProfileImageUrl: String? = null,
     partnerProfileImageUrl: String? = null,
-    reverse: Boolean = false,   // true면 상대 리뷰가 위로
+    reverse: Boolean = false,
 ) {
     Column(
         modifier = Modifier
@@ -254,7 +299,6 @@ private fun BookReviewCard(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // 헤더: 책 썸네일 + 제목/저자
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -287,7 +331,6 @@ private fun BookReviewCard(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // 정렬측은 고정(내것=오른쪽 / 상대=왼쪽), reverse면 세로 순서만 뒤집어 상대를 위로
             val myBlock: @Composable () -> Unit = {
                 ReviewBlock(username = myUsername, profileImageUrl = myProfileImageUrl, rating = review.myRating, date = review.myDate, review = review.myReview, alignEnd = true)
             }
@@ -305,7 +348,6 @@ private fun BookReviewCard(
     }
 }
 
-// 도서 리뷰 한 블록: 프로필·이름 + 말풍선(별점·날짜 + 리뷰 텍스트)
 @Composable
 private fun ReviewBlock(username: String, profileImageUrl: String?, rating: Int, date: String, review: String, alignEnd: Boolean) {
     Column(

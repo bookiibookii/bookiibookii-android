@@ -40,8 +40,38 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.openPrivacyPolicy
+import com.bookiibookii.bookiibookii.common.openTermsOfService
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+
+@Composable
+fun SettingRoute(
+    onBackClick: () -> Unit,
+    onNoticeClick: () -> Unit,
+    onQuestionClick: () -> Unit,
+    onWithdrawClick: () -> Unit,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    SettingScreen(
+        onBackClick = onBackClick,
+        onNoticeClick = onNoticeClick,
+        onQuestionClick = onQuestionClick,
+        onTermsClick = { context.openTermsOfService() },
+        onPrivacyClick = { context.openPrivacyPolicy() },
+        onWithdrawClick = onWithdrawClick,
+        onLogoutClick = {
+            val ctx = context.applicationContext
+            com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar.deactivateCurrentToken {
+                com.bookiibookii.bookiibookii.onboarding.login.TokenManager.clear(ctx)
+                val intent = android.content.Intent(ctx, com.bookiibookii.bookiibookii.onboarding.login.LoginActivity::class.java).apply {
+                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                ctx.startActivity(intent)
+            }
+        },
+    )
+}
 
 @Composable
 fun SettingScreen(

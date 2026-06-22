@@ -33,7 +33,6 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 @Composable
 internal fun LibraryBookGridItem(book: LibraryBook, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // 표지 이미지 (coverUrl 있으면 실제 이미지, 없으면 회색 플레이스홀더)
         Box(
             modifier = Modifier
                 .fillMaxWidth()

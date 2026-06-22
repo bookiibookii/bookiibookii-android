@@ -34,9 +34,7 @@ class ReviewEditViewModel : ViewModel() {
     private val _event = MutableSharedFlow<ReviewEditEvent>()
     val event: SharedFlow<ReviewEditEvent> = _event.asSharedFlow()
 
-    // 프리필·수정 대상 = 내가 작성한 책 리뷰(GET /reviews/book/me).
     private var myReviews: List<BookReviewItemDTO> = emptyList()
-    // 일괄 수정(PATCH /reviews/my-group)은 memberBookId 기준 — 리뷰 응답엔 없어 라이브러리 멤버북에서 매핑. myReviews와 동일 순서.
     private var memberBookIds: List<Int?> = emptyList()
 
     sealed interface ReviewEditEvent {
@@ -44,18 +42,11 @@ class ReviewEditViewModel : ViewModel() {
         data class Error(val message: String) : ReviewEditEvent
     }
 
-    /**
-     * 프리필
-     * - 책: GET /api/groups/{groupId}/reviews/book/me — 내 리뷰만, 정확한 Double 별점·내용·표지·reviewId·bookId.
-     * - memberBookId: GET /api/library/memberbooks 에서 같은 groupId의 bookId→memberBookId 매핑(일괄 수정용).
-     * - 파트너 후기: GET /api/groups/{groupId}/reviews 의 memberReviews 중 내 것(writerNickname 일치).
-     */
     fun load(groupId: Int) {
         if (groupId == -1) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // 1) 내 책 리뷰
                 val resp = RetrofitClient.libApi().getMyBookReviews(groupId)
                 val reviews = if (resp.isSuccessful && resp.body()?.isSuccess == true) {
                     resp.body()?.result?.reviews.orEmpty()
@@ -64,7 +55,6 @@ class ReviewEditViewModel : ViewModel() {
                 }
                 myReviews = reviews
 
-                // 2) bookId → memberBookId 매핑
                 val bookIdToMemberBookId: Map<Int, Int> = try {
                     val libResp = RetrofitClient.libApi().getLibraryBooks()
                     if (libResp.isSuccessful && libResp.body()?.isSuccess == true) {
@@ -77,7 +67,6 @@ class ReviewEditViewModel : ViewModel() {
                 } catch (_: Exception) { emptyMap() }
                 memberBookIds = reviews.map { r -> r.bookId?.let { bookIdToMemberBookId[it] } }
 
-                // 3) 내 파트너(멤버) 후기 — reaction/comment 프리필
                 var initialIsPartnerGood: Boolean? = null
                 var initialPartnerComment = ""
                 try {
@@ -92,7 +81,7 @@ class ReviewEditViewModel : ViewModel() {
                         }
                         initialPartnerComment = mine?.comment.orEmpty()
                     }
-                } catch (_: Exception) { /* 파트너 후기 프리필 실패 무시 */ }
+                } catch (_: Exception) {  }
 
                 _uiState.update {
                     it.copy(
@@ -104,18 +93,13 @@ class ReviewEditViewModel : ViewModel() {
                         initialPartnerComment = initialPartnerComment,
                     )
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
+                _event.emit(ReviewEditEvent.Error("후기 정보를 불러오지 못했습니다."))
             }
         }
     }
 
-    /**
-     * 종료 그룹 내 리뷰 일괄 수정 — PATCH /api/groups/{groupId}/reviews/my-group
-     * 책 리뷰(memberBookId별 별점·코멘트) + 파트너 후기(reaction·comment)를 한 번에 보낸다.
-     * - ratings / bookComments: load()로 받은 내 책 리뷰와 같은 순서.
-     * - isPartnerGood / partnerComment: 선택 시에만 파트너 후기 포함.
-     */
     fun submit(
         groupId: Int,
         ratings: List<Double>,
@@ -127,7 +111,6 @@ class ReviewEditViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            // memberBookId가 매핑된 책 리뷰만 포함(서버는 memberBookId required)
             val bookItems = myReviews.mapIndexedNotNull { i, review ->
                 val memberBookId = memberBookIds.getOrNull(i) ?: return@mapIndexedNotNull null
                 BookReviewUpdateItemDTO(

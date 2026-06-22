@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,6 +38,40 @@ import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
+fun MypageMainRoute(
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel,
+    onBackClick: () -> Unit,
+    onSettingClick: () -> Unit,
+    onProfileSettingClick: () -> Unit,
+    onAddressManagementClick: () -> Unit,
+    onBookshelfClick: () -> Unit,
+    onWrittenReviewClick: () -> Unit,
+    onReceivedReviewClick: () -> Unit,
+    onInstagramShareClick: () -> Unit,
+    onDownloadClick: () -> Unit,
+) {
+    val profile by viewModel.profileData.observeAsState()
+
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        viewModel.fetchMypageData()
+    }
+
+    MypageScreen(
+        profile = profile,
+        onSaveIntroduction = { viewModel.updateIntroduction(it) },
+        onBackClick = onBackClick,
+        onSettingClick = onSettingClick,
+        onProfileSettingClick = onProfileSettingClick,
+        onAddressManagementClick = onAddressManagementClick,
+        onBookshelfClick = onBookshelfClick,
+        onWrittenReviewClick = onWrittenReviewClick,
+        onReceivedReviewClick = onReceivedReviewClick,
+        onInstagramShareClick = onInstagramShareClick,
+        onDownloadClick = onDownloadClick,
+    )
+}
+
+@Composable
 fun MypageScreen(
     profile: UserProfileResDTO? = null,
     onSaveIntroduction: (String) -> Unit = {},
@@ -48,6 +83,7 @@ fun MypageScreen(
     onProfileSettingClick: () -> Unit = {},
     onAddressManagementClick: () -> Unit = {},
     onInstagramShareClick: () -> Unit = {},
+    onDownloadClick: () -> Unit = {},
 ) {
     var isMottoEditing by remember { mutableStateOf(false) }
     var mottoInput by remember(profile?.introduction) { mutableStateOf(profile?.introduction ?: "") }
@@ -117,6 +153,7 @@ fun MypageScreen(
                 representativeBooks = profile?.userBooks ?: emptyList(),
                 onDismiss = { showShareDialog = false },
                 onInstagramClick = { showShareDialog = false; onInstagramShareClick() },
+                onDownloadClick = { showShareDialog = false; onDownloadClick() },
             )
         }
     }

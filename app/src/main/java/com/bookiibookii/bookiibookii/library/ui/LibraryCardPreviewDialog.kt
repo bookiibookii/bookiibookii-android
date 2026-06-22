@@ -35,7 +35,6 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// 독서카드 상세의 v2 레이아웃과 동일한 비율
 private const val TOP_WEIGHT = 336f
 private const val BOTTOM_WEIGHT = 128f
 
@@ -49,7 +48,6 @@ internal fun LibraryCardPreviewDialog(
     bookTitle: String = "",
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        // 기본 다이얼로그 스크림보다 배경을 더 어둡게
         val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
         SideEffect {
             dialogWindowProvider?.window?.setDimAmount(0.8f)
@@ -58,7 +56,6 @@ internal fun LibraryCardPreviewDialog(
     }
 }
 
-// 카드 본문 — Dialog 래퍼와 분리해 @Preview 대상이 되도록 함
 @Composable
 private fun LibraryCardPreviewContent(
     mode: AddCardMode,
@@ -81,8 +78,6 @@ private fun LibraryCardPreviewContent(
     }
 }
 
-// 좌상단 책제목 칩 — [B 심볼] + 책제목. 미리보기·공유 카드 공용
-// solidBackground=true(이미지 카드): 주황 채움 / false(텍스트 카드): 투명 + main_pale 테두리
 @Composable
 internal fun BookTitleChip(title: String, solidBackground: Boolean) {
     Row(
@@ -115,7 +110,6 @@ internal fun BookTitleChip(title: String, solidBackground: Boolean) {
     }
 }
 
-// 인용구 카드 v2: 선명한 오렌지 그라데이션 + 하단 메모 영역
 @Composable
 private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -160,7 +154,6 @@ private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
                 .weight(BOTTOM_WEIGHT / (TOP_WEIGHT + BOTTOM_WEIGHT))
                 .padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
-            // 메모가 없으면 아무것도 표시하지 않음
             if (memo.isNotBlank()) {
                 Text(
                     text = memo,
@@ -173,11 +166,9 @@ private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
     }
 }
 
-// 사진 카드 v2: 사진 상단 배경 + 하단 메모 영역
 @Composable
 private fun PhotoCardPreview(memo: String, imageUri: android.net.Uri? = null, bookTitle: String) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // 사진 영역 (업로드된 사진 또는 placeholder)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -198,7 +189,6 @@ private fun PhotoCardPreview(memo: String, imageUri: android.net.Uri? = null, bo
                 }
             }
         }
-        // 메모 영역
         Box(
             modifier = Modifier
                 .fillMaxWidth()

@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +55,36 @@ import com.bookiibookii.bookiibookii.common.DateUtils
 enum class ReviewTab { WRITTEN, RECEIVED }
 
 @Composable
+fun ReviewRoute(
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel,
+    initialTab: ReviewTab,
+    onBackClick: () -> Unit,
+) {
+    val profile by viewModel.profileData.observeAsState()
+    val writtenState by viewModel.writtenReviews.observeAsState(com.bookiibookii.bookiibookii.mypage.vm.WrittenReviewUiState())
+    val receivedState by viewModel.receivedReviews.observeAsState(com.bookiibookii.bookiibookii.mypage.vm.ReceivedReviewUiState())
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchWrittenReviews(reset = true)
+        viewModel.fetchReceivedReviews(reset = true)
+    }
+
+    ReviewScreen(
+        initialTab = initialTab,
+        onBackClick = onBackClick,
+        bookReviewCount = writtenState.totalCount.toInt(),
+        writtenReviews = writtenState.items,
+        writtenHasNext = writtenState.hasNext,
+        onLoadMoreWritten = { viewModel.fetchWrittenReviews(reset = false) },
+        boomUpCount = receivedState.positiveCount.toInt(),
+        receivedReviews = receivedState.items,
+        receivedHasNext = receivedState.hasNext,
+        onLoadMoreReceived = { viewModel.fetchReceivedReviews(reset = false) },
+        nickname = profile?.nickname ?: "",
+    )
+}
+
+@Composable
 fun ReviewScreen(
     initialTab: ReviewTab = ReviewTab.WRITTEN,
     onBackClick: () -> Unit = {},
@@ -70,12 +101,10 @@ fun ReviewScreen(
     var selectedTab by remember { mutableStateOf(initialTab) }
     val listState = rememberLazyListState()
 
-    // 탭 전환 시 스크롤 위치를 맨 위로 초기화(다른 탭의 끝 위치에서 잘못된 추가 로드 방지)
     LaunchedEffect(selectedTab) {
         listState.scrollToItem(0)
     }
 
-    // 리스트 끝 부근에 도달하면 다음 페이지 로드
     val shouldLoadMore by remember {
         derivedStateOf {
             val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
@@ -236,7 +265,6 @@ private fun BookReviewCard(review: WrittenReviewItem) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // 제목+저자가 길면 칩 영역을 침범하지 않고 저자(구분선 포함)가 다음 줄로 내려가도록 FlowRow 사용
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
                             review.bookTitle.orEmpty(),

@@ -6,9 +6,6 @@ import com.bookiibookii.bookiibookii.data.model.library.PublicReadingCardRespons
 import com.bookiibookii.bookiibookii.library.ui.ReadingCard
 import com.bookiibookii.bookiibookii.library.ui.ReadingCardType
 
-/**
- * API DTO → UI 모델 변환. library.vm 내 모든 ViewModel에서 공유.
- */
 internal fun MemberCardResponseDTO.toReadingCard() = ReadingCard(
     cardId                 = cardId.toLong(),
     memberBookId           = memberBookId,
@@ -31,10 +28,6 @@ internal fun MemberCardResponseDTO.toReadingCard() = ReadingCard(
     isMine                 = isMine,
 )
 
-/**
- * 공유 토큰 공개 조회 DTO → UI 모델 변환.
- * 공개 응답엔 cardId/북마크/리액션이 없어 기본값 사용. 작성자=creatorNickname.
- */
 internal fun PublicReadingCardResponseDTO.toReadingCard() = ReadingCard(
     username  = creatorNickname.orEmpty(),
     content   = memo.orEmpty(),

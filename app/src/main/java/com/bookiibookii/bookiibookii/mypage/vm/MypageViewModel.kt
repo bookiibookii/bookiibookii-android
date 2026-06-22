@@ -20,7 +20,6 @@ import java.io.File
 
 private const val PAGE_SIZE = 10
 
-// 작성한 후기 페이징 상태
 data class WrittenReviewUiState(
     val items: List<WrittenReviewItem> = emptyList(),
     val totalCount: Long = 0,
@@ -29,7 +28,6 @@ data class WrittenReviewUiState(
     val isLoading: Boolean = false,
 )
 
-// 받은 후기 페이징 상태
 data class ReceivedReviewUiState(
     val items: List<ReceivedReviewItem> = emptyList(),
     val positiveCount: Long = 0,
@@ -79,7 +77,6 @@ class MypageViewModel : ViewModel() {
                         _profileData.value = it
                         confirmedNickname = it.nickname
 
-                        // 후기 날짜 로그
                         Log.d("MypageReview", "=== recentBookReviews (${it.recentBookReviews?.size ?: 0}개) ===")
                         it.recentBookReviews?.forEachIndexed { i, r ->
                             Log.d("MypageReview", "  [$i] bookTitle=${r.bookTitle}, tradeType=${r.tradeType}, rating=${r.rating}, reviewDate=${r.reviewDate}, comment=${r.comment}")
@@ -99,7 +96,6 @@ class MypageViewModel : ViewModel() {
         }
     }
 
-    // 작성한 후기 조회. reset=true면 첫 페이지부터 새로, false면 다음 페이지 추가(무한 스크롤)
     fun fetchWrittenReviews(reset: Boolean) {
         val state = _writtenReviews.value ?: WrittenReviewUiState()
         if (state.isLoading) return
@@ -129,7 +125,6 @@ class MypageViewModel : ViewModel() {
         }
     }
 
-    // 받은 후기 조회. reset=true면 첫 페이지부터 새로, false면 다음 페이지 추가(무한 스크롤)
     fun fetchReceivedReviews(reset: Boolean) {
         val state = _receivedReviews.value ?: ReceivedReviewUiState()
         if (state.isLoading) return
@@ -228,7 +223,6 @@ class MypageViewModel : ViewModel() {
                             val uploadUrl = result.presignedPutUrl
                             val issuedS3Key = result.s3Key
 
-                            // S3 업로드 통일 — 리사이즈/압축(≤1MB) 자동 적용
                             val uploadResult = S3Uploader.uploadImage(imageFile, uploadUrl)
                             if (uploadResult.isFailure) {
                                 _eventFlow.emit(Event.ShowToast("이미지 업로드에 실패했습니다.", false))

@@ -104,7 +104,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val current = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
         val isTopLevel = current is HomeFragment
                 || current is TrackerFragment
-                || current is LibraryFragment
+                || (current is LibraryFragment && current.isAtMainRoute())
         binding.bottomNav.root.visibility = if (isTopLevel) View.VISIBLE else View.GONE
     }
 

@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -56,6 +58,117 @@ private const val TEXT_MEMO_MAX = 110
 private const val PHOTO_MEMO_MAX = 110
 
 @Composable
+fun LibraryAddCardRoute(
+    mode: AddCardMode,
+    memberBookId: Int,
+    cardId: Long,
+    initialQuote: String,
+    initialPage: String,
+    initialMemo: String,
+    initialImageUrl: String?,
+    initialS3Key: String?,
+    bookTitle: String,
+    totalPages: Int,
+    onBackClick: () -> Unit,
+    onSaved: (isEdit: Boolean) -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryAddCardViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isEdit = cardId != -1L
+    val uiState by viewModel.uiState.collectAsState()
+
+    var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var cameraImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    val pickImageLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri -> uri?.let { selectedImageUri = it } }
+
+    val takePhotoLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.TakePicture(),
+    ) { success -> if (success) cameraImageUri?.let { selectedImageUri = it } }
+
+    fun launchCamera() {
+        val uri = try {
+            val cameraDir = java.io.File(context.cacheDir, "camera").apply { mkdirs() }
+            val file = java.io.File(cameraDir, "card_${System.currentTimeMillis()}.jpg")
+            androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        } catch (e: Exception) {
+            null
+        }
+        if (uri == null) {
+            context.showCustomToast("카메라를 실행할 수 없습니다.", false)
+            return
+        }
+        cameraImageUri = uri
+        takePhotoLauncher.launch(uri)
+    }
+
+    val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted -> if (granted) launchCamera() }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.event.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.library.vm.LibraryAddCardViewModel.AddCardEvent.Success -> {
+                    context.showCustomToast(if (isEdit) "독서카드가 수정되었습니다." else "독서카드가 등록되었습니다.", true)
+                    onSaved(isEdit)
+                }
+                is com.bookiibookii.bookiibookii.library.vm.LibraryAddCardViewModel.AddCardEvent.Error -> {
+                    context.showCustomToast(event.message, false)
+                }
+            }
+        }
+    }
+
+    LibraryAddCardScreen(
+        mode = mode,
+        selectedImageUri = selectedImageUri,
+        isEdit = isEdit,
+        initialQuote = initialQuote,
+        initialPage = initialPage,
+        initialMemo = initialMemo,
+        initialImageUrl = initialImageUrl,
+        bookTitle = bookTitle,
+        totalPages = totalPages.takeIf { it > 0 },
+        onImagePick = { pickImageLauncher.launch("image/*") },
+        onImageCapture = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) },
+        onBackClick = onBackClick,
+        isLoading = uiState.isLoading,
+        onSubmit = { page, quotation, memo ->
+            if (memberBookId == -1) {
+                context.showCustomToast("책 정보를 찾을 수 없습니다.", false)
+                return@LibraryAddCardScreen
+            }
+            if (isEdit) {
+                viewModel.updateCard(
+                    cardId = cardId,
+                    memberBookId = memberBookId,
+                    mode = mode,
+                    page = page,
+                    quotation = quotation,
+                    memo = memo,
+                    newImageUri = selectedImageUri,
+                    existingS3Key = initialS3Key,
+                    contentResolver = context.contentResolver,
+                )
+            } else {
+                viewModel.createCard(
+                    memberBookId = memberBookId,
+                    mode = mode,
+                    page = page,
+                    quotation = quotation,
+                    memo = memo,
+                    imageUri = selectedImageUri,
+                    contentResolver = context.contentResolver,
+                )
+            }
+        },
+    )
+}
+
+@Composable
 fun LibraryAddCardScreen(
     mode: AddCardMode = AddCardMode.TEXT,
     selectedImageUri: android.net.Uri? = null,
@@ -63,20 +176,19 @@ fun LibraryAddCardScreen(
     initialQuote: String = "",
     initialPage: String = "",
     initialMemo: String = "",
-    initialImageUrl: String? = null,   // 수정 모드: 기존 사진(원격 URL)
-    bookTitle: String = "",            // 미리보기 칩에 표시할 책제목
-    totalPages: Int? = null,           // 전체 페이지 수 — 입력값이 초과하면 이 값으로 자동 보정
-    onImagePick: () -> Unit = {},      // 갤러리
-    onImageCapture: () -> Unit = {},   // 카메라
+    initialImageUrl: String? = null,
+    bookTitle: String = "",
+    totalPages: Int? = null,
+    onImagePick: () -> Unit = {},
+    onImageCapture: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    isLoading: Boolean = false,        // 등록/수정 통신 진행 여부 — 중복 제출 차단용
+    isLoading: Boolean = false,
     onSubmit: (page: Int, quotation: String, memo: String) -> Unit = { _, _, _ -> },
 ) {
     var quote by remember { mutableStateOf(initialQuote) }
     var page by remember { mutableStateOf(initialPage) }
     var memo by remember { mutableStateOf(initialMemo) }
 
-    // 페이지 입력이 전체 페이지 수를 초과하면 전체 페이지로 자동 보정
     fun clampPage(input: String): String {
         val n = input.toIntOrNull() ?: return input
         return if (totalPages != null && totalPages > 0 && n > totalPages) totalPages.toString() else input
@@ -88,7 +200,6 @@ fun LibraryAddCardScreen(
 
     val memoMax = if (mode == AddCardMode.TEXT) TEXT_MEMO_MAX else PHOTO_MEMO_MAX
 
-    // 수정 모드: 초기값 대비 변경 여부 (사진은 새로 고른 경우만 변경으로 간주)
     val hasChanges = if (mode == AddCardMode.TEXT) {
         quote != initialQuote || page != initialPage || memo != initialMemo
     } else {
@@ -101,7 +212,6 @@ fun LibraryAddCardScreen(
             .background(BookiiBookiiTheme.colors.uiBg)
             .imePadding(),
     ) {
-        // Header
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -127,7 +237,6 @@ fun LibraryAddCardScreen(
             HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
         }
 
-        // Content
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -138,7 +247,6 @@ fun LibraryAddCardScreen(
         ) {
             when (mode) {
                 AddCardMode.TEXT -> {
-                    // 인용구 (필수)
                     AddCardField(
                         label = "인용구",
                         required = true,
@@ -153,7 +261,6 @@ fun LibraryAddCardScreen(
                         maxLength = QUOTE_MAX,
                         errorText = if (quoteError) "인용구를 입력해주세요" else null,
                     )
-                    // 페이지 (필수)
                     AddCardField(
                         label = "페이지",
                         required = true,
@@ -167,7 +274,6 @@ fun LibraryAddCardScreen(
                         keyboardType = KeyboardType.Number,
                         errorText = if (pageError) "페이지를 입력해주세요" else null,
                     )
-                    // 메모
                     AddCardField(
                         label = "메모",
                         required = false,
@@ -178,7 +284,6 @@ fun LibraryAddCardScreen(
                     )
                 }
                 AddCardMode.PHOTO -> {
-                    // 사진 업로드 영역
                     var showPhotoSheet by remember { mutableStateOf(false) }
                     Column {
                         Box(
@@ -199,7 +304,6 @@ fun LibraryAddCardScreen(
                                     contentScale       = androidx.compose.ui.layout.ContentScale.Crop,
                                     modifier           = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp)),
                                 )
-                                // 사진이 있으면 우상단에 편집(사진 변경) 배지
                                 Box(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
@@ -244,7 +348,6 @@ fun LibraryAddCardScreen(
                             )
                         }
                     }
-                    // 페이지 (필수)
                     AddCardField(
                         label = "페이지",
                         required = true,
@@ -258,7 +361,6 @@ fun LibraryAddCardScreen(
                         keyboardType = KeyboardType.Number,
                         errorText = if (pageError) "페이지를 입력해주세요" else null,
                     )
-                    // 메모
                     AddCardField(
                         label = "메모",
                         required = false,
@@ -271,12 +373,9 @@ fun LibraryAddCardScreen(
             }
         }
 
-        // 중복 제출 가드: 재구성 타이밍에 의존하지 않도록 stable MutableState로 즉시 차단
         val submitting = remember { mutableStateOf(false) }
-        // 통신 종료(에러로 화면이 남은 경우 포함) 시 다시 누를 수 있도록 리셋
         LaunchedEffect(isLoading) { if (!isLoading) submitting.value = false }
 
-        // 필수값 검증 후 제출 (등록/수정 공용)
         val submit = submit@{
             if (submitting.value) return@submit
             var valid = true
@@ -295,7 +394,6 @@ fun LibraryAddCardScreen(
         }
 
         if (isEdit) {
-            // 수정 모드: 단일 "수정" 버튼 — 변경된 내용이 없으면 비활성
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -314,7 +412,6 @@ fun LibraryAddCardScreen(
                 )
             }
         } else {
-            // 등록 모드: 미리보기 + 등록하기
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -356,7 +453,6 @@ fun LibraryAddCardScreen(
         }
     }
 
-    // 미리보기 다이얼로그
     if (showPreview) {
         LibraryCardPreviewDialog(
             mode = mode,
@@ -451,7 +547,6 @@ private fun AddCardField(
         }
     }
 }
-
 
 @Preview(showBackground = true, heightDp = 900)
 @Composable

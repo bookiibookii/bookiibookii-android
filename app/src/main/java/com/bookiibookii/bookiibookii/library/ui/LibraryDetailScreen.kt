@@ -39,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -74,23 +76,19 @@ data class ReadingCard(
     val type: ReadingCardType,
     val isBookmarked: Boolean = false,
     val date: String = "",
-    val completedAt: String? = null,  // 독서 종료일 (책 정보 보강용)
-    val genre: String = "",           // 장르 (책 정보 보강용)
-    val totalPages: Int? = null,      // 전체 페이지 수
+    val completedAt: String? = null,
+    val genre: String = "",
+    val totalPages: Int? = null,
     val bookTitle: String = "",
     val quotation: String = "",
     val imageUrl: String? = null,
-    val s3Key: String? = null,        // 기존 이미지 키 (수정 시 사진 미교체면 그대로 재전송)
-    val myReactions: List<String> = emptyList(),      // 내가 누른 리액션 API key 목록
-    val reactionCounts: Map<String, Int> = emptyMap(), // API key → 전체 인원 수
+    val s3Key: String? = null,
+    val myReactions: List<String> = emptyList(),
+    val reactionCounts: Map<String, Int> = emptyMap(),
     val creatorProfileImageUrl: String? = null,
     val isMine: Boolean = false,
 )
 
-// 서재 상세 카드 아이템에서 사용 (리액션 API key → 아이콘 drawable)
-// 5종 이모지 개편(공감해요/좋아요/웃겨요/슬퍼요/화나요)에 맞춰 아이콘 갱신.
-// CHEERUP은 더 이상 "힘나요"가 아닌 "화나요" 용도로 재사용됨. AWESOME(멋져요)은 개편으로 사라진 값이라
-// 매핑에서 제외 — 개편 이전 과거 데이터에 남아있어도 목록에 아이콘이 표시되지 않는다.
 internal val reactionIconByApiKey: Map<String, Int> = mapOf(
     "LIKE"    to R.drawable.ic_good,
     "SAD"     to R.drawable.ic_sad,
@@ -105,15 +103,93 @@ data class LibraryDetailBook(
     val groupName: String,
     val title: String,
     val author: String,
-    val genre: String = "",         // 서재 목록 API(getLibraryBooks)에서 전달
+    val genre: String = "",
     val coverUrl: String? = null,
-    val isDone: Boolean = false,    // true: 완료(별점), false: 읽는 중(프로그래스바)
-    val progressRate: Int = 0,      // 0-100 (isDone=false 일 때 사용)
-    val rating: Double = 0.0,       // 0-5 (isDone=true 일 때 사용)
+    val isDone: Boolean = false,
+    val progressRate: Int = 0,
+    val rating: Double = 0.0,
     val startDate: String = "",
-    val endDate: String? = null,    // 완료됐을 때만 값 존재
-    val completedAt: String? = null, // 독서 종료일 — 표시용 종료일은 이 값을 사용
+    val endDate: String? = null,
+    val completedAt: String? = null,
 )
+
+@Composable
+fun LibraryDetailRoute(
+    groupId: Int,
+    memberBookId: Int,
+    groupName: String,
+    bookTitle: String,
+    author: String,
+    genre: String,
+    coverUrl: String,
+    startDate: String,
+    endDate: String,
+    completedAt: String,
+    rating: Double,
+    isDone: Boolean,
+    progressRate: Int,
+    totalPages: Int,
+    onBackClick: () -> Unit,
+    onAddTextCard: () -> Unit,
+    onAddPhotoCard: () -> Unit,
+    onCardClick: (initialIndex: Int, sortedCards: List<ReadingCard>, sortByLatest: Boolean) -> Unit,
+    onReviewClick: () -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryDetailViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val state by viewModel.uiState.collectAsState()
+
+    val book = if (bookTitle.isNotBlank()) {
+        LibraryDetailBook(
+            groupId = groupId,
+            memberBookId = memberBookId,
+            groupName = groupName,
+            title = bookTitle,
+            author = author,
+            genre = genre,
+            coverUrl = coverUrl.ifBlank { null },
+            isDone = isDone,
+            progressRate = progressRate,
+            rating = rating,
+            startDate = startDate,
+            endDate = endDate.ifBlank { null },
+            completedAt = completedAt.ifBlank { null },
+        )
+    } else {
+        null
+    }
+
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        if (groupId != -1) viewModel.fetchGroupCards(groupId, bookTitle)
+        if (memberBookId != -1 && bookTitle.isNotBlank()) {
+            viewModel.checkRepresentativeStatus(memberBookId, bookTitle)
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.event.collect { msg ->
+            context.showCustomToast(msg, !msg.contains("실패") && !msg.contains("오류"))
+        }
+    }
+
+    LibraryDetailScreen(
+        book = book,
+        cards = state.cards,
+        isRepresentative = state.isRepresentative,
+        onBackClick = onBackClick,
+        onAddTextCard = onAddTextCard,
+        onAddPhotoCard = onAddPhotoCard,
+        onCardClick = onCardClick,
+        onReviewClick = onReviewClick,
+        onRepresentativeAdd = { viewModel.addRepresentative(memberBookId) },
+        onRepresentativeRemove = { viewModel.removeRepresentative(state.representativeUserBookId) },
+        onAladinClick = { title ->
+            val url = "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=${android.net.Uri.encode(title)}"
+            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+        },
+        onDeleteBook = { viewModel.deleteMemberBook(memberBookId, onBackClick) },
+    )
+}
 
 @Composable
 fun LibraryDetailScreen(
@@ -137,7 +213,6 @@ fun LibraryDetailScreen(
 
     val displayedCards = if (myCardsOnly) cards.filter { it.isMine } else cards
     val sortedCards = if (sortByLatest) {
-        // date는 일(day) 단위라 같은 날 카드는 동률 → cardId(생성 순서)로 2차 정렬해 최신이 먼저 오게 함
         displayedCards.sortedWith(
             compareByDescending<ReadingCard> { it.date }.thenByDescending { it.cardId },
         )
@@ -146,7 +221,6 @@ fun LibraryDetailScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 배경 딤 (FAB 메뉴 열렸을 때)
         if (showFabMenu) {
             Box(
                 modifier = Modifier
@@ -161,9 +235,7 @@ fun LibraryDetailScreen(
                 .fillMaxSize()
                 .background(BookiiBookiiTheme.colors.uiBg),
         ) {
-            // 상단 고정 헤더 (스크롤 영역 밖)
             DetailHeader(title = book?.title ?: "", onBackClick = onBackClick, onMenuClick = { showBookSheet = true })
-            // 헤더 아래만 스크롤 (weight(1f)로 남은 공간 채움)
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -172,7 +244,6 @@ fun LibraryDetailScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 if (book != null) {
-                    // genre·시작/종료 날짜 모두 서재 목록 API(getLibraryBooks)에서 args로 전달됨
                     BookInfoCard(book = book, modifier = Modifier.padding(horizontal = 16.dp))
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -193,7 +264,6 @@ fun LibraryDetailScreen(
             }
         }
 
-        // FAB 메뉴 + FAB 버튼 영역
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -202,19 +272,16 @@ fun LibraryDetailScreen(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // 확장 메뉴 항목들
             AnimatedVisibility(
                 visible = showFabMenu,
                 enter = fadeIn() + slideInVertically { it / 2 },
                 exit = fadeOut() + slideOutVertically { it / 2 },
             ) {
-                // width(IntrinsicSize.Max): 두 항목 중 넓은 쪽 기준으로 통일
                 Column(
                     modifier = Modifier.width(IntrinsicSize.Max),
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    // 이미지 카드 → 위쪽
                     FabMenuItem(
                         label = "이미지 카드 추가",
                         onClick = {
@@ -232,7 +299,6 @@ fun LibraryDetailScreen(
                             }
                         },
                     )
-                    // 인용구 카드 → 아래쪽
                     FabMenuItem(
                         label = "인용구 카드 추가",
                         onClick = {
@@ -254,8 +320,6 @@ fun LibraryDetailScreen(
                 }
             }
 
-            // 메인 FAB
-            // FAB 색: Grey900 검정 (피그마 스펙)
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -279,7 +343,7 @@ fun LibraryDetailScreen(
                 author = book.author,
                 genre = book.genre,
                 isRepresentative = isRepresentative,
-                isCompleted = book.isDone,   // 완료(groupStatus COMPLETED)일 때만 리뷰/대표/삭제 노출
+                isCompleted = book.isDone,
                 onDismiss = { showBookSheet = false },
                 onReviewClick = {
                     showBookSheet = false
@@ -302,8 +366,6 @@ fun LibraryDetailScreen(
     }
 }
 
-// 아이콘과 글씨가 검정 원형(pill) 배경에 함께 둘러싸인 FAB 메뉴 아이템
-// 피그마 스펙: 151x48 고정, 좌 여백 12 / 아이콘-글자 간격 8 / 글자 우 여백 16, 세로 중앙 정렬
 @Composable
 private fun FabMenuItem(
     label: String,
@@ -364,7 +426,6 @@ private fun DetailHeader(title: String, onBackClick: () -> Unit, onMenuClick: ()
 @Composable
 private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier) {
     val startFmt = DateUtils.formatDate(book.startDate)
-    // 종료일은 completedAt 사용 — 값 있으면 "시작 ~ 종료", 없으면 "시작 ~"
     val dateText = if (!book.completedAt.isNullOrBlank()) {
         "$startFmt ~ ${DateUtils.formatDate(book.completedAt)}"
     } else {
@@ -379,7 +440,6 @@ private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier)
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // 책 표지
         Box(
             modifier = Modifier
                 .width(102.dp)
@@ -401,7 +461,6 @@ private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(text = "${book.groupName}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey600, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(text = book.title.stripBookSubtitle(), style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                // 장르가 오면 "(장르)" 추가, 현재 API 미제공으로 저자명만 표시
                 Text(
                     text = if (book.genre.isBlank()) book.author else "${book.author} (${book.genre})",
                     style = BookiiBookiiTheme.typography.regular14,
@@ -410,14 +469,12 @@ private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier)
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (book.isDone) {
-                    // 완료: 별점 표시
                     Row {
                         for (i in 1..5) {
                             val filled = i.toDouble() <= book.rating; Icon(painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star), contentDescription = null, tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(20.dp))
                         }
                     }
                 } else {
-                    // 읽는 중: 프로그래스바 표시
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Box(
                             modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(50.dp)).background(BookiiBookiiTheme.colors.grey200),
@@ -460,7 +517,6 @@ private fun FilterRow(
             Text(text = "내 독서카드만 보기", style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey500)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            // 각 라벨은 해당 정렬로 '설정'한다 (토글 아님). 이미 선택된 라벨을 눌러도 그대로 유지됨.
             Text(text = "최신순", style = if (sortByLatest) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14, color = if (sortByLatest) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500, modifier = Modifier.clickable { onSortChange(true) })
             Text(text = "|", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
             Text(text = "페이지순", style = if (!sortByLatest) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14, color = if (!sortByLatest) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500, modifier = Modifier.clickable { onSortChange(false) })
@@ -505,14 +561,12 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
             }
             Text(text = card.content, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey800, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth().weight(1f))
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                // 리액션 아이콘
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
                     card.reactionCounts
                         .filter { it.value > 0 }
                         .keys
                         .forEach { apiKey ->
                             reactionIconByApiKey[apiKey]?.let { iconRes ->
-                                // 풀컬러 이모지 아이콘이라 독서카드 상세와 동일하게 원래 색 그대로 표시(tint 미적용)
                                 Icon(
                                     painter = painterResource(iconRes),
                                     contentDescription = null,
@@ -595,7 +649,6 @@ private val previewReadingBook = LibraryDetailBook(
     startDate = "2026-05-20",
 )
 
-// 읽는 중 (진행률 바)
 @Preview(showBackground = true, heightDp = 1000)
 @Composable
 private fun LibraryDetailScreenReadingPreview() {
@@ -604,7 +657,6 @@ private fun LibraryDetailScreenReadingPreview() {
     }
 }
 
-// 완료 (별점)
 @Preview(showBackground = true, heightDp = 1000)
 @Composable
 private fun LibraryDetailScreenDonePreview() {

@@ -144,7 +144,6 @@ private fun RepresentativeEditContent(
                             scaleX = if (isDragged) 1.02f else 1f
                             scaleY = if (isDragged) 1.02f else 1f
                             shadowElevation = if (isDragged) 8f else 0f
-                            // 그림자가 카드의 둥근 모서리(20dp)를 따르도록 shape 지정 (미지정 시 사각 그림자)
                             shape = RoundedCornerShape(20.dp)
                             clip = false
                         },
@@ -155,7 +154,6 @@ private fun RepresentativeEditContent(
                         draggingItemOffset = 0f
                     },
                     onDragEnd = {
-                        // 드래그 종료 시점의 최종 위치로 즉시 API 호출
                         val finalIdx = draggedIndex
                         val startIdx = dragStartIndex
                         if (finalIdx != null && startIdx != null && startIdx != finalIdx) {
@@ -169,8 +167,6 @@ private fun RepresentativeEditContent(
                         draggingItemOffset = 0f
                     },
                     onDrag = { dragAmount ->
-                        // draggedIndex(옮겨진 뒤의 실제 위치) 기준으로 계산해 여러 칸 연속 이동 지원.
-                        // while로 처리해 한 이벤트에서 여러 칸 넘어가는 빠른 드래그도 모두 반영(끊김 방지)
                         if (draggedIndex != null) {
                             draggingItemOffset += dragAmount
                             var current = draggedIndex!!
@@ -241,7 +237,6 @@ private fun RepresentativeEditListItem(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                // 상단: 책 제목 semibold14 grey900
                 Text(
                     text = book.title.stripBookSubtitle(),
                     style = BookiiBookiiTheme.typography.semibold14,
@@ -249,7 +244,6 @@ private fun RepresentativeEditListItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                // 하단: 저자명 regular14 grey900 (API 미제공 시 빈 문자열)
                 Text(
                     text = "",
                     style = BookiiBookiiTheme.typography.regular14,
@@ -259,7 +253,6 @@ private fun RepresentativeEditListItem(
                 )
             }
 
-            // 완독책(rating 있음)만 별점 표시. 인생책(rating null)은 미표시
             book.rating?.let { rating ->
                 Spacer(modifier = Modifier.width(12.dp))
                 RepresentativeStarRatingRow(rating = rating)
@@ -286,7 +279,6 @@ private fun RepresentativeEditListItem(
     }
 }
 
-// 대표책 편집 행 별점 (16dp). 완독책에만 표시
 @Composable
 private fun RepresentativeStarRatingRow(rating: Double) {
     Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
@@ -300,14 +292,11 @@ private fun RepresentativeStarRatingRow(rating: Double) {
 private fun RepresentativeStarIcon(starValue: Double) {
     val colors = BookiiBookiiTheme.colors
     when {
-        // 가득 채운 별
         starValue >= 0.75 -> Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = colors.uiMainSub, modifier = Modifier.size(16.dp))
-        // 반 별: 외곽선 MainSub + 안쪽 MainSubPale
         starValue >= 0.25 -> Box(modifier = Modifier.size(16.dp)) {
             Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = colors.uiMainSubPale, modifier = Modifier.size(16.dp))
             Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = colors.uiMainSub, modifier = Modifier.size(16.dp))
         }
-        // 빈 별
         else -> Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = colors.grey200, modifier = Modifier.size(16.dp))
     }
 }

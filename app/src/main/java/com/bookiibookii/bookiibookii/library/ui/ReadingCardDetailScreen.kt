@@ -82,16 +82,15 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import com.bookiibookii.bookiibookii.ui.theme.MaruBuri
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import java.util.UUID
-
-// ── 데이터 ──────────────────────────────────────────────────────────────────
 
 private data class Reaction(
     val iconRes: Int,
     val label: String,
 )
 
-// 5종 이모지 리액션 (기존 6종 → 5종 개편)
 private val reactionList = listOf(
     Reaction(R.drawable.ic_empathy, "공감해요"),
     Reaction(R.drawable.ic_good,    "좋아요"),
@@ -99,8 +98,6 @@ private val reactionList = listOf(
     Reaction(R.drawable.ic_sad,     "슬퍼요"),
     Reaction(R.drawable.ic_angry,   "화나요"),
 )
-
-// 리액션 라벨 → API 키 (서버 전송용).
 
 private val reactionToApiKey = mapOf(
     "공감해요" to "FEELYOU",
@@ -110,7 +107,6 @@ private val reactionToApiKey = mapOf(
     "화나요"  to "CHEERUP",
 )
 
-// API 키 → Reaction 객체 (myReactions 초기 활성 상태 복원용)
 private val apiKeyToReaction: Map<String, Reaction> by lazy {
     mapOf(
         "FEELYOU" to reactionList[0],
@@ -129,7 +125,366 @@ private data class Particle(
     val rotation: Float,
 )
 
-// ── 메인 스크린 ──────────────────────────────────────────────────────────────
+private fun createCameraEdgeGradientBackground(card: android.graphics.Bitmap): android.graphics.Bitmap {
+    val samples = 10
+    val column = android.graphics.Bitmap.createScaledBitmap(card, 1, samples, true)
+    val topColor = column.getPixel(0, 0)
+    val bottomColor = column.getPixel(0, samples - 1)
+    column.recycle()
+
+    val w = 1080
+    val h = 1920
+    val bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(bitmap)
+    val paint = android.graphics.Paint().apply {
+        shader = android.graphics.LinearGradient(
+            0f, 0f, 0f, h.toFloat(),
+            topColor, bottomColor,
+            android.graphics.Shader.TileMode.CLAMP,
+        )
+    }
+    canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
+    return bitmap
+}
+
+private fun saveCardBitmapToGallery(context: android.content.Context, bitmap: android.graphics.Bitmap): Boolean {
+    val resolver = context.contentResolver
+    val values = android.content.ContentValues().apply {
+        put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, "bookii_card_${System.currentTimeMillis()}.png")
+        put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "${android.os.Environment.DIRECTORY_PICTURES}/부키부키")
+            put(android.provider.MediaStore.Images.Media.IS_PENDING, 1)
+        }
+    }
+    val uri = resolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
+    return try {
+        resolver.openOutputStream(uri)?.use { out ->
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
+        } ?: return false
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            values.clear()
+            values.put(android.provider.MediaStore.Images.Media.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        }
+        true
+    } catch (_: Exception) {
+        resolver.delete(uri, null, null)
+        false
+    }
+}
+
+private fun captureShareableCardBitmap(
+    context: android.content.Context,
+    card: ReadingCard,
+    cardVersion: Int,
+    onBitmap: (android.graphics.Bitmap?) -> Unit,
+) {
+    val cardWidthPx = (context.resources.displayMetrics.widthPixels * 0.85f).toInt()
+    val cardHeightPx = (cardWidthPx * 520f / 320f).toInt()
+
+    val cardView = androidx.compose.ui.platform.ComposeView(context).apply {
+        setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        visibility = android.view.View.INVISIBLE
+        setContent {
+            BookiiBookiiTheme {
+                ShareableCard(card = card, cardVersion = cardVersion)
+            }
+        }
+    }
+
+    val container = (context as? android.app.Activity)?.findViewById<android.view.ViewGroup>(android.R.id.content) ?: run {
+        onBitmap(null)
+        return
+    }
+    container.addView(cardView, android.view.ViewGroup.LayoutParams(cardWidthPx, cardHeightPx))
+
+    cardView.postDelayed({
+        val bitmap = try {
+            val w = cardView.width
+            val h = cardView.height
+            if (w <= 0 || h <= 0) {
+                null
+            } else {
+                android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888).also { bmp ->
+                    cardView.draw(android.graphics.Canvas(bmp))
+                }
+            }
+        } catch (_: Exception) {
+            null
+        } finally {
+            if (cardView.isAttachedToWindow) container.removeView(cardView)
+        }
+        onBitmap(bitmap)
+    }, 500L)
+}
+
+private fun launchInstagramStoryIntentFor(context: android.content.Context, stickerUri: android.net.Uri, backgroundUri: android.net.Uri) {
+    val intent = android.content.Intent("com.instagram.share.ADD_TO_STORY").apply {
+        setPackage("com.instagram.android")
+        setDataAndType(backgroundUri, "image/*")
+        putExtra("interactive_asset_uri", stickerUri)
+        putExtra("source_application", context.packageName)
+        flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+    }
+    intent.clipData = android.content.ClipData.newRawUri("Sticker", stickerUri).also {
+        it.addItem(android.content.ClipData.Item(backgroundUri))
+    }
+    val resInfoList = context.packageManager.queryIntentActivities(intent, 0)
+    for (info in resInfoList) {
+        val pkg = info.activityInfo.packageName
+        context.grantUriPermission(pkg, stickerUri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.grantUriPermission(pkg, backgroundUri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    try {
+        context.startActivity(intent)
+    } catch (_: Exception) {
+        context.showCustomToast("인스타그램 앱을 찾을 수 없습니다.", false)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ReadingCardDetailRoute(
+    initialIndex: Int,
+    sortByLatest: Boolean,
+    cardsJson: String,
+    onBackClick: () -> Unit,
+    onEditCard: (card: ReadingCard) -> Unit,
+    onDeleted: () -> Unit,
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    val cards = remember(cardsJson) {
+        try {
+            com.google.gson.Gson().fromJson(cardsJson, object : com.google.gson.reflect.TypeToken<List<ReadingCard>>() {}.type)
+                ?: emptyList<ReadingCard>()
+        } catch (_: Exception) {
+            emptyList<ReadingCard>()
+        }
+    }
+
+    var pendingDownload by remember { mutableStateOf<Pair<ReadingCard, Int>?>(null) }
+    val storagePermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        val pending = pendingDownload
+        pendingDownload = null
+        if (granted && pending != null) {
+            saveCardToGalleryFor(context, coroutineScope, pending.first, pending.second)
+        } else {
+            context.showCustomToast("저장 권한이 필요해요", false)
+        }
+    }
+
+    fun deleteCard(card: ReadingCard) {
+        coroutineScope.launch {
+            val success = try {
+                val resp = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    com.bookiibookii.bookiibookii.data.api.RetrofitClient.libApi().deleteCard(card.cardId)
+                }
+                resp.isSuccessful && resp.body()?.isSuccess == true
+            } catch (_: Exception) {
+                false
+            }
+            if (success) {
+                context.showCustomToast("독서카드를 삭제했어요", true)
+                onDeleted()
+            } else {
+                context.showCustomToast("삭제에 실패했어요", false)
+            }
+        }
+    }
+
+    fun fetchShareUrl(card: ReadingCard, onResult: (String?) -> Unit) {
+        coroutineScope.launch {
+            val shareUrl = try {
+                withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    com.bookiibookii.bookiibookii.data.api.RetrofitClient.libApi().createShareToken(card.cardId).body()?.result?.shareUrl
+                }
+            } catch (_: Exception) {
+                null
+            }
+            onResult(shareUrl)
+        }
+    }
+
+    fun copyShareLink(card: ReadingCard) {
+        fetchShareUrl(card) { shareUrl ->
+            if (shareUrl.isNullOrBlank()) {
+                context.showCustomToast("링크 복사에 실패했어요", false)
+            } else {
+                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("독서카드 링크", shareUrl))
+                context.showCustomToast("링크를 복사했어요", true)
+            }
+        }
+    }
+
+    fun shareToKakao(card: ReadingCard) {
+        fetchShareUrl(card) { shareUrl ->
+            if (shareUrl.isNullOrBlank()) {
+                context.showCustomToast("공유에 실패했어요", false)
+                return@fetchShareUrl
+            }
+            val shareToken = android.net.Uri.parse(shareUrl).lastPathSegment.orEmpty()
+            val link = com.kakao.sdk.template.model.Link(
+                webUrl = shareUrl,
+                mobileWebUrl = shareUrl,
+                androidExecutionParams = mapOf("shareToken" to shareToken),
+                iosExecutionParams = mapOf("shareToken" to shareToken),
+            )
+            val feed = com.kakao.sdk.template.model.FeedTemplate(
+                content = com.kakao.sdk.template.model.Content(
+                    title = card.bookTitle.ifBlank { "독서카드" },
+                    description = card.quotation.ifBlank { card.content },
+                    imageUrl = card.imageUrl.orEmpty(),
+                    link = link,
+                ),
+                buttons = listOf(com.kakao.sdk.template.model.Button("보러가기", link)),
+            )
+            if (com.kakao.sdk.share.ShareClient.instance.isKakaoTalkSharingAvailable(context)) {
+                com.kakao.sdk.share.ShareClient.instance.shareDefault(context, feed) { result, error ->
+                    when {
+                        error != null -> context.showCustomToast("공유에 실패했어요", false)
+                        result != null -> context.startActivity(result.intent)
+                    }
+                }
+            } else {
+                try {
+                    context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, com.kakao.sdk.share.WebSharerClient.instance.makeDefaultUrl(feed)))
+                } catch (_: Exception) {
+                    context.showCustomToast("카카오톡을 열 수 없어요", false)
+                }
+            }
+        }
+    }
+
+    fun shareToX(card: ReadingCard) {
+        fetchShareUrl(card) { shareUrl ->
+            if (shareUrl.isNullOrBlank()) {
+                context.showCustomToast("공유에 실패했어요", false)
+                return@fetchShareUrl
+            }
+            val text = card.bookTitle.stripBookSubtitle().ifBlank { "독서카드" }
+            val intentUrl = "https://twitter.com/intent/tweet?text=" + android.net.Uri.encode(text) + "&url=" + android.net.Uri.encode(shareUrl)
+            try {
+                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(intentUrl)))
+            } catch (_: Exception) {
+                context.showCustomToast("X를 열 수 없어요", false)
+            }
+        }
+    }
+
+    fun shareCardToInstagram(card: ReadingCard, cardVersion: Int) {
+        captureShareableCardBitmap(context, card, cardVersion) { bitmap ->
+            if (bitmap == null) {
+                context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
+                return@captureShareableCardBitmap
+            }
+            coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val imagesDir = java.io.File(context.cacheDir, "images").apply { mkdirs() }
+                    imagesDir.listFiles()?.forEach { it.delete() }
+
+                    val stickerFile = java.io.File(imagesDir, "card_sticker_${System.currentTimeMillis()}.png")
+                    java.io.FileOutputStream(stickerFile).use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                    val stickerUri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", stickerFile)
+
+                    val bgBitmap = createCameraEdgeGradientBackground(bitmap)
+                    bitmap.recycle()
+                    val bgFile = java.io.File(imagesDir, "bg_${System.currentTimeMillis()}.png")
+                    java.io.FileOutputStream(bgFile).use { bgBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                    bgBitmap.recycle()
+                    val backgroundUri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", bgFile)
+
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        launchInstagramStoryIntentFor(context, stickerUri, backgroundUri)
+                    }
+                } catch (e: Exception) {
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        context.showCustomToast("공유 준비 중 오류가 발생했습니다.", false)
+                    }
+                }
+            }
+        }
+    }
+
+    fun downloadCard(card: ReadingCard, cardVersion: Int) {
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P &&
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            pendingDownload = card to cardVersion
+            storagePermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            return
+        }
+        saveCardToGalleryFor(context, coroutineScope, card, cardVersion)
+    }
+
+    ReadingCardDetailScreen(
+        cards = cards,
+        initialIndex = initialIndex,
+        sortByLatest = sortByLatest,
+        onBackClick = onBackClick,
+        onBookmarkToggle = { cardId ->
+            coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val resp = com.bookiibookii.bookiibookii.data.api.RetrofitClient.libApi().toggleBookmark(cardId)
+                    if (!resp.isSuccessful) {
+                        withContext(kotlinx.coroutines.Dispatchers.Main) { context.showCustomToast("북마크 처리에 실패했어요", false) }
+                    }
+                } catch (_: Exception) {
+                    withContext(kotlinx.coroutines.Dispatchers.Main) { context.showCustomToast("네트워크 오류가 발생했어요", false) }
+                }
+            }
+        },
+        onReactionToggle = { cardId, reactionLabel ->
+            coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val resp = com.bookiibookii.bookiibookii.data.api.RetrofitClient.libApi().toggleReaction(
+                        cardId,
+                        com.bookiibookii.bookiibookii.data.model.library.MemberCardReactionToggleRequestDTO(reaction = reactionLabel),
+                    )
+                    if (!resp.isSuccessful) {
+                        withContext(kotlinx.coroutines.Dispatchers.Main) { context.showCustomToast("반응 처리에 실패했어요", false) }
+                    }
+                } catch (_: Exception) {
+                    withContext(kotlinx.coroutines.Dispatchers.Main) { context.showCustomToast("네트워크 오류가 발생했어요", false) }
+                }
+            }
+        },
+        onInstaShare = { card, version -> shareCardToInstagram(card, version) },
+        onCopyLink = { card -> copyShareLink(card) },
+        onKakaoShare = { card -> shareToKakao(card) },
+        onXShare = { card -> shareToX(card) },
+        onDownload = { card, version -> downloadCard(card, version) },
+        onEditClick = { card -> onEditCard(card) },
+        onDeleteConfirmed = { card -> deleteCard(card) },
+    )
+}
+
+private fun saveCardToGalleryFor(
+    context: android.content.Context,
+    coroutineScope: kotlinx.coroutines.CoroutineScope,
+    card: ReadingCard,
+    cardVersion: Int,
+) {
+    captureShareableCardBitmap(context, card, cardVersion) { bitmap ->
+        if (bitmap == null) {
+            context.showCustomToast("저장 중 오류가 발생했어요", false)
+            return@captureShareableCardBitmap
+        }
+        coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val saved = saveCardBitmapToGallery(context, bitmap)
+            bitmap.recycle()
+            withContext(kotlinx.coroutines.Dispatchers.Main) {
+                if (saved) context.showCustomToast("사진을 저장했어요", true)
+                else context.showCustomToast("사진 저장에 실패했어요", false)
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,7 +495,6 @@ fun ReadingCardDetailScreen(
     onBackClick: () -> Unit = {},
     onBookmarkToggle: (cardId: Long) -> Unit = {},
     onReactionToggle: (cardId: Long, reaction: String) -> Unit = { _, _ -> },
-    // 인스타/다운로드는 화면에서 직접 렌더링한 카드를 캡처하므로, 지금 보고 있는 cardVersion을 그대로 전달해 일치시킨다.
     onInstaShare: (card: ReadingCard, cardVersion: Int) -> Unit = { _, _ -> },
     onCopyLink: (card: ReadingCard) -> Unit = {},
     onKakaoShare: (card: ReadingCard) -> Unit = {},
@@ -155,17 +509,14 @@ fun ReadingCardDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var cardVersion     by remember { mutableStateOf(1) }
 
-    // 카드별 북마크 상태 (낙관적 업데이트)
     val bookmarkStates = remember(cards) {
         mutableStateListOf(*Array(cards.size) { i -> cards.getOrNull(i)?.isBookmarked ?: false })
     }
 
-    // 리액션 + 파티클 상태
     var activeReactionList by remember { mutableStateOf(listOf<Reaction>()) }
     val particles          = remember { mutableStateListOf<Particle>() }
 
     LaunchedEffect(pagerState.currentPage) {
-        // myReactions(API 키 목록)에서 초기 활성 리액션 복원
         val card = cards.getOrNull(pagerState.currentPage)
         activeReactionList = card?.myReactions
             ?.mapNotNull { apiKeyToReaction[it] }
@@ -221,7 +572,6 @@ fun ReadingCardDetailScreen(
             }
         }
 
-        // 버전 선택 도트 2개 — 카드 타입별 디자인
         Box(
             modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
             contentAlignment = Alignment.Center,
@@ -243,7 +593,6 @@ fun ReadingCardDetailScreen(
                     activeReactionList = activeReactionList.filter { it.label != label }
                 } else {
                     activeReactionList = activeReactionList + reaction
-                    // 비활성 → 활성 시에만 파티클 발생
                     coroutineScope.launch {
                         val burstCount     = (5..8).random()
                         val recentReactions = activeReactionList.takeLast(2)
@@ -271,8 +620,6 @@ fun ReadingCardDetailScreen(
     }
 
     if (showShareSheet) {
-        // 시트 자체가 슬라이드다운 애니메이션이 끝난 뒤 onDismiss를 호출하므로 여기서 바로
-        // showShareSheet = false를 하지 않는다 (클릭 즉시 끄면 닫히는 애니메이션이 생략됨)
         ReadingCardShareBottomSheet(
             onDismiss    = { showShareSheet = false },
             onKakaoClick = { currentCard?.let { onKakaoShare(it) } },
@@ -296,7 +643,6 @@ fun ReadingCardDetailScreen(
     }
 }
 
-// 독서카드 삭제 확인 다이얼로그 (그룹 삭제 다이얼로그와 동일 패턴)
 @Composable
 private fun ReadingCardDeleteDialog(
     onDismiss: () -> Unit,
@@ -364,9 +710,6 @@ private fun ReadingCardDeleteDialog(
     }
 }
 
-// ── 파티클 애니메이션 ─────────────────────────────────────────────────────────
-
-// 인스타 스토리 더블탭 하트처럼: 튕기듯 팝업(스프링) → 살짝 회전하며 위로 떠오르다 페이드아웃
 @Composable
 private fun FloatingParticle(particle: Particle, onAnimationEnd: (Particle) -> Unit) {
     val scale      = remember { Animatable(0f) }
@@ -427,8 +770,6 @@ private fun BoxScope.ReactionOverlay(
     }
 }
 
-// ── 카드 아이템 ──────────────────────────────────────────────────────────────
-
 @Composable
 private fun ReadingCardDetailItem(
     card: ReadingCard,
@@ -452,12 +793,6 @@ private fun ReadingCardDetailItem(
     }
 }
 
-// ── PHOTO 카드 ────────────────────────────────────────────────────────────────
-// v1 = Type A (shareFragment.txt): 상단 이미지 + 책 제목 배지 오버레이, 하단 메모
-// v2 = Type B (shareFragment.txt): 전체 이미지 + 상단 흰 그라디언트, 좌상단 책 제목
-// 상세 화면에서는 닉네임/B로고를 표시하지 않음 (공유용 ShareableCard에만 표시)
-
-// 사진 카드 v2 상단 화이트 그라데이션: 11%까지 흰색 100%, 41%에서 90%, 100%에서 0%로 페이드
 private val photoCardTopGradient = Brush.verticalGradient(
     0f to Color.White,
     0.11f to Color.White,
@@ -474,10 +809,8 @@ private fun PhotoCard(
     onParticleEnd: (Particle) -> Unit,
 ) {
     if (cardVersion == 1) {
-        // v1 (Type A)
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // 상단 이미지 영역
                 Box(
                     modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(BookiiBookiiTheme.colors.grey300),
                 ) {
@@ -489,13 +822,10 @@ private fun PhotoCard(
                             modifier           = Modifier.matchParentSize(),
                         )
                     }
-                    // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
                 }
-                // 하단 흰 텍스트 영역
                 Box(
                     modifier = Modifier.fillMaxWidth().weight(128f / 464f),
                 ) {
-                    // 메모 텍스트 (좌상단)
                     if (card.content.isNotBlank()) {
                         Text(
                             text = card.content,
@@ -511,9 +841,7 @@ private fun PhotoCard(
             ReactionOverlay(particles, onParticleEnd, Modifier.align(Alignment.BottomStart).padding(bottom = 128.dp, start = 24.dp))
         }
     } else {
-        // v2 (Type B): 전체 이미지 + 텍스트 오버레이
         Box(modifier = Modifier.fillMaxSize()) {
-            // 전체 이미지 배경
             Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
                 if (!card.imageUrl.isNullOrBlank()) {
                     AsyncImage(
@@ -524,10 +852,7 @@ private fun PhotoCard(
                     )
                 }
             }
-            // 상단 흰 그라디언트 오버레이
             Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(PHOTO_GRADIENT_HEIGHT_FRACTION).background(photoCardTopGradient))
-            // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
-            // 메모 텍스트 (좌상단)
             if (card.content.isNotBlank()) {
                 Text(
                     text = card.content,
@@ -542,11 +867,6 @@ private fun PhotoCard(
         }
     }
 }
-
-// ── QUOTE 카드 ────────────────────────────────────────────────────────────────
-// v1: 흰→연한주황 그라데이션, 주황 텍스트 — 좌상단 책 제목(배지)
-// v2: 진한 주황 그라데이션, 흰 텍스트   — 좌상단 책 제목(흰)
-// 상세 화면에서는 닉네임을 표시하지 않음 (공유용 ShareableCard에만 표시)
 
 @Composable
 private fun QuoteCard(
@@ -570,13 +890,11 @@ private fun QuoteCard(
             end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
         )
     }
-    // 따옴표 아이콘: 항상 main_150 (3번 요구사항)
     val iconTint  = BookiiBookiiTheme.colors.uiMain150
     val textColor = if (cardVersion == 1) BookiiBookiiTheme.colors.uiMain else Color.White
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // 상단 컬러 영역 (텍스트 영역)
             Box(
                 modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(topGradient),
             ) {
@@ -585,16 +903,13 @@ private fun QuoteCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Spacer(modifier = Modifier.height(20.dp))
-                    // 책 제목은 상세 화면에선 숨김 (공유 카드에만 표시)
                     Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
                     Text(text = "“$quotationText”", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
                 }
             }
-            // 하단 메모 영역 (상세 화면에서는 닉네임 미표시 — 공유용 ShareableCard에만 표시)
             Box(
                 modifier = Modifier.fillMaxWidth().weight(128f / 464f),
             ) {
-                // 메모 텍스트 (좌상단)
                 if (card.content.isNotBlank()) {
                     Text(
                         text     = card.content,
@@ -610,15 +925,11 @@ private fun QuoteCard(
     }
 }
 
-// ── 공유용 카드 (오프스크린 비트맵 캡처, 오버레이 없음) ─────────────────────
-// 실제 카드 디자인과 동일 (책 제목·닉네임·B로고 포함)
-
 @Composable
 internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Modifier = Modifier) {
     Box(modifier = modifier.clip(RoundedCornerShape(20.dp)).background(BookiiBookiiTheme.colors.white)) {
         when (card.type) {
             ReadingCardType.PHOTO -> if (cardVersion == 1) {
-                // v1: 상단 이미지 + 책 제목 배지, 하단 메모 + 닉네임(우하단)
                 Column(modifier = Modifier.fillMaxSize()) {
                     Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(BookiiBookiiTheme.colors.grey300)) {
                         if (!card.imageUrl.isNullOrBlank()) {
@@ -650,11 +961,9 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                     }
                 }
             } else {
-                // v2: 전체 이미지 + 상단 흰 그라디언트, 좌하단 닉네임 + 우하단 B로고
                 Box(modifier = Modifier.fillMaxSize()) {
                     Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
                         if (!card.imageUrl.isNullOrBlank()) {
-                            // allowHardware(false): 소프트웨어 Canvas로 캡처(공유/다운로드)하려면 하드웨어 비트맵 비활성 필요
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
                                     .data(card.imageUrl)
@@ -702,7 +1011,6 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                 val iconTint  = BookiiBookiiTheme.colors.uiMain150
                 val textColor = if (cardVersion == 1) BookiiBookiiTheme.colors.uiMain else Color.White
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // 상단 그라디언트 — 남는 공간을 모두 채움(하단 영역이 content만큼 차지하고 남은 만큼)
                     Box(modifier = Modifier.fillMaxWidth().weight(1f).background(gradient)) {
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Spacer(modifier = Modifier.height(20.dp))
@@ -714,7 +1022,6 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                             Text("“$quotationText”", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    // 하단 — content 길이만큼 아래로 늘어남(말줄임 없음), username은 content 바로 아래 우측 정렬
                     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
                         if (card.content.isNotBlank()) {
                             Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800)
@@ -730,10 +1037,6 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
         }
     }
 }
-
-// ── 버전 선택 도트 — 카드 타입별 디자인 ─────────────────────────────────────
-// PHOTO v1: 흰→주황 그라디언트 원 / PHOTO v2: 우상단 주황 삼각 분할
-// QUOTE v1: 연한 주황 T          / QUOTE v2: 진한 주황 T
 
 @Composable
 private fun CardVersionDot(
@@ -754,7 +1057,6 @@ private fun CardVersionDot(
             when (cardType) {
                 ReadingCardType.PHOTO -> {
                     if (version == 1) {
-                        // 사진 v1: 흰→주황 그라디언트
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             drawRect(
                                 brush = Brush.linearGradient(
@@ -765,23 +1067,21 @@ private fun CardVersionDot(
                             )
                         }
                     } else {
-                        // 사진 v2: 좌상단→우하단 대각, 좌상단=main, 우하단=main_pale
                         Canvas(modifier = Modifier.fillMaxSize()) {
-                            drawRect(color = Color(0xFFFFC9A4)) // main_150(main_pale) 배경
+                            drawRect(color = Color(0xFFFFC9A4))
                             drawPath(
                                 path = Path().apply {
-                                    moveTo(0f, 0f)           // 좌상단
-                                    lineTo(size.width, 0f)   // 우상단
-                                    lineTo(0f, size.height)  // 좌하단
+                                    moveTo(0f, 0f)
+                                    lineTo(size.width, 0f)
+                                    lineTo(0f, size.height)
                                     close()
                                 },
-                                color = Color(0xFFFF7618),   // main 색상 (좌상단 삼각)
+                                color = Color(0xFFFF7618),
                             )
                         }
                     }
                 }
                 ReadingCardType.QUOTE -> {
-                    // v1: main_pale 배경 + main T / v2: main 배경 + 흰 T
                     val bgColor  = if (version == 1) BookiiBookiiTheme.colors.uiMainPale else Color(0xFFFF7618)
                     val txtColor = if (version == 1) BookiiBookiiTheme.colors.uiMain else Color.White
                     Box(
@@ -795,8 +1095,6 @@ private fun CardVersionDot(
         }
     }
 }
-
-// ── 헤더 ─────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun CardDetailHeader(
@@ -831,7 +1129,6 @@ private fun CardDetailHeader(
     }
 }
 
-// 미트볼 아이콘 + 메뉴 팝오버 (내 카드일 때만 노출). 바깥 탭/항목 선택 시 닫힘
 @Composable
 private fun CardDetailEditMenu(
     onEditClick: () -> Unit,
@@ -871,7 +1168,6 @@ private fun CardDetailEditMenu(
     }
 }
 
-// 수정하기/삭제하기 카드 팝오버
 @Composable
 private fun CardDetailMenuPopover(
     onEditClick: () -> Unit,
@@ -912,8 +1208,6 @@ private fun CardDetailMenuItem(text: String, iconRes: Int, onClick: () -> Unit) 
     }
 }
 
-// ── 카드 정보 영역 ────────────────────────────────────────────────────────────
-
 @Composable
 private fun CardInfoArea(
     card: ReadingCard?,
@@ -928,7 +1222,6 @@ private fun CardInfoArea(
         modifier              = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white).padding(16.dp),
         verticalArrangement   = Arrangement.spacedBy(16.dp),
     ) {
-        // 진행도 바 + 정렬 표시
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(modifier = Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(30.dp)).background(BookiiBookiiTheme.colors.grey200)) {
                 Box(modifier = Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).fillMaxHeight().background(BookiiBookiiTheme.colors.uiMain))
@@ -937,13 +1230,11 @@ private fun CardInfoArea(
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            // 프로필 + 닉네임 + 북마크 버튼
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     ProfilePlaceholder(imageUrl = card?.creatorProfileImageUrl, modifier = Modifier.size(32.dp))
                     Text(text = card?.username ?: "", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey800)
                 }
-                // 북마크 버튼 — 항상 표시, 상태에 따라 스타일 변경
                 Box(
                     modifier = Modifier
                         .size(32.dp)
@@ -962,7 +1253,6 @@ private fun CardInfoArea(
                 }
             }
 
-            // 책 제목 + 페이지 + 날짜
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -980,8 +1270,6 @@ private fun CardInfoArea(
     }
 }
 
-// ── 리액션 바 ─────────────────────────────────────────────────────────────────
-
 @Composable
 private fun ReactionBar(
     activeReactions: List<Reaction>,
@@ -996,7 +1284,6 @@ private fun ReactionBar(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier            = Modifier.clickable { onReact(reaction) },
             ) {
-                // 이모지 아이콘 자체가 풀컬러라 배경은 항상 흰 원, 선택 시 테두리로 강조
                 Box(
                     modifier = Modifier
                         .size(63.dp)

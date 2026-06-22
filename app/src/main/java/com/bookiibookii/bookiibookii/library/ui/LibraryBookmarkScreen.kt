@@ -23,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,28 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 private enum class BookmarkSortType { RECENT, OLDEST }
 
 @Composable
+fun LibraryBookmarkRoute(
+    onBackClick: () -> Unit,
+    onCardClick: (initialIndex: Int, sortByLatest: Boolean, cards: List<ReadingCard>) -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryBookmarkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        viewModel.fetchBookmarkedCards()
+    }
+
+    LibraryBookmarkScreen(
+        cards = state.cards,
+        isLoading = state.isLoading,
+        onSortChange = { isLatest -> viewModel.sortByLatest(isLatest) },
+        onBackClick = onBackClick,
+        onMoveToLibrary = onBackClick,
+        onCardClick = { index, bookmarkedCards -> onCardClick(index, true, bookmarkedCards) },
+    )
+}
+
+@Composable
 fun LibraryBookmarkScreen(
     cards: List<ReadingCard> = emptyList(),
     isLoading: Boolean = false,
@@ -54,14 +77,13 @@ fun LibraryBookmarkScreen(
     onMoveToLibrary: () -> Unit = {},
 ) {
     var sortType by remember { mutableStateOf(BookmarkSortType.RECENT) }
-    val bookmarkedCards = cards  // 이미 서버에서 필터된 북마크 카드
+    val bookmarkedCards = cards
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
-        // 헤더
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,17 +99,14 @@ fun LibraryBookmarkScreen(
             ) {
                 BookiiBackButton(onClick = onBackClick)
                 Text(text = "북마크", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
-                // 정렬 아이콘 자리
                 Box(modifier = Modifier.size(40.dp))
             }
             HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
         }
 
         if (!isLoading && bookmarkedCards.isEmpty()) {
-            // 빈 상태: 안내 카드 + 서재 이동 버튼
             BookmarkEmptyContent(onMoveToLibrary = onMoveToLibrary)
         } else {
-            // 카운트 + 정렬
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,7 +137,6 @@ fun LibraryBookmarkScreen(
                 }
             }
 
-            // 카드 그리드 (2열)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -148,7 +166,6 @@ fun LibraryBookmarkScreen(
     }
 }
 
-// 빈 상태 안내 카드 + "서재로 이동하기" 버튼
 @Composable
 private fun BookmarkEmptyContent(
     onMoveToLibrary: () -> Unit,
@@ -202,7 +219,6 @@ private fun BookmarkCardItem(
             .background(BookiiBookiiTheme.colors.white)
             .clickable { onClick() },
     ) {
-        // 상단 텍스트 영역
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -250,11 +266,9 @@ private fun BookmarkCardItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                // 리액션 아이콘
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
                     card.reactionCounts.filter { it.value > 0 }.keys.forEach { apiKey ->
                         com.bookiibookii.bookiibookii.library.ui.reactionIconByApiKey[apiKey]?.let { iconRes ->
-                            // 풀컬러 이모지 아이콘이라 독서카드 상세와 동일하게 원래 색 그대로 표시(tint 미적용)
                             Icon(
                                 painter = painterResource(iconRes),
                                 contentDescription = null,
@@ -272,7 +286,6 @@ private fun BookmarkCardItem(
             }
         }
 
-        // 하단 비주얼 영역
         when (card.type) {
             ReadingCardType.PHOTO -> Box(
                 modifier = Modifier

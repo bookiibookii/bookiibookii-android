@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +42,6 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 enum class LibrarySortType { RECENT, OLDEST, RATING, TITLE }
 private enum class LibraryViewType { GRID, LIST }
 
-// 검색바 radius: 좌20/우30 비대칭 (피그마 스펙)
 private val searchBarShape = RoundedCornerShape(
     topStart = 20.dp, topEnd = 30.dp,
     bottomStart = 20.dp, bottomEnd = 30.dp,
@@ -62,6 +62,31 @@ data class LibraryBook(
     val completedAt: String? = null,
     val totalPages: Int? = null,
 )
+
+@Composable
+fun LibraryMainRoute(
+    onProfileClick: () -> Unit,
+    onBookmarkClick: () -> Unit,
+    onBookClick: (LibraryBook) -> Unit,
+    viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryMainViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        viewModel.fetchBooks()
+    }
+
+    LibraryScreen(
+        readingBooks = state.readingBooks,
+        doneBooks = state.doneBooks,
+        sortType = state.sortType,
+        isLoading = state.isLoading,
+        onSortChange = { viewModel.setSortType(it) },
+        onProfileClick = onProfileClick,
+        onBookmarkClick = onBookmarkClick,
+        onBookClick = onBookClick,
+    )
+}
 
 @Composable
 fun LibraryScreen(
@@ -91,10 +116,8 @@ fun LibraryScreen(
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
-        // 상단 고정 헤더 (스크롤 영역 밖)
         LibraryHeader(onProfileClick = onProfileClick, onBookmarkClick = onBookmarkClick)
 
-        // 헤더 아래만 스크롤 (weight(1f)로 남은 공간 채움)
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -166,7 +189,6 @@ private fun LibraryHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            // 아이콘 버튼 40dp, 아이콘 자체 32dp (피그마 스펙)
             IconButton(onClick = onProfileClick, modifier = Modifier.size(40.dp)) {
                 Icon(
                     painter = painterResource(R.drawable.ic_person2),
@@ -202,7 +224,6 @@ private fun LibrarySearchBar(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // 높이 56dp, 테두리 Grey100, 비대칭 radius (피그마 스펙)
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -234,7 +255,6 @@ private fun LibrarySearchBar(
                     inner()
                 },
             )
-            // 검색어 있으면 grey900, 없으면 grey300
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -284,7 +304,6 @@ private fun LibraryFilterBar(
             Text(text = "권", style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey900)
         }
 
-        // 정렬 옵션: 각 Text 사이에 "|" 를 별도 Text로 구분 (피그마 스펙)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -382,8 +401,6 @@ private fun LibrarySearchResults(
         }
     }
 }
-
-// LibraryBookGridItem, LibraryBookListItem → LibraryBookItem.kt
 
 private val previewReadingBooks = listOf(
     LibraryBook(groupId = 1, memberBookId = 1, groupName = "숭실대 경제 독서모임", title = "데미안", author = "헤르만 헤세", progress = 0.64f, startDate = "2026-05-20"),

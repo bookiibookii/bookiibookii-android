@@ -32,11 +32,9 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-// 배경 그라디언트
 private val BgGradientTop = Color(0xFFFCECE0)
 private val BgGradientBottom = Color(0xFFF1EDEB)
 
-// 공유 토큰으로 진입하는 공개 독서카드 뷰어 (로그인 불필요, stateless)
 @Composable
 fun PublicCardViewerScreen(
     card: ReadingCard,
@@ -50,7 +48,6 @@ fun PublicCardViewerScreen(
             .background(BookiiBookiiTheme.colors.white)
             .statusBarsPadding(),
     ) {
-        // 헤더
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -67,7 +64,6 @@ fun PublicCardViewerScreen(
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)
 
-        // 그라디언트 배경 + 가운데 카드
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -75,7 +71,6 @@ fun PublicCardViewerScreen(
                 .background(Brush.verticalGradient(listOf(BgGradientTop, BgGradientBottom))),
             contentAlignment = Alignment.Center,
         ) {
-            // 카드
             Box(
                 modifier = Modifier
                     .widthIn(max = 320.dp)
@@ -88,7 +83,6 @@ fun PublicCardViewerScreen(
             }
         }
 
-        // 하단 푸터
         Row(
             modifier = Modifier
                 .fillMaxWidth()

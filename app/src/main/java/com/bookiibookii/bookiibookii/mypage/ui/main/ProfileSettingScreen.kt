@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.mypage.MypageReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
@@ -77,6 +79,109 @@ private fun validateNickname(nickname: String): Boolean {
     if (nickname.isBlank() || nickname.length > 10) return false
     if (nickname.any { it.isWhitespace() || Character.isSurrogate(it) }) return false
     return nicknameAllowedRegex.matches(nickname)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileSettingRoute(
+    viewModel: com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel,
+    onBackClick: () -> Unit,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val profile by viewModel.profileData.observeAsState()
+    val nicknameCheckState by viewModel.nicknameCheckState.observeAsState()
+
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImageFile by remember { mutableStateOf<java.io.File?>(null) }
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    fun createUploadTempFile(uri: Uri): java.io.File? {
+        return try {
+            val tempFile = java.io.File.createTempFile("profile_", ".jpg", context.cacheDir)
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                tempFile.outputStream().use { output -> input.copyTo(output) }
+            } ?: return null
+            tempFile
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    val takePictureLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.TakePicture(),
+    ) { success ->
+        if (success) {
+            cameraImageUri?.let { uri ->
+                selectedImageUri = uri
+                selectedImageFile = createUploadTempFile(uri)
+            }
+        }
+    }
+
+    fun createCameraUri(): Uri? = try {
+        val cameraDir = java.io.File(context.cacheDir, "camera").apply { mkdirs() }
+        val file = java.io.File(cameraDir, "profile_${System.currentTimeMillis()}.jpg")
+        androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    } catch (e: Exception) {
+        null
+    }
+
+    fun launchCamera() {
+        val uri = createCameraUri()
+        if (uri == null) {
+            context.showCustomToast("카메라를 실행할 수 없습니다. 잠시 후 다시 시도해주세요.", false)
+            return
+        }
+        cameraImageUri = uri
+        val captureIntent = android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
+        context.packageManager
+            .queryIntentActivities(captureIntent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+            .forEach { info ->
+                context.grantUriPermission(
+                    info.activityInfo.packageName,
+                    uri,
+                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION or android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }
+        takePictureLauncher.launch(uri)
+    }
+
+    val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted -> if (granted) launchCamera() }
+
+    val pickMediaLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri ->
+        uri?.let {
+            selectedImageUri = it
+            selectedImageFile = createUploadTempFile(it)
+        }
+    }
+
+    LaunchedEffect(Unit) { viewModel.resetNicknameCheckState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel.Event.NavigateBack -> onBackClick()
+                is com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel.Event.ShowToast ->
+                    context.showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
+                else -> {}
+            }
+        }
+    }
+
+    ProfileSettingScreen(
+        profile = profile,
+        profileImageUri = selectedImageUri,
+        nicknameCheckState = nicknameCheckState,
+        onBackClick = onBackClick,
+        onOpenCamera = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) },
+        onOpenGallery = { pickMediaLauncher.launch("image/*") },
+        onCheckNickname = { nickname -> viewModel.checkNickname(nickname) },
+        onSaveClick = { request -> viewModel.updateProfile(request, selectedImageFile) },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -145,7 +250,6 @@ fun ProfileSettingScreen(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // 프로필 이미지
             Box(
                 modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 24.dp),
                 contentAlignment = Alignment.Center,
@@ -197,7 +301,6 @@ fun ProfileSettingScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(32.dp),
             ) {
-                // 닉네임 (중복 확인 포함)
                 NicknameFieldWithCheck(
                     value = nickname,
                     onValueChange = { filtered ->
@@ -349,7 +452,6 @@ private fun GenderField(selectedIndex: Int?, onSelect: (Int) -> Unit) {
     val options = listOf("여성", "남성", "선택 안함")
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = "성별", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
-        // 여성/남성: 큰 버튼 고정 너비, 선택 안함: 작은 버튼 (온보딩과 동일)
         Row(
             modifier = Modifier.fillMaxWidth().height(48.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -381,7 +483,6 @@ private fun GenderField(selectedIndex: Int?, onSelect: (Int) -> Unit) {
     }
 }
 
-// gender
 private fun genderIndexFromCode(code: String?): Int? = when (code) {
     "FEMALE" -> 0
     "MALE" -> 1
@@ -389,7 +490,6 @@ private fun genderIndexFromCode(code: String?): Int? = when (code) {
     else -> null
 }
 
-// "yyyy-MM-dd"
 private fun parseBirthDate(birthDate: String?): Triple<Int, Int, Int>? {
     val parts = birthDate?.split("-") ?: return null
     if (parts.size != 3) return null

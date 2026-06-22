@@ -54,7 +54,6 @@ fun AddressSearchScreen(onBackClick: () -> Unit) {
             HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 0.5.dp)
         }
 
-        // 프리뷰에서는 WebView가 렌더를 깨뜨리므로 플레이스홀더로 대체
         if (LocalInspectionMode.current) {
             Box(
                 modifier = Modifier

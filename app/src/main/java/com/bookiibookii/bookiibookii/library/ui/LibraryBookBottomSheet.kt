@@ -32,7 +32,7 @@ fun LibraryBookBottomSheet(
     author: String = "스즈키 유이",
     genre: String = "소설",
     isRepresentative: Boolean = false,
-    isCompleted: Boolean = false,   // groupStatus == "COMPLETED" 일 때만 리뷰/대표/삭제 노출
+    isCompleted: Boolean = false,
     onDismiss: () -> Unit = {},
     onReviewClick: () -> Unit = {},
     onToggleRepresentativeClick: () -> Unit = {},
