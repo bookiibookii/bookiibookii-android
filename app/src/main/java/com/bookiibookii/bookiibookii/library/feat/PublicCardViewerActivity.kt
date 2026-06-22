@@ -156,12 +156,16 @@ class PublicCardViewerActivity : ComponentActivity() {
         val cardWidthPx = (resources.displayMetrics.widthPixels * 0.82f).toInt().coerceAtMost(maxWidthPx)
         val cardHeightPx = (cardWidthPx * 520f / 320f).toInt()
 
+        val offscreenImageLoader = coil.ImageLoader.Builder(this).allowHardware(false).build()
+
         val cardView = ComposeView(this).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             visibility = View.INVISIBLE
             setContent {
-                BookiiBookiiTheme {
-                    ShareableCard(card = card)
+                androidx.compose.runtime.CompositionLocalProvider(coil.compose.LocalImageLoader provides offscreenImageLoader) {
+                    BookiiBookiiTheme {
+                        ShareableCard(card = card)
+                    }
                 }
             }
         }
