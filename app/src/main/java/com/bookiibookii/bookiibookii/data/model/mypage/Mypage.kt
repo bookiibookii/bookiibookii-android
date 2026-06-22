@@ -1,13 +1,12 @@
 package com.bookiibookii.bookiibookii.data.model.mypage
 
-// GET /api/mypage, GET /api/profiles/{nickname}
 data class UserProfileResDTO(
     val userId: Long,
     val profileImageUrl: String?,
     val nickname: String,
     val introduction: String?,
-    val gender: String? = null,        // MALE | FEMALE | NONE
-    val birthDate: String? = null,     // yyyy-MM-dd
+    val gender: String? = null,
+    val birthDate: String? = null,
     val userBooks: List<UserBookDto>?,
     val bookReviewCount: Int,
     val recentBookReviews: List<BookReviewSummaryDto>?,
@@ -38,7 +37,6 @@ data class ReceivedMemberReviewDto(
     val createdAt: String?,
 )
 
-// PATCH /api/mypage
 data class MypageReqDTO(
     val nickname: String,
     val gender: String? = null,
@@ -46,18 +44,15 @@ data class MypageReqDTO(
     val s3Key: String? = null,
 )
 
-// PATCH /api/mypage/introduction
 data class UpdateIntroductionReqDTO(
     val introduction: String?,
 )
 
-// POST /api/users/me/withdrawal
 data class WithdrawalReqDTO(
     val reason: String,
     val customReason: String? = null,
 )
 
-// 하위 호환 유지용 (LoginActivity, user/Profile.kt에서 참조 중 — 해당 파일 담당팀 업데이트 전까지 유지)
 data class MypageResult(
     val userId: Int,
     val profileImageUrl: String?,

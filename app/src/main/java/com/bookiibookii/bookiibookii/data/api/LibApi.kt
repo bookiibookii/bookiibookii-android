@@ -31,8 +31,6 @@ import retrofit2.http.Query
 
 interface LibApi {
 
-    // ── Library (멤버북) ───────────────────────────────────────────────────────
-
     @GET("api/library/memberbooks")
     suspend fun getLibraryBooks(): Response<ApiResponse<List<BookResult>>>
 
@@ -45,8 +43,6 @@ interface LibApi {
     suspend fun deleteMemberBook(
         @Path("memberBookId") memberBookId: Int
     ): Response<ApiResponse<String>>
-
-    // ── Cards ──────────────────────────────────────────────────────────────────
 
     @GET("api/member-books/group/{groupId}/cards")
     suspend fun getGroupCards(
@@ -99,13 +95,10 @@ interface LibApi {
         @Path("cardId") cardId: Long
     ): Response<ApiResponse<ShareTokenResponseDTO>>
 
-    // 공유 토큰 기반 공개 조회 — 인증 불필요. 서버는 ApiResponse 래퍼로 감싸 반환(result에 카드)
     @GET("api/public/reading-cards/{shareToken}")
     suspend fun getPublicReadingCard(
         @Path("shareToken") shareToken: String
     ): Response<ApiResponse<PublicReadingCardResponseDTO>>
-
-    // ── Reviews ────────────────────────────────────────────────────────────────
 
     @GET("api/groups/{groupId}/reviews")
     suspend fun getGroupReviews(
@@ -124,7 +117,6 @@ interface LibApi {
         @Body request: MemberReviewCreateDTO
     ): Response<ApiResponse<String>>
 
-    // 내 책 리뷰 목록 조회 — 수정 시 reviewId 확보용
     @GET("api/groups/{groupId}/reviews/book/me")
     suspend fun getMyBookReviews(
         @Path("groupId") groupId: Int
@@ -137,14 +129,11 @@ interface LibApi {
         @Body request: BookReviewUpsertDTO
     ): Response<ApiResponse<String>>
 
-    // 내 그룹 리뷰(책 리뷰 여러 개 + 파트너 리뷰) 일괄 수정
     @PATCH("api/groups/{groupId}/reviews/my-group")
     suspend fun updateMyGroupReviews(
         @Path("groupId") groupId: Int,
         @Body request: MyGroupReviewsUpdateDTO
     ): Response<ApiResponse<MyGroupReviewsResponseDTO>>
-
-    // ── Trackers ───────────────────────────────────────────────────────────────
 
     @GET("api/me/trackers")
     suspend fun getMyTrackers(): Response<TrackerResponse>

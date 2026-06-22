@@ -47,8 +47,10 @@ fun MypageMainRoute(
     onBookshelfClick: () -> Unit,
     onWrittenReviewClick: () -> Unit,
     onReceivedReviewClick: () -> Unit,
-    onInstagramShareClick: () -> Unit,
-    onDownloadClick: () -> Unit,
+    onInstagramShareClick: (isDark: Boolean) -> Unit,
+    onDownloadClick: (isDark: Boolean) -> Unit,
+    onXShareClick: () -> Unit,
+    onLinkCopyClick: () -> Unit,
 ) {
     val profile by viewModel.profileData.observeAsState()
 
@@ -68,6 +70,8 @@ fun MypageMainRoute(
         onReceivedReviewClick = onReceivedReviewClick,
         onInstagramShareClick = onInstagramShareClick,
         onDownloadClick = onDownloadClick,
+        onXShareClick = onXShareClick,
+        onLinkCopyClick = onLinkCopyClick,
     )
 }
 
@@ -82,8 +86,10 @@ fun MypageScreen(
     onReceivedReviewClick: () -> Unit = {},
     onProfileSettingClick: () -> Unit = {},
     onAddressManagementClick: () -> Unit = {},
-    onInstagramShareClick: () -> Unit = {},
-    onDownloadClick: () -> Unit = {},
+    onInstagramShareClick: (isDark: Boolean) -> Unit = {},
+    onDownloadClick: (isDark: Boolean) -> Unit = {},
+    onXShareClick: () -> Unit = {},
+    onLinkCopyClick: () -> Unit = {},
 ) {
     var isMottoEditing by remember { mutableStateOf(false) }
     var mottoInput by remember(profile?.introduction) { mutableStateOf(profile?.introduction ?: "") }
@@ -152,8 +158,10 @@ fun MypageScreen(
                 imageUrl = profile?.profileImageUrl,
                 representativeBooks = profile?.userBooks ?: emptyList(),
                 onDismiss = { showShareDialog = false },
-                onInstagramClick = { showShareDialog = false; onInstagramShareClick() },
-                onDownloadClick = { showShareDialog = false; onDownloadClick() },
+                onInstagramClick = { isDark -> showShareDialog = false; onInstagramShareClick(isDark) },
+                onDownloadClick = { isDark -> showShareDialog = false; onDownloadClick(isDark) },
+                onXClick = { showShareDialog = false; onXShareClick() },
+                onLinkCopyClick = { showShareDialog = false; onLinkCopyClick() },
             )
         }
     }
