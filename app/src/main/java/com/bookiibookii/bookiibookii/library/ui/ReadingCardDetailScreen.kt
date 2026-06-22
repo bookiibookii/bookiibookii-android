@@ -54,6 +54,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -125,25 +126,18 @@ private data class Particle(
     val rotation: Float,
 )
 
-private fun createCameraEdgeGradientBackground(card: android.graphics.Bitmap): android.graphics.Bitmap {
-    val samples = 10
-    val column = android.graphics.Bitmap.createScaledBitmap(card, 1, samples, true)
-    val topColor = column.getPixel(0, 0)
-    val bottomColor = column.getPixel(0, samples - 1)
-    column.recycle()
-
-    val w = 1080
-    val h = 1920
-    val bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+private fun createUiMainPaleGradientBackground(width: Int = 1080, height: Int = 1920): android.graphics.Bitmap {
+    val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
     val canvas = android.graphics.Canvas(bitmap)
     val paint = android.graphics.Paint().apply {
         shader = android.graphics.LinearGradient(
-            0f, 0f, 0f, h.toFloat(),
-            topColor, bottomColor,
+            0f, 0f, 0f, height.toFloat(),
+            com.bookiibookii.bookiibookii.ui.theme.UiMainPale.toArgb(),
+            android.graphics.Color.WHITE,
             android.graphics.Shader.TileMode.CLAMP,
         )
     }
-    canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
+    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
     return bitmap
 }
 
@@ -174,6 +168,26 @@ private fun saveCardBitmapToGallery(context: android.content.Context, bitmap: an
     }
 }
 
+private fun compositeCardOnGradientBackground(card: android.graphics.Bitmap): android.graphics.Bitmap {
+    val canvasBitmap = createUiMainPaleGradientBackground()
+    val canvas = android.graphics.Canvas(canvasBitmap)
+    val canvasWidth = canvasBitmap.width
+    val canvasHeight = canvasBitmap.height
+
+    val maxWidth = canvasWidth * 0.85f
+    val maxHeight = canvasHeight * 0.75f
+    val scale = minOf(maxWidth / card.width, maxHeight / card.height, 1f)
+    val drawWidth = (card.width * scale).toInt()
+    val drawHeight = (card.height * scale).toInt()
+    val left = (canvasWidth - drawWidth) / 2
+    val top = (canvasHeight - drawHeight) / 2
+
+    val destRect = android.graphics.Rect(left, top, left + drawWidth, top + drawHeight)
+    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+    canvas.drawBitmap(card, null, destRect, paint)
+    return canvasBitmap
+}
+
 private fun captureShareableCardBitmap(
     context: android.content.Context,
     card: ReadingCard,
@@ -183,12 +197,16 @@ private fun captureShareableCardBitmap(
     val cardWidthPx = (context.resources.displayMetrics.widthPixels * 0.85f).toInt()
     val cardHeightPx = (cardWidthPx * 520f / 320f).toInt()
 
+    val offscreenImageLoader = coil.ImageLoader.Builder(context).allowHardware(false).build()
+
     val cardView = androidx.compose.ui.platform.ComposeView(context).apply {
         setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         visibility = android.view.View.INVISIBLE
         setContent {
-            BookiiBookiiTheme {
-                ShareableCard(card = card, cardVersion = cardVersion)
+            androidx.compose.runtime.CompositionLocalProvider(coil.compose.LocalImageLoader provides offscreenImageLoader) {
+                BookiiBookiiTheme {
+                    ShareableCard(card = card, cardVersion = cardVersion)
+                }
             }
         }
     }
@@ -392,7 +410,7 @@ fun ReadingCardDetailRoute(
                     java.io.FileOutputStream(stickerFile).use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
                     val stickerUri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", stickerFile)
 
-                    val bgBitmap = createCameraEdgeGradientBackground(bitmap)
+                    val bgBitmap = createUiMainPaleGradientBackground()
                     bitmap.recycle()
                     val bgFile = java.io.File(imagesDir, "bg_${System.currentTimeMillis()}.png")
                     java.io.FileOutputStream(bgFile).use { bgBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
@@ -476,8 +494,10 @@ private fun saveCardToGalleryFor(
             return@captureShareableCardBitmap
         }
         coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val saved = saveCardBitmapToGallery(context, bitmap)
+            val finalBitmap = compositeCardOnGradientBackground(bitmap)
             bitmap.recycle()
+            val saved = saveCardBitmapToGallery(context, finalBitmap)
+            finalBitmap.recycle()
             withContext(kotlinx.coroutines.Dispatchers.Main) {
                 if (saved) context.showCustomToast("사진을 저장했어요", true)
                 else context.showCustomToast("사진 저장에 실패했어요", false)
