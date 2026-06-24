@@ -102,6 +102,13 @@ interface MypApi {
         @Path("userBookId") userBookId: Long,
     ): Response<ApiResponse<String>>
 
+    // 인생 책 교체
+    @PATCH("api/mypage/bookshelf/favorites/{userBookId}")
+    suspend fun replaceFavoriteBook(
+        @Path("userBookId") userBookId: Long,
+        @Body request: AddFavoriteBookRequest,
+    ): Response<ApiResponse<String>>
+
     // 공지 목록 조회
     @GET("api/notice")
     suspend fun getNoticeList(): Response<NoticeListResponse>

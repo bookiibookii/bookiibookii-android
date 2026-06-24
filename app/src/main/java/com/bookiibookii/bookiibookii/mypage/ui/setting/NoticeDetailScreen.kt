@@ -49,7 +49,7 @@ fun NoticeDetailRoute(
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel.Event.ShowToast ->
-                    context.showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
+                    context.showCustomToast(event.message, event.isSuccess)
                 else -> Unit
             }
         }

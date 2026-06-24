@@ -20,16 +20,19 @@ data class LibraryDetailUiState(
     val cards: List<ReadingCard> = emptyList(),
     val isRepresentative: Boolean = false,
     val representativeUserBookId: Long = -1L,
+    val representativeCount: Int = 0,
     val errorMessage: String? = null,
 )
+
+data class LibraryDetailToastEvent(val message: String, val isSuccess: Boolean)
 
 class LibraryDetailViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(LibraryDetailUiState())
     val uiState: StateFlow<LibraryDetailUiState> = _uiState.asStateFlow()
 
-    private val _event = MutableSharedFlow<String>()
-    val event: SharedFlow<String> = _event.asSharedFlow()
+    private val _event = MutableSharedFlow<LibraryDetailToastEvent>()
+    val event: SharedFlow<LibraryDetailToastEvent> = _event.asSharedFlow()
 
     fun fetchGroupCards(groupId: Int, bookTitle: String = "") {
         viewModelScope.launch {
@@ -75,6 +78,7 @@ class LibraryDetailViewModel : ViewModel() {
                         it.copy(
                             isRepresentative        = match != null,
                             representativeUserBookId = match?.userBookId ?: -1L,
+                            representativeCount      = representatives.size,
                         )
                     }
                 }
@@ -86,6 +90,10 @@ class LibraryDetailViewModel : ViewModel() {
 
     fun addRepresentative(memberBookId: Int) {
         viewModelScope.launch {
+            if (_uiState.value.representativeCount >= 7) {
+                _event.emit(LibraryDetailToastEvent("대표책은 최대 7개까지만 등록 가능합니다", false))
+                return@launch
+            }
             try {
                 val request = AddRepresentativeBookRequest(memberBookId = memberBookId.toLong())
                 Log.d("Representative", "대표도서 등록 요청 → memberBookId=$memberBookId, request=$request")
@@ -101,14 +109,14 @@ class LibraryDetailViewModel : ViewModel() {
 
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _uiState.update { it.copy(isRepresentative = true) }
-                    _event.emit("대표 도서로 등록되었습니다.")
+                    _event.emit(LibraryDetailToastEvent("대표 도서로 등록되었습니다.", true))
                 } else {
                     Log.e("Representative", "isSuccess=false, code=${response.code()}, message=${response.message()}")
-                    _event.emit("대표 도서 등록에 실패했습니다.")
+                    _event.emit(LibraryDetailToastEvent("대표 도서 등록에 실패했습니다.", false))
                 }
             } catch (e: Exception) {
                 Log.e("Representative", "예외 발생: ${e.message}", e)
-                _event.emit("네트워크 오류가 발생했습니다.")
+                _event.emit(LibraryDetailToastEvent("네트워크 오류가 발생했습니다.", false))
             }
         }
     }
@@ -119,12 +127,12 @@ class LibraryDetailViewModel : ViewModel() {
                 val response = RetrofitClient.mypApi().deleteRepresentativeBook(userBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _uiState.update { it.copy(isRepresentative = false, representativeUserBookId = -1L) }
-                    _event.emit("대표 도서 등록이 해제되었습니다.")
+                    _event.emit(LibraryDetailToastEvent("대표 도서 등록이 해제되었습니다.", true))
                 } else {
-                    _event.emit("대표 도서 해제에 실패했습니다.")
+                    _event.emit(LibraryDetailToastEvent("대표 도서 해제에 실패했습니다.", false))
                 }
             } catch (e: Exception) {
-                _event.emit("네트워크 오류가 발생했습니다.")
+                _event.emit(LibraryDetailToastEvent("네트워크 오류가 발생했습니다.", false))
             }
         }
     }
@@ -134,13 +142,13 @@ class LibraryDetailViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.libApi().deleteMemberBook(memberBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    _event.emit("서재에서 삭제되었습니다.")
+                    _event.emit(LibraryDetailToastEvent("서재에서 삭제되었습니다.", true))
                     onSuccess()
                 } else {
-                    _event.emit("삭제에 실패했습니다.")
+                    _event.emit(LibraryDetailToastEvent("삭제에 실패했습니다.", false))
                 }
             } catch (e: Exception) {
-                _event.emit("네트워크 오류가 발생했습니다.")
+                _event.emit(LibraryDetailToastEvent("네트워크 오류가 발생했습니다.", false))
             }
         }
     }

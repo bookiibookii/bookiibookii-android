@@ -170,8 +170,8 @@ fun LibraryDetailRoute(
     }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        viewModel.event.collect { msg ->
-            context.showCustomToast(msg, !msg.contains("실패") && !msg.contains("오류"))
+        viewModel.event.collect { event ->
+            context.showCustomToast(event.message, event.isSuccess)
         }
     }
 
@@ -259,11 +259,30 @@ fun LibraryDetailScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                CardGrid(
-                    cards = sortedCards,
-                    onCardClick = { index -> onCardClick(index, sortedCards, sortByLatest) },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
+                if (sortedCards.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(BookiiBookiiTheme.colors.white)
+                            .padding(20.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "아직 독서카드가 없어요.\n기록하고 싶은 페이지를 남겨주세요.",
+                            style = BookiiBookiiTheme.typography.regular16,
+                            color = BookiiBookiiTheme.colors.grey600,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
+                    }
+                } else {
+                    CardGrid(
+                        cards = sortedCards,
+                        onCardClick = { index -> onCardClick(index, sortedCards, sortByLatest) },
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                }
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

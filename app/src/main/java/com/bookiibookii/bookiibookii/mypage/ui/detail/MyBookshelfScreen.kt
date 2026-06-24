@@ -52,6 +52,8 @@ enum class BookViewMode { GRID, LIST }
 @Composable
 fun MyBookshelfRoute(
     onBack: () -> Unit,
+    onLibraryClick: (CompletedBook) -> Unit = {},
+    onReviewClick: (com.bookiibookii.bookiibookii.mypage.vm.GroupReviewNavTarget) -> Unit = {},
     viewModel: com.bookiibookii.bookiibookii.mypage.vm.BookshelfViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -66,7 +68,7 @@ fun MyBookshelfRoute(
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is com.bookiibookii.bookiibookii.mypage.vm.BookshelfViewModel.Event.ShowToast ->
-                    context.showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
+                    context.showCustomToast(event.message, event.isSuccess)
             }
         }
     }
@@ -79,6 +81,8 @@ fun MyBookshelfRoute(
         sortOrder = sortOrder,
         bookSearchState = bookSearchState,
         onBack = onBack,
+        onLibraryClick = onLibraryClick,
+        onReviewClick = { book -> viewModel.fetchGroupReviewTarget(book.groupId, book.title, onReviewClick) },
         onSortOrderChange = { order -> viewModel.setSortOrder(order) },
         onSearchBooks = { query -> viewModel.onBookSearchQueryChange(query) },
         onSearchClick = { viewModel.searchBooks() },
@@ -102,6 +106,8 @@ fun MyBookshelfScreen(
     sortOrder: SortOrder = SortOrder.LATEST,
     bookSearchState: BookSearchState? = null,
     onBack: () -> Unit = {},
+    onLibraryClick: (CompletedBook) -> Unit = {},
+    onReviewClick: (CompletedBook) -> Unit = {},
     onSortOrderChange: (SortOrder) -> Unit = {},
     onSearchBooks: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
@@ -227,13 +233,20 @@ fun MyBookshelfScreen(
             onDismiss = { showBookBottomSheet = false },
             onReviewClick = {
                 showBookBottomSheet = false
-                context.showCustomToast("준비중입니다", false)
+                onReviewClick(book)
             },
-            onAddRepresentativeClick = { memberBookId -> showBookBottomSheet = false; onAddRepresentativeBook(memberBookId) },
+            onAddRepresentativeClick = { memberBookId ->
+                showBookBottomSheet = false
+                if (representativeBooks.size >= 7) {
+                    context.showCustomToast("대표책은 최대 7개까지만 등록 가능합니다", false)
+                } else {
+                    onAddRepresentativeBook(memberBookId)
+                }
+            },
             onRemoveRepresentativeClick = { userBookId -> showBookBottomSheet = false; onRemoveRepresentativeBook(userBookId) },
             onLibraryClick = {
                 showBookBottomSheet = false
-                context.showCustomToast("준비중입니다", false)
+                onLibraryClick(book)
             },
             onAladinClick = {
                 showBookBottomSheet = false
@@ -307,10 +320,10 @@ private fun FilterBar(
 @Composable
 private fun MyBookshelfScreenPreview() {
     val completedBooks = listOf(
-        CompletedBook(memberBookId = 1, title = "데미안", author = "헤르만 헤세", image = null, category = "(소설)", rating = 4.5, completedAt = "2026-05-01"),
-        CompletedBook(memberBookId = 2, title = "1984", author = "조지 오웰", image = null, category = "(소설)", rating = 5.0, completedAt = "2026-04-20"),
-        CompletedBook(memberBookId = 3, title = "사피엔스", author = "유발 하라리", image = null, category = "(인문)", rating = 4.0, completedAt = "2026-04-10"),
-        CompletedBook(memberBookId = 4, title = "코스모스", author = "칼 세이건", image = null, category = "(과학)", rating = 4.8, completedAt = "2026-03-15"),
+        CompletedBook(memberBookId = 1, groupId = 1, title = "데미안", author = "헤르만 헤세", image = null, category = "(소설)", rating = 4.5, completedAt = "2026-05-01"),
+        CompletedBook(memberBookId = 2, groupId = 2, title = "1984", author = "조지 오웰", image = null, category = "(소설)", rating = 5.0, completedAt = "2026-04-20"),
+        CompletedBook(memberBookId = 3, groupId = 3, title = "사피엔스", author = "유발 하라리", image = null, category = "(인문)", rating = 4.0, completedAt = "2026-04-10"),
+        CompletedBook(memberBookId = 4, groupId = 4, title = "코스모스", author = "칼 세이건", image = null, category = "(과학)", rating = 4.8, completedAt = "2026-03-15"),
     )
     val favoriteBooks = listOf(
         FavoriteBook(userBookId = 10, title = "데미안", author = "헤르만 헤세", category = "(소설)", image = null),

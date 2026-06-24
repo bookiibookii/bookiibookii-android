@@ -39,6 +39,9 @@ class LibraryFragment : Fragment() {
                             .addToBackStack(null)
                             .commit()
                     },
+                    onMatchingStatusClick = {
+                        (activity as? com.bookiibookii.bookiibookii.MainActivity)?.moveToHomeMyGroupsTab()
+                    },
                     onRouteChanged = { currentRoute = it },
                     startDestination = startDestination,
                 )
@@ -83,6 +86,27 @@ class LibraryFragment : Fragment() {
                         isDone = isDone,
                         progressRate = progressRate,
                         totalPages = totalPages,
+                    ),
+                )
+            }
+        }
+
+        fun newInstanceAtGroupReview(
+            groupId: Int,
+            groupName: String = "",
+            bookTitle: String = "",
+            startDate: String = "",
+            endDate: String = "",
+        ) = LibraryFragment().apply {
+            arguments = Bundle().apply {
+                putString(
+                    ARG_START_DESTINATION,
+                    LibraryDestinations.groupReview(
+                        groupId = groupId,
+                        groupName = groupName,
+                        bookTitle = bookTitle,
+                        startDate = startDate,
+                        endDate = endDate,
                     ),
                 )
             }

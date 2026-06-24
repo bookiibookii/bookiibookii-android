@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.data.model.mypage.InquirySummary
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import kotlinx.coroutines.launch
@@ -55,12 +57,17 @@ fun FaqRoute(
     viewModel: com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val inquiries by viewModel.inquiries.observeAsState(emptyList())
+
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        viewModel.fetchInquiries()
+    }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel.Event.ShowToast ->
-                    context.showCustomToast(event.message, false)
+                    context.showCustomToast(event.message, event.isSuccess)
                 is com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel.Event.InquirySuccess ->
                     context.showCustomToast("문의가 접수되었습니다.", true)
                 else -> Unit
@@ -69,6 +76,7 @@ fun FaqRoute(
     }
 
     FaqScreen(
+        faqItems = inquiries.filter { !it.adminReply.isNullOrBlank() },
         onBackClick = onBackClick,
         onPostInquiry = { title, content -> viewModel.postInquiry(title, content) },
         onInquiryClick = { context.openReportChannel() },
@@ -76,30 +84,10 @@ fun FaqRoute(
     )
 }
 
-private data class FaqItem(val question: String, val answer: String)
-
-private val mockFaqItems = listOf(
-    FaqItem(
-        question = "책 상태가 좋지 않으면 교환이 거절될 수 있나요?",
-        answer = "네, 책의 상태에 따라 교환이 제한될 수 있습니다. 낙서, 심한 훼손, 페이지 누락 등이 있는 경우 상대방이 교환을 거절할 권리가 있습니다. 교환 전 책 상태를 사진으로 등록해 주시면 분쟁을 예방할 수 있습니다.",
-    ),
-    FaqItem(
-        question = "교환 후 책 내용이 기대와 다르면 어떻게 하나요?",
-        answer = "교환은 책의 내용이 아닌 상태를 기준으로 하므로, 내용에 대한 불만족은 교환 사유가 되지 않습니다.",
-    ),
-    FaqItem(
-        question = "교환 신청 후 상대방이 응답하지 않으면 어떻게 되나요?",
-        answer = "상대방이 일정 시간 내 응답하지 않으면 교환 신청이 자동으로 취소됩니다.",
-    ),
-    FaqItem(
-        question = "배송 중 책이 분실되거나 파손되면 누가 책임지나요?",
-        answer = "배송 중 분실 및 파손은 배송 방법에 따라 책임 소재가 달라질 수 있습니다.",
-    ),
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FaqScreen(
+    faqItems: List<InquirySummary> = emptyList(),
     onBackClick: () -> Unit = {},
     onPostInquiry: (title: String, content: String) -> Unit = { _, _ -> },
     onInquiryClick: () -> Unit = {},
@@ -119,13 +107,13 @@ fun FaqScreen(
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            mockFaqItems.forEachIndexed { index, item ->
+            faqItems.forEachIndexed { index, item ->
                 FaqItemCard(
                     item = item,
                     isExpanded = expandedIndex == index,
                     onToggle = { expandedIndex = if (expandedIndex == index) null else index },
                 )
-                if (index < mockFaqItems.lastIndex) {
+                if (index < faqItems.lastIndex) {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -301,7 +289,7 @@ private fun FaqTopBar(onBackClick: () -> Unit) {
 }
 
 @Composable
-private fun FaqItemCard(item: FaqItem, isExpanded: Boolean, onToggle: () -> Unit) {
+private fun FaqItemCard(item: InquirySummary, isExpanded: Boolean, onToggle: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -326,7 +314,7 @@ private fun FaqItemCard(item: FaqItem, isExpanded: Boolean, onToggle: () -> Unit
             ) {
                 Text("Q.", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.uiMain)
                 Text(
-                    text = item.question,
+                    text = item.title,
                     style = BookiiBookiiTheme.typography.semibold16,
                     color = BookiiBookiiTheme.colors.grey900,
                 )
@@ -347,7 +335,7 @@ private fun FaqItemCard(item: FaqItem, isExpanded: Boolean, onToggle: () -> Unit
             ) {
                 Text("A.", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.uiMain)
                 Text(
-                    text = item.answer,
+                    text = item.adminReply.orEmpty(),
                     style = BookiiBookiiTheme.typography.regular14,
                     color = BookiiBookiiTheme.colors.grey900,
                 )
@@ -356,10 +344,24 @@ private fun FaqItemCard(item: FaqItem, isExpanded: Boolean, onToggle: () -> Unit
     }
 }
 
+private val previewFaqItems = listOf(
+    InquirySummary(
+        inquiryId = 1L,
+        userId = 1L,
+        nickname = "부키",
+        createdAt = "2026-05-01",
+        title = "책 상태가 좋지 않으면 교환이 거절될 수 있나요?",
+        content = "",
+        supportStatus = "RESOLVED",
+        adminReply = "네, 책의 상태에 따라 교환이 제한될 수 있습니다. 낙서, 심한 훼손, 페이지 누락 등이 있는 경우 상대방이 교환을 거절할 권리가 있습니다.",
+        resolvedAt = "2026-05-02",
+    ),
+)
+
 @Preview(showBackground = true, widthDp = 412)
 @Composable
 private fun FaqScreenPreview() {
     BookiiPreview {
-        FaqScreen()
+        FaqScreen(faqItems = previewFaqItems)
     }
 }

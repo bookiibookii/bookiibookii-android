@@ -26,7 +26,7 @@ class AddressViewModel : ViewModel() {
     val eventFlow = _eventFlow.asSharedFlow()
 
     sealed class Event {
-        data class ShowToast(val message: String) : Event()
+        data class ShowToast(val message: String, val isSuccess: Boolean = false) : Event()
     }
 
     private suspend fun loadDeliveries(): List<DeliveryAddress> = try {
