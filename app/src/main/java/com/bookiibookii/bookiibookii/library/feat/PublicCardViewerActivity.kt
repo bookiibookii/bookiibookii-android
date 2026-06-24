@@ -50,12 +50,12 @@ import kotlinx.coroutines.withContext
 
 class PublicCardViewerActivity : ComponentActivity() {
 
-    private var pendingSaveCard: ReadingCard? = null
+    private var pendingSaveCard: Pair<ReadingCard, Int>? = null
     private val storagePermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            val card = pendingSaveCard
+            val pending = pendingSaveCard
             pendingSaveCard = null
-            if (granted && card != null) saveCardToGallery(card)
+            if (granted && pending != null) saveCardToGallery(pending.first, pending.second)
             else showCustomToast("저장 권한이 필요해요", false)
         }
 
@@ -97,8 +97,9 @@ class PublicCardViewerActivity : ComponentActivity() {
                     }
                     is ViewerState.Success -> PublicCardViewerScreen(
                         card = s.card,
+                        cardVersion = s.cardVersion,
                         onGoMain = { openApp() },
-                        onSaveImage = { saveImage(s.card) },
+                        onSaveImage = { saveImage(s.card, s.cardVersion) },
                     )
                 }
             }
@@ -113,7 +114,8 @@ class PublicCardViewerActivity : ComponentActivity() {
                 val body = response.body()
                 val dto = body?.result
                 if (response.isSuccessful && body?.isSuccess == true && dto != null) {
-                    ViewerState.Success(dto.toReadingCard(), dto.bookAuthor.orEmpty())
+                    val cardVersion = if (dto.shareLayout == "SPLIT") 1 else 2
+                    ViewerState.Success(dto.toReadingCard(), dto.bookAuthor.orEmpty(), cardVersion)
                 } else {
                     ViewerState.Error
                 }
@@ -123,19 +125,19 @@ class PublicCardViewerActivity : ComponentActivity() {
         }
     }
 
-    private fun saveImage(card: ReadingCard) {
+    private fun saveImage(card: ReadingCard, cardVersion: Int) {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
         ) {
-            pendingSaveCard = card
+            pendingSaveCard = card to cardVersion
             storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             return
         }
-        saveCardToGallery(card)
+        saveCardToGallery(card, cardVersion)
     }
 
-    private fun saveCardToGallery(card: ReadingCard) {
-        captureCard(card) { bitmap ->
+    private fun saveCardToGallery(card: ReadingCard, cardVersion: Int) {
+        captureCard(card, cardVersion) { bitmap ->
             if (bitmap == null) {
                 showCustomToast("저장 중 오류가 발생했어요", false)
                 return@captureCard
@@ -151,7 +153,7 @@ class PublicCardViewerActivity : ComponentActivity() {
         }
     }
 
-    private fun captureCard(card: ReadingCard, onBitmap: (Bitmap?) -> Unit) {
+    private fun captureCard(card: ReadingCard, cardVersion: Int, onBitmap: (Bitmap?) -> Unit) {
         val maxWidthPx = (320 * resources.displayMetrics.density).toInt()
         val cardWidthPx = (resources.displayMetrics.widthPixels * 0.82f).toInt().coerceAtMost(maxWidthPx)
         val cardHeightPx = (cardWidthPx * 520f / 320f).toInt()
@@ -161,7 +163,7 @@ class PublicCardViewerActivity : ComponentActivity() {
             visibility = View.INVISIBLE
             setContent {
                 BookiiBookiiTheme {
-                    ShareableCard(card = card)
+                    ShareableCard(card = card, cardVersion = cardVersion)
                 }
             }
         }
@@ -232,7 +234,7 @@ class PublicCardViewerActivity : ComponentActivity() {
     private sealed interface ViewerState {
         data object Loading : ViewerState
         data object Error : ViewerState
-        data class Success(val card: ReadingCard, val author: String) : ViewerState
+        data class Success(val card: ReadingCard, val author: String, val cardVersion: Int) : ViewerState
     }
 
     companion object {

@@ -38,6 +38,7 @@ private val BgGradientBottom = Color(0xFFF1EDEB)
 @Composable
 fun PublicCardViewerScreen(
     card: ReadingCard,
+    cardVersion: Int = 2,
     onGoMain: () -> Unit = {},
     onSaveImage: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -79,7 +80,7 @@ fun PublicCardViewerScreen(
                     .shadow(elevation = 10.dp, shape = BookiiBookiiTheme.shape.round20)
                     .clip(BookiiBookiiTheme.shape.round20),
             ) {
-                ShareableCard(card = card, modifier = Modifier.fillMaxSize())
+                ShareableCard(card = card, cardVersion = cardVersion, modifier = Modifier.fillMaxSize())
             }
         }
 

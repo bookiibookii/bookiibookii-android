@@ -441,7 +441,9 @@ private fun copyProfileShareLink(context: android.content.Context, profile: User
     val shareUrl = buildProfileShareUrl(profile)
     val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("프로필 링크", shareUrl))
-    context.showCustomToast("링크를 복사했어요", true)
+    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
+        context.showCustomToast("링크를 복사했어요", true)
+    }
 }
 
 private fun shareProfileToX(context: android.content.Context, profile: UserProfileResDTO) {
