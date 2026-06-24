@@ -40,8 +40,21 @@ android {
         buildConfigField("String", "KAKAO_REST_API_KEY", "\"${properties["KAKAO_REST_API_KEY"] ?: ""}\"")
     }
 
+    signingConfigs {
+        create("release") {
+            val storeFilePath = properties["RELEASE_STORE_FILE"] as String?
+            if (storeFilePath != null) {
+                storeFile = file(storeFilePath)
+                storePassword = properties["RELEASE_STORE_PASSWORD"] as String?
+                keyAlias = properties["RELEASE_KEY_ALIAS"] as String?
+                keyPassword = properties["RELEASE_KEY_PASSWORD"] as String?
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
