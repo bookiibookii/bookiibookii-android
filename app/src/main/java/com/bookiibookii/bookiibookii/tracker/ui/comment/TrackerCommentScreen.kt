@@ -78,6 +78,8 @@ import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.CommentItem
 import com.bookiibookii.bookiibookii.data.model.group.CommentWriter
+import com.bookiibookii.bookiibookii.error.ErrorActivity
+import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.tracker.vm.TrackerCommentViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
@@ -114,6 +116,8 @@ fun TrackerCommentRoute(
                 is TrackerCommentViewModel.Event.ShowError -> {
                     context.showCustomToast(event.message, isSuccess = false)
                 }
+                is TrackerCommentViewModel.Event.NotFound ->
+                    context.startActivity(ErrorActivity.newIntent(context, ErrorType.GROUP_DELETED))
             }
         }
     }

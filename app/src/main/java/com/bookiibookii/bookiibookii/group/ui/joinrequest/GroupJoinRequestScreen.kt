@@ -34,6 +34,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppItem
+import com.bookiibookii.bookiibookii.error.ErrorActivity
+import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.group.model.ApplicationListUiState
 import com.bookiibookii.bookiibookii.group.vm.JoinRequestViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
@@ -74,6 +76,8 @@ fun GroupJoinRequestRoute(
                 }
                 is JoinRequestViewModel.Event.ShowError ->
                     context.showCustomToast(event.message, isSuccess = false)
+                is JoinRequestViewModel.Event.NotFound ->
+                    context.startActivity(ErrorActivity.newIntent(context, ErrorType.GROUP_DELETED))
                 is JoinRequestViewModel.Event.Applied,
                 is JoinRequestViewModel.Event.Canceled,
                 is JoinRequestViewModel.Event.AddressReady,

@@ -371,6 +371,9 @@ class TrackerDetailViewModel(
                     } else {
                         _state.update { it.copy(error = "트래커를 불러오지 못했어요", loading = false) }
                     }
+                } else if (res.code() == 404) {
+                    // 삭제된/존재하지 않는 그룹(예: 예전 알림으로 진입) → 삭제된 페이지 안내
+                    _state.update { it.copy(notFound = true, loading = false) }
                 } else {
                     _state.update { it.copy(error = body?.message ?: "트래커를 불러오지 못했어요", loading = false) }
                 }

@@ -58,6 +58,8 @@ class JoinRequestViewModel : ViewModel() {
         // status: "ACCEPTED" | "REJECTED"
         data class ApplicationUpdated(val status: String, val applicantName: String) : Event()
         data class ShowError(val message: String) : Event()
+        // 삭제된/존재하지 않는 그룹 → 삭제된 페이지 화면
+        data object NotFound : Event()
         // APPLY 전 주소 등록 여부 확인 결과
         data object AddressReady : Event()    // 주소 있음 → 참여 신청 다이얼로그
         data object AddressMissing : Event()  // 주소 없음 → 주소 등록 안내 다이얼로그
@@ -225,6 +227,10 @@ class JoinRequestViewModel : ViewModel() {
                             error = null,
                         )
                     }
+                } else if (res.code() == 404) {
+                    // 삭제된/존재하지 않는 그룹(예: 예전 알림으로 진입) → 삭제된 페이지 안내
+                    _eventFlow.emit(Event.NotFound)
+                    _applicationListState.update { it.copy(loading = false) }
                 } else {
                     _applicationListState.update {
                         it.copy(error = "신청자 명단을 불러오지 못했어요", loading = false)

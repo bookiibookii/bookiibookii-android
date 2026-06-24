@@ -13,6 +13,7 @@ import com.bookiibookii.bookiibookii.notification.ui.NotificationRoute
 @Composable
 fun NotificationNavHost(
     onExit: () -> Unit,
+    onRedirect: (NotificationRedirect) -> Unit,
     modifier: Modifier = Modifier,
     startDestination: String = NotificationDestinations.MAIN,
 ) {
@@ -31,6 +32,7 @@ fun NotificationNavHost(
             NotificationRoute(
                 onBackClick = { if (!navController.popBackStack()) onExit() },
                 onAddClick = { navController.navigate(NotificationDestinations.KEYWORD_SETTING) },
+                onRedirect = onRedirect,
             )
         }
         composable(NotificationDestinations.KEYWORD_SETTING) {
