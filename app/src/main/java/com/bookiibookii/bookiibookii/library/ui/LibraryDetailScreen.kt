@@ -60,7 +60,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
+import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import androidx.compose.ui.window.Dialog
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import com.bookiibookii.bookiibookii.ui.theme.MaruBuri
@@ -210,6 +213,7 @@ fun LibraryDetailScreen(
     var sortByLatest by remember { mutableStateOf(true) }
     var showBookSheet by remember { mutableStateOf(false) }
     var showFabMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val displayedCards = if (myCardsOnly) cards.filter { it.isMine } else cards
     val sortedCards = if (sortByLatest) {
@@ -359,8 +363,87 @@ fun LibraryDetailScreen(
                 },
                 onDeleteClick = {
                     showBookSheet = false
-                    onDeleteBook()
+                    showDeleteDialog = true
                 },
+            )
+        }
+
+        if (showDeleteDialog) {
+            Dialog(onDismissRequest = { showDeleteDialog = false }) {
+                LibraryDeleteDialog(
+                    onDismiss = { showDeleteDialog = false },
+                    onConfirm = {
+                        showDeleteDialog = false
+                        onDeleteBook()
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibraryDeleteDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(BookiiBookiiTheme.shape.round24)
+            .background(BookiiBookiiTheme.colors.white)
+            .padding(20.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "서재 삭제",
+                style = BookiiBookiiTheme.typography.bold24,
+                color = BookiiBookiiTheme.colors.grey900,
+                modifier = Modifier.weight(1f),
+            )
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(BookiiBookiiTheme.colors.grey100)
+                    .clickable(onClick = onDismiss),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_x),
+                    contentDescription = "닫기",
+                    tint = BookiiBookiiTheme.colors.grey900,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+        Text(
+            text = "서재에서 삭제하시겠습니까? 삭제하면 즉시 사라지며, 이후 되돌릴 수 없습니다.",
+            style = BookiiBookiiTheme.typography.regular16,
+            color = BookiiBookiiTheme.colors.grey900,
+            modifier = Modifier.padding(top = 24.dp),
+        )
+        Row(
+            modifier = Modifier.padding(top = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            BottomSheetTwoBtnShort(
+                text = "취소",
+                style = BottomSheetBtnStyle.White,
+                textStyle = BookiiBookiiTheme.typography.regular16,
+                onClick = onDismiss,
+                modifier = Modifier.weight(1f),
+            )
+            BottomSheetTwoBtnShort(
+                text = "삭제",
+                style = BottomSheetBtnStyle.Red,
+                textStyle = BookiiBookiiTheme.typography.regular16,
+                onClick = onConfirm,
+                modifier = Modifier.weight(1f),
             )
         }
     }

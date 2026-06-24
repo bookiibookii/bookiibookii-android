@@ -315,33 +315,44 @@ fun ReadingCardDetailRoute(
         }
     }
 
-    fun fetchShareUrl(card: ReadingCard, onResult: (String?) -> Unit) {
+    fun fetchShareUrl(card: ReadingCard, cardVersion: Int, onResult: (String?) -> Unit) {
         coroutineScope.launch {
+            val shareLayout = if (cardVersion == 1) "SPLIT" else "OVERLAY"
             val shareUrl = try {
                 withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    com.bookiibookii.bookiibookii.data.api.RetrofitClient.libApi().createShareToken(card.cardId).body()?.result?.shareUrl
+                    val resp = com.bookiibookii.bookiibookii.data.api.RetrofitClient.libApi()
+                        .createShareToken(card.cardId, com.bookiibookii.bookiibookii.data.model.library.CreateShareTokenRequestDTO(shareLayout))
+                    if (!resp.isSuccessful) {
+                        android.util.Log.e("ShareToken", "createShareToken 실패: code=${resp.code()}, body=${resp.errorBody()?.string()}")
+                    } else if (resp.body()?.isSuccess != true) {
+                        android.util.Log.e("ShareToken", "createShareToken 실패: isSuccess=false, message=${resp.body()?.message}")
+                    }
+                    resp.body()?.result?.shareUrl
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                android.util.Log.e("ShareToken", "createShareToken 예외 발생", e)
                 null
             }
             onResult(shareUrl)
         }
     }
 
-    fun copyShareLink(card: ReadingCard) {
-        fetchShareUrl(card) { shareUrl ->
+    fun copyShareLink(card: ReadingCard, cardVersion: Int) {
+        fetchShareUrl(card, cardVersion) { shareUrl ->
             if (shareUrl.isNullOrBlank()) {
                 context.showCustomToast("링크 복사에 실패했어요", false)
             } else {
                 val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 clipboard.setPrimaryClip(android.content.ClipData.newPlainText("독서카드 링크", shareUrl))
-                context.showCustomToast("링크를 복사했어요", true)
+                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
+                    context.showCustomToast("링크를 복사했어요", true)
+                }
             }
         }
     }
 
-    fun shareToKakao(card: ReadingCard) {
-        fetchShareUrl(card) { shareUrl ->
+    fun shareToKakao(card: ReadingCard, cardVersion: Int) {
+        fetchShareUrl(card, cardVersion) { shareUrl ->
             if (shareUrl.isNullOrBlank()) {
                 context.showCustomToast("공유에 실패했어요", false)
                 return@fetchShareUrl
@@ -379,8 +390,8 @@ fun ReadingCardDetailRoute(
         }
     }
 
-    fun shareToX(card: ReadingCard) {
-        fetchShareUrl(card) { shareUrl ->
+    fun shareToX(card: ReadingCard, cardVersion: Int) {
+        fetchShareUrl(card, cardVersion) { shareUrl ->
             if (shareUrl.isNullOrBlank()) {
                 context.showCustomToast("공유에 실패했어요", false)
                 return@fetchShareUrl
@@ -473,9 +484,9 @@ fun ReadingCardDetailRoute(
             }
         },
         onInstaShare = { card, version -> shareCardToInstagram(card, version) },
-        onCopyLink = { card -> copyShareLink(card) },
-        onKakaoShare = { card -> shareToKakao(card) },
-        onXShare = { card -> shareToX(card) },
+        onCopyLink = { card, version -> copyShareLink(card, version) },
+        onKakaoShare = { card, version -> shareToKakao(card, version) },
+        onXShare = { card, version -> shareToX(card, version) },
         onDownload = { card, version -> downloadCard(card, version) },
         onEditClick = { card -> onEditCard(card) },
         onDeleteConfirmed = { card -> deleteCard(card) },
@@ -516,9 +527,9 @@ fun ReadingCardDetailScreen(
     onBookmarkToggle: (cardId: Long) -> Unit = {},
     onReactionToggle: (cardId: Long, reaction: String) -> Unit = { _, _ -> },
     onInstaShare: (card: ReadingCard, cardVersion: Int) -> Unit = { _, _ -> },
-    onCopyLink: (card: ReadingCard) -> Unit = {},
-    onKakaoShare: (card: ReadingCard) -> Unit = {},
-    onXShare: (card: ReadingCard) -> Unit = {},
+    onCopyLink: (card: ReadingCard, cardVersion: Int) -> Unit = { _, _ -> },
+    onKakaoShare: (card: ReadingCard, cardVersion: Int) -> Unit = { _, _ -> },
+    onXShare: (card: ReadingCard, cardVersion: Int) -> Unit = { _, _ -> },
     onDownload: (card: ReadingCard, cardVersion: Int) -> Unit = { _, _ -> },
     onEditClick: (card: ReadingCard) -> Unit = {},
     onDeleteConfirmed: (card: ReadingCard) -> Unit = {},
@@ -642,11 +653,11 @@ fun ReadingCardDetailScreen(
     if (showShareSheet) {
         ReadingCardShareBottomSheet(
             onDismiss    = { showShareSheet = false },
-            onKakaoClick = { currentCard?.let { onKakaoShare(it) } },
+            onKakaoClick = { currentCard?.let { onKakaoShare(it, cardVersion) } },
             onInstaClick = { currentCard?.let { onInstaShare(it, cardVersion) } },
-            onXClick     = { currentCard?.let { onXShare(it) } },
+            onXClick     = { currentCard?.let { onXShare(it, cardVersion) } },
             onDownloadClick = { currentCard?.let { onDownload(it, cardVersion) } },
-            onCopyLinkClick = { currentCard?.let { onCopyLink(it) } },
+            onCopyLinkClick = { currentCard?.let { onCopyLink(it, cardVersion) } },
         )
     }
 

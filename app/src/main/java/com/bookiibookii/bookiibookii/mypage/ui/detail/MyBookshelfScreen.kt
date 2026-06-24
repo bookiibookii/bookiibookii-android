@@ -217,6 +217,7 @@ fun MyBookshelfScreen(
     if (showBookBottomSheet && selectedBook != null) {
         val book = selectedBook!!
         val repBook = representativeBooks.find { it.title == book.title }
+        val context = androidx.compose.ui.platform.LocalContext.current
         BookshelfBookBottomSheet(
             title = book.title,
             author = book.author ?: "",
@@ -224,11 +225,21 @@ fun MyBookshelfScreen(
             memberBookId = book.memberBookId,
             representativeUserBookId = repBook?.userBookId,
             onDismiss = { showBookBottomSheet = false },
-            onReviewClick = { showBookBottomSheet = false },
+            onReviewClick = {
+                showBookBottomSheet = false
+                context.showCustomToast("준비중입니다", false)
+            },
             onAddRepresentativeClick = { memberBookId -> showBookBottomSheet = false; onAddRepresentativeBook(memberBookId) },
             onRemoveRepresentativeClick = { userBookId -> showBookBottomSheet = false; onRemoveRepresentativeBook(userBookId) },
-            onLibraryClick = { showBookBottomSheet = false },
-            onAladinClick = { showBookBottomSheet = false },
+            onLibraryClick = {
+                showBookBottomSheet = false
+                context.showCustomToast("준비중입니다", false)
+            },
+            onAladinClick = {
+                showBookBottomSheet = false
+                val url = "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=${android.net.Uri.encode(book.title)}"
+                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+            },
         )
     }
 }
