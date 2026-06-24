@@ -92,15 +92,23 @@ data class PresignedUrlResponseDTO(
     val presignedPutUrl: String
 )
 
+// 독서카드 공유 토큰 발급 요청 (POST /api/member-books/cards/{cardId}/share-token)
+// shareLayout: "OVERLAY"(전체 이미지+오버레이 텍스트) | "SPLIT"(이미지/텍스트 영역 분리)
+data class CreateShareTokenRequestDTO(
+    val shareLayout: String
+)
+
 // 독서카드 공유 토큰 발급 응답 (POST /api/member-books/cards/{cardId}/share-token)
 data class ShareTokenResponseDTO(
     val shareToken: String,
-    val shareUrl: String
+    val shareUrl: String,
+    val shareLayout: String?
 )
 
 // 공유 토큰 기반 독서카드 공개 조회 응답 (GET /api/public/reading-cards/{shareToken})
 // 공개 엔드포인트라 ApiResponse 래퍼 없이 DTO를 직접 반환한다. required 없음 → 전부 nullable.
 data class PublicReadingCardResponseDTO(
+    val shareLayout: String?,
     val cardType: String?,
     val bookTitle: String?,
     val bookAuthor: String?,

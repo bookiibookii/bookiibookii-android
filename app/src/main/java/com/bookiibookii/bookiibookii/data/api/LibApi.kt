@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.data.api
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.library.BookResult
 import com.bookiibookii.bookiibookii.data.model.library.BookReviewUpsertDTO
+import com.bookiibookii.bookiibookii.data.model.library.CreateShareTokenRequestDTO
 import com.bookiibookii.bookiibookii.data.model.library.GroupReviewsResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardBookmarkResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.MemberCardCreateRequestDTO
@@ -96,7 +97,8 @@ interface LibApi {
 
     @POST("api/member-books/cards/{cardId}/share-token")
     suspend fun createShareToken(
-        @Path("cardId") cardId: Long
+        @Path("cardId") cardId: Long,
+        @Body request: CreateShareTokenRequestDTO
     ): Response<ApiResponse<ShareTokenResponseDTO>>
 
     // 공유 토큰 기반 공개 조회 — 인증 불필요. 서버는 ApiResponse 래퍼로 감싸 반환(result에 카드)
