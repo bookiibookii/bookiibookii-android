@@ -14,10 +14,16 @@ import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
 import com.bookiibookii.bookiibookii.mypage.MypageFragment
 import com.bookiibookii.bookiibookii.notification.NotificationFragment
+import com.bookiibookii.bookiibookii.tracker.nav.TrackerDestinations
 import com.bookiibookii.bookiibookii.tracker.nav.TrackerNavHost
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 class TrackerFragment : Fragment() {
+
+    // 알림 클릭 등 딥링크 진입 시작점. 없으면 트래커 홈(MAIN).
+    private val startDestination: String
+        get() = arguments?.getString(ARG_START_DESTINATION) ?: TrackerDestinations.MAIN
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -27,6 +33,9 @@ class TrackerFragment : Fragment() {
         setContent {
             BookiiBookiiTheme {
                 TrackerNavHost(
+                    startDestination = startDestination,
+                    // 딥링크 진입 시 백버튼이 팝할 게 없으면 트래커 Fragment를 닫음
+                    onExit = { parentFragmentManager.popBackStack() },
                     // "서재로 이동" → 바텀네비 서재 탭을 누른 것처럼 전환
                     onNavigateLibrary = {
                         (activity as? MainActivity)?.moveToLibraryTab()
@@ -78,6 +87,17 @@ class TrackerFragment : Fragment() {
                             .commit()
                     },
                 )
+            }
+        }
+    }
+
+    companion object {
+        private const val ARG_START_DESTINATION = "arg_start_destination"
+
+        // 알림 클릭 딥링크 진입 (예: 트래커 상세/댓글)
+        fun newInstance(startDestination: String) = TrackerFragment().apply {
+            arguments = Bundle().apply {
+                putString(ARG_START_DESTINATION, startDestination)
             }
         }
     }

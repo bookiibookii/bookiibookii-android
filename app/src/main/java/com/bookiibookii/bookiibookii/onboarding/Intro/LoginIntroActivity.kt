@@ -25,6 +25,8 @@ class LoginIntroActivity : AppCompatActivity() {
                     flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
                             Intent.FLAG_ACTIVITY_NEW_TASK or
                             Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    // MainActivity가 FCM 알림 라우팅할 수 있도록 전달
+                    intent?.extras?.let { putExtras(it) }
                 }
             )
             finish()

@@ -33,6 +33,8 @@ class TrackerCommentViewModel(
     // 일회성 이벤트 — 토스트용
     sealed class Event {
         data class ShowError(val message: String) : Event()
+        // 삭제된/존재하지 않는 그룹(404) → 삭제된 페이지 화면
+        data object NotFound : Event()
     }
 
     init {
@@ -49,6 +51,10 @@ class TrackerCommentViewModel(
                 val list = res.body()?.result
                 if (res.isSuccessful && res.body()?.isSuccess == true && list != null) {
                     _state.update { it.copy(comments = list, loading = false, error = null) }
+                } else if (res.code() == 404) {
+                    // 삭제된/존재하지 않는 그룹(예: 예전 알림으로 진입) → 삭제된 페이지 안내
+                    _eventFlow.emit(Event.NotFound)
+                    _state.update { it.copy(loading = false) }
                 } else {
                     _state.update { it.copy(error = "댓글을 불러오지 못했어요", loading = false) }
                 }

@@ -58,6 +58,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
+import com.bookiibookii.bookiibookii.error.ErrorActivity
+import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.data.model.group.GroupRule
 import com.bookiibookii.bookiibookii.data.model.group.ParticipantSlot
 import com.bookiibookii.bookiibookii.group.model.ExchangeType
@@ -104,6 +106,8 @@ fun GroupDetailRoute(
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is GroupDetailViewModel.Event.Deleted -> onDeleted()
+                is GroupDetailViewModel.Event.NotFound ->
+                    context.startActivity(ErrorActivity.newIntent(context, ErrorType.GROUP_DELETED))
                 is GroupDetailViewModel.Event.ShowError ->
                     context.showCustomToast(event.message, isSuccess = false)
             }

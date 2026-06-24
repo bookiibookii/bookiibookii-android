@@ -29,6 +29,7 @@ class GroupDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
     sealed class Event {
         data object Deleted : Event()
+        data object NotFound : Event()
         data class ShowError(val message: String) : Event()
     }
 
@@ -58,6 +59,10 @@ class GroupDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
                             error = null,
                         )
                     }
+                } else if (res.code() == 404) {
+                    // 삭제된/존재하지 않는 그룹(예: 예전 알림으로 진입) → 삭제된 페이지 안내
+                    _eventFlow.emit(Event.NotFound)
+                    _state.update { it.copy(loading = false) }
                 } else {
                     _state.update { it.copy(error = "그룹 정보를 불러오지 못했어요", loading = false) }
                 }
