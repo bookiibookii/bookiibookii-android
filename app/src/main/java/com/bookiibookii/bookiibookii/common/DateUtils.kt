@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.common
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -12,6 +13,47 @@ object DateUtils {
     private val formatter = DateTimeFormatter
         .ofPattern("yyyy. MM. dd.", Locale.US)
         .withZone(ZoneId.systemDefault())
+
+    // 직접교환 약속 시간 전용
+    // 요청: offset 포함(+09:00), 응답: UTC Z. OffsetDateTime.parse가 둘 다 동일 instant로 파싱.
+    private val KST = ZoneId.of("Asia/Seoul")
+    private val MEETING_FORMATTER = DateTimeFormatter.ofPattern("yyyy. MM. dd. HH:mm", Locale.US)
+
+    // 서버 응답(Z)/요청형(+09:00)/offset 없는 문자열 모두 받아 KST "yyyy. MM. dd. HH:mm" 로 표시
+    fun formatKstDateTime(raw: String?): String {
+        if (raw.isNullOrBlank()) return ""
+        return try {
+            OffsetDateTime.parse(raw).atZoneSameInstant(KST).format(MEETING_FORMATTER)
+        } catch (_: Exception) { try {
+            LocalDateTime.parse(raw).atZone(KST).format(MEETING_FORMATTER) // offset 없으면 KST 벽시계 간주
+        } catch (_: Exception) {
+            raw
+        } }
+    }
+
+    // 피커가 고른 KST 벽시계 LocalDateTime → offset 포함 요청 문자열(예: 2026-05-20T14:30:00+09:00)
+    fun meetingAtFromKst(local: LocalDateTime): String =
+        local.atZone(KST).toOffsetDateTime().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
+    // 서버 응답(Z)/offset 문자열 → 수정 모드 프리필용 KST LocalDateTime (실패 시 null)
+    fun parseKstLocalDateTime(raw: String?): LocalDateTime? {
+        if (raw.isNullOrBlank()) return null
+        return try {
+            OffsetDateTime.parse(raw).atZoneSameInstant(KST).toLocalDateTime()
+        } catch (_: Exception) {
+            runCatching { LocalDateTime.parse(raw) }.getOrNull()
+        }
+    }
+
+    // 약속 시각 → Instant (수정 가능 여부 판정용, 실패 시 null)
+    fun toInstantOrNull(raw: String?): Instant? {
+        if (raw.isNullOrBlank()) return null
+        return try {
+            OffsetDateTime.parse(raw).toInstant()
+        } catch (_: Exception) {
+            runCatching { LocalDateTime.parse(raw).atZone(KST).toInstant() }.getOrNull()
+        }
+    }
 
     // 서버 시간 문자열 → Instant
     // "...Z"/offset 있으면 Instant.parse, 없으면 UTC LocalDateTime으로 간주

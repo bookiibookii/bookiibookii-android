@@ -178,7 +178,7 @@ class TrackerMainViewModel(
                         x = x,
                         y = y,
                         addressDetail = addressDetail,
-                        scheduledAt = scheduledAt,
+                        meetingAt = scheduledAt,
                     ),
                 )
                 if (res.isSuccessful && res.body()?.isSuccess == true) {
@@ -214,7 +214,7 @@ class TrackerMainViewModel(
                         x = x,
                         y = y,
                         addressDetail = addressDetail,
-                        scheduledAt = scheduledAt,
+                        meetingAt = scheduledAt,
                     ),
                 )
                 if (res.isSuccessful && res.body()?.isSuccess == true) {
