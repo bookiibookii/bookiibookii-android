@@ -6,6 +6,6 @@ data class PartnerDeliveryResponseDTO(
     val deliveryCompany: String?,
     val deliveryCompanyName: String?,
     val trackingNumber: String?,
-    val registeredAt: String?,
+    val trackingRegisteredAt: String?,
     val canConfirmReceived: Boolean?,
 )

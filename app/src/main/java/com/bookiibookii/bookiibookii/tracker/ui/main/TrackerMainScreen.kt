@@ -782,7 +782,7 @@ fun TrackerMainRoute(
     val meeting = meetingInfo
     if (meetingInfoDialogGroupId != null && meeting != null) {
         TrackerDirectMeetingInfoDialog(
-            scheduledAt = meeting.scheduledAt.orEmpty(),
+            scheduledAt = meeting.meetingAt.orEmpty(),
             address = meeting.location?.address.orEmpty(),
             addressDetail = meeting.addressDetail.orEmpty(),
             isHost = uiState.cards.firstOrNull { it.groupId == meetingInfoDialogGroupId }?.isHost == true,
@@ -810,7 +810,7 @@ fun TrackerMainRoute(
                         )
                     )
                 }
-                meetingScheduledAt = meeting.scheduledAt.orEmpty()
+                meetingScheduledAt = meeting.meetingAt.orEmpty()
                 meetingAddressDetail = meeting.addressDetail.orEmpty()
                 meetingInfoDialogGroupId = null
                 viewModel.clearMeeting()
