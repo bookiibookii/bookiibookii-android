@@ -68,6 +68,7 @@ fun LibraryMainRoute(
     onProfileClick: () -> Unit,
     onBookmarkClick: () -> Unit,
     onBookClick: (LibraryBook) -> Unit,
+    onMatchingStatusClick: () -> Unit = {},
     viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryMainViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -85,6 +86,7 @@ fun LibraryMainRoute(
         onProfileClick = onProfileClick,
         onBookmarkClick = onBookmarkClick,
         onBookClick = onBookClick,
+        onMatchingStatusClick = onMatchingStatusClick,
     )
 }
 
@@ -98,6 +100,7 @@ fun LibraryScreen(
     onProfileClick: () -> Unit = {},
     onBookmarkClick: () -> Unit = {},
     onBookClick: (LibraryBook) -> Unit = {},
+    onMatchingStatusClick: () -> Unit = {},
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var viewType by remember { mutableStateOf(LibraryViewType.GRID) }
@@ -132,11 +135,19 @@ fun LibraryScreen(
             )
 
             if (isSearchActive) {
-                LibrarySearchResults(
-                    books = filteredBooks,
-                    viewType = viewType,
-                    onBookClick = onBookClick,
-                )
+                if (filteredBooks.isEmpty()) {
+                    LibraryEmptyStateBox(
+                        text = "그룹을 찾지 못했어요.\n검색어를 다시 확인해주세요.",
+                        textColor = BookiiBookiiTheme.colors.grey600,
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp),
+                    )
+                } else {
+                    LibrarySearchResults(
+                        books = filteredBooks,
+                        viewType = viewType,
+                        onBookClick = onBookClick,
+                    )
+                }
             } else {
                 LibraryFilterBar(
                     bookCount = allBooks.size,
@@ -147,24 +158,51 @@ fun LibraryScreen(
                         viewType = if (viewType == LibraryViewType.GRID) LibraryViewType.LIST else LibraryViewType.GRID
                     },
                 )
-                if (readingBooks.isNotEmpty()) {
-                    LibraryBookSection(
-                        title = "읽는 중",
-                        books = readingBooks,
-                        viewType = viewType,
-                        onBookClick = onBookClick,
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Text(
+                        text = "읽는 중",
+                        style = BookiiBookiiTheme.typography.semibold20,
+                        color = BookiiBookiiTheme.colors.grey900,
+                        modifier = Modifier.padding(vertical = 16.dp),
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    if (readingBooks.isNotEmpty()) {
+                        LibraryBookSectionContent(books = readingBooks, viewType = viewType, onBookClick = onBookClick)
+                    } else {
+                        LibraryEmptyStateBox(
+                            text = "아직 진행 중인 그룹이 없어요,\n독서메이트 매칭 현황을 확인해보세요.",
+                            textColor = BookiiBookiiTheme.colors.grey900,
+                            buttonText = "매칭 현황 확인하기",
+                            onButtonClick = onMatchingStatusClick,
+                        )
+                    }
                 }
-                if (doneBooks.isNotEmpty()) {
-                    LibraryBookSection(
-                        title = "다 읽었어요",
-                        books = doneBooks,
-                        viewType = viewType,
-                        onBookClick = onBookClick,
+                Spacer(modifier = Modifier.height(24.dp))
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Text(
+                        text = "다 읽었어요",
+                        style = BookiiBookiiTheme.typography.semibold20,
+                        color = BookiiBookiiTheme.colors.grey900,
+                        modifier = Modifier.padding(vertical = 16.dp),
                     )
+                    if (doneBooks.isNotEmpty()) {
+                        LibraryBookSectionContent(books = doneBooks, viewType = viewType, onBookClick = onBookClick)
+                    } else {
+                        LibraryEmptyStateBox(
+                            text = "아직 종료된 그룹이 없어요.",
+                            textColor = BookiiBookiiTheme.colors.grey600,
+                        )
+                    }
                 }
             }
+
+            Text(
+                text = "도서 DB 제공 : 알라딘 인터넷서점(www.aladin.co.kr)",
+                style = BookiiBookiiTheme.typography.regular14,
+                color = BookiiBookiiTheme.colors.grey700,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 40.dp),
+            )
 
             Spacer(modifier = Modifier.height(192.dp))
         }
@@ -334,38 +372,72 @@ private fun LibraryFilterBar(
 }
 
 @Composable
-private fun LibraryBookSection(
-    title: String,
+private fun LibraryBookSectionContent(
     books: List<LibraryBook>,
     viewType: LibraryViewType,
     onBookClick: (LibraryBook) -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        Text(
-            text = title,
-            style = BookiiBookiiTheme.typography.semibold20,
-            color = BookiiBookiiTheme.colors.grey900,
-            modifier = Modifier.padding(vertical = 16.dp),
-        )
-        if (viewType == LibraryViewType.GRID) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                books.chunked(3).forEach { row ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        row.forEach { book ->
-                            LibraryBookGridItem(book = book, modifier = Modifier.weight(1f).clickable { onBookClick(book) })
-                        }
-                        repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+    if (viewType == LibraryViewType.GRID) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            books.chunked(3).forEach { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    row.forEach { book ->
+                        LibraryBookGridItem(book = book, modifier = Modifier.weight(1f).clickable { onBookClick(book) })
                     }
+                    repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
                 }
             }
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                books.forEach { book ->
-                    LibraryBookListItem(book = book, onClick = { onBookClick(book) })
-                }
+        }
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            books.forEach { book ->
+                LibraryBookListItem(book = book, onClick = { onBookClick(book) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibraryEmptyStateBox(
+    text: String,
+    textColor: Color,
+    buttonText: String? = null,
+    onButtonClick: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(BookiiBookiiTheme.colors.white)
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Text(
+            text = text,
+            style = BookiiBookiiTheme.typography.regular16,
+            color = textColor,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        if (buttonText != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(BookiiBookiiTheme.colors.uiMain)
+                    .clickable { onButtonClick() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = buttonText,
+                    style = BookiiBookiiTheme.typography.regular15,
+                    color = BookiiBookiiTheme.colors.white,
+                )
             }
         }
     }

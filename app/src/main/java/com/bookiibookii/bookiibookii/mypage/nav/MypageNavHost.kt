@@ -60,6 +60,8 @@ import java.io.File
 fun MypageNavHost(
     mypageViewModel: MypageViewModel,
     onBackClick: () -> Unit = {},
+    onLibraryDetailClick: (com.bookiibookii.bookiibookii.data.model.mypage.CompletedBook) -> Unit = {},
+    onGroupReviewClick: (com.bookiibookii.bookiibookii.mypage.vm.GroupReviewNavTarget) -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = MypageDestinations.MAIN,
 ) {
@@ -160,7 +162,11 @@ fun MypageNavHost(
         }
 
         composable(MypageDestinations.MY_BOOKSHELF) {
-            MyBookshelfRoute(onBack = popOrExit)
+            MyBookshelfRoute(
+                onBack = popOrExit,
+                onLibraryClick = onLibraryDetailClick,
+                onReviewClick = onGroupReviewClick,
+            )
         }
 
         composable(

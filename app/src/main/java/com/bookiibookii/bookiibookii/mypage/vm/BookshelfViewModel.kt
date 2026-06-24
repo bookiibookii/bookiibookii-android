@@ -24,6 +24,14 @@ import kotlinx.coroutines.launch
 
 enum class SortOrder { LATEST, OLDEST, RATING, TITLE }
 
+data class GroupReviewNavTarget(
+    val groupId: Int,
+    val bookTitle: String,
+    val groupName: String,
+    val startDate: String,
+    val endDate: String,
+)
+
 class BookshelfViewModel : ViewModel() {
 
     private val _bookshelf = MutableLiveData<BookshelfResult?>(null)
@@ -54,20 +62,25 @@ class BookshelfViewModel : ViewModel() {
     }
 
     private fun recompute() {
-        val books = _bookshelf.value?.completedBooks ?: emptyList()
-        sortedCompletedBooks.value = when (_sortOrder.value ?: SortOrder.LATEST) {
+        val bookshelf = _bookshelf.value
+        val books = bookshelf?.completedBooks ?: emptyList()
+        val representativeTitles = (bookshelf?.representativeBooks ?: emptyList()).map { it.title }.toSet()
+
+        val sorted = when (_sortOrder.value ?: SortOrder.LATEST) {
             SortOrder.LATEST -> books.sortedByDescending { it.completedAt ?: "" }
             SortOrder.OLDEST -> books.sortedBy { it.completedAt ?: "9999" }
             SortOrder.RATING -> books.sortedByDescending { it.rating }
             SortOrder.TITLE -> books.sortedBy { it.title }
         }
+        // 대표책을 앞에, 나머지를 뒤에 (안정 정렬이라 그룹 내부는 선택된 정렬 기준이 그대로 유지됨)
+        sortedCompletedBooks.value = sorted.sortedByDescending { it.title in representativeTitles }
     }
 
     private val _eventFlow = MutableSharedFlow<Event>()
     val eventFlow = _eventFlow.asSharedFlow()
 
     sealed class Event {
-        data class ShowToast(val message: String) : Event()
+        data class ShowToast(val message: String, val isSuccess: Boolean = false) : Event()
     }
 
     init {
@@ -134,6 +147,40 @@ class BookshelfViewModel : ViewModel() {
     fun clearBookSearch() {
         _bookSearchQuery.value = ""
         _bookSearchState.value = BookSearchState.Idle
+    }
+
+    // 나의 책장 응답(CompletedBookDto)에는 groupName/기간이 없어, 그룹 후기 화면 진입 전
+    // 그룹 상세 API로 보강한다.
+    fun fetchGroupReviewTarget(groupId: Long, bookTitle: String, onResult: (GroupReviewNavTarget) -> Unit) {
+        viewModelScope.launch {
+            val target = try {
+                val resp = RetrofitClient.grpApi().getGroupDetail(groupId)
+                val detail = resp.body()?.result
+                if (resp.isSuccessful && resp.body()?.isSuccess == true && detail != null) {
+                    val startDate = detail.startDate.orEmpty()
+                    val endDate = if (startDate.isNotBlank()) {
+                        try {
+                            java.time.LocalDate.parse(startDate).plusDays(detail.readingPeriod.toLong()).toString()
+                        } catch (_: Exception) {
+                            ""
+                        }
+                    } else ""
+                    GroupReviewNavTarget(
+                        groupId = groupId.toInt(),
+                        bookTitle = bookTitle,
+                        groupName = detail.groupName,
+                        startDate = startDate,
+                        endDate = endDate,
+                    )
+                } else {
+                    GroupReviewNavTarget(groupId = groupId.toInt(), bookTitle = bookTitle, groupName = "", startDate = "", endDate = "")
+                }
+            } catch (e: Exception) {
+                Log.e("BookshelfViewModel", "fetchGroupReviewTarget error", e)
+                GroupReviewNavTarget(groupId = groupId.toInt(), bookTitle = bookTitle, groupName = "", startDate = "", endDate = "")
+            }
+            onResult(target)
+        }
     }
 
     fun addRepresentativeBook(memberBookId: Long) {
@@ -228,9 +275,14 @@ class BookshelfViewModel : ViewModel() {
     fun replaceFavoriteBook(oldUserBookId: Long, isbn13: String) {
         viewModelScope.launch {
             try {
-                RetrofitClient.mypApi().deleteFavoriteBook(oldUserBookId)
-                RetrofitClient.mypApi().addFavoriteBook(AddFavoriteBookRequest(isbn13 = isbn13))
-                ensureFavoritesAreRepresentative()
+                val response = RetrofitClient.mypApi().replaceFavoriteBook(
+                    oldUserBookId, AddFavoriteBookRequest(isbn13 = isbn13)
+                )
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    ensureFavoritesAreRepresentative()
+                } else {
+                    _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "인생 책 교체에 실패했습니다."))
+                }
             } catch (e: Exception) {
                 Log.e("BookshelfViewModel", "replaceFavoriteBook error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))

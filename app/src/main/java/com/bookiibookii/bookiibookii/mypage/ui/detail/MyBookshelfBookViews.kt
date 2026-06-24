@@ -171,9 +171,9 @@ private fun BookshelfStarIcon(starValue: Double) {
 }
 
 private val previewBooks = listOf(
-    CompletedBook(memberBookId = 1, title = "데미안", author = "헤르만 헤세", image = null, category = "(소설)", rating = 4.5, completedAt = "2026-05-01"),
-    CompletedBook(memberBookId = 2, title = "1984", author = "조지 오웰", image = null, category = "(소설)", rating = 5.0, completedAt = "2026-04-20"),
-    CompletedBook(memberBookId = 3, title = "사피엔스", author = "유발 하라리", image = null, category = "(인문)", rating = 4.0, completedAt = "2026-04-10"),
+    CompletedBook(memberBookId = 1, groupId = 1, title = "데미안", author = "헤르만 헤세", image = null, category = "(소설)", rating = 4.5, completedAt = "2026-05-01"),
+    CompletedBook(memberBookId = 2, groupId = 2, title = "1984", author = "조지 오웰", image = null, category = "(소설)", rating = 5.0, completedAt = "2026-04-20"),
+    CompletedBook(memberBookId = 3, groupId = 3, title = "사피엔스", author = "유발 하라리", image = null, category = "(인문)", rating = 4.0, completedAt = "2026-04-10"),
 )
 
 @Preview(showBackground = true, widthDp = 412)

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.mypage.InquiryRequest
+import com.bookiibookii.bookiibookii.data.model.mypage.InquirySummary
 import com.bookiibookii.bookiibookii.data.model.mypage.NoticeDetail
 import com.bookiibookii.bookiibookii.data.model.mypage.NoticeSummary
 import com.bookiibookii.bookiibookii.data.model.mypage.WithdrawalReqDTO
@@ -25,11 +26,14 @@ class SettingViewModel : ViewModel() {
     private val _withdrawFailed = MutableLiveData(false)
     val withdrawFailed: LiveData<Boolean> get() = _withdrawFailed
 
+    private val _inquiries = MutableLiveData<List<InquirySummary>>(emptyList())
+    val inquiries: LiveData<List<InquirySummary>> get() = _inquiries
+
     private val _eventFlow = MutableSharedFlow<Event>()
     val eventFlow = _eventFlow.asSharedFlow()
 
     sealed class Event {
-        data class ShowToast(val message: String) : Event()
+        data class ShowToast(val message: String, val isSuccess: Boolean = false) : Event()
         object InquirySuccess : Event()
         object WithdrawSuccess : Event()
     }
@@ -61,6 +65,22 @@ class SettingViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("SettingViewModel", "fetchNoticeDetail error", e)
+                _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            }
+        }
+    }
+
+    fun fetchInquiries() {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.mypApi().getInquiryList()
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    _inquiries.value = response.body()?.result ?: emptyList()
+                } else {
+                    _eventFlow.emit(Event.ShowToast("자주 묻는 질문을 불러오지 못했습니다."))
+                }
+            } catch (e: Exception) {
+                Log.e("SettingViewModel", "fetchInquiries error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
             }
         }

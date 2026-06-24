@@ -177,6 +177,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         replaceFragment(fragment)
     }
 
+    fun moveToGroupTab() {
+        selectTab(NavTab.HOME, HomeFragment())
+    }
+
+    // 홈 탭의 "내 그룹"(매칭 현황) 탭으로 바로 이동 (서재 메인의 빈 상태 CTA 등에서 사용)
+    fun moveToHomeMyGroupsTab() {
+        selectTab(NavTab.HOME, HomeFragment.newInstanceAtMyGroups())
+    }
+
+    // 서재 탭으로 이동 (바텀네비 '서재'를 누른 것과 동일)
     // 서재 탭으로 이동
     fun moveToLibraryTab() {
         selectTab(NavTab.LIBRARY, LibraryFragment())

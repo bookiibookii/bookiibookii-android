@@ -166,7 +166,7 @@ fun ProfileSettingRoute(
             when (event) {
                 is com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel.Event.NavigateBack -> onBackClick()
                 is com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel.Event.ShowToast ->
-                    context.showCustomToast(event.message, !event.message.contains("실패") && !event.message.contains("오류"))
+                    context.showCustomToast(event.message, event.isSuccess)
                 else -> {}
             }
         }

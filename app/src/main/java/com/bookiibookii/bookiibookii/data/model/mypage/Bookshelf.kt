@@ -9,6 +9,7 @@ data class BookshelfResult(
 
 data class CompletedBook(
     val memberBookId: Long,
+    val groupId: Long,
     val title: String,
     val author: String?,
     val image: String?,

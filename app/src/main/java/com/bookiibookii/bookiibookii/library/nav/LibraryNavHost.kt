@@ -31,6 +31,7 @@ fun LibraryNavHost(
     onProfileClick: () -> Unit = {},
     onExitLibrary: () -> Unit = {},
     onRouteChanged: (String) -> Unit = {},
+    onMatchingStatusClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = LibraryDestinations.MAIN,
 ) {
@@ -62,6 +63,7 @@ fun LibraryNavHost(
             LibraryMainRoute(
                 onProfileClick = onProfileClick,
                 onBookmarkClick = { navController.navigate(LibraryDestinations.BOOKMARK) },
+                onMatchingStatusClick = onMatchingStatusClick,
                 onBookClick = { book ->
                     navController.navigate(
                         LibraryDestinations.detail(

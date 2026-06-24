@@ -40,6 +40,9 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        if (arguments?.getString(ARG_START_TAB) == HomeTab.MY_GROUPS.name) {
+            vm.selectTab(HomeTab.MY_GROUPS)
+        }
         setContent {
             BookiiBookiiTheme {
                 HomeRoute(
@@ -94,6 +97,16 @@ class HomeFragment : Fragment() {
                             .commit()
                     },
                 )
+            }
+        }
+    }
+
+    companion object {
+        private const val ARG_START_TAB = "arg_start_tab"
+
+        fun newInstanceAtMyGroups() = HomeFragment().apply {
+            arguments = Bundle().apply {
+                putString(ARG_START_TAB, HomeTab.MY_GROUPS.name)
             }
         }
     }
