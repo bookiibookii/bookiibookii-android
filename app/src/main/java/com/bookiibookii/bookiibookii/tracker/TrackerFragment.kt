@@ -34,6 +34,8 @@ class TrackerFragment : Fragment() {
             BookiiBookiiTheme {
                 TrackerNavHost(
                     startDestination = startDestination,
+                    // 딥링크 진입 시 백버튼이 팝할 게 없으면 트래커 Fragment를 닫음
+                    onExit = { parentFragmentManager.popBackStack() },
                     // "서재로 이동" → 바텀네비 서재 탭을 누른 것처럼 전환
                     onNavigateLibrary = {
                         (activity as? MainActivity)?.moveToLibraryTab()

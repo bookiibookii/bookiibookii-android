@@ -35,6 +35,8 @@ fun TrackerNavHost(
     onAlertClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = TrackerDestinations.MAIN,
+    // 딥링크(알림)로 하위 화면이 시작점이 된 경우, 백버튼이 팝할 게 없으면 트래커 밖으로 나감
+    onExit: () -> Unit = {},
 ) {
     val navController = rememberNavController()
 
@@ -103,7 +105,7 @@ fun TrackerNavHost(
                 .collectAsStateWithLifecycle()
             TrackerDetailRoute(
                 groupId = groupId,
-                onBackClick = { navController.popBackStack() },
+                onBackClick = { if (!navController.popBackStack()) onExit() },
                 onNavigateBookReview = { edit ->
                     navController.navigate(TrackerDestinations.bookReview(groupId, edit))
                 },
@@ -142,7 +144,7 @@ fun TrackerNavHost(
                 ?.getBoolean(TrackerDestinations.BOOK_REVIEW_ARG_EDIT) ?: false
             TrackerBookReviewRoute(
                 groupId = groupId,
-                onBackClick = { navController.popBackStack() },
+                onBackClick = { if (!navController.popBackStack()) onExit() },
                 isEdit = isEdit,
             )
         }
@@ -158,7 +160,7 @@ fun TrackerNavHost(
                 ?.getLong(TrackerDestinations.PARTNER_REVIEW_ARG_GROUP_ID) ?: return@composable
             TrackerPartnerReviewRoute(
                 groupId = groupId,
-                onBackClick = { navController.popBackStack() },
+                onBackClick = { if (!navController.popBackStack()) onExit() },
                 // 등록 완료 시 상세가 아니라 메인까지 되돌아감
                 onSubmitDone = {
                     navController.popBackStack(TrackerDestinations.MAIN, inclusive = false)
@@ -184,12 +186,12 @@ fun TrackerNavHost(
             TrackerCommentRoute(
                 groupId = groupId,
                 title = title,
-                onBackClick = { navController.popBackStack() },
+                onBackClick = { if (!navController.popBackStack()) onExit() },
             )
         }
         composable(TrackerDestinations.PLACE_SEARCH) {
             PlaceSearchScreen(
-                onBackClick = { navController.popBackStack() },
+                onBackClick = { if (!navController.popBackStack()) onExit() },
                 onPlaceClick = { result ->
                     // 선택 결과를 이전 화면(약속 다이얼로그)으로 반환하고 복귀
                     navController.previousBackStackEntry
