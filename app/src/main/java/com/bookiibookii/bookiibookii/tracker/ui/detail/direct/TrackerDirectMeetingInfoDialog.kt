@@ -21,9 +21,9 @@ import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.component.CloseButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.bookiibookii.bookiibookii.common.DateUtils
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.time.Instant
 
 // 직접교환 약속 확인 - 등록된 약속 조회 (StepChip 없음)
 @Composable
@@ -127,17 +127,13 @@ private fun TrackerDirectMeetingInfoDialogContent(
 
 // 현재 시각 기준 약속까지 12시간 이상 남았는지(수정 가능 여부). 파싱 실패 시 수정 불가로 간주.
 private fun isMeetingEditable(scheduledAt: String): Boolean =
-    runCatching {
-        Duration.between(LocalDateTime.now(), LocalDateTime.parse(scheduledAt)).toHours() >= 12
-    }.getOrDefault(false)
+    DateUtils.toInstantOrNull(scheduledAt)
+        ?.let { Duration.between(Instant.now(), it).toHours() >= 12 }
+        ?: false
 
-private val MEETING_INFO_FORMATTER = DateTimeFormatter.ofPattern("yyyy. MM. dd. HH:mm")
-
-// "2026-05-20T14:30:00" → "2026. 05. 20. 14:30" (파싱 실패 시 원본 그대로)
+// 서버 응답(UTC Z) → KST "2026. 05. 20. 14:30" (파싱 실패 시 원본 그대로)
 private fun formatMeetingScheduledAt(scheduledAt: String): String =
-    runCatching {
-        LocalDateTime.parse(scheduledAt).format(MEETING_INFO_FORMATTER)
-    }.getOrDefault(scheduledAt)
+    DateUtils.formatKstDateTime(scheduledAt)
 
 @Composable
 private fun ReadOnlyField(label: String, value: String) {

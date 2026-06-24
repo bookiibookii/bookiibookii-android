@@ -282,7 +282,7 @@ class TrackerDetailViewModel(
                         x = x,
                         y = y,
                         addressDetail = addressDetail,
-                        scheduledAt = scheduledAt,
+                        meetingAt = scheduledAt,
                     ),
                 )
                 if (res.isSuccessful && res.body()?.isSuccess == true) {
@@ -317,7 +317,7 @@ class TrackerDetailViewModel(
                         x = x,
                         y = y,
                         addressDetail = addressDetail,
-                        scheduledAt = scheduledAt,
+                        meetingAt = scheduledAt,
                     ),
                 )
                 if (res.isSuccessful && res.body()?.isSuccess == true) {

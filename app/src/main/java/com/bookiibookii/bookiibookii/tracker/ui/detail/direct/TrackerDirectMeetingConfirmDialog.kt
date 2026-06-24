@@ -21,9 +21,8 @@ import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.component.CloseButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 // 직접교환 약속 잡기 3/3 - 약속 확인
 @Composable
@@ -115,13 +114,9 @@ private fun TrackerDirectMeetingConfirmDialogContent(
     }
 }
 
-private val MEETING_DISPLAY_FORMATTER = DateTimeFormatter.ofPattern("yyyy. MM. dd. HH:mm")
-
-// "2026-05-20T14:30:00" → "2026. 05. 20. 14:30" (파싱 실패 시 원본 그대로)
+// offset 포함(+09:00)/UTC Z 모두 받아 KST "2026. 05. 20. 14:30" 로 표시 (파싱 실패 시 원본)
 private fun formatScheduledAt(scheduledAt: String): String =
-    runCatching {
-        LocalDateTime.parse(scheduledAt).format(MEETING_DISPLAY_FORMATTER)
-    }.getOrDefault(scheduledAt)
+    DateUtils.formatKstDateTime(scheduledAt)
 
 @Composable
 private fun StepChip(text: String) {

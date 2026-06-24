@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
 import com.bookiibookii.bookiibookii.ui.component.CloseButton
@@ -40,6 +41,7 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.YearMonth
 
 private val WEEKDAY_LABELS = listOf("일", "월", "화", "수", "목", "금", "토")
@@ -79,9 +81,7 @@ private fun TrackerDirectMeetingTimeDialogContent(
     val today = remember { LocalDate.now() }
     // 기존 일시 파싱(수정 모드). 실패하거나 없으면 null → 기본값 사용
     val initial = remember(initialScheduledAt) {
-        initialScheduledAt?.takeIf { it.isNotBlank() }?.let {
-            runCatching { LocalDateTime.parse(it) }.getOrNull()
-        }
+        DateUtils.parseKstLocalDateTime(initialScheduledAt)
     }
     var displayMonth by remember {
         mutableStateOf(YearMonth.from(initial?.toLocalDate() ?: today))
@@ -255,9 +255,8 @@ private fun buildScheduledAt(date: LocalDate, isAm: Boolean, hour12: Int, minute
         !isAm && hour12 != 12 -> hour12 + 12 // 오후 1~11시 → 13~23시
         else -> hour12                   // 오전 1~11시, 오후 12시
     }
-    return "%04d-%02d-%02dT%02d:%02d:00".format(
-        date.year, date.monthValue, date.dayOfMonth, hour24, minute,
-    )
+    // KST -> offset 포함 요청 문자열(+09:00)
+    return DateUtils.meetingAtFromKst(LocalDateTime.of(date, LocalTime.of(hour24, minute)))
 }
 
 @Composable
