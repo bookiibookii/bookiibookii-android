@@ -20,12 +20,16 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.GroupFragment
+import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
 import com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar
+import com.bookiibookii.bookiibookii.notification.nav.NotificationRedirect
+import com.bookiibookii.bookiibookii.notification.nav.NotificationRedirectRouter
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.tracker.TrackerFragment
+import com.bookiibookii.bookiibookii.tracker.nav.TrackerDestinations
 
 private enum class NavTab { HOME, TRACKER, LIBRARY }
 
@@ -114,13 +118,44 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         handleNavigationIntent(intent)
     }
 
+    // 알림(FCM 포그라운드/백그라운드, 인앱) 클릭 → 화면 이동.
+    // FCM data 또는 OS 가 주입한 extra를 라우터가 한 번에 파싱한다.
     private fun handleNavigationIntent(intent: Intent?) {
-        when (intent?.getStringExtra("NAV_ACTION")) {
-            "OPEN_GROUP" -> {
-                moveToGroupTab()
-                intent.removeExtra("NAV_ACTION")
+        val redirect = NotificationRedirectRouter.fromIntent(intent) ?: return
+        dispatchNotificationRedirect(redirect)
+        // 회전·onNewIntent 재설정 시 중복 처리 방지
+        intent?.removeExtra(NotificationRedirectRouter.KEY_REDIRECT_TYPE)
+    }
+
+    // redirectType(백엔드 RedirectType) → 목적지. groupId 없으면 해당 분기는 무시.
+    fun dispatchNotificationRedirect(redirect: NotificationRedirect) {
+        val groupId = redirect.groupId
+        when (redirect.redirectType) {
+            "EXPLORE_HOME" -> selectTab(NavTab.HOME, HomeFragment())
+            "TRACKER_HOME" -> selectTab(NavTab.TRACKER, TrackerFragment())
+            "APPLICATION_MANAGEMENT" -> groupId?.let {
+                pushDeepFragment(GroupFragment.newInstance(GroupDestinations.joinRequests(it.toString())))
             }
+            "GROUP_DETAIL" -> groupId?.let {
+                pushDeepFragment(GroupFragment.newInstance(GroupDestinations.detail(it)))
+            }
+            "TRACKER_DETAIL" -> groupId?.let {
+                pushDeepFragment(TrackerFragment.newInstance(TrackerDestinations.detail(it)))
+            }
+            "TRACKER_COMMENT" -> groupId?.let {
+                pushDeepFragment(TrackerFragment.newInstance(TrackerDestinations.comment(it, redirect.title.orEmpty())))
+            }
+            else -> Log.d("FCM", "라우팅 보류 redirectType=${redirect.redirectType}")
         }
+    }
+
+    // 상세류 화면 진입 — 바텀네비 숨기고 백스택에 쌓아 뒤로가기 시 이전 화면 복귀
+    private fun pushDeepFragment(fragment: Fragment) {
+        binding.bottomNav.root.visibility = View.GONE
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 
     private fun initBottomNav() {
@@ -142,11 +177,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         replaceFragment(fragment)
     }
 
-    fun moveToGroupTab() {
-        selectTab(NavTab.HOME, HomeFragment())
-    }
-
-    // 서재 탭으로 이동 (바텀네비 '서재'를 누른 것과 동일)
+    // 서재 탭으로 이동
     fun moveToLibraryTab() {
         selectTab(NavTab.LIBRARY, LibraryFragment())
     }

@@ -45,5 +45,12 @@ class MypageFragment : Fragment() {
                 putString(ARG_START_DESTINATION, MypageDestinations.addressManagement(initialTab))
             }
         }
+
+        // 알림 클릭 딥링크 진입 (예: 공지 상세)
+        fun newInstance(startDestination: String) = MypageFragment().apply {
+            arguments = Bundle().apply {
+                putString(ARG_START_DESTINATION, startDestination)
+            }
+        }
     }
 }
