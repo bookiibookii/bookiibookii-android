@@ -38,4 +38,6 @@ data class TrackerDetailUiState(
     val steps: List<TrackerStep> = emptyList(),
     val loading: Boolean = false,
     val error: String? = null,
+    // 삭제된/존재하지 않는 그룹(404) → 삭제된 페이지 화면
+    val notFound: Boolean = false,
 )

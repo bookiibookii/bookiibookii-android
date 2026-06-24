@@ -18,6 +18,8 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.openExternalUrl
 import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.error.ErrorActivity
+import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.deliveryTrackingUrl
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
@@ -71,6 +73,13 @@ fun TrackerDetailRoute(
     val partnerDelivery by viewModel.partnerDelivery.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
+
+    // 삭제된/존재하지 않는 그룹(404) → 삭제된 페이지 화면
+    LaunchedEffect(uiState.notFound) {
+        if (uiState.notFound) {
+            context.startActivity(ErrorActivity.newIntent(context, ErrorType.GROUP_DELETED))
+        }
+    }
 
     // 최초 진입은 VM init에서 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
     // 하위 화면(서재/리뷰 등)에서 복귀할 때만 상세를 재조회한다. (rememberSaveable로 백스택 복귀 시에도 유지)
