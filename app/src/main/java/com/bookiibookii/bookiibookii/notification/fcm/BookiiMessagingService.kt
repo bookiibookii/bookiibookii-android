@@ -44,9 +44,9 @@ class BookiiMessagingService : FirebaseMessagingService() {
 
     // data 는 클릭 시 화면 이동을 위해 Intent extra(String)로 그대로 싣는다.
     // 백그라운드/종료 상태에서 OS 가 트레이 클릭으로 주입하는 extra 와 같은 형식 →
-    // MainActivity 가 양쪽을 동일하게 라우팅한다.
+    // MainActivity 가 양쪽을 동일하게 라우팅
     private fun showNotification(title: String, body: String, data: Map<String, String>) {
-        // 알림마다 다른 ID — 알림이 덮어쓰지 않고 쌓이며, PendingIntent extra 도 분리된다.
+        // 알림마다 다른 ID — 알림이 덮어쓰지 않고 쌓이며, PendingIntent extra 도 분리
         val notificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
 
         val intent = Intent(this, MainActivity::class.java).apply {

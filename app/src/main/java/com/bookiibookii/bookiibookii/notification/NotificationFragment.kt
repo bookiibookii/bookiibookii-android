@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.notification.nav.NotificationDestinations
 import com.bookiibookii.bookiibookii.notification.nav.NotificationNavHost
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -26,6 +27,7 @@ class NotificationFragment : Fragment() {
                 NotificationNavHost(
                     startDestination = startDestination,
                     onExit = { parentFragmentManager.popBackStack() },
+                    onRedirect = { (activity as? MainActivity)?.dispatchNotificationRedirect(it) },
                 )
             }
         }
