@@ -117,9 +117,10 @@ dependencies {
 
     implementation("com.kakao.sdk:v2-all:2.20.1")
 
-    // Firebase Cloud Messaging (푸시 알림)
+    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.analytics)
 
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
