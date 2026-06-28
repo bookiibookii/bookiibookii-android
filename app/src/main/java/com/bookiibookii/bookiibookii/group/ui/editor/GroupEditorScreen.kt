@@ -39,7 +39,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.TextRange
-import java.text.Normalizer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -195,6 +195,7 @@ fun GroupEditorScreen(
                         onClearClick = onClearBookSearch,
                         results = uiState.bookSearchResults,
                         onBookSelect = onBookSelect,
+                        bookSelected = uiState.isbn13 != null,
                         error = uiState.bookSearchError,
                     )
                 }
@@ -334,15 +335,19 @@ private fun BookSearchSection(
     onClearClick: () -> Unit,
     results: List<BookItem>,
     onBookSelect: (BookItem) -> Unit,
+    bookSelected: Boolean = false,
     error: String? = null,
 ) {
     var fieldSize by remember { mutableStateOf(IntSize.Zero) }
     val density = LocalDensity.current
-    // 커서 제어를 위해 TextFieldValue 사용. 외부 query 변경(도서 선택/초기화) 시 동기화하며 커서를 맨 뒤로
+    // 책 선택 시 키보드를 내리기 위한 포커스 매니저
+    val focusManager = LocalFocusManager.current
+    // 커서 제어를 위해 TextFieldValue 사용. 외부 query 변경(도서 선택/초기화) 시 동기화하며 커서를 맨 앞으로
+    // (긴 책 제목도 처음부터 보이도록)
     var fieldValue by remember { mutableStateOf(TextFieldValue(query)) }
     LaunchedEffect(query) {
         if (fieldValue.text != query) {
-            fieldValue = TextFieldValue(text = query, selection = TextRange(query.length))
+            fieldValue = TextFieldValue(text = query, selection = TextRange(0))
         }
     }
     // 도서 선택 시 검색 필드를 한 번 하이라이트
@@ -385,17 +390,11 @@ private fun BookSearchSection(
                 BasicTextField(
                     value = fieldValue,
                     onValueChange = { newValue ->
-                        val oldLen = Normalizer.normalize(fieldValue.text, Normalizer.Form.NFD).length
-                        val newLen = Normalizer.normalize(newValue.text, Normalizer.Form.NFD).length
-                        if (newLen < oldLen) {
-                            // 한 글자라도 삭제하면 전부 삭제
-                            fieldValue = TextFieldValue("")
-                            onClearClick()
-                        } else {
-                            fieldValue = newValue
-                            onQueryChange(newValue.text)
-                        }
+                        fieldValue = newValue
+                        onQueryChange(newValue.text)
                     },
+                    // 책을 고르면 더 이상 텍스트를 입력/수정할 수 없게 함 (초기화는 X 버튼으로)
+                    enabled = !bookSelected,
                     singleLine = true,
                     textStyle = BookiiBookiiTheme.typography.regular16.copy(
                         color = BookiiBookiiTheme.colors.grey900,
@@ -441,6 +440,8 @@ private fun BookSearchSection(
                         onBookClick = { book ->
                             selectTick++
                             onBookSelect(book)
+                            // 책 선택 시 키보드 내림
+                            focusManager.clearFocus()
                         },
                         modifier = Modifier
                             .width(with(density) { fieldSize.width.toDp() })

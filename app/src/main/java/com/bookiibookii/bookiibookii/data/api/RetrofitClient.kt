@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.data.api
 
 import android.content.Context
+import com.bookiibookii.bookiibookii.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -9,8 +10,8 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // dev 도메인 주소
-    private const val BASE_URL = "https://bookii.gyeonseo.com/"
+    // 빌드 타입별 도메인 주소 (debug: bookii / release: bookiibookii)
+    private val BASE_URL = BuildConfig.BASE_URL
 
     private lateinit var authedRetrofit: Retrofit
     private lateinit var noAuthRetrofit: Retrofit
