@@ -225,6 +225,7 @@ fun GroupDetailRoute(
                 GroupApplyDialog(
                     bookSearchQuery = applyState.bookSearchQuery,
                     bookSearchResults = applyState.bookSearchResults,
+                    bookSelected = applyState.isbn13 != null,
                     applyMsg = applyState.applyMsg,
                     canSubmit = applyState.canSubmit && !applyState.submitting,
                     onQueryChange = applyViewModel::onBookSearchQueryChange,

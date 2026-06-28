@@ -153,6 +153,8 @@ class GroupEditorViewModel(
             isbn13 = book.isbn13,
             bookSearchQuery = book.title,
             bookSearchResults = emptyList(),
+            // 이전 검색에서 남은 에러 메시지가 책 선택 후 다시 드러나지 않도록 비움
+            bookSearchError = null,
         )
     }
 
