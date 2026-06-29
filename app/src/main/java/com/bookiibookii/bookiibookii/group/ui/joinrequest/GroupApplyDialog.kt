@@ -50,7 +50,6 @@ import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.group.ui.component.BookSearchDropdown
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
-import java.text.Normalizer
 
 // 그룹 참여 신청 다이얼로그
 // 활성화: isbn13 != null && applyMsg 비어있지 않음
@@ -58,6 +57,7 @@ import java.text.Normalizer
 fun GroupApplyDialog(
     bookSearchQuery: String,
     bookSearchResults: List<BookItem>,
+    bookSelected: Boolean,
     applyMsg: String,
     canSubmit: Boolean,
     onQueryChange: (String) -> Unit,
@@ -108,6 +108,7 @@ fun GroupApplyDialog(
         BookSearchField(
             query = bookSearchQuery,
             results = bookSearchResults,
+            bookSelected = bookSelected,
             onQueryChange = onQueryChange,
             onSearchClick = onSearchClick,
             onClearClick = onClearClick,
@@ -132,6 +133,7 @@ fun GroupApplyDialog(
 private fun BookSearchField(
     query: String,
     results: List<BookItem>,
+    bookSelected: Boolean,
     onQueryChange: (String) -> Unit,
     onSearchClick: () -> Unit,
     onClearClick: () -> Unit,
@@ -139,11 +141,12 @@ private fun BookSearchField(
 ) {
     var fieldSize by remember { mutableStateOf(IntSize.Zero) }
     val density = LocalDensity.current
-    // 커서 제어를 위해 TextFieldValue 사용
+    // 커서 제어를 위해 TextFieldValue 사용. 외부 query 변경(도서 선택/초기화) 시 커서를 맨 앞으로
+    // (긴 책 제목도 처음부터 보이도록)
     var fieldValue by remember { mutableStateOf(TextFieldValue(query)) }
     LaunchedEffect(query) {
         if (fieldValue.text != query) {
-            fieldValue = TextFieldValue(text = query, selection = TextRange(query.length))
+            fieldValue = TextFieldValue(text = query, selection = TextRange(0))
         }
     }
     // 도서 선택 시 검색 필드를 한 번 하이라이트
@@ -185,17 +188,11 @@ private fun BookSearchField(
             BasicTextField(
                 value = fieldValue,
                 onValueChange = { newValue ->
-                    val oldLen = Normalizer.normalize(fieldValue.text, Normalizer.Form.NFD).length
-                    val newLen = Normalizer.normalize(newValue.text, Normalizer.Form.NFD).length
-                    if (newLen < oldLen) {
-                        // 한 글자라도 삭제하면 전부 삭제
-                        fieldValue = TextFieldValue("")
-                        onClearClick()
-                    } else {
-                        fieldValue = newValue
-                        onQueryChange(newValue.text)
-                    }
+                    fieldValue = newValue
+                    onQueryChange(newValue.text)
                 },
+                // 책을 고르면 입력 세션을 끊어 더 이상 텍스트를 입력/수정할 수 없게 함 (초기화는 X 버튼으로)
+                enabled = !bookSelected,
                 singleLine = true,
                 textStyle = BookiiBookiiTheme.typography.regular16.copy(
                     color = BookiiBookiiTheme.colors.grey900,
@@ -216,6 +213,14 @@ private fun BookSearchField(
                         innerTextField()
                     }
                 },
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_x),
+                contentDescription = "초기화",
+                tint = BookiiBookiiTheme.colors.black,
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable { onClearClick() },
             )
         }
         if (results.isNotEmpty()) {
@@ -338,6 +343,7 @@ private fun GroupApplyDialogEmptyPreview() {
             GroupApplyDialog(
                 bookSearchQuery = "",
                 bookSearchResults = emptyList(),
+                bookSelected = false,
                 applyMsg = "",
                 canSubmit = false,
                 onQueryChange = {},
@@ -360,6 +366,7 @@ private fun GroupApplyDialogFilledPreview() {
             GroupApplyDialog(
                 bookSearchQuery = "녹나무의 여신",
                 bookSearchResults = emptyList(),
+                bookSelected = true,
                 applyMsg = "안녕하세요! 끝까지 완독할 자신 있습니다.",
                 canSubmit = true,
                 onQueryChange = {},

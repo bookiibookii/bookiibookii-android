@@ -23,8 +23,8 @@ android {
         applicationId = "com.bookiibookii.bookiibookii_d"
         minSdk = 28
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -53,6 +53,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"https://bookii.gyeonseo.com/\"")
+        }
         release {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
@@ -60,6 +63,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "BASE_URL", "\"https://bookiibookii.gyeonseo.com/\"")
         }
     }
     compileOptions {
@@ -130,9 +134,10 @@ dependencies {
 
     implementation("com.kakao.sdk:v2-all:2.20.1")
 
-    // Firebase Cloud Messaging (푸시 알림)
+    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.analytics)
 
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 

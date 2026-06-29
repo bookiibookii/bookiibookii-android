@@ -49,5 +49,8 @@ google-services.json
 .cxx
 local.properties
 
+# Kotlin compiler sessions
+.kotlin/
+
 # Claude Code
 .claude/
