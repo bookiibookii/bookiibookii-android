@@ -7,7 +7,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.foundation.layout.defaultMinSize
@@ -268,17 +266,13 @@ internal fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: 
             )
         }
 
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            val gap = 8.dp
-            val itemWidth = (maxWidth - gap * 6) / 7
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(gap),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                books.forEachIndexed { index, book ->
-                    BookSpineItem(title = book.title, isOrange = index % 2 == 0, modifier = Modifier.width(itemWidth))
-                }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            books.forEachIndexed { index, book ->
+                BookSpineItem(title = book.title, isOrange = index % 2 == 0, modifier = Modifier.weight(1f))
             }
         }
     }

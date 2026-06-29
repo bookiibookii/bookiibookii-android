@@ -57,6 +57,28 @@ data class WithdrawalReqDTO(
     val customReason: String? = null,
 )
 
+// POST /api/mypage/share-token
+data class ProfileShareTokenResponseDTO(
+    val shareToken: String,
+    val shareUrl: String,
+)
+
+// GET /api/public/profiles/{shareToken}
+data class PublicProfileResponseDTO(
+    val nickname: String,
+    val profileImageUrl: String?,
+    val introduction: String?,
+    val representativeBooks: List<RepresentativeBookPublicDto>,
+)
+
+data class RepresentativeBookPublicDto(
+    val title: String,
+    val author: String?,
+    val image: String?,
+    val displayOrder: Int = 0,
+    val rating: Double? = null,
+)
+
 // 하위 호환 유지용 (LoginActivity, user/Profile.kt에서 참조 중 — 해당 파일 담당팀 업데이트 전까지 유지)
 data class MypageResult(
     val userId: Int,

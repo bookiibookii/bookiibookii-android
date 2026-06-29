@@ -49,8 +49,8 @@ fun MypageMainRoute(
     onReceivedReviewClick: () -> Unit,
     onInstagramShareClick: (isDark: Boolean) -> Unit,
     onDownloadClick: (isDark: Boolean) -> Unit,
-    onXShareClick: () -> Unit,
-    onLinkCopyClick: () -> Unit,
+    onXShareClick: (isDark: Boolean) -> Unit,
+    onLinkCopyClick: (isDark: Boolean) -> Unit,
 ) {
     val profile by viewModel.profileData.observeAsState()
 
@@ -88,8 +88,8 @@ fun MypageScreen(
     onAddressManagementClick: () -> Unit = {},
     onInstagramShareClick: (isDark: Boolean) -> Unit = {},
     onDownloadClick: (isDark: Boolean) -> Unit = {},
-    onXShareClick: () -> Unit = {},
-    onLinkCopyClick: () -> Unit = {},
+    onXShareClick: (isDark: Boolean) -> Unit = {},
+    onLinkCopyClick: (isDark: Boolean) -> Unit = {},
 ) {
     var isMottoEditing by remember { mutableStateOf(false) }
     var mottoInput by remember(profile?.introduction) { mutableStateOf(profile?.introduction ?: "") }
@@ -160,8 +160,8 @@ fun MypageScreen(
                 onDismiss = { showShareDialog = false },
                 onInstagramClick = { isDark -> showShareDialog = false; onInstagramShareClick(isDark) },
                 onDownloadClick = { isDark -> showShareDialog = false; onDownloadClick(isDark) },
-                onXClick = { showShareDialog = false; onXShareClick() },
-                onLinkCopyClick = { showShareDialog = false; onLinkCopyClick() },
+                onXClick = { isDark -> showShareDialog = false; onXShareClick(isDark) },
+                onLinkCopyClick = { isDark -> showShareDialog = false; onLinkCopyClick(isDark) },
             )
         }
     }

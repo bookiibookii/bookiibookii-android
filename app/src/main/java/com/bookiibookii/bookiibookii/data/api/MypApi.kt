@@ -18,6 +18,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.ReportListResponse
 import com.bookiibookii.bookiibookii.data.model.mypage.ReportRequest
 import com.bookiibookii.bookiibookii.data.model.mypage.UpdateIntroductionReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UpdateRepresentativeOrderRequest
+import com.bookiibookii.bookiibookii.data.model.mypage.ProfileShareTokenResponseDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.WithdrawalReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.WrittenReviews
@@ -108,6 +109,10 @@ interface MypApi {
         @Path("userBookId") userBookId: Long,
         @Body request: AddFavoriteBookRequest,
     ): Response<ApiResponse<String>>
+
+    // 프로필 공유 토큰 발급
+    @POST("api/mypage/share-token")
+    suspend fun createProfileShareToken(): Response<ApiResponse<ProfileShareTokenResponseDTO>>
 
     // 공지 목록 조회
     @GET("api/notice")

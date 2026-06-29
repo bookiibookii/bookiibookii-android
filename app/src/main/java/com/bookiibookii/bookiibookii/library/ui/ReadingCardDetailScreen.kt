@@ -126,20 +126,6 @@ private data class Particle(
     val rotation: Float,
 )
 
-private fun createUiMainPaleGradientBackground(width: Int = 1080, height: Int = 1920): android.graphics.Bitmap {
-    val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
-    val canvas = android.graphics.Canvas(bitmap)
-    val paint = android.graphics.Paint().apply {
-        shader = android.graphics.LinearGradient(
-            0f, 0f, 0f, height.toFloat(),
-            com.bookiibookii.bookiibookii.ui.theme.UiMainPale.toArgb(),
-            android.graphics.Color.WHITE,
-            android.graphics.Shader.TileMode.CLAMP,
-        )
-    }
-    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-    return bitmap
-}
 
 private fun saveCardBitmapToGallery(context: android.content.Context, bitmap: android.graphics.Bitmap): Boolean {
     val resolver = context.contentResolver
@@ -168,23 +154,29 @@ private fun saveCardBitmapToGallery(context: android.content.Context, bitmap: an
     }
 }
 
-private fun compositeCardOnGradientBackground(card: android.graphics.Bitmap): android.graphics.Bitmap {
-    val canvasBitmap = createUiMainPaleGradientBackground()
+private fun compositeCardOnWhiteBackground(card: android.graphics.Bitmap): android.graphics.Bitmap {
+    val canvasWidth = 1080
+    val canvasHeight = 1920
+    val canvasBitmap = android.graphics.Bitmap.createBitmap(canvasWidth, canvasHeight, android.graphics.Bitmap.Config.ARGB_8888)
     val canvas = android.graphics.Canvas(canvasBitmap)
-    val canvasWidth = canvasBitmap.width
-    val canvasHeight = canvasBitmap.height
+    canvas.drawColor(android.graphics.Color.WHITE)
 
     val maxWidth = canvasWidth * 0.85f
     val maxHeight = canvasHeight * 0.75f
     val scale = minOf(maxWidth / card.width, maxHeight / card.height, 1f)
     val drawWidth = (card.width * scale).toInt()
     val drawHeight = (card.height * scale).toInt()
-    val left = (canvasWidth - drawWidth) / 2
-    val top = (canvasHeight - drawHeight) / 2
+    val left = ((canvasWidth - drawWidth) / 2).toFloat()
+    val top = ((canvasHeight - drawHeight) / 2).toFloat()
 
-    val destRect = android.graphics.Rect(left, top, left + drawWidth, top + drawHeight)
-    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
-    canvas.drawBitmap(card, null, destRect, paint)
+    val shadowPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        maskFilter = android.graphics.BlurMaskFilter(30f, android.graphics.BlurMaskFilter.Blur.NORMAL)
+        color = android.graphics.Color.argb(50, 0, 0, 0)
+    }
+    canvas.drawRect(left, top, left + drawWidth, top + drawHeight, shadowPaint)
+
+    val cardPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+    canvas.drawBitmap(card, null, android.graphics.RectF(left, top, left + drawWidth, top + drawHeight), cardPaint)
     return canvasBitmap
 }
 
@@ -195,7 +187,7 @@ private fun captureShareableCardBitmap(
     onBitmap: (android.graphics.Bitmap?) -> Unit,
 ) {
     val cardWidthPx = (context.resources.displayMetrics.widthPixels * 0.85f).toInt()
-    val cardHeightPx = (cardWidthPx * 520f / 320f).toInt()
+    val cardHeightPx = (cardWidthPx * 464f / 320f).toInt()
 
     val offscreenImageLoader = coil.ImageLoader.Builder(context).allowHardware(false).build()
 
@@ -261,6 +253,25 @@ private fun launchInstagramStoryIntentFor(context: android.content.Context, stic
     }
 }
 
+private fun launchInstagramStoryBackgroundOnly(context: android.content.Context, backgroundUri: android.net.Uri) {
+    val intent = android.content.Intent("com.instagram.share.ADD_TO_STORY").apply {
+        setPackage("com.instagram.android")
+        setDataAndType(backgroundUri, "image/*")
+        putExtra("source_application", context.packageName)
+        flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+    }
+    intent.clipData = android.content.ClipData.newRawUri("Background", backgroundUri)
+    val resInfoList = context.packageManager.queryIntentActivities(intent, 0)
+    for (info in resInfoList) {
+        context.grantUriPermission(info.activityInfo.packageName, backgroundUri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    try {
+        context.startActivity(intent)
+    } catch (_: Exception) {
+        context.showCustomToast("인스타그램 앱을 찾을 수 없습니다.", false)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReadingCardDetailRoute(
@@ -317,7 +328,12 @@ fun ReadingCardDetailRoute(
 
     fun fetchShareUrl(card: ReadingCard, cardVersion: Int, onResult: (String?) -> Unit) {
         coroutineScope.launch {
-            val shareLayout = if (cardVersion == 1) "SPLIT" else "OVERLAY"
+            // PHOTO: v1=OVERLAY, v2=SPLIT | QUOTE: v1=SPLIT, v2=OVERLAY
+            val shareLayout = if (card.type == ReadingCardType.PHOTO) {
+                if (cardVersion == 1) "OVERLAY" else "SPLIT"
+            } else {
+                if (cardVersion == 1) "SPLIT" else "OVERLAY"
+            }
             val shareUrl = try {
                 withContext(kotlinx.coroutines.Dispatchers.IO) {
                     val resp = com.bookiibookii.bookiibookii.data.api.RetrofitClient.libApi()
@@ -417,11 +433,7 @@ fun ReadingCardDetailRoute(
                     val imagesDir = java.io.File(context.cacheDir, "images").apply { mkdirs() }
                     imagesDir.listFiles()?.forEach { it.delete() }
 
-                    val stickerFile = java.io.File(imagesDir, "card_sticker_${System.currentTimeMillis()}.png")
-                    java.io.FileOutputStream(stickerFile).use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
-                    val stickerUri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", stickerFile)
-
-                    val bgBitmap = createUiMainPaleGradientBackground()
+                    val bgBitmap = compositeCardOnWhiteBackground(bitmap)
                     bitmap.recycle()
                     val bgFile = java.io.File(imagesDir, "bg_${System.currentTimeMillis()}.png")
                     java.io.FileOutputStream(bgFile).use { bgBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
@@ -429,7 +441,7 @@ fun ReadingCardDetailRoute(
                     val backgroundUri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", bgFile)
 
                     withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        launchInstagramStoryIntentFor(context, stickerUri, backgroundUri)
+                        launchInstagramStoryBackgroundOnly(context, backgroundUri)
                     }
                 } catch (e: Exception) {
                     withContext(kotlinx.coroutines.Dispatchers.Main) {
@@ -505,7 +517,7 @@ private fun saveCardToGalleryFor(
             return@captureShareableCardBitmap
         }
         coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val finalBitmap = compositeCardOnGradientBackground(bitmap)
+            val finalBitmap = compositeCardOnWhiteBackground(bitmap)
             bitmap.recycle()
             val saved = saveCardBitmapToGallery(context, finalBitmap)
             finalBitmap.recycle()
@@ -840,6 +852,33 @@ private fun PhotoCard(
     onParticleEnd: (Particle) -> Unit,
 ) {
     if (cardVersion == 1) {
+        // OVERLAY (첫 번째 타입)
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
+                if (!card.imageUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model              = card.imageUrl,
+                        contentDescription = null,
+                        contentScale       = ContentScale.Crop,
+                        modifier           = Modifier.matchParentSize(),
+                    )
+                }
+            }
+            Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(PHOTO_GRADIENT_HEIGHT_FRACTION).background(photoCardTopGradient))
+            if (card.content.isNotBlank()) {
+                Text(
+                    text = card.content,
+                    style = BookiiBookiiTheme.typography.regular16,
+                    color = BookiiBookiiTheme.colors.grey800,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 52.dp, end = 20.dp),
+                )
+            }
+            ReactionOverlay(particles, onParticleEnd, Modifier.align(Alignment.BottomStart).padding(bottom = 56.dp, start = 24.dp))
+        }
+    } else {
+        // SPLIT (두 번째 타입)
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
                 Box(
@@ -870,31 +909,6 @@ private fun PhotoCard(
                 }
             }
             ReactionOverlay(particles, onParticleEnd, Modifier.align(Alignment.BottomStart).padding(bottom = 128.dp, start = 24.dp))
-        }
-    } else {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
-                if (!card.imageUrl.isNullOrBlank()) {
-                    AsyncImage(
-                        model              = card.imageUrl,
-                        contentDescription = null,
-                        contentScale       = ContentScale.Crop,
-                        modifier           = Modifier.matchParentSize(),
-                    )
-                }
-            }
-            Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(PHOTO_GRADIENT_HEIGHT_FRACTION).background(photoCardTopGradient))
-            if (card.content.isNotBlank()) {
-                Text(
-                    text = card.content,
-                    style = BookiiBookiiTheme.typography.regular16,
-                    color = BookiiBookiiTheme.colors.grey800,
-                    maxLines = 4,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 52.dp, end = 20.dp),
-                )
-            }
-            ReactionOverlay(particles, onParticleEnd, Modifier.align(Alignment.BottomStart).padding(bottom = 56.dp, start = 24.dp))
         }
     }
 }
@@ -961,37 +975,7 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
     Box(modifier = modifier.clip(RoundedCornerShape(20.dp)).background(BookiiBookiiTheme.colors.white)) {
         when (card.type) {
             ReadingCardType.PHOTO -> if (cardVersion == 1) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(BookiiBookiiTheme.colors.grey300)) {
-                        if (!card.imageUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(card.imageUrl)
-                                    .allowHardware(false)
-                                    .build(),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.matchParentSize(),
-                            )
-                        }
-                        if (card.bookTitle.isNotBlank()) {
-                            Box(modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 40.dp)) {
-                                BookTitleChip(title = card.bookTitle, solidBackground = true)
-                            }
-                        }
-                    }
-                    Box(modifier = Modifier.fillMaxWidth().weight(128f / 464f)) {
-                        if (card.content.isNotBlank()) {
-                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 20.dp))
-                        }
-                        if (card.username.isNotBlank()) {
-                            Text(card.username, style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400,
-                                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp))
-                        }
-                    }
-                }
-            } else {
+                // OVERLAY (첫 번째 타입)
                 Box(modifier = Modifier.fillMaxSize()) {
                     Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
                         if (!card.imageUrl.isNullOrBlank()) {
@@ -1009,9 +993,15 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                     Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(PHOTO_GRADIENT_HEIGHT_FRACTION).background(photoCardTopGradient))
                     if (card.bookTitle.isNotBlank()) {
                         Box(modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 40.dp)) {
-                            BookTitleChip(title = card.bookTitle, solidBackground = true)
+                            BookTitleChip(title = card.bookTitle.stripBookSubtitle(), style = BookTitleChipStyle.PALE_FILL)
                         }
                     }
+                    Icon(
+                        painter = painterResource(R.drawable.ic_logo_symbol),
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.85f),
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 18.dp).size(20.dp),
+                    )
                     if (card.content.isNotBlank()) {
                         Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 52.dp, end = 20.dp))
@@ -1020,8 +1010,38 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                         Text("by. ${card.username}", style = BookiiBookiiTheme.typography.regular14, color = Color.White,
                             modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 20.dp))
                     }
-                    Text("B", color = Color.White.copy(alpha = 0.85f), fontSize = 20.sp, fontWeight = FontWeight.Black,
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 18.dp))
+                }
+            } else {
+                // SPLIT (두 번째 타입)
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(BookiiBookiiTheme.colors.grey300)) {
+                        if (!card.imageUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(card.imageUrl)
+                                    .allowHardware(false)
+                                    .build(),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.matchParentSize(),
+                            )
+                        }
+                        if (card.bookTitle.isNotBlank()) {
+                            Box(modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 40.dp)) {
+                                BookTitleChip(title = card.bookTitle.stripBookSubtitle())
+                            }
+                        }
+                    }
+                    Box(modifier = Modifier.fillMaxWidth().weight(128f / 464f)) {
+                        if (card.content.isNotBlank()) {
+                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 20.dp))
+                        }
+                        if (card.username.isNotBlank()) {
+                            Text("by. ${card.username}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400,
+                                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp))
+                        }
+                    }
                 }
             }
             ReadingCardType.QUOTE -> {
@@ -1046,7 +1066,10 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Spacer(modifier = Modifier.height(20.dp))
                             if (card.bookTitle.isNotBlank()) {
-                                BookTitleChip(title = card.bookTitle, solidBackground = cardVersion != 1)
+                                BookTitleChip(
+                                    title = card.bookTitle.stripBookSubtitle(),
+                                    style = if (cardVersion == 2) BookTitleChipStyle.WHITE_STROKE else BookTitleChipStyle.SOLID,
+                                )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
@@ -1119,7 +1142,7 @@ private fun CardVersionDot(
                         modifier         = Modifier.fillMaxSize().background(bgColor),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(text = "T", color = txtColor, fontSize = 15.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
+                        Text(text = "T", color = txtColor, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
                     }
                 }
             }

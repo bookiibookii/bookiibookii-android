@@ -59,9 +59,9 @@ fun ProfileShareDialog(
     representativeBooks: List<UserBookDto> = emptyList(),
     onDismiss: () -> Unit = {},
     onInstagramClick: (isDark: Boolean) -> Unit = {},
-    onXClick: () -> Unit = {},
+    onXClick: (isDark: Boolean) -> Unit = {},
     onDownloadClick: (isDark: Boolean) -> Unit = {},
-    onLinkCopyClick: () -> Unit = {},
+    onLinkCopyClick: (isDark: Boolean) -> Unit = {},
 ) {
     var isDark by remember { mutableStateOf(false) }
 
@@ -172,7 +172,7 @@ fun ProfileShareDialog(
                             iconTint = Color.Unspecified,
                             iconSize = 56.dp,
                             labelColor = shareLabelColor,
-                            onClick = onXClick,
+                            onClick = { onXClick(isDark) },
                         )
                         ShareActionItem(
                             iconRes = R.drawable.ic_download,
@@ -188,7 +188,7 @@ fun ProfileShareDialog(
                             bgColor = BookiiBookiiTheme.colors.grey100,
                             iconTint = BookiiBookiiTheme.colors.grey900,
                             labelColor = shareLabelColor,
-                            onClick = onLinkCopyClick,
+                            onClick = { onLinkCopyClick(isDark) },
                         )
                     }
                 }
