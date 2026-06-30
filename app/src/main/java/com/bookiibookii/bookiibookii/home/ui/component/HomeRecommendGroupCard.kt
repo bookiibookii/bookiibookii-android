@@ -49,7 +49,7 @@ internal fun RecommendGroupRow(
             state = pagerState,
             pageSize = PageSize.Fixed(334.dp),
             pageSpacing = 12.dp,
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
             // 한 번 스와이프 = 한 장씩(Pager 기본) + 느리고 묵직한 스냅으로 무게감.
             // 더 빠르게/덜 묵직하게 하려면 stiffness를 올리면 됨(StiffnessLow→MediumLow→Medium).
             flingBehavior = PagerDefaults.flingBehavior(
@@ -107,12 +107,6 @@ private fun HomeRecommendGroupCard(
     Column(
         modifier = modifier
             .width(334.dp)
-            .shadow(
-                elevation = 8.dp,
-                shape = shape,
-                ambientColor = Color(0x33000000),
-                spotColor = Color(0x33000000),
-            )
             .clip(shape)
             .background(colors.white)
             .clickable(onClick = onClick)
@@ -126,6 +120,7 @@ private fun HomeRecommendGroupCard(
         ) {
             BookCover(
                 imageUrl = group.bookImage,
+                aladinCoverSize = "cover200",
                 modifier = Modifier.size(width = 72.dp, height = 100.dp),
             )
 

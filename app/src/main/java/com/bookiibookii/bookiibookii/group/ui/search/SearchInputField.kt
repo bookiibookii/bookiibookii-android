@@ -14,9 +14,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -44,10 +48,16 @@ fun SearchInputField(
         bottomEnd = 30.dp,
     )
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
     val submit = {
         focusManager.clearFocus()
         onSearch()
     }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     Row(
         modifier = modifier
             .clip(shape)
@@ -66,7 +76,9 @@ fun SearchInputField(
             cursorBrush = SolidColor(BookiiBookiiTheme.colors.uiMain),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { submit() }),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .focusRequester(focusRequester),
             decorationBox = { innerTextField ->
                 Box(contentAlignment = Alignment.CenterStart) {
                     if (query.isEmpty()) {

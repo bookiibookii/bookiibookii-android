@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -19,7 +21,7 @@ import com.bookiibookii.bookiibookii.data.model.group.GroupItem
 import com.bookiibookii.bookiibookii.data.model.group.HomeLayoutType
 import com.bookiibookii.bookiibookii.data.model.group.HomeSection
 import com.bookiibookii.bookiibookii.data.model.group.HomeSectionItem
-import com.bookiibookii.bookiibookii.home.ui.component.RecommendBookGrid
+import com.bookiibookii.bookiibookii.home.ui.component.BookThumbnail
 import com.bookiibookii.bookiibookii.home.ui.component.RecommendBookRow
 import com.bookiibookii.bookiibookii.home.ui.component.RecommendGroupRow
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -30,7 +32,12 @@ internal fun LazyListScope.homeRecommendContent(
     onGroupClick: (Long) -> Unit,
     onBookClick: (HomeSectionItem) -> Unit = {},
 ) {
-    item { Box(Modifier.fillMaxWidth().height(8.dp)) }
+    item(
+        key = "recommend-top-spacer",
+        contentType = "spacer",
+    ) {
+        Box(Modifier.fillMaxWidth().height(8.dp))
+    }
 
     // 아이템 없는 섹션 + 미지원 레이아웃은 숨김. 나머지는 응답 순서대로 렌더.
     val visibleSections = sections.filter {
@@ -39,19 +46,19 @@ internal fun LazyListScope.homeRecommendContent(
 
     visibleSections.forEachIndexed { index, section ->
         if (index > 0) {
-            item { Box(Modifier.fillMaxWidth().height(8.dp)) }
+            item(
+                key = "${section.sectionType}-$index-spacer",
+                contentType = "spacer",
+            ) { Box(Modifier.fillMaxWidth().height(8.dp)) }
         }
-        item {
-            when (section.layoutType) {
-                HomeLayoutType.GROUP_CARD_CAROUSEL -> GroupCarouselSection(section, onGroupClick)
-                HomeLayoutType.BOOK_THUMBNAIL_CAROUSEL -> BookCarouselSection(section, onBookClick)
-                HomeLayoutType.BOOK_THUMBNAIL_GRID -> BookGridSection(section, onBookClick)
-            }
+
+        when (section.layoutType) {
+            HomeLayoutType.GROUP_CARD_CAROUSEL -> groupCarouselSectionItems(index, section, onGroupClick)
+            HomeLayoutType.BOOK_THUMBNAIL_CAROUSEL -> bookCarouselSectionItems(index, section, onBookClick)
+            HomeLayoutType.BOOK_THUMBNAIL_GRID -> bookGridSectionItems(index, section, onBookClick)
         }
     }
 
-    // 하단 여백
-    item { Box(Modifier.height(80.dp)) }
 }
 
 private val SUPPORTED_LAYOUTS = setOf(
@@ -60,77 +67,128 @@ private val SUPPORTED_LAYOUTS = setOf(
     HomeLayoutType.BOOK_THUMBNAIL_GRID,
 )
 
-// 그룹 카드 캐러셀
-@Composable
-private fun GroupCarouselSection(
+private fun LazyListScope.sectionHeaderItem(
+    sectionIndex: Int,
+    section: HomeSection,
+) {
+    item(
+        key = "${section.sectionType}-$sectionIndex-header",
+        contentType = "section-header",
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.white)
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp),
+        ) {
+            HomeSectionHeader(
+                title = section.title,
+                subtitle = section.subtitle,
+            )
+        }
+    }
+}
+
+private fun LazyListScope.groupCarouselSectionItems(
+    sectionIndex: Int,
     section: HomeSection,
     onGroupClick: (Long) -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BookiiBookiiTheme.colors.white)
-            .padding(top = 16.dp, bottom = 16.dp),
+    sectionHeaderItem(sectionIndex, section)
+    item(
+        key = "${section.sectionType}-$sectionIndex-content",
+        contentType = HomeLayoutType.GROUP_CARD_CAROUSEL,
     ) {
-        HomeSectionHeader(
-            title = section.title,
-            subtitle = section.subtitle,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
-        Box(Modifier.height(12.dp))
-        RecommendGroupRow(
-            groups = section.items.map { it.toGroupItem() },
-            onGroupClick = onGroupClick,
-        )
+        val groups = remember(section.items) { section.items.map { it.toGroupItem() } }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.white)
+                .padding(bottom = 16.dp),
+        ) {
+            Box(Modifier.height(12.dp))
+            RecommendGroupRow(
+                groups = groups,
+                onGroupClick = onGroupClick,
+            )
+        }
     }
 }
 
-// 책 썸네일 캐러셀
-@Composable
-private fun BookCarouselSection(
+private fun LazyListScope.bookCarouselSectionItems(
+    sectionIndex: Int,
     section: HomeSection,
     onBookClick: (HomeSectionItem) -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BookiiBookiiTheme.colors.white)
-            .padding(top = 16.dp, bottom = 24.dp),
+    sectionHeaderItem(sectionIndex, section)
+    item(
+        key = "${section.sectionType}-$sectionIndex-content",
+        contentType = HomeLayoutType.BOOK_THUMBNAIL_CAROUSEL,
     ) {
-        HomeSectionHeader(
-            title = section.title,
-            subtitle = section.subtitle,
-            modifier = Modifier.padding(start = 16.dp),
-        )
-        Spacer(Modifier.height(16.dp))
-        RecommendBookRow(
-            books = section.items,
-            onBookClick = onBookClick,
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.white)
+                .padding(bottom = 24.dp),
+        ) {
+            Spacer(Modifier.height(16.dp))
+            RecommendBookRow(
+                books = section.items,
+                onBookClick = onBookClick,
+            )
+        }
     }
 }
 
-// 책 썸네일 그리드
-@Composable
-private fun BookGridSection(
+private fun LazyListScope.bookGridSectionItems(
+    sectionIndex: Int,
     section: HomeSection,
     onBookClick: (HomeSectionItem) -> Unit,
+    columns: Int = 3,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BookiiBookiiTheme.colors.white)
-            .padding(16.dp),
+    sectionHeaderItem(sectionIndex, section)
+    item(
+        key = "${section.sectionType}-$sectionIndex-grid-spacer",
+        contentType = "section-content-spacer",
     ) {
-        HomeSectionHeader(
-            title = section.title,
-            subtitle = section.subtitle,
-        )
-        Spacer(Modifier.height(16.dp))
-        RecommendBookGrid(
-            books = section.items,
-            onBookClick = onBookClick,
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(BookiiBookiiTheme.colors.white),
+        ) {
+            Spacer(Modifier.height(16.dp))
+        }
+    }
+
+    val rows = section.items.chunked(columns)
+    rows.forEachIndexed { rowIndex, rowBooks ->
+        item(
+            key = "${section.sectionType}-$sectionIndex-row-$rowIndex",
+            contentType = "book-grid-row",
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(BookiiBookiiTheme.colors.white)
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = if (rowIndex == rows.lastIndex) 16.dp else 8.dp,
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                rowBooks.forEach { book ->
+                    BookThumbnail(
+                        book = book,
+                        onClick = { onBookClick(book) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(columns - rowBooks.size) {
+                    Spacer(Modifier.weight(1f))
+                }
+            }
+        }
     }
 }
 
