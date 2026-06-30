@@ -139,7 +139,10 @@ fun OnbStep1Content(
         )
 
         BirthdateSection(
-            birthdateText = state.birthdate?.replace("-", ".") ?: "0000.00.00",
+            birthdateText = state.birthdate?.let {
+                val parts = it.split("-")
+                "${parts[0].takeLast(2)}.${parts[1]}.${parts[2]}."
+            } ?: "00.00.00.",
             isBirthdateSet = state.birthdate != null,
             onClick = { showBirthdateSheet = true }
         )
