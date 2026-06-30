@@ -26,10 +26,10 @@
             android:fillColor="#FFFFFF"
             android:pathData="M64,32.63C75.046,32.63 84,41.584 84,52.63C84,63.676 75.046,72.63 64,72.63C52.954,72.63 44,63.676 44,52.63C44,41.584 52.954,32.63 64,32.63Z" />
 
-        <!-- Body: Union body path offset by (24, 32.63) into 128 coord space -->
+        <!-- Body: extended to y=150 (beyond viewport) so squircle clip cuts cleanly without anti-alias artifact -->
         <path
             android:fillColor="#FFFFFF"
-            android:pathData="M64.5,79.005C86.868,79.005 105,97.809 105,121.005C105,121.589 104.985,122.171 104.962,122.749C95.403,126.663 82.159,128.005 64,128.005C46.474,128.005 33.527,126.754 24.052,123.149C24.017,122.439 24,121.724 24,121.005C24,97.809 42.133,79.005 64.5,79.005Z" />
+            android:pathData="M64.5,79.005C86.868,79.005 105,97.809 105,121.005L105,150L24,150L24,121.005C24,97.809 42.133,79.005 64.5,79.005Z" />
     </group>
 
 </vector>

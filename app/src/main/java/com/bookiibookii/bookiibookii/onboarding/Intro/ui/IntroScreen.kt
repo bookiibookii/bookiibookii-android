@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.onboarding.Intro.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -17,13 +18,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,51 +43,52 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import kotlinx.coroutines.delay
 
+// 페이지: 0=로고, 1=슬로건, 2=홈, 3=트래커, 4=서재, 5=후기+시작
 private const val PAGE_COUNT = 6
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 0 – 로고")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 1 – 로고")
 @Composable
 private fun PreviewPage0() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 0) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 1 – 슬로건")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 2 – 슬로건")
 @Composable
 private fun PreviewPage1() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 1) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 2 – 홈")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 3 – 홈")
 @Composable
 private fun PreviewPage2() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 2) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 3 – 트래커")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 4 – 트래커")
 @Composable
 private fun PreviewPage3() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 3) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 4 – 서재")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 5 – 서재")
 @Composable
 private fun PreviewPage4() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 4) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 5 – 시작")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 6 – 시작")
 @Composable
 private fun PreviewPage5() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 5) } }
 
 @Composable
 fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
-    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { PAGE_COUNT })
+    var currentPage by remember { mutableIntStateOf(initialPage) }
     var startVisible by remember { mutableStateOf(initialPage == PAGE_COUNT - 1) }
-    // 자동 재생이 끝난 뒤부터 사용자가 직접 스와이프해 이전 화면을 다시 볼 수 있게 허용
-    var userScrollEnabled by remember { mutableStateOf(initialPage != 0) }
 
     LaunchedEffect(Unit) {
         if (initialPage != 0) return@LaunchedEffect
-        repeat(PAGE_COUNT - 1) { index ->
-            delay(2500L)
-            pagerState.animateScrollToPage(
-                page = index + 1,
-                animationSpec = tween(durationMillis = 500),
-            )
+        // Page 1: 로고 (2500ms)
+        delay(2500L)
+        // Page 2: 슬로건 (2000ms)
+        currentPage = 1
+        delay(2000L)
+        // Page 3~6: 프리뷰 카드 (2500ms 간격)
+        for (page in 2 until PAGE_COUNT) {
+            currentPage = page
+            if (page < PAGE_COUNT - 1) delay(2500L)
         }
         delay(350L)
         startVisible = true
-        userScrollEnabled = true
     }
 
     Box(
@@ -95,17 +96,16 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
-        // ── Pager: 페이지별 고유 콘텐츠만 (로고·푸터는 바깥 오버레이) ──────────
-        HorizontalPager(
-            state = pagerState,
+        // ── Crossfade: 페이드 인/아웃 전환 ───────────────────────────────────────
+        Crossfade(
+            targetState = currentPage,
+            animationSpec = tween(durationMillis = 500),
+            label = "introPageFade",
             modifier = Modifier.fillMaxSize(),
-            userScrollEnabled = userScrollEnabled,
         ) { page ->
-            Box(
-                modifier = Modifier.fillMaxSize(),
-            ) {
+            Box(modifier = Modifier.fillMaxSize()) {
                 when (page) {
-                    // 스플래시-1: 로고 정중앙 (300dp — Figma 기준)
+                    // Page 1: 로고 정중앙
                     0 -> Image(
                         painter = painterResource(R.drawable.ic_logo_wordmark),
                         contentDescription = null,
@@ -115,7 +115,8 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
                             .width(300.dp),
                     )
 
-                    // 스플래시-2: 텍스트만 중앙 (로고는 오버레이)
+                    // Page 2: 슬로건 — Figma 1050-57852
+                    // "읽고, 교환하고, 기록해요." (medium) + "부키부키" (bold), 화면 중앙
                     1 -> Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -135,18 +136,17 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
                         )
                     }
 
-                    // 스플래시-3~6: 텍스트 + 카드 (로고·푸터는 오버레이)
+                    // Page 3~6: 텍스트 + 프리뷰 카드 — 로고·푸터는 오버레이
                     else -> {
-                        // 페이지 텍스트
                         Text(
                             text = when (page) {
                                 2 -> "오늘은 누구와\n어떤 책으로 만나볼까요?"
                                 3 -> "책을 교환하는 모든 순간을\n단계별로 관리해요."
-                                4 -> "서로의 문장을 공유하며\n넓어지는 둘만의 서재"
+                                4 -> "서로의 문장을 공유하며\n넓어지는 우리만의 서재"
                                 else -> "지금 부키부키에서\n나와 꼭 맞는 독서 파트너를 찾아보세요!"
                             },
                             style = BookiiBookiiTheme.typography.semibold20,
-                            color = BookiiBookiiTheme.colors.uiMain,
+                            color = BookiiBookiiTheme.colors.grey900,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
@@ -154,7 +154,6 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
                                 .padding(top = 121.dp),
                         )
 
-                        // 프리뷰 카드 (화면 하단에서 피킹)
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
@@ -173,8 +172,8 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
             }
         }
 
-        // ── 오버레이: 상단 로고 (페이지 1~5 고정 — 슬라이드 시 움직이지 않음) ──
-        if (pagerState.currentPage >= 1) {
+        // ── 오버레이: 상단 로고 (Page 2~6 고정) ──────────────────────────────────
+        if (currentPage >= 1) {
             Image(
                 painter = painterResource(R.drawable.ic_logo_wordmark),
                 contentDescription = null,
@@ -187,8 +186,8 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
             )
         }
 
-        // ── 오버레이: 하단 푸터 104dp (페이지 2~5 고정 — 카드 하단 가림) ────────
-        if (pagerState.currentPage >= 2) {
+        // ── 오버레이: 하단 푸터 104dp (Page 3~6) ─────────────────────────────────
+        if (currentPage >= 2) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -197,8 +196,8 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
                     .background(BookiiBookiiTheme.colors.uiBg),
                 contentAlignment = Alignment.Center,
             ) {
-                // 마지막 페이지: 시작 버튼
-                if (pagerState.currentPage == PAGE_COUNT - 1) {
+                // Page 6: 시작 버튼
+                if (currentPage == PAGE_COUNT - 1) {
                     AnimatedVisibility(
                         visible = startVisible,
                         enter = fadeIn() + slideInVertically(initialOffsetY = { it / 4 }),
