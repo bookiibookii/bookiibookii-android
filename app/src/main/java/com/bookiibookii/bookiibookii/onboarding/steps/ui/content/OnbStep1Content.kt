@@ -152,7 +152,8 @@ fun OnbStep1Content(
         ProfilePhotoBottomSheet(
             onCamera = { onOpenCamera(); showPhotoSheet = false },
             onGallery = { onOpenGallery(); showPhotoSheet = false },
-            onDismiss = { showPhotoSheet = false }
+            onDefaultImage = { vm.clearProfileUri(); showPhotoSheet = false },
+            onDismiss = { showPhotoSheet = false },
         )
     }
 
