@@ -33,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.BoxWithConstraints
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.FavoriteBook
@@ -41,6 +42,7 @@ import com.bookiibookii.bookiibookii.mypage.ui.main.BookSpineItem
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.component.LifeBookSearchDialog
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
+import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -71,9 +73,12 @@ internal fun RepresentativeBookSection(
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
-            books.forEachIndexed { index, book ->
-                BookSpineItem(title = book.title, isOrange = index % 2 == 0, modifier = Modifier.weight(1f))
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val spineWidth = (maxWidth - 8.dp * 6) / 7
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+                books.forEachIndexed { index, book ->
+                    BookSpineItem(title = book.title, isOrange = index % 2 == 0, modifier = Modifier.width(spineWidth))
+                }
             }
         }
     }
@@ -145,7 +150,15 @@ internal fun LifeBookSection(
                         }
                         Column(modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(text = book.title.stripBookSubtitle(), style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(text = book.author ?: "", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey700, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            val lifeCategory = book.category?.let { GroupTagMapper.toKoreanTag(it).removePrefix("#") }
+                            Text(
+                                text = if (book.author != null && lifeCategory != null) "${book.author} ($lifeCategory)"
+                                       else book.author ?: lifeCategory ?: "",
+                                style = BookiiBookiiTheme.typography.regular14,
+                                color = BookiiBookiiTheme.colors.grey700,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                         }
                     }
                 } else {

@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.data.model.mypage.CompletedBook
@@ -227,7 +228,7 @@ fun MyBookshelfScreen(
         BookshelfBookBottomSheet(
             title = book.title,
             author = book.author ?: "",
-            genre = book.category?.trim('(', ')') ?: "",
+            genre = book.category?.let { GroupTagMapper.toKoreanTag(it).removePrefix("#") } ?: "",
             memberBookId = book.memberBookId,
             representativeUserBookId = repBook?.userBookId,
             onDismiss = { showBookBottomSheet = false },

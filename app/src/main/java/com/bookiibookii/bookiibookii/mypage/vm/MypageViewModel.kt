@@ -77,14 +77,6 @@ class MypageViewModel : ViewModel() {
                         _profileData.value = it
                         confirmedNickname = it.nickname
 
-                        Log.d("MypageReview", "=== recentBookReviews (${it.recentBookReviews?.size ?: 0}개) ===")
-                        it.recentBookReviews?.forEachIndexed { i, r ->
-                            Log.d("MypageReview", "  [$i] bookTitle=${r.bookTitle}, tradeType=${r.tradeType}, rating=${r.rating}, reviewDate=${r.reviewDate}, comment=${r.comment}")
-                        }
-                        Log.d("MypageReview", "=== recentReceivedReviews (${it.recentReceivedReviews?.size ?: 0}개) ===")
-                        it.recentReceivedReviews?.forEachIndexed { i, r ->
-                            Log.d("MypageReview", "  [$i] reviewerNickname=${r.reviewerNickname}, reaction=${r.reaction}, comment=${r.comment}, createdAt=${r.createdAt}")
-                        }
                     }
                 } else {
                     _eventFlow.emit(Event.ShowToast("정보를 불러오지 못했습니다.", false))
