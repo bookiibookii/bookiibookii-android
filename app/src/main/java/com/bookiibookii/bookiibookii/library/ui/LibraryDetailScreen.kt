@@ -573,7 +573,7 @@ private fun BookInfoCard(book: LibraryDetailBook, modifier: Modifier = Modifier)
                 if (book.isDone) {
                     Row {
                         for (i in 1..5) {
-                            val filled = i.toDouble() <= book.rating; Icon(painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star), contentDescription = null, tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(20.dp))
+                            val filled = i.toDouble() <= book.rating; Icon(painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star), contentDescription = null, tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey300, modifier = Modifier.size(20.dp))
                         }
                     }
                 } else {

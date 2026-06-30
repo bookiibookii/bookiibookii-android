@@ -52,6 +52,9 @@ import com.bookiibookii.bookiibookii.mypage.ui.setting.WebViewRoute
 import com.bookiibookii.bookiibookii.mypage.ui.setting.WithdrawRoute
 import com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -133,11 +136,11 @@ fun MypageNavHost(
                 onDownloadClick = { isDark ->
                     mypageViewModel.profileData.value?.let { downloadProfileCard(it, isDark) }
                 },
-                onXShareClick = {
-                    mypageViewModel.profileData.value?.let { shareProfileToX(context, it) }
+                onXShareClick = { isDark ->
+                    mypageViewModel.profileData.value?.let { shareProfileToX(context, coroutineScope, it, isDark) }
                 },
-                onLinkCopyClick = {
-                    mypageViewModel.profileData.value?.let { copyProfileShareLink(context, it) }
+                onLinkCopyClick = { isDark ->
+                    copyProfileShareLink(context, coroutineScope, isDark)
                 },
             )
         }
@@ -261,7 +264,6 @@ private fun captureProfileCardBitmap(
                 BookiiBookiiTheme {
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(24.dp))
                             .background(if (isDark) BookiiBookiiTheme.colors.grey900 else BookiiBookiiTheme.colors.white)
                             .padding(vertical = 20.dp),
                     ) {
@@ -318,39 +320,23 @@ private fun captureProfileCardBitmap(
     cardView.postDelayed(::captureAndCleanup, 2000L)
 }
 
-private fun createUiMainPaleGradientBackground(width: Int = 1080, height: Int = 1920): Bitmap {
-    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    val paint = android.graphics.Paint().apply {
-        shader = android.graphics.LinearGradient(
-            0f, 0f, 0f, height.toFloat(),
-            com.bookiibookii.bookiibookii.ui.theme.UiMainPale.toArgb(),
-            android.graphics.Color.WHITE,
-            android.graphics.Shader.TileMode.CLAMP,
-        )
-    }
-    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-    return bitmap
-}
 
-private fun compositeProfileCardOnGradientBackground(card: Bitmap): Bitmap {
-    val canvasBitmap = createUiMainPaleGradientBackground()
-    val canvas = Canvas(canvasBitmap)
-    val canvasWidth = canvasBitmap.width
-    val canvasHeight = canvasBitmap.height
+private fun compositeProfileCardFullBleed(card: Bitmap): Bitmap {
+    val storyW = 1080
+    val storyH = 1920
+    val out = Bitmap.createBitmap(storyW, storyH, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(out)
+    canvas.drawColor(android.graphics.Color.WHITE)
 
-    val maxWidth = canvasWidth * 0.85f
-    val maxHeight = canvasHeight * 0.75f
-    val scale = minOf(maxWidth / card.width, maxHeight / card.height, 1f)
-    val drawWidth = (card.width * scale).toInt()
-    val drawHeight = (card.height * scale).toInt()
-    val left = (canvasWidth - drawWidth) / 2
-    val top = (canvasHeight - drawHeight) / 2
+    val scale = maxOf(storyW.toFloat() / card.width, storyH.toFloat() / card.height)
+    val drawW = (card.width * scale).toInt()
+    val drawH = (card.height * scale).toInt()
+    val dx = ((storyW - drawW) / 2).toFloat()
+    val dy = ((storyH - drawH) / 2).toFloat()
 
-    val destRect = android.graphics.Rect(left, top, left + drawWidth, top + drawHeight)
     val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
-    canvas.drawBitmap(card, null, destRect, paint)
-    return canvasBitmap
+    canvas.drawBitmap(card, null, android.graphics.RectF(dx, dy, dx + drawW, dy + drawH), paint)
+    return out
 }
 
 private fun shareProfileToInstagram(
@@ -368,19 +354,15 @@ private fun shareProfileToInstagram(
             try {
                 val imagesDir = File(context.cacheDir, "images").apply { mkdirs() }
 
-                val stickerFile = File(imagesDir, "profile_sticker_${System.currentTimeMillis()}.png")
-                stickerFile.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                val fullBleedBitmap = compositeProfileCardFullBleed(bitmap)
                 bitmap.recycle()
-                val stickerUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", stickerFile)
-
-                val backgroundBitmap = createUiMainPaleGradientBackground()
                 val backgroundFile = File(imagesDir, "profile_bg_${System.currentTimeMillis()}.png")
-                backgroundFile.outputStream().use { backgroundBitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-                backgroundBitmap.recycle()
+                backgroundFile.outputStream().use { fullBleedBitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                fullBleedBitmap.recycle()
                 val backgroundUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", backgroundFile)
 
                 withContext(kotlinx.coroutines.Dispatchers.Main) {
-                    launchInstagramStoryIntent(context, stickerUri, backgroundUri)
+                    launchInstagramStoryBackgroundOnly(context, backgroundUri)
                 }
             } catch (e: Exception) {
                 withContext(kotlinx.coroutines.Dispatchers.Main) {
@@ -403,7 +385,7 @@ private fun saveProfileCardToGallery(
             return@captureProfileCardBitmap
         }
         coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val finalBitmap = compositeProfileCardOnGradientBackground(bitmap)
+            val finalBitmap = compositeProfileCardFullBleed(bitmap)
             bitmap.recycle()
             val saved = saveProfileBitmapToGallery(context, finalBitmap)
             finalBitmap.recycle()
@@ -440,26 +422,51 @@ private fun saveProfileBitmapToGallery(context: android.content.Context, bitmap:
     }
 }
 
-private fun buildProfileShareUrl(profile: UserProfileResDTO): String =
-    "https://bookiibookii.com/user/${profile.userId}"
-
-private fun copyProfileShareLink(context: android.content.Context, profile: UserProfileResDTO) {
-    val shareUrl = buildProfileShareUrl(profile)
-    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-    clipboard.setPrimaryClip(ClipData.newPlainText("프로필 링크", shareUrl))
-    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
-        context.showCustomToast("링크를 복사했어요", true)
+private suspend fun fetchProfileShareUrl(isDark: Boolean = false): String? {
+    return withContext(Dispatchers.IO) {
+        try {
+            val response = RetrofitClient.mypApi().createProfileShareToken()
+            response.body()?.result?.shareUrl?.let { url ->
+                if (isDark) "$url?dark=1" else url
+            }
+        } catch (_: Exception) {
+            null
+        }
     }
 }
 
-private fun shareProfileToX(context: android.content.Context, profile: UserProfileResDTO) {
-    val shareUrl = buildProfileShareUrl(profile)
-    val text = "${profile.nickname}님의 부키부키 프로필"
-    val intentUrl = "https://twitter.com/intent/tweet?text=" + Uri.encode(text) + "&url=" + Uri.encode(shareUrl)
-    try {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(intentUrl)))
-    } catch (_: Exception) {
-        context.showCustomToast("X를 열 수 없어요", false)
+private fun copyProfileShareLink(context: android.content.Context, coroutineScope: CoroutineScope, isDark: Boolean = false) {
+    coroutineScope.launch {
+        val shareUrl = fetchProfileShareUrl(isDark) ?: run {
+            context.showCustomToast("링크 생성에 실패했어요", false)
+            return@launch
+        }
+        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("프로필 링크", shareUrl))
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
+            context.showCustomToast("링크를 복사했어요", true)
+        }
+    }
+}
+
+private fun shareProfileToX(
+    context: android.content.Context,
+    coroutineScope: CoroutineScope,
+    profile: UserProfileResDTO,
+    isDark: Boolean = false,
+) {
+    coroutineScope.launch {
+        val shareUrl = fetchProfileShareUrl(isDark) ?: run {
+            context.showCustomToast("링크 생성에 실패했어요", false)
+            return@launch
+        }
+        val text = "${profile.nickname}님의 부키부키 프로필"
+        val intentUrl = "https://twitter.com/intent/tweet?text=" + Uri.encode(text) + "&url=" + Uri.encode(shareUrl)
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(intentUrl)))
+        } catch (_: Exception) {
+            context.showCustomToast("X를 열 수 없어요", false)
+        }
     }
 }
 
@@ -483,6 +490,25 @@ private fun launchInstagramStoryIntent(context: android.content.Context, sticker
     try {
         context.startActivity(intent)
     } catch (e: Exception) {
+        context.showCustomToast("인스타그램 앱을 찾을 수 없습니다.", false)
+    }
+}
+
+private fun launchInstagramStoryBackgroundOnly(context: android.content.Context, backgroundUri: Uri) {
+    val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
+        setPackage("com.instagram.android")
+        setDataAndType(backgroundUri, "image/*")
+        putExtra("source_application", context.packageName)
+        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+    }
+    intent.clipData = ClipData.newRawUri("Background", backgroundUri)
+    val resInfoList = context.packageManager.queryIntentActivities(intent, 0)
+    for (info in resInfoList) {
+        context.grantUriPermission(info.activityInfo.packageName, backgroundUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    try {
+        context.startActivity(intent)
+    } catch (_: Exception) {
         context.showCustomToast("인스타그램 앱을 찾을 수 없습니다.", false)
     }
 }

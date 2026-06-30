@@ -114,7 +114,12 @@ class PublicCardViewerActivity : ComponentActivity() {
                 val body = response.body()
                 val dto = body?.result
                 if (response.isSuccessful && body?.isSuccess == true && dto != null) {
-                    val cardVersion = if (dto.shareLayout == "SPLIT") 1 else 2
+                    // PHOTO: OVERLAY=v1, SPLIT=v2 | QUOTE: SPLIT=v1, OVERLAY=v2
+                    val cardVersion = if (dto.cardType == "IMAGE") {
+                        if (dto.shareLayout == "OVERLAY") 1 else 2
+                    } else {
+                        if (dto.shareLayout == "SPLIT") 1 else 2
+                    }
                     ViewerState.Success(dto.toReadingCard(), dto.bookAuthor.orEmpty(), cardVersion)
                 } else {
                     ViewerState.Error

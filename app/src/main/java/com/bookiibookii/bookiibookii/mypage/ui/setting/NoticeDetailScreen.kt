@@ -18,6 +18,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+import com.mikepenz.markdown.compose.Markdown
+import com.mikepenz.markdown.model.DefaultMarkdownColors
+import com.mikepenz.markdown.model.DefaultMarkdownTypography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -117,10 +122,35 @@ fun NoticeDetailScreen(
                     color = BookiiBookiiTheme.colors.grey500
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = content,
-                    style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey700
+                Markdown(
+                    content = content,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = DefaultMarkdownColors(
+                        text = BookiiBookiiTheme.colors.grey900,
+                        codeText = BookiiBookiiTheme.colors.grey900,
+                        inlineCodeText = BookiiBookiiTheme.colors.grey900,
+                        linkText = BookiiBookiiTheme.colors.uiMain,
+                        codeBackground = BookiiBookiiTheme.colors.grey100,
+                        inlineCodeBackground = BookiiBookiiTheme.colors.grey100,
+                        dividerColor = BookiiBookiiTheme.colors.grey200,
+                    ),
+                    typography = DefaultMarkdownTypography(
+                        text = TextStyle(fontSize = 15.sp),
+                        paragraph = TextStyle(fontSize = 15.sp),
+                        h1 = TextStyle(fontSize = 22.sp),
+                        h2 = TextStyle(fontSize = 20.sp),
+                        h3 = TextStyle(fontSize = 18.sp),
+                        h4 = TextStyle(fontSize = 16.sp),
+                        h5 = TextStyle(fontSize = 15.sp),
+                        h6 = TextStyle(fontSize = 14.sp),
+                        code = TextStyle(fontSize = 13.sp),
+                        inlineCode = TextStyle(fontSize = 13.sp),
+                        quote = TextStyle(fontSize = 14.sp),
+                        ordered = TextStyle(fontSize = 15.sp),
+                        bullet = TextStyle(fontSize = 15.sp),
+                        list = TextStyle(fontSize = 15.sp),
+                        link = TextStyle(fontSize = 15.sp),
+                    ),
                 )
             }
         }

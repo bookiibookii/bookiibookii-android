@@ -53,7 +53,30 @@ fun SettingRoute(
     onWithdrawClick: () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    var pushEnabled by remember {
+        mutableStateOf(androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled())
+    }
+
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                pushEnabled = androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     SettingScreen(
+        pushEnabled = pushEnabled,
+        onPushToggle = {
+            val intent = android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+            }
+            context.startActivity(intent)
+        },
         onBackClick = onBackClick,
         onNoticeClick = onNoticeClick,
         onQuestionClick = onQuestionClick,
@@ -75,6 +98,8 @@ fun SettingRoute(
 
 @Composable
 fun SettingScreen(
+    pushEnabled: Boolean = true,
+    onPushToggle: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onNoticeClick: () -> Unit = {},
     onQuestionClick: () -> Unit = {},
@@ -84,7 +109,6 @@ fun SettingScreen(
     onLogoutClick: () -> Unit = {},
     onWithdrawClick: () -> Unit = {},
 ) {
-    var pushEnabled by remember { mutableStateOf(true) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.uiBg)) {
@@ -99,7 +123,7 @@ fun SettingScreen(
 
             SettingSectionHeader("알림")
             Spacer(modifier = Modifier.height(8.dp))
-            PushNotificationCard(pushEnabled = pushEnabled, onToggle = { pushEnabled = it })
+            PushNotificationCard(pushEnabled = pushEnabled, onToggle = onPushToggle)
 
             Spacer(modifier = Modifier.height(24.dp))
             SettingSectionHeader("고객센터")

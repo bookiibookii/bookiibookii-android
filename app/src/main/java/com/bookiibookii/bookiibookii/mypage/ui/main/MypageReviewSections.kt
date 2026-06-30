@@ -217,13 +217,13 @@ private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
 
 @Composable
 private fun MypageStarRating(rating: Int) {
-    Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
+    Row {
         repeat(5) { index ->
             val filled = index < rating
             Icon(
                 painter = painterResource(if (filled) R.drawable.ic_star_fill else R.drawable.ic_star),
                 contentDescription = null,
-                tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
+                tint = if (filled) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey300,
                 modifier = Modifier.size(16.dp),
             )
         }

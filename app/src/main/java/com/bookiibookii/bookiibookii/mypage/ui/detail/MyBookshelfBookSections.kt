@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -67,18 +66,14 @@ internal fun RepresentativeBookSection(
                 Text(text = "${books.size}/7권", style = BookiiBookiiTheme.typography.regular11, color = BookiiBookiiTheme.colors.grey700, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
             }
             Spacer(modifier = Modifier.weight(1f))
-            Surface(shape = RoundedCornerShape(50.dp), color = BookiiBookiiTheme.colors.grey200, modifier = Modifier.clickable { onEditClick() }) {
+            Surface(shape = RoundedCornerShape(8.dp), color = BookiiBookiiTheme.colors.grey200, modifier = Modifier.clickable { onEditClick() }) {
                 Text(text = "수정", style = BookiiBookiiTheme.typography.regular11, color = BookiiBookiiTheme.colors.grey700, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val gap = 8.dp
-            val itemWidth = (maxWidth - gap * 6) / 7
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.Bottom) {
-                books.forEachIndexed { index, book ->
-                    BookSpineItem(title = book.title, isOrange = index % 2 == 0, modifier = Modifier.width(itemWidth))
-                }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+            books.forEachIndexed { index, book ->
+                BookSpineItem(title = book.title, isOrange = index % 2 == 0, modifier = Modifier.weight(1f))
             }
         }
     }

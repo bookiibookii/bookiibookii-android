@@ -152,6 +152,9 @@ dependencies {
     // EncryptedSharedPreferences (토큰 암호화 저장)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
+    // Markdown rendering (공지사항)
+    implementation("com.mikepenz:multiplatform-markdown-renderer-android:0.27.0")
+
     // Compose
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)

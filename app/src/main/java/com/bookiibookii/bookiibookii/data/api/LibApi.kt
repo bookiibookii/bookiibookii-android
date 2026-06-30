@@ -19,6 +19,7 @@ import com.bookiibookii.bookiibookii.data.model.library.MemberCardUpdateRequestD
 import com.bookiibookii.bookiibookii.data.model.library.MemberReviewCreateDTO
 import com.bookiibookii.bookiibookii.data.model.library.PresignedUrlResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.PublicReadingCardResponseDTO
+import com.bookiibookii.bookiibookii.data.model.mypage.PublicProfileResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.ShareTokenResponseDTO
 import com.bookiibookii.bookiibookii.data.model.library.TrackerResponse
 import retrofit2.Response
@@ -106,6 +107,12 @@ interface LibApi {
     suspend fun getPublicReadingCard(
         @Path("shareToken") shareToken: String
     ): Response<ApiResponse<PublicReadingCardResponseDTO>>
+
+    // 프로필 공유 토큰 기반 공개 조회 — 인증 불필요
+    @GET("api/public/profiles/{shareToken}")
+    suspend fun getPublicProfile(
+        @Path("shareToken") shareToken: String
+    ): Response<ApiResponse<PublicProfileResponseDTO>>
 
     // ── Reviews ────────────────────────────────────────────────────────────────
 

@@ -78,32 +78,36 @@ private fun LibraryCardPreviewContent(
     }
 }
 
+internal enum class BookTitleChipStyle { SOLID, PALE_FILL, WHITE_STROKE }
+
 @Composable
-internal fun BookTitleChip(title: String, solidBackground: Boolean) {
+internal fun BookTitleChip(title: String, style: BookTitleChipStyle = BookTitleChipStyle.SOLID) {
+    val bgModifier = when (style) {
+        BookTitleChipStyle.SOLID -> Modifier.background(BookiiBookiiTheme.colors.uiMain)
+        BookTitleChipStyle.PALE_FILL -> Modifier.background(BookiiBookiiTheme.colors.uiMainPale)
+        BookTitleChipStyle.WHITE_STROKE -> Modifier.border(1.dp, Color.White, RoundedCornerShape(8.dp))
+    }
+    val contentColor = if (style == BookTitleChipStyle.PALE_FILL) BookiiBookiiTheme.colors.uiMain else Color.White
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .then(
-                if (solidBackground) {
-                    Modifier.background(BookiiBookiiTheme.colors.uiMain)
-                } else {
-                    Modifier.border(1.dp, BookiiBookiiTheme.colors.uiMainPale, RoundedCornerShape(8.dp))
-                }
-            )
+            .then(bgModifier)
             .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_logo_symbol),
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(16.dp),
-        )
+        if (style != BookTitleChipStyle.PALE_FILL) {
+            Icon(
+                painter = painterResource(R.drawable.ic_logo_symbol),
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(16.dp),
+            )
+        }
         Text(
             text = title,
             style = BookiiBookiiTheme.typography.medium16,
-            color = Color.White,
+            color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -130,7 +134,7 @@ private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 if (bookTitle.isNotBlank()) {
-                    BookTitleChip(title = bookTitle, solidBackground = false)
+                    BookTitleChip(title = bookTitle)
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(
@@ -185,7 +189,7 @@ private fun PhotoCardPreview(memo: String, imageUri: android.net.Uri? = null, bo
             }
             if (bookTitle.isNotBlank()) {
                 Box(modifier = Modifier.align(Alignment.TopStart).padding(20.dp)) {
-                    BookTitleChip(title = bookTitle, solidBackground = true)
+                    BookTitleChip(title = bookTitle)
                 }
             }
         }

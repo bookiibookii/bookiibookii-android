@@ -150,7 +150,7 @@ private fun BookListItem(
 
 @Composable
 internal fun BookshelfStarRatingRow(rating: Double) {
-    Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
+    Row {
         for (i in 1..5) {
             BookshelfStarIcon(starValue = (rating - (i - 1)).coerceIn(0.0, 1.0))
         }
@@ -163,10 +163,10 @@ private fun BookshelfStarIcon(starValue: Double) {
     when {
         starValue >= 0.75 -> Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = colors.uiMainSub, modifier = Modifier.size(16.dp))
         starValue >= 0.25 -> Box(modifier = Modifier.size(16.dp)) {
-            Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = colors.uiMainSub150, modifier = Modifier.size(16.dp))
+            Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = colors.uiMainSubPale, modifier = Modifier.size(16.dp))
             Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = colors.uiMainSub, modifier = Modifier.size(16.dp))
         }
-        else -> Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = colors.grey200, modifier = Modifier.size(16.dp))
+        else -> Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = colors.grey300, modifier = Modifier.size(16.dp))
     }
 }
 
