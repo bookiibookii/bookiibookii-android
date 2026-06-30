@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,11 +27,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -55,8 +59,8 @@ private fun PreviewCardWrapper(content: @Composable () -> Unit) {
                 ambientColor = Color(0x1A000000),
                 spotColor = Color(0x1A000000),
             )
-            .clip(RoundedCornerShape(20.dp))
             .border(1.5.dp, BookiiBookiiTheme.colors.grey200, RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(BookiiBookiiTheme.colors.uiBg),
     ) {
         content()
@@ -122,10 +126,10 @@ fun HomePreviewCard() {
                         bookRes = R.drawable.intro_book_boy,
                         profileRes = R.drawable.intro_profile_mus,
                         bookTitle = "소년이 온다",
-                        bookAuthor = "한강 (소설)",
-                        readingDays = "14일",
+                        bookAuthor = "한강 (한국소설)",
+                        readingDays = "7일",
                         username = "무스",
-                        comment = "같이 읽을 분 환영해요",
+                        comment = "함께 완독해요",
                     )
                 }
             }
@@ -217,43 +221,47 @@ private fun TrackerPreviewCardPreview() {
 
 @Composable
 fun TrackerPreviewCard() {
+    val grey100 = BookiiBookiiTheme.colors.grey100
     PreviewCardWrapper {
-        // 알림 보드
+        // 알림 보드 (Figma: border-b only, pt=16dp pb=12dp)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(BookiiBookiiTheme.colors.white)
-                .border(
-                    width = 0.5.dp,
-                    color = BookiiBookiiTheme.colors.grey100,
-                    shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
-                )
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .drawBehind {
+                    val sw = 0.5.dp.toPx()
+                    drawLine(grey100, Offset(0f, size.height - sw / 2), Offset(size.width, size.height - sw / 2), sw)
+                }
+                .padding(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 12.dp),
         ) {
             Row {
                 Text(
                     text = "sayo",
-                    style = BookiiBookiiTheme.typography.regular14,
+                    style = BookiiBookiiTheme.typography.regular20,
                     color = BookiiBookiiTheme.colors.uiMain,
                 )
                 Text(
                     text = "님의",
-                    style = BookiiBookiiTheme.typography.regular14,
+                    style = BookiiBookiiTheme.typography.regular20,
                     color = BookiiBookiiTheme.colors.grey900,
                 )
             }
             Text(
                 text = "교환독서 현황을 알려드려요",
-                style = BookiiBookiiTheme.typography.regular14,
+                style = BookiiBookiiTheme.typography.regular20,
                 color = BookiiBookiiTheme.colors.grey900,
             )
         }
 
-        // 알림 카드
+        // 알림 카드 (Figma: border-t only)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(BookiiBookiiTheme.colors.white)
+                .drawBehind {
+                    val sw = 0.5.dp.toPx()
+                    drawLine(grey100, Offset(0f, sw / 2), Offset(size.width, sw / 2), sw)
+                }
                 .padding(horizontal = 17.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
@@ -281,12 +289,12 @@ fun TrackerPreviewCard() {
             Row {
                 Text(
                     text = "살인자의 기억법",
-                    style = BookiiBookiiTheme.typography.regular11,
+                    style = BookiiBookiiTheme.typography.regular10,
                     color = BookiiBookiiTheme.colors.grey900,
                 )
                 Text(
                     text = "을 읽고 후기를 작성해주세요",
-                    style = BookiiBookiiTheme.typography.regular11,
+                    style = BookiiBookiiTheme.typography.regular10,
                     color = BookiiBookiiTheme.colors.grey700,
                 )
             }
@@ -328,14 +336,21 @@ fun TrackerPreviewCard() {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(360.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(BookiiBookiiTheme.colors.white)
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // 헤더
+                // 헤더 (Figma: border-b 구분선)
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawBehind {
+                            val sw = 0.5.dp.toPx()
+                            drawLine(grey100, Offset(0f, size.height - sw / 2), Offset(size.width, size.height - sw / 2), sw)
+                        }
+                        .padding(bottom = 6.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top,
                 ) {
@@ -387,8 +402,10 @@ fun TrackerPreviewCard() {
                         name = "나",
                         bookTitle = "살인자의 기억법",
                         bookCoverRes = R.drawable.intro_book_killer,
+                        profileRes = R.drawable.intro_profile_sayo_tracker,
                         progress = 0.59f,
                         progressText = "59%",
+                        progressColor = BookiiBookiiTheme.colors.grey400,
                         showMyBookChip = true,
                     )
                     TrackerPersonColumn(
@@ -396,8 +413,10 @@ fun TrackerPreviewCard() {
                         name = "noshel",
                         bookTitle = "작별인사",
                         bookCoverRes = R.drawable.intro_book_farewell,
+                        profileRes = R.drawable.intro_profile_noshel,
                         progress = 0.30f,
                         progressText = "30%",
+                        progressColor = BookiiBookiiTheme.colors.grey400,
                         showMyBookChip = false,
                     )
                 }
@@ -495,11 +514,21 @@ fun LibraryPreviewCard() {
                         color = BookiiBookiiTheme.colors.grey900,
                     )
                     // 별점 (4.5/5)
-                    Row {
+                    Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
                         repeat(4) {
-                            Text(text = "★", style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.uiMain)
+                            Image(
+                                painter = painterResource(R.drawable.ic_star_fill),
+                                contentDescription = null,
+                                colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.uiMain),
+                                modifier = Modifier.size(12.dp),
+                            )
                         }
-                        Text(text = "☆", style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey300)
+                        Image(
+                            painter = painterResource(R.drawable.ic_star),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.grey300),
+                            modifier = Modifier.size(12.dp),
+                        )
                     }
                     Text(
                         text = "2026. 05. 09. ~ 2026. 05. 31.",
@@ -555,6 +584,7 @@ fun LibraryPreviewCard() {
                     modifier = Modifier.weight(1f),
                     profileRes = R.drawable.intro_profile_noshel_lib2,
                     name = "noshel",
+                    bodyText = "좋은 사람이 결국 행복해지는 이야기를 어떻게 사랑하지 않을 수 있겠어...",
                     quote = "\"너랑 나는 좋은 사람.\" 로키가 말한다. \"그러게.\" 나는 미소 짓는다. \"그런 것 같아.\"",
                     page = "p.506",
                 )
@@ -578,7 +608,7 @@ fun LibraryPreviewCard() {
                     modifier = Modifier.weight(1f),
                     profileRes = R.drawable.intro_profile_sayo_lib4,
                     name = "sayo",
-                    text = "나 행복. 너 안 죽음. 행성들을 구하자! 아름다워...",
+                    text = "나 행복. 너 안 죽음. 행성들을 구하자! 아름다워...ㅜㅜ",
                     page = "p.97",
                     photoRes = R.drawable.intro_reading_card_photo4,
                 )
@@ -587,8 +617,10 @@ fun LibraryPreviewCard() {
                     modifier = Modifier.weight(1f),
                     profileRes = R.drawable.intro_profile_noshel_lib3,
                     name = "noshel",
+                    bodyText = "말 한마디 없이 아프다는 걸 알아채는 거, 이게 진짜 우정이지 않을까?",
                     quote = "\"인간은 슬프면 눈에서 물이 흘러나와.\" \"알았다. 나는 네가 물이 새지 않을 때까지 지켜본다.\"",
                     page = "p.97",
+                    showBookmark = false,
                 )
             }
         }
@@ -605,6 +637,7 @@ private fun ReviewPreviewCardPreview() {
 
 @Composable
 fun ReviewPreviewCard() {
+    val grey100 = BookiiBookiiTheme.colors.grey100
     PreviewCardWrapper {
         Column(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -619,30 +652,27 @@ fun ReviewPreviewCard() {
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // 헤더
+                // 헤더 (Figma: border-b only)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 6.dp),
+                        .drawBehind {
+                            val sw = 0.5.dp.toPx()
+                            drawLine(grey100, Offset(0f, size.height - sw / 2), Offset(size.width, size.height - sw / 2), sw)
+                        }
+                        .padding(bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)
-                            .border(0.5.dp, BookiiBookiiTheme.colors.grey100, shape = RoundedCornerShape(0.dp)),
-                    ) {
-                        Column(modifier = Modifier.padding(bottom = 6.dp)) {
-                            Text(
-                                text = "김영하 도장깨기 하실 분",
-                                style = BookiiBookiiTheme.typography.medium12,
-                                color = BookiiBookiiTheme.colors.grey900,
-                            )
-                            Text(
-                                text = "2026. 04. 29. ~ 2026. 05. 17.",
-                                style = BookiiBookiiTheme.typography.regular11,
-                                color = BookiiBookiiTheme.colors.grey500,
-                            )
-                        }
-                    }
+                    Text(
+                        text = "김영하 도장깨기 하실 분",
+                        style = BookiiBookiiTheme.typography.medium12,
+                        color = BookiiBookiiTheme.colors.grey900,
+                    )
+                    Text(
+                        text = "2026. 04. 29. ~ 2026. 05. 17.",
+                        style = BookiiBookiiTheme.typography.regular11,
+                        color = BookiiBookiiTheme.colors.grey500,
+                    )
                 }
 
                 // noshel 버블 (오른쪽)
@@ -670,7 +700,12 @@ fun ReviewPreviewCard() {
                                 .background(BookiiBookiiTheme.colors.uiMainPale),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(text = "👍", style = BookiiBookiiTheme.typography.regular10, color = BookiiBookiiTheme.colors.uiMain)
+                            Image(
+                                painter = painterResource(R.drawable.ic_hand_thumbs_up),
+                                contentDescription = null,
+                                colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.uiMain),
+                                modifier = Modifier.size(12.dp),
+                            )
                         }
                         Box(
                             modifier = Modifier
@@ -857,7 +892,11 @@ private fun GroupCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            BookCoverImage(imageRes = bookRes, width = 52.dp, height = 73.dp, cornerRadius = 6.dp)
+            Box(
+                modifier = Modifier.border(0.5.dp, BookiiBookiiTheme.colors.grey100, RoundedCornerShape(6.dp)),
+            ) {
+                BookCoverImage(imageRes = bookRes, width = 52.dp, height = 73.dp, cornerRadius = 6.dp)
+            }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -940,12 +979,13 @@ private fun BookCoverImage(
 private fun ProfileCircleImage(
     @DrawableRes imageRes: Int,
     size: Dp,
+    modifier: Modifier = Modifier,
 ) {
     Image(
         painter = painterResource(imageRes),
         contentDescription = null,
         contentScale = ContentScale.Crop,
-        modifier = Modifier
+        modifier = modifier
             .size(size)
             .clip(CircleShape),
     )
@@ -979,15 +1019,20 @@ private fun BookGridItem(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Image(
-            painter = painterResource(imageRes),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(87.dp)
+                .aspectRatio(2f / 3f)
+                .border(0.5.dp, BookiiBookiiTheme.colors.grey100, RoundedCornerShape(7.dp))
                 .clip(RoundedCornerShape(7.dp)),
-        )
+        ) {
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
         Text(
             text = title,
             style = BookiiBookiiTheme.typography.regular11,
@@ -1032,80 +1077,107 @@ private fun TrackerPersonColumn(
     name: String,
     bookTitle: String,
     @DrawableRes bookCoverRes: Int,
+    @DrawableRes profileRes: Int,
     progress: Float,
     progressText: String,
+    progressColor: Color,
     showMyBookChip: Boolean,
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        // 책 표지
-        Box(contentAlignment = Alignment.BottomEnd) {
-            BookCoverImage(imageRes = bookCoverRes, width = 73.dp, height = 96.dp, cornerRadius = 8.dp)
-            if (showMyBookChip) {
-                Box(
-                    modifier = Modifier
-                        .padding(3.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xBFE2E1DF))
-                        .padding(horizontal = 3.dp, vertical = 1.5.dp),
-                ) {
-                    Text(
-                        text = "내 책",
-                        style = BookiiBookiiTheme.typography.regular10,
-                        color = BookiiBookiiTheme.colors.grey900,
-                    )
-                }
-            }
-        }
-
-        // 이름 + 책 제목
+    // Figma: relative container — profile image is absolutely overlaid
+    Box(modifier = modifier) {
         Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 9.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(
-                text = name,
-                style = BookiiBookiiTheme.typography.regular11,
-                color = BookiiBookiiTheme.colors.grey700,
-            )
-            Text(
-                text = bookTitle,
-                style = BookiiBookiiTheme.typography.medium12,
-                color = BookiiBookiiTheme.colors.grey800,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
-        }
-
-        // 진행률
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 3.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            // 진행 바
+            // 책 표지 (Figma: border 0.5dp grey100)
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(50.dp))
-                    .background(BookiiBookiiTheme.colors.grey200),
+                    .border(0.5.dp, BookiiBookiiTheme.colors.grey100, RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.BottomEnd,
+            ) {
+                BookCoverImage(imageRes = bookCoverRes, width = 73.dp, height = 96.dp, cornerRadius = 8.dp)
+                if (showMyBookChip) {
+                    Box(
+                        modifier = Modifier
+                            .padding(3.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xBFE2E1DF))
+                            .padding(horizontal = 3.dp, vertical = 1.5.dp),
+                    ) {
+                        Text(
+                            text = "내 책",
+                            style = BookiiBookiiTheme.typography.regular10,
+                            color = BookiiBookiiTheme.colors.grey900,
+                        )
+                    }
+                }
+            }
+
+            // 이름 + 책 제목
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                Text(
+                    text = name,
+                    style = BookiiBookiiTheme.typography.regular11,
+                    color = BookiiBookiiTheme.colors.grey700,
+                )
+                Text(
+                    text = bookTitle,
+                    style = BookiiBookiiTheme.typography.medium12,
+                    color = BookiiBookiiTheme.colors.grey800,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            // 진행률
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 3.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(progress)
+                        .fillMaxWidth()
                         .height(3.dp)
                         .clip(RoundedCornerShape(50.dp))
-                        .background(BookiiBookiiTheme.colors.uiMain),
+                        .background(BookiiBookiiTheme.colors.grey200),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(progress)
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(progressColor),
+                    )
+                }
+                Text(
+                    text = progressText,
+                    style = BookiiBookiiTheme.typography.regular11,
+                    color = BookiiBookiiTheme.colors.grey800,
                 )
             }
-            Text(
-                text = progressText,
-                style = BookiiBookiiTheme.typography.regular11,
-                color = BookiiBookiiTheme.colors.grey800,
+        }
+
+        // 프로필 이미지 오버레이 (Figma: absolute position)
+        if (showMyBookChip) {
+            // "나": 컬럼 하단 중앙 (Figma left=60.51dp, top=179.44dp)
+            ProfileCircleImage(
+                imageRes = profileRes,
+                size = 32.dp,
+                modifier = Modifier.offset(x = 60.dp, y = 179.dp),
+            )
+        } else {
+            // 상대방: 컬럼 상단 좌측 (Figma left=12.38dp, top=0dp)
+            ProfileCircleImage(
+                imageRes = profileRes,
+                size = 32.dp,
+                modifier = Modifier.offset(x = 12.dp, y = 0.dp),
             )
         }
     }
@@ -1150,9 +1222,14 @@ private fun ReadingCardText(
                         .clip(CircleShape)
                         .border(0.5.dp, BookiiBookiiTheme.colors.uiMain, CircleShape)
                         .background(BookiiBookiiTheme.colors.uiMainPale)
-                        .padding(1.5.dp),
+                        .padding(3.dp),
                 ) {
-                    Text(text = "🔖", style = BookiiBookiiTheme.typography.regular10)
+                    Image(
+                        painter = painterResource(R.drawable.ic_bookmark_fill),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.uiMain),
+                        modifier = Modifier.size(10.dp),
+                    )
                 }
             }
             Text(
@@ -1167,7 +1244,12 @@ private fun ReadingCardText(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(text = "♥", style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey400)
+                Image(
+                    painter = painterResource(R.drawable.ic_heart_fill),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.grey400),
+                    modifier = Modifier.size(12.dp),
+                )
                 Text(text = page, style = BookiiBookiiTheme.typography.regular11, color = BookiiBookiiTheme.colors.grey400)
             }
         }
@@ -1188,8 +1270,10 @@ private fun ReadingCardQuote(
     modifier: Modifier = Modifier,
     @DrawableRes profileRes: Int,
     name: String,
+    bodyText: String,
     quote: String,
     page: String,
+    showBookmark: Boolean = true,
 ) {
     Column(
         modifier = modifier
@@ -1216,18 +1300,25 @@ private fun ReadingCardQuote(
                     ProfileCircleImage(imageRes = profileRes, size = 17.dp)
                     Text(text = name, style = BookiiBookiiTheme.typography.medium11, color = BookiiBookiiTheme.colors.grey800)
                 }
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .border(0.5.dp, BookiiBookiiTheme.colors.uiMain, CircleShape)
-                        .background(BookiiBookiiTheme.colors.uiMainPale)
-                        .padding(1.5.dp),
-                ) {
-                    Text(text = "🔖", style = BookiiBookiiTheme.typography.regular10)
+                if (showBookmark) {
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .border(0.5.dp, BookiiBookiiTheme.colors.uiMain, CircleShape)
+                            .background(BookiiBookiiTheme.colors.uiMainPale)
+                            .padding(3.dp),
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.ic_bookmark_fill),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.uiMain),
+                            modifier = Modifier.size(10.dp),
+                        )
+                    }
                 }
             }
             Text(
-                text = quote.take(40) + "...",
+                text = bodyText,
                 style = BookiiBookiiTheme.typography.regular11,
                 color = BookiiBookiiTheme.colors.grey800,
                 maxLines = 3,
@@ -1238,7 +1329,12 @@ private fun ReadingCardQuote(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(text = "♥", style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey400)
+                Image(
+                    painter = painterResource(R.drawable.ic_heart_fill),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.grey400),
+                    modifier = Modifier.size(12.dp),
+                )
                 Text(text = page, style = BookiiBookiiTheme.typography.regular11, color = BookiiBookiiTheme.colors.grey400)
             }
         }
@@ -1269,7 +1365,12 @@ private fun ReadingCardQuote(
                     .padding(6.dp),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(text = "❝", style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.white)
+                    Image(
+                        painter = painterResource(R.drawable.ic_quote),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(BookiiBookiiTheme.colors.white),
+                        modifier = Modifier.size(12.dp),
+                    )
                     Text(
                         text = quote,
                         style = BookiiBookiiTheme.typography.regular10,
@@ -1285,12 +1386,13 @@ private fun ReadingCardQuote(
 
 @Composable
 private fun StarRow(filledCount: Int) {
-    Row {
+    Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
         repeat(5) { i ->
-            Text(
-                text = if (i < filledCount) "★" else "☆",
-                style = BookiiBookiiTheme.typography.regular12,
-                color = if (i < filledCount) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey300,
+            Image(
+                painter = painterResource(if (i < filledCount) R.drawable.ic_star_fill else R.drawable.ic_star),
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(if (i < filledCount) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey300),
+                modifier = Modifier.size(12.dp),
             )
         }
     }
