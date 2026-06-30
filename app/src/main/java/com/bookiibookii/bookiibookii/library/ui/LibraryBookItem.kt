@@ -95,7 +95,7 @@ internal fun LibraryBookGridItem(book: LibraryBook, modifier: Modifier = Modifie
                             Icon(
                                 painter = painterResource(if (i < book.rating) R.drawable.ic_star_fill else R.drawable.ic_star),
                                 contentDescription = null,
-                                tint = if (i < book.rating) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
+                                tint = if (i < book.rating) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey300,
                                 modifier = Modifier.size(16.dp),
                             )
                         }
@@ -155,13 +155,13 @@ internal fun LibraryBookListItem(book: LibraryBook, onClick: () -> Unit) {
                 )
             }
             book.rating != null -> {
-                Row {
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     repeat(5) { i ->
                         Icon(
                             painter = painterResource(if (i < book.rating) R.drawable.ic_star_fill else R.drawable.ic_star),
                             contentDescription = null,
-                            tint = if (i < book.rating) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey200,
-                            modifier = Modifier.size(16.dp),
+                            tint = if (i < book.rating) BookiiBookiiTheme.colors.uiMainSub else BookiiBookiiTheme.colors.grey300,
+                            modifier = Modifier.size(28.dp),
                         )
                     }
                 }

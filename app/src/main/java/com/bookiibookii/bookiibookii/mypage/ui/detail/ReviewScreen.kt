@@ -323,7 +323,7 @@ private fun ReceivedReviewCard(review: ReceivedReviewItem) {
 
 @Composable
 private fun ReviewStarRating(rating: Double) {
-    Row(horizontalArrangement = Arrangement.spacedBy((-2).dp)) {
+    Row {
         for (i in 1..5) {
             val starValue = (rating - (i - 1)).coerceIn(0.0, 1.0)
             val isFull = starValue >= 0.75
@@ -334,7 +334,7 @@ private fun ReviewStarRating(rating: Double) {
                     Icon(painter = painterResource(R.drawable.ic_star_fill), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMainSubPale, modifier = Modifier.size(16.dp))
                     Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = BookiiBookiiTheme.colors.uiMainSub, modifier = Modifier.size(16.dp))
                 }
-                else -> Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = BookiiBookiiTheme.colors.grey200, modifier = Modifier.size(16.dp))
+                else -> Icon(painter = painterResource(R.drawable.ic_star), contentDescription = null, tint = BookiiBookiiTheme.colors.grey300, modifier = Modifier.size(16.dp))
             }
         }
     }
