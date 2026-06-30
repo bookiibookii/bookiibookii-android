@@ -50,8 +50,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        Log.d("DEV_TOKEN", "AccessToken: ${TokenManager.getAccessToken(this)}")
-
         if (!TokenManager.hasAccessToken(this)) {
             startActivity(Intent(this, LoginActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
