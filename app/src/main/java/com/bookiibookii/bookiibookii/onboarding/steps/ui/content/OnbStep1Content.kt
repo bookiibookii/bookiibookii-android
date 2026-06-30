@@ -141,8 +141,8 @@ fun OnbStep1Content(
         BirthdateSection(
             birthdateText = state.birthdate?.let {
                 val parts = it.split("-")
-                "${parts[0].takeLast(2)}.${parts[1]}.${parts[2]}."
-            } ?: "00.00.00.",
+                "${parts[0]}.${parts[1]}.${parts[2]}."
+            } ?: "0000.00.00.",
             isBirthdateSet = state.birthdate != null,
             onClick = { showBirthdateSheet = true }
         )
@@ -480,7 +480,7 @@ private fun GenderSectionSelectedPreview() {
 private fun BirthdateSectionEmptyPreview() {
     BookiiPreview {
         Box(modifier = Modifier.padding(16.dp)) {
-            BirthdateSection(birthdateText = "0000.00.00", isBirthdateSet = false, onClick = {})
+            BirthdateSection(birthdateText = "0000.00.00.", isBirthdateSet = false, onClick = {})
         }
     }
 }
@@ -490,7 +490,7 @@ private fun BirthdateSectionEmptyPreview() {
 private fun BirthdateSectionFilledPreview() {
     BookiiPreview {
         Box(modifier = Modifier.padding(16.dp)) {
-            BirthdateSection(birthdateText = "1997.01.18", isBirthdateSet = true, onClick = {})
+            BirthdateSection(birthdateText = "1997.01.18.", isBirthdateSet = true, onClick = {})
         }
     }
 }

@@ -237,18 +237,18 @@ fun TrackerPreviewCard() {
             Row {
                 Text(
                     text = "sayo",
-                    style = BookiiBookiiTheme.typography.regular18,
+                    style = BookiiBookiiTheme.typography.regular20,
                     color = BookiiBookiiTheme.colors.uiMain,
                 )
                 Text(
                     text = "님의",
-                    style = BookiiBookiiTheme.typography.regular18,
+                    style = BookiiBookiiTheme.typography.regular20,
                     color = BookiiBookiiTheme.colors.grey900,
                 )
             }
             Text(
                 text = "교환독서 현황을 알려드려요",
-                style = BookiiBookiiTheme.typography.regular18,
+                style = BookiiBookiiTheme.typography.regular20,
                 color = BookiiBookiiTheme.colors.grey900,
             )
         }
@@ -336,7 +336,7 @@ fun TrackerPreviewCard() {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp)
+                    .height(360.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(BookiiBookiiTheme.colors.white)
                     .padding(12.dp),
