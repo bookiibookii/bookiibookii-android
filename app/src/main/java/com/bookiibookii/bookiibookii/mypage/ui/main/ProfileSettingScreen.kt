@@ -179,6 +179,7 @@ fun ProfileSettingRoute(
         onBackClick = onBackClick,
         onOpenCamera = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) },
         onOpenGallery = { pickMediaLauncher.launch("image/*") },
+        onClearProfileImage = { selectedImageUri = null; selectedImageFile = null },
         onCheckNickname = { nickname -> viewModel.checkNickname(nickname) },
         onSaveClick = { request -> viewModel.updateProfile(request, selectedImageFile) },
     )
@@ -193,6 +194,7 @@ fun ProfileSettingScreen(
     onBackClick: () -> Unit = {},
     onOpenCamera: () -> Unit = {},
     onOpenGallery: () -> Unit = {},
+    onClearProfileImage: () -> Unit = {},
     onCheckNickname: (String) -> Unit = {},
     onSaveClick: (MypageReqDTO) -> Unit = {},
 ) {
@@ -356,6 +358,7 @@ fun ProfileSettingScreen(
         ProfilePhotoBottomSheet(
             onCamera = { onOpenCamera(); showPhotoSheet = false },
             onGallery = { onOpenGallery(); showPhotoSheet = false },
+            onDefaultImage = { onClearProfileImage(); showPhotoSheet = false },
             onDismiss = { showPhotoSheet = false },
         )
     }

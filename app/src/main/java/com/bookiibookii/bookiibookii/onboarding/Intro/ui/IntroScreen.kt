@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,32 +44,36 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import kotlinx.coroutines.delay
 
-// 페이지: 0=로고, 1=슬로건, 2=홈, 3=트래커, 4=서재, 5=후기+시작
-private const val PAGE_COUNT = 6
+// 페이지: 0=로고, 1=슬로건1, 2=슬로건2, 3=홈, 4=트래커, 5=서재, 6=후기+시작
+private const val PAGE_COUNT = 7
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 1 – 로고")
 @Composable
 private fun PreviewPage0() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 0) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 2 – 슬로건")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 2 – 슬로건1")
 @Composable
 private fun PreviewPage1() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 1) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 3 – 홈")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 3 – 슬로건2")
 @Composable
 private fun PreviewPage2() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 2) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 4 – 트래커")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 4 – 홈")
 @Composable
 private fun PreviewPage3() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 3) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 5 – 서재")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 5 – 트래커")
 @Composable
 private fun PreviewPage4() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 4) } }
 
-@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 6 – 시작")
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 6 – 서재")
 @Composable
 private fun PreviewPage5() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 5) } }
+
+@Preview(showBackground = true, widthDp = 390, heightDp = 844, name = "Page 7 – 시작")
+@Composable
+private fun PreviewPage6() { BookiiBookiiTheme { IntroScreen(onStart = {}, initialPage = 6) } }
 
 @Composable
 fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
@@ -79,11 +84,14 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
         if (initialPage != 0) return@LaunchedEffect
         // Page 1: 로고 (2500ms)
         delay(2500L)
-        // Page 2: 슬로건 (2000ms)
+        // Page 2: 슬로건1 (2000ms)
         currentPage = 1
         delay(2000L)
-        // Page 3~6: 프리뷰 카드 (2500ms 간격)
-        for (page in 2 until PAGE_COUNT) {
+        // Page 3: 슬로건2 (2000ms)
+        currentPage = 2
+        delay(2000L)
+        // Page 4~7: 프리뷰 카드 (2500ms 간격)
+        for (page in 3 until PAGE_COUNT) {
             currentPage = page
             if (page < PAGE_COUNT - 1) delay(2500L)
         }
@@ -115,37 +123,51 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
                             .width(300.dp),
                     )
 
-                    // Page 2: 슬로건 — Figma 1050-57852
-                    // "읽고, 교환하고, 기록해요." (medium) + "부키부키" (bold), 화면 중앙
-                    1 -> Column(
+                    // Page 2: 슬로건1 — "읽고, 교환하고, 기록해요." (SUITE Medium 24)
+                    1 -> Text(
+                        text = "읽고, 교환하고, 기록해요.",
+                        style = BookiiBookiiTheme.typography.suiteMedium24,
+                        color = BookiiBookiiTheme.colors.uiMain,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+
+                    // Page 3: 슬로건2 — "부키부키에서" (Bold+Regular 혼합) + "교환독서 파트너를 찾아보세요!" (Medium)
+                    2 -> Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text(
-                            text = "읽고, 교환하고, 기록해요.",
-                            style = BookiiBookiiTheme.typography.medium24,
-                            color = BookiiBookiiTheme.colors.uiMain,
-                            textAlign = TextAlign.Center,
-                        )
+                        Row {
+                            Text(
+                                text = "부키부키",
+                                style = BookiiBookiiTheme.typography.suiteBold24,
+                                color = BookiiBookiiTheme.colors.uiMain,
+                            )
+                            Text(
+                                text = "에서",
+                                style = BookiiBookiiTheme.typography.suiteRegular24,
+                                color = BookiiBookiiTheme.colors.uiMain,
+                            )
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "부키부키",
-                            style = BookiiBookiiTheme.typography.bold24,
+                            text = "교환독서 파트너를 찾아보세요!",
+                            style = BookiiBookiiTheme.typography.suiteMedium24,
                             color = BookiiBookiiTheme.colors.uiMain,
                             textAlign = TextAlign.Center,
                         )
                     }
 
-                    // Page 3~6: 텍스트 + 프리뷰 카드 — 로고·푸터는 오버레이
+                    // Page 4~7: 텍스트 + 프리뷰 카드 — 로고·푸터는 오버레이
                     else -> {
                         Text(
                             text = when (page) {
-                                2 -> "오늘은 누구와\n어떤 책으로 만나볼까요?"
-                                3 -> "책을 교환하는 모든 순간을\n단계별로 관리해요."
-                                4 -> "서로의 문장을 공유하며\n넓어지는 우리만의 서재"
+                                3 -> "오늘은 누구와\n어떤 책으로 만나볼까요?"
+                                4 -> "책을 교환하는 모든 순간을\n단계별로 관리해요."
+                                5 -> "서로의 문장을 공유하며\n넓어지는 우리만의 서재"
                                 else -> "지금 부키부키에서\n나와 꼭 맞는 독서 파트너를 찾아보세요!"
                             },
-                            style = BookiiBookiiTheme.typography.semibold20,
+                            style = BookiiBookiiTheme.typography.suiteSemibold20,
                             color = BookiiBookiiTheme.colors.grey900,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -161,9 +183,9 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
                                 .padding(top = 239.dp),
                         ) {
                             when (page) {
-                                2 -> HomePreviewCard()
-                                3 -> TrackerPreviewCard()
-                                4 -> LibraryPreviewCard()
+                                3 -> HomePreviewCard()
+                                4 -> TrackerPreviewCard()
+                                5 -> LibraryPreviewCard()
                                 else -> ReviewPreviewCard()
                             }
                         }
@@ -172,7 +194,7 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
             }
         }
 
-        // ── 오버레이: 상단 로고 (Page 2~6 고정) ──────────────────────────────────
+        // ── 오버레이: 상단 로고 (Page 2~7 고정) ──────────────────────────────────
         if (currentPage >= 1) {
             Image(
                 painter = painterResource(R.drawable.ic_logo_wordmark),
@@ -186,8 +208,8 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
             )
         }
 
-        // ── 오버레이: 하단 푸터 104dp (Page 3~6) ─────────────────────────────────
-        if (currentPage >= 2) {
+        // ── 오버레이: 하단 푸터 104dp (Page 4~7) ─────────────────────────────────
+        if (currentPage >= 3) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -196,7 +218,7 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
                     .background(BookiiBookiiTheme.colors.uiBg),
                 contentAlignment = Alignment.Center,
             ) {
-                // Page 6: 시작 버튼
+                // Page 7: 시작 버튼
                 if (currentPage == PAGE_COUNT - 1) {
                     AnimatedVisibility(
                         visible = startVisible,
@@ -218,7 +240,7 @@ fun IntroScreen(onStart: () -> Unit, initialPage: Int = 0) {
                         ) {
                             Text(
                                 text = "시작",
-                                style = BookiiBookiiTheme.typography.semibold18,
+                                style = BookiiBookiiTheme.typography.medium18,
                                 color = BookiiBookiiTheme.colors.white,
                             )
                         }
