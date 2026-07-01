@@ -422,7 +422,7 @@ private fun NicknameFieldWithCheck(
             Box(
                 modifier = Modifier
                     .height(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(if (isCheckEnabled) colors.grey900 else colors.grey400)
                     .clickable(enabled = isCheckEnabled, onClick = onCheckClick)
                     .padding(horizontal = 14.dp),
@@ -461,7 +461,7 @@ private fun GenderField(selectedIndex: Int?, onSelect: (Int) -> Unit) {
         ) {
             options.forEachIndexed { index, label ->
                 val isSelected = selectedIndex == index
-                val modifier = if (index < 2) Modifier.width(119.dp) else Modifier.weight(1f)
+                val modifier = Modifier.weight(1f)
                 Box(
                     modifier = modifier
                         .fillMaxHeight()

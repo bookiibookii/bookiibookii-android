@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.imageLoader
 import coil.request.ImageRequest
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
@@ -46,7 +47,9 @@ fun ProfilePlaceholder(
     modifier: Modifier = Modifier,
     imageUrl: String? = null,
     innerStroke: Boolean = false,
+    imageLoader: coil.ImageLoader? = null,
 ) {
+    val context = LocalContext.current
     Box(modifier = modifier.clip(ProfileSquircleShape)) {
         // 배경 placeholder — 항상 깔아둠. AsyncImage 로딩 전/실패 시 노출
         Image(
@@ -56,10 +59,11 @@ fun ProfilePlaceholder(
         )
         if (!imageUrl.isNullOrBlank()) {
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
+                model = ImageRequest.Builder(context)
                     .data(imageUrl)
                     .crossfade(true)
                     .build(),
+                imageLoader = imageLoader ?: context.imageLoader,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier

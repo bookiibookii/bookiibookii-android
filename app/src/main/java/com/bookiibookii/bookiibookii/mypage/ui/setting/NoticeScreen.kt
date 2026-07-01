@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -173,34 +174,36 @@ private fun NoticeItemCard(notice: NoticeSummary, onClick: () -> Unit) {
         // 제목 + 읽지 않음 dot + 화살표
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Top,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = notice.title,
-                style = BookiiBookiiTheme.typography.semibold16,
-                color = colors.grey900,
-                maxLines = 1,
+            Row(
                 modifier = Modifier.weight(1f),
-            )
-            if (!notice.isRead) {
-                Spacer(modifier = Modifier.size(4.dp))
-                Box(
-                    modifier = Modifier
-                        .padding(top = 3.dp)
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(colors.uiMain),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = notice.title,
+                    style = BookiiBookiiTheme.typography.semibold16,
+                    color = colors.grey900,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
-                Spacer(modifier = Modifier.size(8.dp))
-            } else {
-                Spacer(modifier = Modifier.size(8.dp))
+                if (!notice.isRead) {
+                    Spacer(modifier = Modifier.size(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(colors.uiMain),
+                    )
+                }
             }
+            Spacer(modifier = Modifier.size(8.dp))
             Icon(
                 painter = painterResource(R.drawable.ic_chevron),
                 contentDescription = null,
                 tint = colors.grey900,
                 modifier = Modifier
-                    .padding(top = 2.dp)
                     .size(24.dp)
                     .graphicsLayer { scaleX = -1f },
             )

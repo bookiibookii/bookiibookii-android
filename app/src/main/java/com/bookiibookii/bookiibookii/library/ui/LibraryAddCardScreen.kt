@@ -44,7 +44,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
+import androidx.compose.ui.platform.LocalContext
 import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -193,6 +195,9 @@ fun LibraryAddCardScreen(
         val n = input.toIntOrNull() ?: return input
         return if (totalPages != null && totalPages > 0 && n > totalPages) totalPages.toString() else input
     }
+
+    val context = LocalContext.current
+    val currentNickname = remember { TokenManager.getNickname(context) ?: "" }
 
     var quoteError by remember { mutableStateOf(false) }
     var pageError by remember { mutableStateOf(false) }
@@ -461,6 +466,7 @@ fun LibraryAddCardScreen(
             onDismiss = { showPreview = false },
             imageUri = selectedImageUri ?: initialImageUrl?.let(android.net.Uri::parse),
             bookTitle = bookTitle,
+            bookAuthor = currentNickname,
         )
     }
 }
