@@ -45,7 +45,14 @@ class BookshelfViewModel : ViewModel() {
     val sortOrder: LiveData<SortOrder> get() = _sortOrder
 
     val representativeBooks: LiveData<List<RepresentativeBook>> = _bookshelf.map { bookshelf ->
-        bookshelf?.representativeBooks?.sortedBy { it.displayOrder } ?: emptyList()
+        val authorByTitle = buildMap {
+            bookshelf?.completedBooks?.forEach { put(it.title, it.author to it.category) }
+            bookshelf?.favoriteBooks?.forEach { putIfAbsent(it.title, it.author to it.category) }
+        }
+        bookshelf?.representativeBooks?.sortedBy { it.displayOrder }?.map { rep ->
+            val (author, category) = authorByTitle[rep.title] ?: (null to null)
+            rep.copy(author = author, category = category)
+        } ?: emptyList()
     }
 
     val favoriteBooks: LiveData<List<FavoriteBook>> = _bookshelf.map { bookshelf ->

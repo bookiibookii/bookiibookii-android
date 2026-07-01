@@ -96,4 +96,23 @@ object DateUtils {
             ""
         }
     }
+
+    // 24시간 이내: N분/N시간 전, 이후: YYYY. MM. DD.
+    fun formatNoticeTime(serverTime: String?): String {
+        if (serverTime.isNullOrEmpty()) return ""
+        return try {
+            val instant = parseInstant(serverTime)
+            val diff = System.currentTimeMillis() - instant.toEpochMilli()
+            val minutes = diff / (1000 * 60)
+            val hours = minutes / 60
+            when {
+                minutes < 1 -> "방금 전"
+                minutes < 60 -> "${minutes}분 전"
+                hours < 24 -> "${hours}시간 전"
+                else -> formatter.format(instant)
+            }
+        } catch (e: Exception) {
+            formatDate(serverTime)
+        }
+    }
 }

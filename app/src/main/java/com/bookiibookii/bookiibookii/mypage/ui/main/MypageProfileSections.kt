@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.width
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.UserBookDto
 import com.bookiibookii.bookiibookii.mypage.ui.detail.verticalRotation
@@ -266,13 +268,15 @@ internal fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: 
             )
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            books.forEachIndexed { index, book ->
-                BookSpineItem(title = book.title, isOrange = index % 2 == 0, modifier = Modifier.weight(1f))
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            val spineWidth = (maxWidth - 8.dp * 6) / 7
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                books.forEachIndexed { index, book ->
+                    BookSpineItem(title = book.title, isOrange = index % 2 == 0, modifier = Modifier.width(spineWidth))
+                }
             }
         }
     }

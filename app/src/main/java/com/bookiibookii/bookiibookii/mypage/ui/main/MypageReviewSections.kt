@@ -37,6 +37,7 @@ import com.bookiibookii.bookiibookii.ui.component.ExchangeTypeChip
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.component.ReviewTypeChip
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
+import com.bookiibookii.bookiibookii.mypage.ui.detail.BookshelfStarRatingRow
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 @Composable
@@ -124,7 +125,7 @@ private fun WrittenReviewCard(review: BookReviewSummaryDto) {
                         Text(text = review.bookAuthor, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
                     }
                 }
-                MypageStarRating(rating = review.rating.toInt().coerceIn(0, 5))
+                BookshelfStarRatingRow(rating = review.rating.coerceIn(0.0, 5.0))
             }
             ExchangeTypeChip(isDelivery = review.tradeType != "DIRECT")
         }

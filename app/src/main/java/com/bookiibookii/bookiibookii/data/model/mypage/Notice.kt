@@ -9,9 +9,12 @@ data class NoticeListResponse(
 
 data class NoticeSummary(
     val id: Long,
-    val createdAt: String,
+    val updatedAt: String,
     val title: String,
     val summary: String,
+    val isRead: Boolean,
+    val authorNickname: String,
+    val authorProfileImageUrl: String?,
 )
 
 data class NoticeDetailResponse(
@@ -24,6 +27,10 @@ data class NoticeDetailResponse(
 data class NoticeDetail(
     val id: Long,
     val title: String,
+    val summary: String,
     val content: String,
+    val authorNickname: String,
+    val authorProfileImageUrl: String?,
     val createdAt: String,
+    val updatedAt: String,
 )
