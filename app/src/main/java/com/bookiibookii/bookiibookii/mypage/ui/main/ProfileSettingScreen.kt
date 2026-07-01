@@ -518,7 +518,7 @@ private fun BirthDateField(value: String, onClick: () -> Unit) {
         ) {
             Box(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = if (value.isEmpty()) "YYYY.MM.DD" else value,
+                    text = if (value.isEmpty()) "0000.00.00." else value,
                     style = BookiiBookiiTheme.typography.regular16,
                     color = if (value.isEmpty()) BookiiBookiiTheme.colors.grey400 else BookiiBookiiTheme.colors.grey900,
                 )

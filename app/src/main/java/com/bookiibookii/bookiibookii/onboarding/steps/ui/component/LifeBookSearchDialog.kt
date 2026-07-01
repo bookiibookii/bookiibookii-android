@@ -270,7 +270,8 @@ private fun BookResultItem(
             modifier = Modifier
                 .size(width = 64.dp, height = 95.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(colors.grey200)
+                .background(colors.white)
+                .border(1.dp, colors.grey100, RoundedCornerShape(8.dp))
         )
         Column(
             modifier = Modifier.weight(1f),

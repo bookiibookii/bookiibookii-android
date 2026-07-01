@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.library.ui
+﻿package com.bookiibookii.bookiibookii.library.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -1067,7 +1067,7 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                 val iconTint  = BookiiBookiiTheme.colors.uiMain150
                 val textColor = if (cardVersion == 1) BookiiBookiiTheme.colors.uiMain else Color.White
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.fillMaxWidth().weight(1f).background(gradient)) {
+                    Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(gradient)) {
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Spacer(modifier = Modifier.height(20.dp))
                             if (card.bookTitle.isNotBlank()) {
@@ -1078,17 +1078,18 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
-                            Text("“$quotationText”", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
+                            val displayQuotation = "“$quotationText”"
+                            Text(displayQuotation, style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth().weight(128f / 464f)) {
                         if (card.content.isNotBlank()) {
-                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800)
+                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 20.dp))
                         }
                         if (card.username.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text("by. ${card.username}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400,
-                                modifier = Modifier.align(Alignment.End))
+                                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp))
                         }
                     }
                 }

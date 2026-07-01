@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.onboarding.steps.ui.content
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -123,7 +124,8 @@ private fun LifeBookSlot(
                     .fillMaxWidth()
                     .height(170.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(colors.grey200)
+                    .background(colors.white)
+                    .border(1.dp, colors.grey100, RoundedCornerShape(10.dp))
             ) {
                 AsyncImage(
                     model = book.image,
