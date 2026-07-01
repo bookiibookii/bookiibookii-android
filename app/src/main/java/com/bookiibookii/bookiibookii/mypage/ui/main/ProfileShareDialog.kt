@@ -46,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.mypage.UserBookDto
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
@@ -204,6 +205,7 @@ internal fun ProfileShareCardContent(
     imageUrl: String? = null,
     representativeBooks: List<UserBookDto> = emptyList(),
     isDark: Boolean = false,
+    imageLoader: coil.ImageLoader? = null,
 ) {
     val cardBg = if (isDark) BookiiBookiiTheme.colors.grey900 else BookiiBookiiTheme.colors.white
     val textColor = if (isDark) BookiiBookiiTheme.colors.white else BookiiBookiiTheme.colors.grey900
@@ -245,7 +247,7 @@ internal fun ProfileShareCardContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            ProfilePlaceholder(imageUrl = imageUrl, modifier = Modifier.size(92.dp))
+            ProfilePlaceholder(imageUrl = imageUrl, modifier = Modifier.size(92.dp), imageLoader = imageLoader)
             Text(
                 text = name,
                 style = BookiiBookiiTheme.typography.semibold20,
@@ -301,6 +303,7 @@ internal fun ProfileShareCardContent(
                 books = representativeBooks.take(row1Count),
                 maxRowCount = maxRowCount,
                 cardBg = cardBg,
+                imageLoader = imageLoader,
             )
         }
 
@@ -310,6 +313,7 @@ internal fun ProfileShareCardContent(
                 books = representativeBooks.drop(row1Count).take(row2Count),
                 maxRowCount = maxRowCount,
                 cardBg = cardBg,
+                imageLoader = imageLoader,
             )
         }
 
@@ -322,6 +326,7 @@ private fun BookCoverRow(
     books: List<UserBookDto>,
     maxRowCount: Int,
     cardBg: Color,
+    imageLoader: coil.ImageLoader? = null,
 ) {
     BoxWithConstraints(
         modifier = Modifier
@@ -345,8 +350,10 @@ private fun BookCoverRow(
                         .background(BookiiBookiiTheme.colors.grey200),
                 ) {
                     if (!book.image.isNullOrBlank()) {
+                        val ctx = androidx.compose.ui.platform.LocalContext.current
                         AsyncImage(
                             model = book.image,
+                            imageLoader = imageLoader ?: ctx.imageLoader,
                             contentDescription = book.title,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),

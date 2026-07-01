@@ -39,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -122,6 +123,7 @@ private data class Particle(
     val id: String,
     val iconResId: Int,
     val sizeDp: Float,
+    val startX: Float,
     val targetY: Float,
     val rotation: Float,
 )
@@ -189,16 +191,12 @@ private fun captureShareableCardBitmap(
     val cardWidthPx = (context.resources.displayMetrics.widthPixels * 0.85f).toInt()
     val cardHeightPx = (cardWidthPx * 464f / 320f).toInt()
 
-    val offscreenImageLoader = coil.ImageLoader.Builder(context).allowHardware(false).build()
-
     val cardView = androidx.compose.ui.platform.ComposeView(context).apply {
         setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         visibility = android.view.View.INVISIBLE
         setContent {
-            androidx.compose.runtime.CompositionLocalProvider(coil.compose.LocalImageLoader provides offscreenImageLoader) {
-                BookiiBookiiTheme {
-                    ShareableCard(card = card, cardVersion = cardVersion)
-                }
+            BookiiBookiiTheme {
+                ShareableCard(card = card, cardVersion = cardVersion)
             }
         }
     }
@@ -556,17 +554,19 @@ fun ReadingCardDetailScreen(
         mutableStateListOf(*Array(cards.size) { i -> cards.getOrNull(i)?.isBookmarked ?: false })
     }
 
-    var activeReactionList by remember { mutableStateOf(listOf<Reaction>()) }
-    val particles          = remember { mutableStateListOf<Particle>() }
+    val reactionStates = remember(cards) {
+        mutableStateMapOf(*Array(cards.size) { i ->
+            i to (cards.getOrNull(i)?.myReactions?.mapNotNull { apiKeyToReaction[it] } ?: emptyList<Reaction>())
+        })
+    }
+    val particles = remember { mutableStateListOf<Particle>() }
 
     LaunchedEffect(pagerState.currentPage) {
-        val card = cards.getOrNull(pagerState.currentPage)
-        activeReactionList = card?.myReactions
-            ?.mapNotNull { apiKeyToReaction[it] }
-            ?: emptyList()
         particles.clear()
         cardVersion = 1
     }
+
+    val activeReactionList = reactionStates[pagerState.currentPage] ?: emptyList()
 
     val currentCard     = cards.getOrNull(pagerState.currentPage)
     val progress        = if (cards.isNotEmpty()) (pagerState.currentPage + 1).toFloat() / cards.size else 1f
@@ -629,27 +629,32 @@ fun ReadingCardDetailScreen(
         ReactionBar(
             activeReactions = activeReactionList,
             onReact = { reaction ->
+                val currentPage     = pagerState.currentPage
+                val currentReactions = reactionStates[currentPage] ?: emptyList()
                 val label           = reaction.label
-                val isAlreadyActive = activeReactionList.any { it.label == label }
+                val isAlreadyActive = currentReactions.any { it.label == label }
 
                 if (isAlreadyActive) {
-                    activeReactionList = activeReactionList.filter { it.label != label }
+                    reactionStates[currentPage] = currentReactions.filter { it.label != label }
                 } else {
-                    activeReactionList = activeReactionList + reaction
+                    reactionStates[currentPage] = currentReactions + reaction
                     coroutineScope.launch {
-                        val burstCount     = (5..8).random()
-                        val recentReactions = activeReactionList.takeLast(2)
-                        val pool           = if (recentReactions.isNotEmpty()) recentReactions else listOf(reaction)
-                        repeat(burstCount) {
-                            delay((10..50).random().toLong())
-                            val r = pool.random()
+                        val burstCount = (10..14).random()
+                        val half = burstCount / 2
+                        val others = (reactionStates[currentPage] ?: emptyList())
+                            .filter { it.label != reaction.label }
+                            .ifEmpty { null }
+                        repeat(burstCount) { idx ->
+                            delay((10..80).random().toLong())
+                            val r = if (idx < half || others == null) reaction else others.random()
                             particles.add(
                                 Particle(
                                     id        = UUID.randomUUID().toString(),
                                     iconResId = r.iconRes,
-                                    sizeDp    = (28..44).random().toFloat(),
-                                    targetY   = -(140..300).random().toFloat(),
-                                    rotation  = (-20..20).random().toFloat(),
+                                    sizeDp    = (28..46).random().toFloat(),
+                                    startX    = (-10..80).random().toFloat(),
+                                    targetY   = -(180..400).random().toFloat(),
+                                    rotation  = (-35..35).random().toFloat(),
                                 )
                             )
                         }
@@ -766,23 +771,23 @@ private fun FloatingParticle(particle: Particle, onAnimationEnd: (Particle) -> U
             scale.animateTo(1f, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
         }
         launch {
-            rotation.animateTo(particle.rotation, animationSpec = tween(durationMillis = 1500, easing = LinearOutSlowInEasing))
+            rotation.animateTo(particle.rotation, animationSpec = tween(durationMillis = 1900, easing = LinearOutSlowInEasing))
         }
         launch {
             delay(120)
-            translateY.animateTo(particle.targetY, animationSpec = tween(durationMillis = 1300, easing = LinearOutSlowInEasing))
+            translateY.animateTo(particle.targetY, animationSpec = tween(durationMillis = 1700, easing = LinearOutSlowInEasing))
         }
         launch {
-            delay(850)
-            alpha.animateTo(0f, animationSpec = tween(durationMillis = 650))
+            delay(1100)
+            alpha.animateTo(0f, animationSpec = tween(durationMillis = 800))
         }
-        delay(1550)
+        delay(1950)
         onAnimationEnd(particle)
     }
 
     Box(
         modifier = Modifier
-            .offset(y = translateY.value.dp)
+            .offset(x = particle.startX.dp, y = translateY.value.dp)
             .rotate(rotation.value)
             .scale(scale.value)
             .alpha(alpha.value)

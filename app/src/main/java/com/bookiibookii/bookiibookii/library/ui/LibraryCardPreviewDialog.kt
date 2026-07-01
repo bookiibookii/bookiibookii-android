@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,13 +45,21 @@ internal fun LibraryCardPreviewDialog(
     onDismiss: () -> Unit,
     imageUri: android.net.Uri? = null,
     bookTitle: String = "",
+    bookAuthor: String = "",
 ) {
     Dialog(onDismissRequest = onDismiss) {
         val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
         SideEffect {
             dialogWindowProvider?.window?.setDimAmount(0.8f)
         }
-        LibraryCardPreviewContent(mode = mode, quote = quote, memo = memo, imageUri = imageUri, bookTitle = bookTitle)
+        LibraryCardPreviewContent(
+            mode = mode,
+            quote = quote,
+            memo = memo,
+            imageUri = imageUri,
+            bookTitle = bookTitle,
+            bookAuthor = bookAuthor,
+        )
     }
 }
 
@@ -63,6 +70,7 @@ private fun LibraryCardPreviewContent(
     memo: String,
     imageUri: android.net.Uri? = null,
     bookTitle: String = "",
+    bookAuthor: String = "",
 ) {
     Box(
         modifier = Modifier
@@ -72,22 +80,35 @@ private fun LibraryCardPreviewContent(
             .background(BookiiBookiiTheme.colors.white),
     ) {
         when (mode) {
-            AddCardMode.TEXT -> QuoteCardPreview(quote = quote, memo = memo, bookTitle = bookTitle)
-            AddCardMode.PHOTO -> PhotoCardPreview(memo = memo, imageUri = imageUri, bookTitle = bookTitle)
+            AddCardMode.TEXT -> QuoteCardPreview(
+                quote = quote,
+                memo = memo,
+                bookTitle = bookTitle,
+                bookAuthor = bookAuthor,
+            )
+            AddCardMode.PHOTO -> PhotoCardPreview(
+                memo = memo,
+                imageUri = imageUri,
+                bookTitle = bookTitle,
+                bookAuthor = bookAuthor,
+            )
         }
     }
 }
 
-internal enum class BookTitleChipStyle { SOLID, PALE_FILL, WHITE_STROKE }
+internal enum class BookTitleChipStyle { SOLID, PALE_FILL, WHITE_STROKE, MAIN_PALE_STROKE }
 
 @Composable
 internal fun BookTitleChip(title: String, style: BookTitleChipStyle = BookTitleChipStyle.SOLID) {
-    val bgModifier = when (style) {
-        BookTitleChipStyle.SOLID -> Modifier.background(BookiiBookiiTheme.colors.uiMain)
-        BookTitleChipStyle.PALE_FILL -> Modifier.background(BookiiBookiiTheme.colors.uiMainPale)
-        BookTitleChipStyle.WHITE_STROKE -> Modifier.border(1.dp, Color.White, RoundedCornerShape(8.dp))
+    val isPaleStyle = style == BookTitleChipStyle.PALE_FILL || style == BookTitleChipStyle.MAIN_PALE_STROKE
+    val bgModifier: Modifier = when (style) {
+        BookTitleChipStyle.SOLID           -> Modifier.background(BookiiBookiiTheme.colors.uiMain)
+        BookTitleChipStyle.PALE_FILL       -> Modifier.background(BookiiBookiiTheme.colors.uiMainPale)
+        BookTitleChipStyle.WHITE_STROKE    -> Modifier.border(1.dp, Color.White, RoundedCornerShape(8.dp))
+        BookTitleChipStyle.MAIN_PALE_STROKE -> Modifier.border(1.dp, BookiiBookiiTheme.colors.uiMainPale, RoundedCornerShape(8.dp))
     }
-    val contentColor = if (style == BookTitleChipStyle.PALE_FILL) BookiiBookiiTheme.colors.uiMain else Color.White
+    val contentColor = if (isPaleStyle) BookiiBookiiTheme.colors.uiMain else Color.White
+
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
@@ -96,7 +117,7 @@ internal fun BookTitleChip(title: String, style: BookTitleChipStyle = BookTitleC
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (style != BookTitleChipStyle.PALE_FILL) {
+        if (!isPaleStyle) {
             Icon(
                 painter = painterResource(R.drawable.ic_logo_symbol),
                 contentDescription = null,
@@ -107,7 +128,7 @@ internal fun BookTitleChip(title: String, style: BookTitleChipStyle = BookTitleC
         Text(
             text = title,
             style = BookiiBookiiTheme.typography.medium16,
-            color = contentColor,
+            color = BookiiBookiiTheme.colors.white,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -115,7 +136,13 @@ internal fun BookTitleChip(title: String, style: BookTitleChipStyle = BookTitleC
 }
 
 @Composable
-private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
+private fun QuoteCardPreview(
+    quote: String,
+    memo: String,
+    bookTitle: String,
+    bookAuthor: String = "",
+) {
+    val displayQuote = if (quote.isBlank()) "인용구를 입력해주세요." else quote
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -134,7 +161,7 @@ private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 if (bookTitle.isNotBlank()) {
-                    BookTitleChip(title = bookTitle)
+                    BookTitleChip(title = bookTitle, style = BookTitleChipStyle.MAIN_PALE_STROKE)
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(
@@ -144,7 +171,7 @@ private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
                         modifier = Modifier.size(28.dp),
                     )
                     Text(
-                        text = "“${quote.ifBlank { "인용구를 입력해주세요." }}”",
+                        text = "“$displayQuote”",
                         style = BookiiBookiiTheme.typography.semibold20,
                         color = Color.White,
                         overflow = TextOverflow.Ellipsis,
@@ -164,6 +191,15 @@ private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
                     style = BookiiBookiiTheme.typography.regular16,
                     color = BookiiBookiiTheme.colors.grey800,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.TopStart),
+                )
+            }
+            if (bookAuthor.isNotBlank()) {
+                Text(
+                    text = "by. $bookAuthor",
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey400,
+                    modifier = Modifier.align(Alignment.BottomEnd),
                 )
             }
         }
@@ -171,7 +207,12 @@ private fun QuoteCardPreview(quote: String, memo: String, bookTitle: String) {
 }
 
 @Composable
-private fun PhotoCardPreview(memo: String, imageUri: android.net.Uri? = null, bookTitle: String) {
+private fun PhotoCardPreview(
+    memo: String,
+    imageUri: android.net.Uri? = null,
+    bookTitle: String = "",
+    bookAuthor: String = "",
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -205,6 +246,15 @@ private fun PhotoCardPreview(memo: String, imageUri: android.net.Uri? = null, bo
                     style = BookiiBookiiTheme.typography.regular16,
                     color = BookiiBookiiTheme.colors.grey800,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.TopStart),
+                )
+            }
+            if (bookAuthor.isNotBlank()) {
+                Text(
+                    text = "by. $bookAuthor",
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey400,
+                    modifier = Modifier.align(Alignment.BottomEnd),
                 )
             }
         }

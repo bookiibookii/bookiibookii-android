@@ -260,21 +260,20 @@ private fun captureProfileCardBitmap(
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         visibility = View.INVISIBLE
         setContent {
-            androidx.compose.runtime.CompositionLocalProvider(coil.compose.LocalImageLoader provides offscreenImageLoader) {
-                BookiiBookiiTheme {
-                    Box(
-                        modifier = Modifier
-                            .background(if (isDark) BookiiBookiiTheme.colors.grey900 else BookiiBookiiTheme.colors.white)
-                            .padding(vertical = 20.dp),
-                    ) {
-                        ProfileShareCardContent(
-                            name = profile.nickname,
-                            motto = profile.introduction ?: "",
-                            imageUrl = profile.profileImageUrl,
-                            representativeBooks = profile.userBooks ?: emptyList(),
-                            isDark = isDark,
-                        )
-                    }
+            BookiiBookiiTheme {
+                Box(
+                    modifier = Modifier
+                        .background(if (isDark) BookiiBookiiTheme.colors.grey900 else BookiiBookiiTheme.colors.white)
+                        .padding(vertical = 20.dp),
+                ) {
+                    ProfileShareCardContent(
+                        name = profile.nickname,
+                        motto = profile.introduction ?: "",
+                        imageUrl = profile.profileImageUrl,
+                        representativeBooks = profile.userBooks ?: emptyList(),
+                        isDark = isDark,
+                        imageLoader = offscreenImageLoader,
+                    )
                 }
             }
         }

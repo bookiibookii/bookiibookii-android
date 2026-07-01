@@ -5,6 +5,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.AddFavoriteBookRequest
 import com.bookiibookii.bookiibookii.data.model.mypage.AddRepresentativeBookRequest
 import com.bookiibookii.bookiibookii.data.model.mypage.BookshelfResult
 import com.bookiibookii.bookiibookii.data.model.mypage.GroupMemberResponse
+import com.bookiibookii.bookiibookii.data.model.mypage.FaqListResponse
 import com.bookiibookii.bookiibookii.data.model.mypage.InquiryCreateResponse
 import com.bookiibookii.bookiibookii.data.model.mypage.InquiryListResponse
 import com.bookiibookii.bookiibookii.data.model.mypage.InquiryRequest
@@ -123,6 +124,10 @@ interface MypApi {
     suspend fun getNoticeDetail(
         @Path("noticeId") noticeId: Long,
     ): Response<NoticeDetailResponse>
+
+    // 자주 묻는 질문 조회
+    @GET("api/faq")
+    suspend fun getFaq(): Response<FaqListResponse>
 
     // 문의 목록 조회
     @GET("api/inquiry")
