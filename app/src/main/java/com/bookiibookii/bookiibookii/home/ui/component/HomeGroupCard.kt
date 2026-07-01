@@ -55,7 +55,7 @@ internal fun HomeGroupCard(
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             // 상단: 교환방식 칩 + 책 제목 + 저자(장르)
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -89,7 +89,7 @@ internal fun HomeGroupCard(
             }
 
             // 하단: 예상 독서 기간 + 호스트 정보
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 // 피그마: "예상 독서 기간"(grey700) + "7"(grey800) + "일"(grey700) — 3개 분리
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),

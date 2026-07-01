@@ -9,6 +9,7 @@ import com.bookiibookii.bookiibookii.data.model.group.GroupItem
 import com.bookiibookii.bookiibookii.data.model.group.HomeSection
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,6 +51,28 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // 풀-투-리프레시: 전체 데이터 재로딩 후 isLoading 해제
+    fun refresh() {
+        if (_uiState.value.isLoading) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                coroutineScope {
+                    launch { loadNickname() }
+                    launch { loadRecommendedGroups() }
+                    launch { loadNotificationDot() }
+                    when (_uiState.value.selectedTab) {
+                        HomeTab.MY_GROUPS -> launch { loadMyGroups() }
+                        HomeTab.APPLIED -> launch { loadAppliedGroups() }
+                        HomeTab.RECOMMEND -> Unit
+                    }
+                }
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
     fun selectTab(tab: HomeTab) {
         _uiState.update { it.copy(selectedTab = tab) }
         when (tab) {
@@ -59,31 +82,33 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun fetchNickname() {
-        viewModelScope.launch {
-            runCatching {
-                RetrofitClient.mypApi().getMypage()
-            }.onSuccess { response ->
-                val nickname = response.body()?.result?.nickname ?: return@onSuccess
-                _uiState.update { it.copy(nickname = nickname) }
-                TokenManager.saveNickname(getApplication(), nickname)
-            }
+    private fun fetchNickname() = viewModelScope.launch { loadNickname() }
+
+    private suspend fun loadNickname() {
+        runCatching {
+            RetrofitClient.mypApi().getMypage()
+        }.onSuccess { response ->
+            val nickname = response.body()?.result?.nickname ?: return@onSuccess
+            _uiState.update { it.copy(nickname = nickname) }
+            TokenManager.saveNickname(getApplication(), nickname)
         }
     }
 
-    private fun fetchRecommendedGroups() {
-        viewModelScope.launch {
-            runCatching {
-                RetrofitClient.grpApi().getHomeGroups()
-            }.onSuccess { response ->
-                val result = response.body()?.result ?: return@onSuccess
-                _uiState.update { it.copy(recommendSections = result.sections) }
-            }
+    private fun fetchRecommendedGroups() = viewModelScope.launch { loadRecommendedGroups() }
+
+    private suspend fun loadRecommendedGroups() {
+        runCatching {
+            RetrofitClient.grpApi().getHomeGroups()
+        }.onSuccess { response ->
+            val result = response.body()?.result ?: return@onSuccess
+            _uiState.update { it.copy(recommendSections = result.sections) }
         }
     }
 
-    fun fetchNotificationDot() {
-        viewModelScope.launch {
+    fun fetchNotificationDot() = viewModelScope.launch { loadNotificationDot() }
+
+    private suspend fun loadNotificationDot() {
+        coroutineScope {
             val systemDeferred = async {
                 runCatching {
                     RetrofitClient.notiApi().getNotifications("SYSTEM", null, 20)
@@ -99,30 +124,30 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun fetchMyGroups() {
-        viewModelScope.launch {
-            runCatching {
-                RetrofitClient.grpApi().getMyHostedGroups()
-            }.onSuccess { response ->
-                val groups = response.body()?.result
-                    ?.filter { it.displayStatus == "BEFORE_MATCHING" } ?: return@onSuccess
-                _uiState.update { it.copy(myGroups = groups) }
-            }
+    private fun fetchMyGroups() = viewModelScope.launch { loadMyGroups() }
+
+    private suspend fun loadMyGroups() {
+        runCatching {
+            RetrofitClient.grpApi().getMyHostedGroups()
+        }.onSuccess { response ->
+            val groups = response.body()?.result
+                ?.filter { it.displayStatus == "BEFORE_MATCHING" } ?: return@onSuccess
+            _uiState.update { it.copy(myGroups = groups) }
         }
     }
 
-    private fun fetchAppliedGroups() {
-        viewModelScope.launch {
-            runCatching {
-                RetrofitClient.grpApi().getAppliedGroups()
-            }.onSuccess { response ->
-                val groups = response.body()?.result?.applicationList
-                    ?.filter { it.applicationStatus == "PENDING" }
-                    ?.map { it.toGroupItem() } ?: return@onSuccess
-                _uiState.update { it.copy(appliedGroups = groups) }
-            }.onFailure { e ->
-                Log.e("HomeVM", "fetchAppliedGroups error", e)
-            }
+    private fun fetchAppliedGroups() = viewModelScope.launch { loadAppliedGroups() }
+
+    private suspend fun loadAppliedGroups() {
+        runCatching {
+            RetrofitClient.grpApi().getAppliedGroups()
+        }.onSuccess { response ->
+            val groups = response.body()?.result?.applicationList
+                ?.filter { it.applicationStatus == "PENDING" }
+                ?.map { it.toGroupItem() } ?: return@onSuccess
+            _uiState.update { it.copy(appliedGroups = groups) }
+        }.onFailure { e ->
+            Log.e("HomeVM", "fetchAppliedGroups error", e)
         }
     }
 }

@@ -75,6 +75,11 @@ class OnbViewModel : ViewModel() {
         updateState(currentState().copy(profileUri = uri))
     }
 
+    fun clearProfileUri() {
+        updateState(currentState().copy(profileUri = null))
+        _imageUploadState.value = ProfileImageUploadState.Idle
+    }
+
     fun checkNickname(nickname: String) {
         viewModelScope.launch {
             _nicknameCheckState.value = NicknameCheckState.Loading
