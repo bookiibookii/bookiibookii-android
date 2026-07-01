@@ -78,7 +78,7 @@ internal fun HomeTabRow(
                                 strokeWidth = strokeWidth,
                             )
                         }
-                        .padding(end = 4.dp, bottom = 16.dp),
+                        .padding(start = 4.dp, end = 4.dp, bottom = 16.dp),
                 )
             }
         }

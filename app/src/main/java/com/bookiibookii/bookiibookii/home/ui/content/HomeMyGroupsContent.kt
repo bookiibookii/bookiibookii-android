@@ -112,8 +112,6 @@ internal fun LazyListScope.homeMyGroupsContent(
         }
     }
 
-    // 하단 여백
-    item { Box(Modifier.height(80.dp)) }
 }
 
 // ─── 프리뷰 ───────────────────────────────────────────────────────────────────

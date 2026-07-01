@@ -47,6 +47,7 @@ internal fun BookThumbnail(
     ) {
         BookCover(
             imageUrl = book.bookImage,
+            aladinCoverSize = "cover200",
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(120f / 168f),
@@ -82,7 +83,10 @@ internal fun RecommendBookRow(
         contentPadding = PaddingValues(start = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(books) { book ->
+        items(
+            items = books,
+            key = { book -> book.isbn13 ?: book.title.orEmpty() },
+        ) { book ->
             BookThumbnail(
                 book = book,
                 onClick = { onBookClick(book) },
