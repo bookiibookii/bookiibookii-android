@@ -12,6 +12,7 @@
     <string name="type_permission_title">접근 권한이 없는 페이지입니다.</string>
 
     <string name="type_group_delete_title">삭제된 페이지입니다.</string>
+    <string name="type_group_close_title">종료된 그룹입니다.</string>
 
     <string name="com_btn_retry">다시 시도</string>
     <string name="com_btn_back">이전</string>

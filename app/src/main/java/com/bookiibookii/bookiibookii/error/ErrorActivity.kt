@@ -17,7 +17,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
  * 종류는 [ErrorType]으로 전달받고, 버튼 동작은 기존 ComErrorActivity와 동일하게 유지
  */
 
-// TODO: 접근 권한이 없는 페이지, 삭제된 페이지 에러 화면 진입점 없음
+// TODO: 접근 권한이 없는 페이지(NO_PERMISSION) 진입점 없음
 class ErrorActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
