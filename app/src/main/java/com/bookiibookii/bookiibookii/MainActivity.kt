@@ -17,12 +17,17 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.common.BaseActivity
+import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.home.HomeFragment
 import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
+import com.bookiibookii.bookiibookii.library.ui.ReadingCard
+import com.bookiibookii.bookiibookii.library.vm.toReadingCard
 import com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar
 import com.bookiibookii.bookiibookii.notification.nav.NotificationRedirect
 import com.bookiibookii.bookiibookii.notification.nav.NotificationRedirectRouter
@@ -30,6 +35,8 @@ import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.tracker.TrackerFragment
 import com.bookiibookii.bookiibookii.tracker.nav.TrackerDestinations
+import com.google.gson.Gson
+import kotlinx.coroutines.launch
 
 private enum class NavTab { HOME, TRACKER, LIBRARY }
 
@@ -143,7 +150,46 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             "TRACKER_COMMENT" -> groupId?.let {
                 pushDeepFragment(TrackerFragment.newInstance(TrackerDestinations.comment(it, redirect.title.orEmpty())))
             }
+            "BOOK_CARD_DETAIL" -> {
+                val cardId = redirect.cardId
+                if (groupId != null && cardId != null) openCardDetail(groupId, cardId)
+                else showCustomToast("카드를 불러오지 못했어요", false)
+            }
             else -> Log.d("FCM", "라우팅 보류 redirectType=${redirect.redirectType}")
+        }
+    }
+
+    // 알림 → 독서카드 상세. groupId로 카드 목록을 받아 cardId와 매칭,
+    // 같은 책 카드만 추려(일반 진입과 동일 범위) 라이브러리 상세화면을 그대로 재사용해 연다.
+    private fun openCardDetail(groupId: Long, cardId: Long) {
+        lifecycleScope.launch {
+            val allCards = try {
+                val resp = RetrofitClient.libApi().getGroupCards(groupId.toInt())
+                if (resp.isSuccessful && resp.body()?.isSuccess == true) {
+                    resp.body()?.result?.cards?.map { it.toReadingCard() }
+                } else null
+            } catch (_: Exception) {
+                null
+            }
+
+            val target = allCards?.firstOrNull { it.cardId == cardId }
+            val sorted = allCards
+                ?.filter { it.bookTitle == target?.bookTitle }
+                ?.sortedWith(compareByDescending<ReadingCard> { it.date }.thenByDescending { it.cardId })
+            val index = sorted?.indexOfFirst { it.cardId == cardId } ?: -1
+
+            if (target == null || sorted == null || index < 0) {
+                showCustomToast("카드를 불러오지 못했어요", false)
+                return@launch
+            }
+
+            pushDeepFragment(
+                LibraryFragment.newInstanceAtCardDetail(
+                    initialIndex = index,
+                    sortByLatest = true,
+                    cardsJson = Gson().toJson(sorted),
+                ),
+            )
         }
     }
 
