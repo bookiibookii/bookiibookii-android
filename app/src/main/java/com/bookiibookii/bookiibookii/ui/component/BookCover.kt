@@ -37,7 +37,7 @@ fun BookCover(
     Box(
         modifier = modifier
             .clip(shape)
-            .background(BookiiBookiiTheme.colors.uiBg)
+            .background(BookiiBookiiTheme.colors.white)
             .border(
                 width = 1.dp,
                 color = BookiiBookiiTheme.colors.grey100,

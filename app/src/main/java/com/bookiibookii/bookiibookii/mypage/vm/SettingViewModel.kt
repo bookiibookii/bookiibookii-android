@@ -80,11 +80,7 @@ class SettingViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.mypApi().getFaq()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val items = response.body()?.result ?: emptyList()
-                    items.forEachIndexed { i, item ->
-                        Log.d("SettingViewModel", "FAQ[$i] Q=${item.question} / A=${item.answer}")
-                    }
-                    _faqItems.value = items
+                    _faqItems.value = response.body()?.result ?: emptyList()
                 } else {
                     Log.e("SettingViewModel", "fetchFaq failed: code=${response.code()} body=${response.body()}")
                     _eventFlow.emit(Event.ShowToast("자주 묻는 질문을 불러오지 못했습니다."))

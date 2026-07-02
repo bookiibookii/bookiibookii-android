@@ -1,6 +1,7 @@
 package com.bookiibookii.bookiibookii.library.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -465,7 +466,7 @@ fun LibraryAddCardScreen(
             memo = memo,
             onDismiss = { showPreview = false },
             imageUri = selectedImageUri ?: initialImageUrl?.let(android.net.Uri::parse),
-            bookTitle = bookTitle,
+            bookTitle = bookTitle.stripBookSubtitle(),
             bookAuthor = currentNickname,
         )
     }
