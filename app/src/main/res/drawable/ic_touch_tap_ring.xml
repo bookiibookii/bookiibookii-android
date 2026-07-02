@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="72dp"
+    android:height="72dp"
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+  <!-- 탭 링 (주황) — 고정 레이어 -->
+  <path
+      android:pathData="M34.7995,32.5808C38.6798,31.3859 41.5,27.7723 41.5,23.5C41.5,18.2533 37.2467,14 32,14C26.7533,14 22.5,18.2533 22.5,23.5C22.5,27.6984 25.2234,31.2607 29,32.5166"
+      android:strokeWidth="1.5"
+      android:fillColor="#00000000"
+      android:strokeColor="#FF7618"/>
+</vector>

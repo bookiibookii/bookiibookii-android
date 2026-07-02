@@ -108,6 +108,7 @@ fun TrackerCommentRoute(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val currentUserId = remember { TokenManager.getUserId(context) }
+    var showCoachMark by remember { mutableStateOf(!TokenManager.isTrackerCommentCoachMarkDone(context)) }
 
     // 바텀 네비 표시는 TrackerNavHost에서 현재 라우트 기준으로 일괄 제어
     LaunchedEffect(Unit) {
@@ -122,19 +123,29 @@ fun TrackerCommentRoute(
         }
     }
 
-    TrackerCommentScreen(
-        title = title,
-        comments = uiState.comments,
-        currentUserId = currentUserId,
-        draft = uiState.draft,
-        submitting = uiState.submitting,
-        isRefreshing = uiState.isRefreshing,
-        onBackClick = onBackClick,
-        onDraftChange = viewModel::onDraftChange,
-        onSubmit = viewModel::submit,
-        onDelete = viewModel::delete,
-        onRefresh = viewModel::refresh,
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        TrackerCommentScreen(
+            title = title,
+            comments = uiState.comments,
+            currentUserId = currentUserId,
+            draft = uiState.draft,
+            submitting = uiState.submitting,
+            isRefreshing = uiState.isRefreshing,
+            onBackClick = onBackClick,
+            onDraftChange = viewModel::onDraftChange,
+            onSubmit = viewModel::submit,
+            onDelete = viewModel::delete,
+            onRefresh = viewModel::refresh,
+        )
+        if (showCoachMark) {
+            TrackerCommentCoachMarkOverlay(
+                onDismiss = {
+                    TokenManager.saveTrackerCommentCoachMarkDone(context)
+                    showCoachMark = false
+                },
+            )
+        }
+    }
 }
 
 // 트래커 1:1 댓글 화면 (풀스크린, stateless)
