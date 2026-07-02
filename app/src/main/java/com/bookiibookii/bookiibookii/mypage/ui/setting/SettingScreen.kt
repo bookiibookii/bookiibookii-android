@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,8 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.openPrivacyPolicy
 import com.bookiibookii.bookiibookii.common.openTermsOfService
+import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 
@@ -53,29 +53,50 @@ fun SettingRoute(
     onWithdrawClick: () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
+    val prefs = remember { context.getSharedPreferences("bookii_prefs", android.content.Context.MODE_PRIVATE) }
     var pushEnabled by remember {
-        mutableStateOf(androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled())
+        mutableStateOf(prefs.getBoolean("push_notification_enabled", true))
     }
 
-    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                pushEnabled = androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
+    val notificationPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                prefs.edit().putBoolean("push_notification_enabled", true).apply()
+                pushEnabled = true
+                com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar.registerCurrentToken(context)
+            } else {
+                context.showCustomToast("알림 권한이 거부되었습니다. 시스템 설정에서 직접 허용해주세요.", false)
             }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
+        },
+    )
 
     SettingScreen(
         pushEnabled = pushEnabled,
-        onPushToggle = {
-            val intent = android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+        onPushToggle = { enabled ->
+            if (enabled) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                        context, android.Manifest.permission.POST_NOTIFICATIONS
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    if (granted) {
+                        prefs.edit().putBoolean("push_notification_enabled", true).apply()
+                        pushEnabled = true
+                        com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar.registerCurrentToken(context)
+                    } else {
+                        notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                } else {
+                    prefs.edit().putBoolean("push_notification_enabled", true).apply()
+                    pushEnabled = true
+                    com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar.registerCurrentToken(context)
+                }
+            } else {
+                prefs.edit().putBoolean("push_notification_enabled", false).apply()
+                pushEnabled = false
+                com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar.deactivateCurrentToken {}
             }
-            context.startActivity(intent)
         },
         onBackClick = onBackClick,
         onNoticeClick = onNoticeClick,
@@ -241,17 +262,7 @@ private fun PushNotificationCard(pushEnabled: Boolean, onToggle: (Boolean) -> Un
             Text("푸시 알림 받기", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey900)
             Text("서비스 알림을 받습니다.", style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey600)
         }
-        Switch(
-            checked = pushEnabled,
-            onCheckedChange = onToggle,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = BookiiBookiiTheme.colors.white,
-                checkedTrackColor = BookiiBookiiTheme.colors.uiMain,
-                uncheckedThumbColor = BookiiBookiiTheme.colors.white,
-                uncheckedTrackColor = BookiiBookiiTheme.colors.grey300,
-                uncheckedBorderColor = BookiiBookiiTheme.colors.grey300,
-            ),
-        )
+        BookiiToggle(checked = pushEnabled, onCheckedChange = onToggle)
     }
 }
 
@@ -330,6 +341,35 @@ private fun TextSettingCard(
                     .graphicsLayer { scaleX = -1f },
             )
         }
+    }
+}
+
+@Composable
+private fun BookiiToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val colors = BookiiBookiiTheme.colors
+    val thumbOffset by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (checked) 20f else 0f,
+        label = "toggle",
+    )
+    Box(
+        modifier = androidx.compose.ui.Modifier
+            .width(52.dp)
+            .height(32.dp)
+            .clip(androidx.compose.foundation.shape.CircleShape)
+            .background(if (checked) colors.uiMain else colors.grey300)
+            .clickable(
+                indication = null,
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+            ) { onCheckedChange(!checked) },
+    ) {
+        Box(
+            modifier = androidx.compose.ui.Modifier
+                .padding(4.dp)
+                .size(24.dp)
+                .offset(x = thumbOffset.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(androidx.compose.ui.graphics.Color.White),
+        )
     }
 }
 

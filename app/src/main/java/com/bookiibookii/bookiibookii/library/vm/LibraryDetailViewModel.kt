@@ -37,13 +37,8 @@ class LibraryDetailViewModel : ViewModel() {
     fun fetchGroupCards(groupId: Int, bookTitle: String = "") {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            Log.d("LibraryDetail", "fetchGroupCards 시작 — groupId=$groupId, bookTitle=$bookTitle")
             try {
                 val response = RetrofitClient.libApi().getGroupCards(groupId)
-                Log.d("LibraryDetail", "응답 코드: ${response.code()}")
-                Log.d("LibraryDetail", "isSuccessful: ${response.isSuccessful}")
-                Log.d("LibraryDetail", "isSuccess(body): ${response.body()?.isSuccess}")
-
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
                     val allCards = result?.cards ?: emptyList()
@@ -52,12 +47,9 @@ class LibraryDetailViewModel : ViewModel() {
                     } else {
                         allCards
                     }
-                    Log.d("LibraryDetail", "그룹 전체 ${allCards.size}개 중 '$bookTitle' 카드 ${bookCards.size}개")
                     val cards = bookCards.map { it.toReadingCard() }
                     _uiState.update { it.copy(isLoading = false, cards = cards) }
                 } else {
-                    val errBody = response.errorBody()?.string()
-                    Log.e("LibraryDetail", "실패 — code=${response.code()}, errBody=$errBody")
                     _uiState.update { it.copy(isLoading = false, errorMessage = "독서카드를 불러오지 못했습니다.") }
                 }
             } catch (e: Exception) {
@@ -96,22 +88,11 @@ class LibraryDetailViewModel : ViewModel() {
             }
             try {
                 val request = AddRepresentativeBookRequest(memberBookId = memberBookId.toLong())
-                Log.d("Representative", "대표도서 등록 요청 → memberBookId=$memberBookId, request=$request")
-
                 val response = RetrofitClient.mypApi().addRepresentativeBook(request)
-                Log.d("Representative", "응답 코드: ${response.code()}")
-                Log.d("Representative", "응답 body: ${response.body()}")
-
-                if (!response.isSuccessful) {
-                    val errBody = response.errorBody()?.string()
-                    Log.e("Representative", "실패 에러 body: $errBody")
-                }
-
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _uiState.update { it.copy(isRepresentative = true) }
                     _event.emit(LibraryDetailToastEvent("대표 도서로 등록되었습니다.", true))
                 } else {
-                    Log.e("Representative", "isSuccess=false, code=${response.code()}, message=${response.message()}")
                     _event.emit(LibraryDetailToastEvent("대표 도서 등록에 실패했습니다.", false))
                 }
             } catch (e: Exception) {

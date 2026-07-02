@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.ui.detail
 
+import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -244,10 +245,12 @@ private fun RepresentativeEditListItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                val repCategory = book.category?.let { GroupTagMapper.toKoreanTag(it).removePrefix("#") }
                 Text(
-                    text = "",
+                    text = if (book.author != null && repCategory != null) "${book.author} ($repCategory)"
+                           else book.author ?: repCategory ?: "",
                     style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey900,
+                    color = BookiiBookiiTheme.colors.grey700,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

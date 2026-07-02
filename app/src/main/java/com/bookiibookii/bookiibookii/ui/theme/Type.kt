@@ -3,8 +3,10 @@ package com.bookiibookii.bookiibookii.ui.theme
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -23,6 +25,14 @@ val MaruBuri = FontFamily(
     Font(R.font.maruburi_regular, FontWeight.Normal),
     Font(R.font.maruburi_semibold, FontWeight.SemiBold),
     Font(R.font.maruburi_bold, FontWeight.Bold)
+)
+
+@OptIn(ExperimentalTextApi::class)
+val Suite = FontFamily(
+    Font(R.font.suite_variable, weight = FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
+    Font(R.font.suite_variable, weight = FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
+    Font(R.font.suite_variable, weight = FontWeight.SemiBold, variationSettings = FontVariation.Settings(FontVariation.weight(600))),
+    Font(R.font.suite_variable, weight = FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
 )
 
 @Immutable
@@ -60,11 +70,23 @@ data class BookiiTypography(
     val bold18: TextStyle,
     val bold20: TextStyle,
     val bold24: TextStyle,
+    val suiteRegular24: TextStyle,
+    val suiteMedium24: TextStyle,
+    val suiteBold24: TextStyle,
+    val suiteSemibold20: TextStyle,
 )
 
 // 피그마: lineHeight=1.4, letterSpacing=-0.01em (모든 텍스트 스타일 공통)
 private fun pretendard(weight: FontWeight, size: Int) = TextStyle(
     fontFamily = Pretendard,
+    fontWeight = weight,
+    fontSize = size.sp,
+    lineHeight = (size * 1.4f).sp,
+    letterSpacing = (-0.01).em,
+)
+
+private fun suite(weight: FontWeight, size: Int) = TextStyle(
+    fontFamily = Suite,
     fontWeight = weight,
     fontSize = size.sp,
     lineHeight = (size * 1.4f).sp,
@@ -105,6 +127,10 @@ val bookiiTypography = BookiiTypography(
     bold18 = pretendard(FontWeight.Bold, 18),
     bold20 = pretendard(FontWeight.Bold, 20),
     bold24 = pretendard(FontWeight.Bold, 24),
+    suiteRegular24 = suite(FontWeight.Normal, 24),
+    suiteMedium24 = suite(FontWeight.Medium, 24),
+    suiteBold24 = suite(FontWeight.Bold, 24),
+    suiteSemibold20 = suite(FontWeight.SemiBold, 20),
 )
 
 val LocalBookiiTypography = staticCompositionLocalOf<BookiiTypography> {

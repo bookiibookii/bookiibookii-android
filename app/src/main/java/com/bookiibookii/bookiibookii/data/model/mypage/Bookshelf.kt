@@ -32,6 +32,8 @@ data class RepresentativeBook(
     val displayOrder: Int,
     val isFavorite: Boolean,
     val rating: Double? = null,
+    val author: String? = null,
+    val category: String? = null,
 )
 
 // POST /api/mypage/bookshelf/favorites

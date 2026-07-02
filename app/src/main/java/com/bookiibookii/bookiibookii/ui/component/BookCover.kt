@@ -31,12 +31,13 @@ private fun String.toAladinCover(size: String): String =
 fun BookCover(
     modifier: Modifier = Modifier,
     imageUrl: String? = null,
+    aladinCoverSize: String = "cover500",
 ) {
     val shape = BookiiBookiiTheme.shape.round8
     Box(
         modifier = modifier
             .clip(shape)
-            .background(BookiiBookiiTheme.colors.uiBg)
+            .background(BookiiBookiiTheme.colors.white)
             .border(
                 width = 1.dp,
                 color = BookiiBookiiTheme.colors.grey100,
@@ -44,10 +45,10 @@ fun BookCover(
             ),
     ) {
         if (!imageUrl.isNullOrBlank()) {
-            val highRes = imageUrl.toAladinCover("cover500")
+            val highRes = imageUrl.toAladinCover(aladinCoverSize)
             val fallback = imageUrl.toAladinCover("cover200")
             // cover500이 없는 책은 로딩 실패 → cover200으로 1회 폴백
-            var model by remember(imageUrl) { mutableStateOf(highRes) }
+            var model by remember(imageUrl, aladinCoverSize) { mutableStateOf(highRes) }
             AsyncImage(
                 model = model,
                 contentDescription = null,

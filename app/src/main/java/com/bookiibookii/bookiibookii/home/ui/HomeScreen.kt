@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +49,7 @@ fun HomeRoute(
     HomeScreen(
         uiState = uiState,
         onTabSelect = viewModel::selectTab,
+        onRefresh = viewModel::refresh,
         onGroupClick = onGroupClick,
         onSearchClick = onSearchClick,
         onCreateGroupClick = onCreateGroupClick,
@@ -59,11 +62,12 @@ fun HomeRoute(
 
 // ─── Stateless 레이아웃 ───────────────────────────────────────────────────────
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun HomeScreen(
     uiState: HomeUiState,
     onTabSelect: (HomeTab) -> Unit,
+    onRefresh: () -> Unit,
     onGroupClick: (Long) -> Unit,
     onSearchClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
@@ -93,47 +97,53 @@ internal fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BookiiBookiiTheme.colors.uiBg),
-            contentPadding = PaddingValues(bottom = 100.dp),
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = onRefresh,
+            modifier = Modifier.fillMaxSize(),
         ) {
-            // [0] 웰컴섹션 — 맨 위에서만 보임
-            item { HomeWelcomeSection(nickname = uiState.nickname) }
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BookiiBookiiTheme.colors.uiBg),
+                contentPadding = PaddingValues(bottom = 100.dp),
+            ) {
+                // [0] 웰컴섹션 — 맨 위에서만 보임
+                item { HomeWelcomeSection(nickname = uiState.nickname) }
 
-            // [1] 검색창+그룹생성 — 일반 아이템: 맨 위에서만 보이고 스크롤하면 자연스럽게 사라짐
-            // (sticky에서 빼서 헤더 높이를 고정 → 스크롤 점프/자동 스크롤 현상 제거)
-            item {
-                HomeSearchCreateRow(
-                    onSearchClick = onSearchClick,
-                    onCreateGroupClick = onCreateGroupClick,
-                )
-            }
+                // [1] 검색창+그룹생성 — 일반 아이템: 맨 위에서만 보이고 스크롤하면 자연스럽게 사라짐
+                // (sticky에서 빼서 헤더 높이를 고정 → 스크롤 점프/자동 스크롤 현상 제거)
+                item {
+                    HomeSearchCreateRow(
+                        onSearchClick = onSearchClick,
+                        onCreateGroupClick = onCreateGroupClick,
+                    )
+                }
 
-            // [2] stickyHeader: 탭바만 고정 — 높이가 변하지 않아 스크롤 점프 없음
-            stickyHeader {
-                HomeTabRow(selectedTab = uiState.selectedTab, onTabSelect = onTabSelect)
-            }
+                // [2] stickyHeader: 탭바만 고정 — 높이가 변하지 않아 스크롤 점프 없음
+                stickyHeader {
+                    HomeTabRow(selectedTab = uiState.selectedTab, onTabSelect = onTabSelect)
+                }
 
-            when (uiState.selectedTab) {
-                HomeTab.RECOMMEND -> homeRecommendContent(
-                    sections = uiState.recommendSections,
-                    onGroupClick = onGroupClick,
-                    onBookClick = onBookClick,
-                )
-                HomeTab.MY_GROUPS -> homeMyGroupsContent(
-                    myGroups = uiState.myGroups,
-                    onGroupClick = onGroupClick,
-                    onCreateGroupClick = onCreateGroupClick,
-                )
-                HomeTab.APPLIED -> homeAppliedContent(
-                    appliedGroups = uiState.appliedGroups,
-                    onGroupClick = onGroupClick,
-                    // "그룹 탐색하기" → 그룹 검색 화면(GroupSearchScreen)
-                    onExploreGroupClick = onSearchClick,
-                )
+                when (uiState.selectedTab) {
+                    HomeTab.RECOMMEND -> homeRecommendContent(
+                        sections = uiState.recommendSections,
+                        onGroupClick = onGroupClick,
+                        onBookClick = onBookClick,
+                    )
+                    HomeTab.MY_GROUPS -> homeMyGroupsContent(
+                        myGroups = uiState.myGroups,
+                        onGroupClick = onGroupClick,
+                        onCreateGroupClick = onCreateGroupClick,
+                    )
+                    HomeTab.APPLIED -> homeAppliedContent(
+                        appliedGroups = uiState.appliedGroups,
+                        onGroupClick = onGroupClick,
+                        // "그룹 탐색하기" → 그룹 검색 화면(GroupSearchScreen)
+                        onExploreGroupClick = onSearchClick,
+                    )
+                }
             }
         }
     }
@@ -170,6 +180,7 @@ private fun HomeScreenRecommendPreview() {
                 recommendSections = mockSections,
             ),
             onTabSelect = {},
+            onRefresh = {},
             onGroupClick = {},
             onSearchClick = {},
             onCreateGroupClick = {},
@@ -190,6 +201,7 @@ private fun HomeScreenRecommendEmptyPreview() {
                 recommendSections = emptyList(),
             ),
             onTabSelect = {},
+            onRefresh = {},
             onGroupClick = {},
             onSearchClick = {},
             onCreateGroupClick = {},
@@ -210,6 +222,7 @@ private fun HomeScreenMyGroupsEmptyPreview() {
                 myGroups = emptyList(),
             ),
             onTabSelect = {},
+            onRefresh = {},
             onGroupClick = {},
             onSearchClick = {},
             onCreateGroupClick = {},
@@ -230,6 +243,7 @@ private fun HomeScreenAppliedEmptyPreview() {
                 appliedGroups = emptyList(),
             ),
             onTabSelect = {},
+            onRefresh = {},
             onGroupClick = {},
             onSearchClick = {},
             onCreateGroupClick = {},

@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.common.showCustomToast
-import com.bookiibookii.bookiibookii.data.model.mypage.InquirySummary
+import com.bookiibookii.bookiibookii.data.model.mypage.FaqItem
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import kotlinx.coroutines.launch
@@ -57,10 +57,10 @@ fun FaqRoute(
     viewModel: com.bookiibookii.bookiibookii.mypage.vm.SettingViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val inquiries by viewModel.inquiries.observeAsState(emptyList())
+    val faqItems by viewModel.faqItems.observeAsState(emptyList())
 
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-        viewModel.fetchInquiries()
+        viewModel.fetchFaq()
     }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -76,7 +76,7 @@ fun FaqRoute(
     }
 
     FaqScreen(
-        faqItems = inquiries.filter { !it.adminReply.isNullOrBlank() },
+        faqItems = faqItems,
         onBackClick = onBackClick,
         onPostInquiry = { title, content -> viewModel.postInquiry(title, content) },
         onInquiryClick = { context.openReportChannel() },
@@ -87,7 +87,7 @@ fun FaqRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FaqScreen(
-    faqItems: List<InquirySummary> = emptyList(),
+    faqItems: List<FaqItem> = emptyList(),
     onBackClick: () -> Unit = {},
     onPostInquiry: (title: String, content: String) -> Unit = { _, _ -> },
     onInquiryClick: () -> Unit = {},
@@ -107,14 +107,18 @@ fun FaqScreen(
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            faqItems.forEachIndexed { index, item ->
-                FaqItemCard(
-                    item = item,
-                    isExpanded = expandedIndex == index,
-                    onToggle = { expandedIndex = if (expandedIndex == index) null else index },
-                )
-                if (index < faqItems.lastIndex) {
-                    Spacer(modifier = Modifier.height(16.dp))
+            if (faqItems.isEmpty()) {
+                FaqEmptyCard()
+            } else {
+                faqItems.forEachIndexed { index, item ->
+                    FaqItemCard(
+                        item = item,
+                        isExpanded = expandedIndex == index,
+                        onToggle = { expandedIndex = if (expandedIndex == index) null else index },
+                    )
+                    if (index < faqItems.lastIndex) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -289,7 +293,33 @@ private fun FaqTopBar(onBackClick: () -> Unit) {
 }
 
 @Composable
-private fun FaqItemCard(item: InquirySummary, isExpanded: Boolean, onToggle: () -> Unit) {
+private fun FaqEmptyCard() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(BookiiBookiiTheme.colors.white)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = "아직 등록된 질문이 없어요.",
+            style = BookiiBookiiTheme.typography.medium16,
+            color = BookiiBookiiTheme.colors.grey900,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = "문의사항 발생 시 문의 부탁드립니다.",
+            style = BookiiBookiiTheme.typography.regular14,
+            color = BookiiBookiiTheme.colors.grey600,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun FaqItemCard(item: FaqItem, isExpanded: Boolean, onToggle: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -314,7 +344,7 @@ private fun FaqItemCard(item: InquirySummary, isExpanded: Boolean, onToggle: () 
             ) {
                 Text("Q.", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.uiMain)
                 Text(
-                    text = item.title,
+                    text = item.question,
                     style = BookiiBookiiTheme.typography.semibold16,
                     color = BookiiBookiiTheme.colors.grey900,
                 )
@@ -335,7 +365,7 @@ private fun FaqItemCard(item: InquirySummary, isExpanded: Boolean, onToggle: () 
             ) {
                 Text("A.", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.uiMain)
                 Text(
-                    text = item.adminReply.orEmpty(),
+                    text = item.answer,
                     style = BookiiBookiiTheme.typography.regular14,
                     color = BookiiBookiiTheme.colors.grey900,
                 )
@@ -345,16 +375,10 @@ private fun FaqItemCard(item: InquirySummary, isExpanded: Boolean, onToggle: () 
 }
 
 private val previewFaqItems = listOf(
-    InquirySummary(
-        inquiryId = 1L,
-        userId = 1L,
-        nickname = "부키",
-        createdAt = "2026-05-01",
-        title = "책 상태가 좋지 않으면 교환이 거절될 수 있나요?",
-        content = "",
-        supportStatus = "RESOLVED",
-        adminReply = "네, 책의 상태에 따라 교환이 제한될 수 있습니다. 낙서, 심한 훼손, 페이지 누락 등이 있는 경우 상대방이 교환을 거절할 권리가 있습니다.",
-        resolvedAt = "2026-05-02",
+    FaqItem(
+        id = 1L,
+        question = "책 상태가 좋지 않으면 교환이 거절될 수 있나요?",
+        answer = "네, 책의 상태에 따라 교환이 제한될 수 있습니다. 낙서, 심한 훼손, 페이지 누락 등이 있는 경우 상대방이 교환을 거절할 권리가 있습니다.",
     ),
 )
 

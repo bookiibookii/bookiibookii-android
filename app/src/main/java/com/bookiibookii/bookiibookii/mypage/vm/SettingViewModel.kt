@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
+import com.bookiibookii.bookiibookii.data.model.mypage.FaqItem
 import com.bookiibookii.bookiibookii.data.model.mypage.InquiryRequest
 import com.bookiibookii.bookiibookii.data.model.mypage.InquirySummary
 import com.bookiibookii.bookiibookii.data.model.mypage.NoticeDetail
@@ -25,6 +26,9 @@ class SettingViewModel : ViewModel() {
 
     private val _withdrawFailed = MutableLiveData(false)
     val withdrawFailed: LiveData<Boolean> get() = _withdrawFailed
+
+    private val _faqItems = MutableLiveData<List<FaqItem>>(emptyList())
+    val faqItems: LiveData<List<FaqItem>> get() = _faqItems
 
     private val _inquiries = MutableLiveData<List<InquirySummary>>(emptyList())
     val inquiries: LiveData<List<InquirySummary>> get() = _inquiries
@@ -61,10 +65,28 @@ class SettingViewModel : ViewModel() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _noticeDetail.value = response.body()?.result
                 } else {
+                    Log.e("SettingViewModel", "fetchNoticeDetail failed: code=${response.code()} body=${response.body()}")
                     _eventFlow.emit(Event.ShowToast("공지사항 내용을 불러오지 못했습니다."))
                 }
             } catch (e: Exception) {
                 Log.e("SettingViewModel", "fetchNoticeDetail error", e)
+                _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            }
+        }
+    }
+
+    fun fetchFaq() {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.mypApi().getFaq()
+                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                    _faqItems.value = response.body()?.result ?: emptyList()
+                } else {
+                    Log.e("SettingViewModel", "fetchFaq failed: code=${response.code()} body=${response.body()}")
+                    _eventFlow.emit(Event.ShowToast("자주 묻는 질문을 불러오지 못했습니다."))
+                }
+            } catch (e: Exception) {
+                Log.e("SettingViewModel", "fetchFaq error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
             }
         }
@@ -77,7 +99,7 @@ class SettingViewModel : ViewModel() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _inquiries.value = response.body()?.result ?: emptyList()
                 } else {
-                    _eventFlow.emit(Event.ShowToast("자주 묻는 질문을 불러오지 못했습니다."))
+                    _eventFlow.emit(Event.ShowToast("문의 목록을 불러오지 못했습니다."))
                 }
             } catch (e: Exception) {
                 Log.e("SettingViewModel", "fetchInquiries error", e)

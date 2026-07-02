@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.library.ui
+﻿package com.bookiibookii.bookiibookii.library.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -39,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -125,6 +126,7 @@ private data class Particle(
     val id: String,
     val iconResId: Int,
     val sizeDp: Float,
+    val startX: Float,
     val targetY: Float,
     val rotation: Float,
 )
@@ -192,16 +194,12 @@ private fun captureShareableCardBitmap(
     val cardWidthPx = (context.resources.displayMetrics.widthPixels * 0.85f).toInt()
     val cardHeightPx = (cardWidthPx * 464f / 320f).toInt()
 
-    val offscreenImageLoader = coil.ImageLoader.Builder(context).allowHardware(false).build()
-
     val cardView = androidx.compose.ui.platform.ComposeView(context).apply {
         setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         visibility = android.view.View.INVISIBLE
         setContent {
-            androidx.compose.runtime.CompositionLocalProvider(coil.compose.LocalImageLoader provides offscreenImageLoader) {
-                BookiiBookiiTheme {
-                    ShareableCard(card = card, cardVersion = cardVersion)
-                }
+            BookiiBookiiTheme {
+                ShareableCard(card = card, cardVersion = cardVersion)
             }
         }
     }
@@ -563,17 +561,19 @@ fun ReadingCardDetailScreen(
         mutableStateListOf(*Array(cards.size) { i -> cards.getOrNull(i)?.isBookmarked ?: false })
     }
 
-    var activeReactionList by remember { mutableStateOf(listOf<Reaction>()) }
-    val particles          = remember { mutableStateListOf<Particle>() }
+    val reactionStates = remember(cards) {
+        mutableStateMapOf(*Array(cards.size) { i ->
+            i to (cards.getOrNull(i)?.myReactions?.mapNotNull { apiKeyToReaction[it] } ?: emptyList<Reaction>())
+        })
+    }
+    val particles = remember { mutableStateListOf<Particle>() }
 
     LaunchedEffect(pagerState.currentPage) {
-        val card = cards.getOrNull(pagerState.currentPage)
-        activeReactionList = card?.myReactions
-            ?.mapNotNull { apiKeyToReaction[it] }
-            ?: emptyList()
         particles.clear()
         cardVersion = 1
     }
+
+    val activeReactionList = reactionStates[pagerState.currentPage] ?: emptyList()
 
     val currentCard     = cards.getOrNull(pagerState.currentPage)
     val progress        = if (cards.isNotEmpty()) (pagerState.currentPage + 1).toFloat() / cards.size else 1f
@@ -636,31 +636,35 @@ fun ReadingCardDetailScreen(
                 }
             }
 
-            ReactionBar(
-                activeReactions = activeReactionList,
-                onReact = { reaction ->
-                    val label           = reaction.label
-                    val isAlreadyActive = activeReactionList.any { it.label == label }
+        ReactionBar(
+            activeReactions = activeReactionList,
+            onReact = { reaction ->
+                val currentPage     = pagerState.currentPage
+                val currentReactions = reactionStates[currentPage] ?: emptyList()
+                val label           = reaction.label
+                val isAlreadyActive = currentReactions.any { it.label == label }
 
-                    if (isAlreadyActive) {
-                        activeReactionList = activeReactionList.filter { it.label != label }
-                    } else {
-                        activeReactionList = activeReactionList + reaction
-                        coroutineScope.launch {
-                            val burstCount     = (5..8).random()
-                            val recentReactions = activeReactionList.takeLast(2)
-                            val pool           = if (recentReactions.isNotEmpty()) recentReactions else listOf(reaction)
-                            repeat(burstCount) {
-                                delay((10..50).random().toLong())
-                                val r = pool.random()
-                                particles.add(
-                                    Particle(
-                                        id        = UUID.randomUUID().toString(),
-                                        iconResId = r.iconRes,
-                                        sizeDp    = (28..44).random().toFloat(),
-                                        targetY   = -(140..300).random().toFloat(),
-                                        rotation  = (-20..20).random().toFloat(),
-                                    )
+                if (isAlreadyActive) {
+                    reactionStates[currentPage] = currentReactions.filter { it.label != label }
+                } else {
+                    reactionStates[currentPage] = currentReactions + reaction
+                    coroutineScope.launch {
+                        val burstCount = (10..14).random()
+                        val half = burstCount / 2
+                        val others = (reactionStates[currentPage] ?: emptyList())
+                            .filter { it.label != reaction.label }
+                            .ifEmpty { null }
+                        repeat(burstCount) { idx ->
+                            delay((10..80).random().toLong())
+                            val r = if (idx < half || others == null) reaction else others.random()
+                            particles.add(
+                                Particle(
+                                    id        = UUID.randomUUID().toString(),
+                                    iconResId = r.iconRes,
+                                    sizeDp    = (28..46).random().toFloat(),
+                                    startX    = (-10..80).random().toFloat(),
+                                    targetY   = -(180..400).random().toFloat(),
+                                    rotation  = (-35..35).random().toFloat(),
                                 )
                             }
                         }
@@ -788,23 +792,23 @@ private fun FloatingParticle(particle: Particle, onAnimationEnd: (Particle) -> U
             scale.animateTo(1f, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow))
         }
         launch {
-            rotation.animateTo(particle.rotation, animationSpec = tween(durationMillis = 1500, easing = LinearOutSlowInEasing))
+            rotation.animateTo(particle.rotation, animationSpec = tween(durationMillis = 1900, easing = LinearOutSlowInEasing))
         }
         launch {
             delay(120)
-            translateY.animateTo(particle.targetY, animationSpec = tween(durationMillis = 1300, easing = LinearOutSlowInEasing))
+            translateY.animateTo(particle.targetY, animationSpec = tween(durationMillis = 1700, easing = LinearOutSlowInEasing))
         }
         launch {
-            delay(850)
-            alpha.animateTo(0f, animationSpec = tween(durationMillis = 650))
+            delay(1100)
+            alpha.animateTo(0f, animationSpec = tween(durationMillis = 800))
         }
-        delay(1550)
+        delay(1950)
         onAnimationEnd(particle)
     }
 
     Box(
         modifier = Modifier
-            .offset(y = translateY.value.dp)
+            .offset(x = particle.startX.dp, y = translateY.value.dp)
             .rotate(rotation.value)
             .scale(scale.value)
             .alpha(alpha.value)
@@ -1084,7 +1088,7 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                 val iconTint  = BookiiBookiiTheme.colors.uiMain150
                 val textColor = if (cardVersion == 1) BookiiBookiiTheme.colors.uiMain else Color.White
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.fillMaxWidth().weight(1f).background(gradient)) {
+                    Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(gradient)) {
                         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Spacer(modifier = Modifier.height(20.dp))
                             if (card.bookTitle.isNotBlank()) {
@@ -1095,17 +1099,18 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
-                            Text("“$quotationText”", style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
+                            val displayQuotation = "“$quotationText”"
+                            Text(displayQuotation, style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth().weight(128f / 464f)) {
                         if (card.content.isNotBlank()) {
-                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800)
+                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 20.dp))
                         }
                         if (card.username.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text("by. ${card.username}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400,
-                                modifier = Modifier.align(Alignment.End))
+                                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp))
                         }
                     }
                 }

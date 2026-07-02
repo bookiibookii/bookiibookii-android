@@ -179,6 +179,7 @@ fun ProfileSettingRoute(
         onBackClick = onBackClick,
         onOpenCamera = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) },
         onOpenGallery = { pickMediaLauncher.launch("image/*") },
+        onClearProfileImage = { selectedImageUri = null; selectedImageFile = null },
         onCheckNickname = { nickname -> viewModel.checkNickname(nickname) },
         onSaveClick = { request -> viewModel.updateProfile(request, selectedImageFile) },
     )
@@ -193,6 +194,7 @@ fun ProfileSettingScreen(
     onBackClick: () -> Unit = {},
     onOpenCamera: () -> Unit = {},
     onOpenGallery: () -> Unit = {},
+    onClearProfileImage: () -> Unit = {},
     onCheckNickname: (String) -> Unit = {},
     onSaveClick: (MypageReqDTO) -> Unit = {},
 ) {
@@ -356,6 +358,7 @@ fun ProfileSettingScreen(
         ProfilePhotoBottomSheet(
             onCamera = { onOpenCamera(); showPhotoSheet = false },
             onGallery = { onOpenGallery(); showPhotoSheet = false },
+            onDefaultImage = { onClearProfileImage(); showPhotoSheet = false },
             onDismiss = { showPhotoSheet = false },
         )
     }
@@ -419,7 +422,7 @@ private fun NicknameFieldWithCheck(
             Box(
                 modifier = Modifier
                     .height(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(if (isCheckEnabled) colors.grey900 else colors.grey400)
                     .clickable(enabled = isCheckEnabled, onClick = onCheckClick)
                     .padding(horizontal = 14.dp),
@@ -458,7 +461,7 @@ private fun GenderField(selectedIndex: Int?, onSelect: (Int) -> Unit) {
         ) {
             options.forEachIndexed { index, label ->
                 val isSelected = selectedIndex == index
-                val modifier = if (index < 2) Modifier.width(119.dp) else Modifier.weight(1f)
+                val modifier = Modifier.weight(1f)
                 Box(
                     modifier = modifier
                         .fillMaxHeight()
@@ -515,7 +518,7 @@ private fun BirthDateField(value: String, onClick: () -> Unit) {
         ) {
             Box(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = if (value.isEmpty()) "YYYY.MM.DD" else value,
+                    text = if (value.isEmpty()) "0000.00.00." else value,
                     style = BookiiBookiiTheme.typography.regular16,
                     color = if (value.isEmpty()) BookiiBookiiTheme.colors.grey400 else BookiiBookiiTheme.colors.grey900,
                 )

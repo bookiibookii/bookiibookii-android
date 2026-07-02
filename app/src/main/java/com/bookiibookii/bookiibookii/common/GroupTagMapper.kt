@@ -34,6 +34,27 @@ object GroupTagMapper {
             "POL_SOC" -> "#정치/사회"
             "ESC" -> "#기타"
 
+            // --- 책장 카테고리 (백엔드 실제 enum 값) ---
+            "ALL" -> "#전체"
+            "LITERATURE_ALL" -> "#문학"
+            "NON_LITERATURE_ALL" -> "#비문학"
+            // 문학
+            "KOREAN_NOVEL" -> "#한국소설"
+            "WORLD_NOVEL" -> "#세계소설"
+            "GENRE_NOVEL" -> "#장르소설"
+            "ROMANCE" -> "#로맨스"
+            "HISTORICAL_NOVEL" -> "#역사소설"
+            "POETRY_ESSAY" -> "#시/에세이"
+            "PLAY_LITERATURE" -> "#희곡/문학"
+            "LITERATURE_ETC" -> "#기타"
+            // 비문학
+            "ECONOMY_BUSINESS" -> "#경제/경영"
+            "SCIENCE_IT" -> "#과학/IT"
+            "HUMANITIES_HISTORY" -> "#인문/역사"
+            "SELF_DEVELOPMENT" -> "#자기계발"
+            "POLITICS_SOCIETY" -> "#정치/사회"
+            "NON_LITERATURE_ETC" -> "#기타"
+
             // --- 이미지 2: REVIEW (사용자 리뷰 태그) ---
             "KINDNESS" -> "#친절매너"
             "GOOD_HANDWRITING" -> "#예쁜글씨"

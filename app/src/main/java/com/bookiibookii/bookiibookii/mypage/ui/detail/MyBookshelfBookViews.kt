@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.GroupTagMapper
 import com.bookiibookii.bookiibookii.data.model.mypage.CompletedBook
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
@@ -82,8 +83,10 @@ private fun BookGridItem(
             Text(text = book.completedAt, style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey700)
         }
         Text(text = book.title.stripBookSubtitle(), style = BookiiBookiiTheme.typography.semibold14, color = BookiiBookiiTheme.colors.grey900, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val gridCategory = book.category?.let { GroupTagMapper.toKoreanTag(it).removePrefix("#") }
         Text(
-            text = listOfNotNull(book.author, book.category).joinToString(" "),
+            text = if (book.author != null && gridCategory != null) "${book.author} ($gridCategory)"
+                   else book.author ?: gridCategory ?: "",
             style = BookiiBookiiTheme.typography.regular14,
             color = BookiiBookiiTheme.colors.grey700,
             maxLines = 1,
@@ -139,7 +142,13 @@ private fun BookListItem(
             }
             Spacer(modifier = Modifier.height(6.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = listOfNotNull(book.author, book.category).joinToString(" "), style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey700)
+                val listCategory = book.category?.let { GroupTagMapper.toKoreanTag(it).removePrefix("#") }
+                Text(
+                    text = if (book.author != null && listCategory != null) "${book.author} ($listCategory)"
+                           else book.author ?: listCategory ?: "",
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = BookiiBookiiTheme.colors.grey700,
+                )
                 if (book.completedAt != null) {
                     Text(text = book.completedAt, style = BookiiBookiiTheme.typography.regular12, color = BookiiBookiiTheme.colors.grey500)
                 }
