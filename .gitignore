@@ -54,3 +54,6 @@ local.properties
 
 # Claude Code
 .claude/
+
+# understand-anything 지식 그래프 (로컬 전용)
+.understand-anything/

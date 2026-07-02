@@ -91,6 +91,23 @@ class LibraryFragment : Fragment() {
             }
         }
 
+        fun newInstanceAtCardDetail(
+            initialIndex: Int,
+            sortByLatest: Boolean,
+            cardsJson: String,
+        ) = LibraryFragment().apply {
+            arguments = Bundle().apply {
+                putString(
+                    ARG_START_DESTINATION,
+                    LibraryDestinations.cardDetail(
+                        initialIndex = initialIndex,
+                        sortByLatest = sortByLatest,
+                        cardsJson = cardsJson,
+                    ),
+                )
+            }
+        }
+
         fun newInstanceAtGroupReview(
             groupId: Int,
             groupName: String = "",
