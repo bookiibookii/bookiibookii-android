@@ -227,6 +227,8 @@ class OnbViewModel : ViewModel() {
     // ── 온보딩 제출 ────────────────────────────────────────────────────────────
 
     fun submitOnboarding() {
+        // 더블탭 가드 — 이미 제출 중이면 중복 POST 차단
+        if (_onboardingSubmitState.value is OnboardingSubmitState.Loading) return
         val state = currentState()
         viewModelScope.launch {
             _onboardingSubmitState.value = OnboardingSubmitState.Loading

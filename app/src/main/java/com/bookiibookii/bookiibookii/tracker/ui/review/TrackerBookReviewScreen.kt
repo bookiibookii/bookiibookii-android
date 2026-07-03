@@ -89,6 +89,7 @@ fun TrackerBookReviewRoute(
         bookImageUrl = uiState.bookImageUrl,
         initialStar = uiState.initialStar,
         initialComment = uiState.initialComment,
+        submitting = uiState.submitting,
         onBackClick = onBackClick,
         onSubmit = { star, comment ->
             viewModel.submitReview(star, comment, onSuccess = onBackClick)
@@ -104,6 +105,7 @@ fun TrackerBookReviewScreen(
     onSubmit: (star: Double, comment: String?) -> Unit,
     initialStar: Double = 0.0,
     initialComment: String = "",
+    submitting: Boolean = false,
 ) {
     // rating: 0~10 (별 5개 × 2단계 — half=1, full=2)
     // 수정 모드 프리필: 별점(0~5)·내용이 비동기로 도착하면 key 변경으로 초기값 반영
@@ -114,7 +116,7 @@ fun TrackerBookReviewScreen(
         topBar = { TrackerBookReviewHeader(onBackClick = onBackClick) },
         bottomBar = {
             TrackerBookReviewFooter(
-                enabled = rating > 0,
+                enabled = rating > 0 && !submitting,
                 onSubmit = {
                     val star = rating / 2.0
                     val comment = commentInput.takeIf { it.isNotBlank() }

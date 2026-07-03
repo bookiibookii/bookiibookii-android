@@ -58,13 +58,18 @@ class TrackerPartnerReviewViewModel(
 
     // reaction: BOOM_UP | BOOM_DOWN | null, comment: 필수
     fun submitReview(reaction: String?, comment: String, onSuccess: () -> Unit) {
+        // 더블탭 가드 — 제출 진행 중이면 중복 호출/중복 네비 차단
+        if (_state.value.submitting) return
         viewModelScope.launch {
+            _state.update { it.copy(submitting = true) }
             try {
                 val res = repository.submitMemberReview(groupId, reaction, comment)
                 if (res.isSuccessful && res.body()?.isSuccess == true) {
                     onSuccess()
                 }
             } catch (_: Exception) {
+            } finally {
+                _state.update { it.copy(submitting = false) }
             }
         }
     }

@@ -29,6 +29,9 @@ class AddressViewModel : ViewModel() {
         data class ShowToast(val message: String, val isSuccess: Boolean = false) : Event()
     }
 
+    // 주소 추가/수정 진행 중 여부. 폼에서 하나씩만 제출되므로 단일 플래그로 더블탭 중복 제출을 차단.
+    private var mutating = false
+
     private suspend fun loadDeliveries(): List<DeliveryAddress> = try {
         val response = RetrofitClient.locationApi().getDeliveries()
         if (response.isSuccessful && response.body()?.isSuccess == true) {
@@ -67,6 +70,8 @@ class AddressViewModel : ViewModel() {
     fun fetchExchanges() { viewModelScope.launch { loadExchanges() } }
 
     fun addDelivery(request: DeliveryAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().addDelivery(request)
@@ -85,11 +90,15 @@ class AddressViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("AddressViewModel", "addDelivery error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            } finally {
+                mutating = false
             }
         }
     }
 
     fun updateDelivery(id: Long, request: DeliveryAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().updateDelivery(id, request)
@@ -102,6 +111,8 @@ class AddressViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("AddressViewModel", "updateDelivery error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            } finally {
+                mutating = false
             }
         }
     }
@@ -137,6 +148,8 @@ class AddressViewModel : ViewModel() {
     }
 
     fun addExchange(request: ExchangeAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().addExchange(request)
@@ -155,11 +168,15 @@ class AddressViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("AddressViewModel", "addExchange error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            } finally {
+                mutating = false
             }
         }
     }
 
     fun updateExchange(id: Long, request: ExchangeAddressRequest, makeDefault: Boolean, onSuccess: () -> Unit) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.locationApi().updateExchange(id, request)
@@ -172,6 +189,8 @@ class AddressViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("AddressViewModel", "updateExchange error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            } finally {
+                mutating = false
             }
         }
     }

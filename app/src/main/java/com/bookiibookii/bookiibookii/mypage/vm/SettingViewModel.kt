@@ -42,6 +42,9 @@ class SettingViewModel : ViewModel() {
         object WithdrawSuccess : Event()
     }
 
+    // 문의 등록/회원탈퇴 진행 중 여부 — 더블탭으로 중복 등록/중복 탈퇴 요청을 차단
+    private var mutating = false
+
     fun fetchNotices() {
         viewModelScope.launch {
             try {
@@ -109,6 +112,8 @@ class SettingViewModel : ViewModel() {
     }
 
     fun postInquiry(title: String, content: String) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.mypApi().postInquiry(InquiryRequest(title = title, content = content))
@@ -120,11 +125,15 @@ class SettingViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("SettingViewModel", "postInquiry error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            } finally {
+                mutating = false
             }
         }
     }
 
     fun withdraw(reason: String, customReason: String?) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.mypApi().withdraw(
@@ -138,6 +147,8 @@ class SettingViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("SettingViewModel", "withdraw error", e)
                 _withdrawFailed.value = true
+            } finally {
+                mutating = false
             }
         }
     }

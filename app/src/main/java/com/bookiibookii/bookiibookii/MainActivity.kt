@@ -156,6 +156,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 else showCustomToast("카드를 불러오지 못했어요", false)
             }
             else -> Log.d("FCM", "라우팅 보류 redirectType=${redirect.redirectType}")
+            // NOTICE_DETAIL만 else로 남았음
         }
     }
 

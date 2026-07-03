@@ -51,6 +51,10 @@ class TrackerDetailViewModel(
     private val _meetingInfo = MutableStateFlow<MeetingResDTO?>(null)
     val meetingInfo: StateFlow<MeetingResDTO?> = _meetingInfo
 
+    // 쓰기 작업(등록/수정/변경/확인) 진행 중 여부.
+    // 이 화면의 쓰기는 모두 모달에서 하나씩만 일어나므로 단일 플래그로 더블탭 중복 호출을 차단한다.
+    private var mutating = false
+
     // 최초 조회는 여기서. 화면의 ON_RESUME은 '첫 진입을 건너뛰고' 복귀 때만 재조회하므로 중복되지 않는다.
     init {
         load()
@@ -97,6 +101,8 @@ class TrackerDetailViewModel(
         userDeliveryId: Long,
         onSuccess: () -> Unit,
     ) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val res = repository.changeDeliveryAddressSaved(groupId, userDeliveryId)
@@ -106,6 +112,8 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
+            } finally {
+                mutating = false
             }
         }
     }
@@ -117,6 +125,8 @@ class TrackerDetailViewModel(
         addressDetail: String,
         onSuccess: () -> Unit,
     ) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val res = repository.changeDeliveryAddressDirect(groupId, zipCode, address, addressDetail)
@@ -126,6 +136,8 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
+            } finally {
+                mutating = false
             }
         }
     }
@@ -152,6 +164,8 @@ class TrackerDetailViewModel(
 
     // 상대방 운송장 수령 확인
     fun confirmReceive(onSuccess: () -> Unit) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val res = repository.confirmPartnerReceive(groupId)
@@ -161,11 +175,15 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
+            } finally {
+                mutating = false
             }
         }
     }
 
     fun registerDelivery(deliveryCompany: String, trackingNumber: String) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val res = repository.registerDelivery(groupId, deliveryCompany, trackingNumber)
@@ -174,6 +192,8 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시 (다음 단계에서 에러 표시)
+            } finally {
+                mutating = false
             }
         }
     }
@@ -248,6 +268,8 @@ class TrackerDetailViewModel(
 
     // 직접 교환 완료 확인
     fun completeMeeting(onSuccess: () -> Unit) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val res = repository.completeMeeting(groupId)
@@ -257,6 +279,8 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
+            } finally {
+                mutating = false
             }
         }
     }
@@ -271,6 +295,8 @@ class TrackerDetailViewModel(
         scheduledAt: String,
         onSuccess: () -> Unit,
     ) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val res = repository.registerMeeting(
@@ -291,6 +317,8 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
+            } finally {
+                mutating = false
             }
         }
     }
@@ -306,6 +334,8 @@ class TrackerDetailViewModel(
         scheduledAt: String,
         onSuccess: () -> Unit,
     ) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val res = repository.editMeeting(
@@ -326,12 +356,16 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
+            } finally {
+                mutating = false
             }
         }
     }
 
     // 독서 기간(예상 종료일) 수정 — 호스트 전용
     fun updateReadingPeriod(newEndDate: String, onSuccess: () -> Unit) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val res = repository.updateReadingPeriod(groupId, newEndDate)
@@ -341,11 +375,15 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
+            } finally {
+                mutating = false
             }
         }
     }
 
     fun recordProgress(currentPage: Int) {
+        if (mutating) return
+        mutating = true
         viewModelScope.launch {
             try {
                 val res = repository.recordReadingProgress(groupId, currentPage)
@@ -354,6 +392,8 @@ class TrackerDetailViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시 (다음 단계에서 에러 표시 추가)
+            } finally {
+                mutating = false
             }
         }
     }
