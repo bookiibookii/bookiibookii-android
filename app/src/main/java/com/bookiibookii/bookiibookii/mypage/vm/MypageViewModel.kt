@@ -183,7 +183,12 @@ class MypageViewModel : ViewModel() {
         _nicknameCheckState.value = NicknameCheckState.Idle
     }
 
+    // 소개/프로필 저장 진행 중 여부 — 더블탭으로 중복 저장/중복 네비를 차단
+    private var profileMutating = false
+
     fun updateIntroduction(introduction: String) {
+        if (profileMutating) return
+        profileMutating = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.mypApi()
@@ -193,6 +198,8 @@ class MypageViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("MypageViewModel", "updateIntroduction error", e)
+            } finally {
+                profileMutating = false
             }
         }
     }
@@ -201,6 +208,8 @@ class MypageViewModel : ViewModel() {
         request: MypageReqDTO,
         imageFile: File?,
     ) {
+        if (profileMutating) return
+        profileMutating = true
         viewModelScope.launch {
             try {
                 var finalRequest = request
@@ -242,6 +251,8 @@ class MypageViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("UpdateProfile", "Exception", e)
                 _eventFlow.emit(Event.ShowToast("요청 중 오류가 발생했습니다.", false))
+            } finally {
+                profileMutating = false
             }
         }
     }

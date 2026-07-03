@@ -26,6 +26,9 @@ class KeywordSettingViewModel : ViewModel() {
     // 새 화면엔 정렬 토글이 없어 최신순(LATEST) 고정
     private val sort = "LATEST"
 
+    // 키워드 추가 진행 중 여부 — 더블탭으로 같은 키워드가 중복 등록되는 것을 차단
+    private var adding = false
+
     init {
         load()
     }
@@ -53,6 +56,8 @@ class KeywordSettingViewModel : ViewModel() {
     }
 
     fun addKeyword(content: String, onSuccess: () -> Unit) {
+        if (adding) return
+        adding = true
         viewModelScope.launch {
             runCatching {
                 RetrofitClient.kwdApi().createKeyword(KeywordCreateRequest(content = content))
@@ -63,6 +68,7 @@ class KeywordSettingViewModel : ViewModel() {
                     onSuccess()
                 }
             }
+            adding = false
         }
     }
 

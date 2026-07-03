@@ -108,6 +108,8 @@ class ReviewEditViewModel : ViewModel() {
         partnerComment: String,
     ) {
         if (groupId == -1) return
+        // 더블탭 가드 — 제출 진행 중이면 중복 PATCH/중복 완료 이벤트 차단
+        if (_uiState.value.isLoading) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
