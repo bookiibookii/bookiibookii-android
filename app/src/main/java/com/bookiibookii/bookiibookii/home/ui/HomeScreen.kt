@@ -1,22 +1,37 @@
 package com.bookiibookii.bookiibookii.home.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.group.HomeLayoutType
 import com.bookiibookii.bookiibookii.data.model.group.HomeSection
 import com.bookiibookii.bookiibookii.data.model.group.HomeSectionItem
@@ -76,6 +91,18 @@ internal fun HomeScreen(
     onBookClick: (HomeSectionItem) -> Unit = {},
 ) {
     val lazyListState = rememberLazyListState()
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    // 로딩 중 reload 아이콘 회전 애니메이션
+    val infiniteTransition = rememberInfiniteTransition(label = "pullRefresh")
+    val loadingRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 800, easing = LinearEasing),
+        ),
+        label = "loadingRotation",
+    )
 
     // 탭 전환 시 sticky 탭바 위치(index 2)로 자동 스크롤 — 새 탭 콘텐츠를 상단부터 보이게
     LaunchedEffect(uiState.selectedTab) {
@@ -100,7 +127,10 @@ internal fun HomeScreen(
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
             onRefresh = onRefresh,
+            state = pullToRefreshState,
             modifier = Modifier.fillMaxSize(),
+            // 오버레이 indicator 사용 안 함 — LazyColumn item 안에서 처리
+            indicator = {},
         ) {
             LazyColumn(
                 state = lazyListState,
@@ -124,6 +154,36 @@ internal fun HomeScreen(
                 // [2] stickyHeader: 탭바만 고정 — 높이가 변하지 않아 스크롤 점프 없음
                 stickyHeader {
                     HomeTabRow(selectedTab = uiState.selectedTab, onTabSelect = onTabSelect)
+                }
+
+                // [3] 탭바 아래 새로고침 인디케이터:
+                // - 당기는 중: distanceFraction에 따라 item 높이가 늘어나며 탭바 아래에서 내려오는 효과
+                // - 로딩 중: 고정 높이 80dp, 아이콘 회전
+                item(key = "refresh_indicator") {
+                    val progress = pullToRefreshState.distanceFraction.coerceIn(0f, 1f)
+                    val isActive = progress > 0f || uiState.isLoading
+                    if (isActive) {
+                        val itemHeight = if (uiState.isLoading) 80.dp else (80.dp * progress)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(itemHeight)
+                                .clipToBounds(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_reload),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .graphicsLayer {
+                                        alpha = if (uiState.isLoading) 1f else progress
+                                        rotationZ = if (uiState.isLoading) loadingRotation else progress * 360f
+                                    },
+                                tint = BookiiBookiiTheme.colors.grey400,
+                            )
+                        }
+                    }
                 }
 
                 when (uiState.selectedTab) {
@@ -178,6 +238,28 @@ private fun HomeScreenRecommendPreview() {
                 nickname = "부키유저",
                 selectedTab = HomeTab.RECOMMEND,
                 recommendSections = mockSections,
+            ),
+            onTabSelect = {},
+            onRefresh = {},
+            onGroupClick = {},
+            onSearchClick = {},
+            onCreateGroupClick = {},
+            onNotificationClick = {},
+            onProfileClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "HomeScreen - 새로고침 중")
+@Composable
+private fun HomeScreenRefreshingPreview() {
+    BookiiPreview {
+        HomeScreen(
+            uiState = HomeUiState(
+                nickname = "부키유저",
+                selectedTab = HomeTab.RECOMMEND,
+                recommendSections = mockSections,
+                isLoading = true,
             ),
             onTabSelect = {},
             onRefresh = {},
