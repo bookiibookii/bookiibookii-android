@@ -66,8 +66,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -544,11 +547,15 @@ fun ReadingCardDetailScreen(
     onEditClick: (card: ReadingCard) -> Unit = {},
     onDeleteConfirmed: (card: ReadingCard) -> Unit = {},
 ) {
+    val context        = LocalContext.current
     val pagerState    = rememberPagerState(initialPage = initialIndex) { cards.size }
     val coroutineScope = rememberCoroutineScope()
     var showShareSheet  by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var cardVersion     by remember { mutableStateOf(1) }
+    var showCoachMark        by remember { mutableStateOf(!TokenManager.isReadingCardCoachMarkDone(context)) }
+    var bookmarkButtonTopLeft by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
+    var shareButtonTopLeft    by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
 
     val bookmarkStates = remember(cards) {
         mutableStateListOf(*Array(cards.size) { i -> cards.getOrNull(i)?.isBookmarked ?: false })
@@ -572,59 +579,62 @@ fun ReadingCardDetailScreen(
     val progress        = if (cards.isNotEmpty()) (pagerState.currentPage + 1).toFloat() / cards.size else 1f
     val currentBookmark = bookmarkStates.getOrElse(pagerState.currentPage) { false }
 
-    Column(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.uiBg)) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.uiBg)) {
 
-        CardDetailHeader(
-            onBackClick = onBackClick,
-            onShareClick = { showShareSheet = true },
-            showMenu = currentCard?.isMine == true,
-            onEditClick = { currentCard?.let(onEditClick) },
-            onDeleteClick = { showDeleteDialog = true },
-        )
+            CardDetailHeader(
+                onBackClick = onBackClick,
+                onShareClick = { showShareSheet = true },
+                showMenu = currentCard?.isMine == true,
+                onEditClick = { currentCard?.let(onEditClick) },
+                onDeleteClick = { showDeleteDialog = true },
+                onShareButtonPositioned = { shareButtonTopLeft = it },
+            )
 
-        CardInfoArea(
-            card             = currentCard,
-            sortByLatest     = sortByLatest,
-            progress         = progress,
-            isBookmarked     = currentBookmark,
-            onBookmarkToggle = {
-                val idx = pagerState.currentPage
-                if (idx in bookmarkStates.indices) {
-                    bookmarkStates[idx] = !bookmarkStates[idx]
-                    currentCard?.cardId?.let { onBookmarkToggle(it) }
+            CardInfoArea(
+                card             = currentCard,
+                sortByLatest     = sortByLatest,
+                progress         = progress,
+                isBookmarked     = currentBookmark,
+                onBookmarkPositioned = { bookmarkButtonTopLeft = it },
+                onBookmarkToggle = {
+                    val idx = pagerState.currentPage
+                    if (idx in bookmarkStates.indices) {
+                        bookmarkStates[idx] = !bookmarkStates[idx]
+                        currentCard?.cardId?.let { onBookmarkToggle(it) }
+                    }
+                },
+            )
+
+            Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                HorizontalPager(
+                    state          = pagerState,
+                    contentPadding = PaddingValues(horizontal = 32.dp),
+                    pageSpacing    = 8.dp,
+                    modifier       = Modifier.fillMaxSize(),
+                ) { page ->
+                    val card          = cards[page]
+                    val isCurrentPage = page == pagerState.currentPage
+                    ReadingCardDetailItem(
+                        card        = card,
+                        cardVersion = if (isCurrentPage) cardVersion else 1,
+                        particles   = if (isCurrentPage) particles else emptyList(),
+                        onParticleEnd = { particles.remove(it) },
+                        modifier    = Modifier.fillMaxHeight().padding(vertical = 8.dp),
+                    )
                 }
-            },
-        )
-
-        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            HorizontalPager(
-                state          = pagerState,
-                contentPadding = PaddingValues(horizontal = 32.dp),
-                pageSpacing    = 8.dp,
-                modifier       = Modifier.fillMaxSize(),
-            ) { page ->
-                val card          = cards[page]
-                val isCurrentPage = page == pagerState.currentPage
-                ReadingCardDetailItem(
-                    card        = card,
-                    cardVersion = if (isCurrentPage) cardVersion else 1,
-                    particles   = if (isCurrentPage) particles else emptyList(),
-                    onParticleEnd = { particles.remove(it) },
-                    modifier    = Modifier.fillMaxHeight().padding(vertical = 8.dp),
-                )
             }
-        }
 
-        Box(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            val currentType = currentCard?.type ?: ReadingCardType.PHOTO
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                CardVersionDot(version = 1, cardType = currentType, isSelected = cardVersion == 1) { cardVersion = 1 }
-                CardVersionDot(version = 2, cardType = currentType, isSelected = cardVersion == 2) { cardVersion = 2 }
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                val currentType = currentCard?.type ?: ReadingCardType.PHOTO
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    CardVersionDot(version = 1, cardType = currentType, isSelected = cardVersion == 1) { cardVersion = 1 }
+                    CardVersionDot(version = 2, cardType = currentType, isSelected = cardVersion == 2) { cardVersion = 2 }
+                }
             }
-        }
 
         ReactionBar(
             activeReactions = activeReactionList,
@@ -656,15 +666,26 @@ fun ReadingCardDetailScreen(
                                     targetY   = -(180..400).random().toFloat(),
                                     rotation  = (-35..35).random().toFloat(),
                                 )
-                            )
+                            }
                         }
                     }
-                }
-                val apiKey = reactionToApiKey[label] ?: label
-                currentCard?.cardId?.let { onReactionToggle(it, apiKey) }
-            },
-            modifier = Modifier.navigationBarsPadding().padding(bottom = 20.dp),
-        )
+                    val apiKey = reactionToApiKey[label] ?: label
+                    currentCard?.cardId?.let { onReactionToggle(it, apiKey) }
+                },
+                modifier = Modifier.navigationBarsPadding().padding(bottom = 20.dp),
+            )
+        }
+
+        if (showCoachMark) {
+            ReadingCardCoachMarkOverlay(
+                bookmarkTopLeft = bookmarkButtonTopLeft,
+                shareTopLeft    = shareButtonTopLeft,
+                onDismiss = {
+                    showCoachMark = false
+                    TokenManager.saveReadingCardCoachMarkDone(context)
+                },
+            )
+        }
     }
 
     if (showShareSheet) {
@@ -1163,6 +1184,7 @@ private fun CardDetailHeader(
     showMenu: Boolean = false,
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
+    onShareButtonPositioned: (androidx.compose.ui.geometry.Offset) -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
         Box(modifier = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 16.dp)) {
@@ -1177,7 +1199,14 @@ private fun CardDetailHeader(
                 modifier = Modifier.align(Alignment.CenterEnd),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onShareClick, modifier = Modifier.size(40.dp)) {
+                IconButton(
+                    onClick = onShareClick,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .onGloballyPositioned { coords ->
+                            onShareButtonPositioned(coords.positionInRoot())
+                        },
+                ) {
                     Icon(painter = painterResource(R.drawable.ic_share), contentDescription = "공유", tint = BookiiBookiiTheme.colors.grey900, modifier = Modifier.size(32.dp))
                 }
                 if (showMenu) {
@@ -1275,6 +1304,7 @@ private fun CardInfoArea(
     progress: Float,
     isBookmarked: Boolean,
     onBookmarkToggle: () -> Unit,
+    onBookmarkPositioned: (androidx.compose.ui.geometry.Offset) -> Unit = {},
 ) {
     val pageText = card?.page?.let { if (it.isNotBlank() && it != "0") "p.$it" else "" } ?: ""
 
@@ -1301,7 +1331,10 @@ private fun CardInfoArea(
                         .clip(CircleShape)
                         .background(if (isBookmarked) BookiiBookiiTheme.colors.uiMainPale else Color.Transparent)
                         .border(0.5.dp, if (isBookmarked) BookiiBookiiTheme.colors.uiMain else BookiiBookiiTheme.colors.grey300, CircleShape)
-                        .clickable { onBookmarkToggle() },
+                        .clickable { onBookmarkToggle() }
+                        .onGloballyPositioned { coords ->
+                            onBookmarkPositioned(coords.positionInRoot())
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
