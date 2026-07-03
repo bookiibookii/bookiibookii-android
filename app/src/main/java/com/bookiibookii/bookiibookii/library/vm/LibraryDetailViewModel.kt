@@ -118,7 +118,12 @@ class LibraryDetailViewModel : ViewModel() {
         }
     }
 
+    // 서재 삭제 진행 중 여부 — 더블탭으로 중복 DELETE/중복 뒤로가기를 차단
+    private var deleting = false
+
     fun deleteMemberBook(memberBookId: Int, onSuccess: () -> Unit) {
+        if (deleting) return
+        deleting = true
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.libApi().deleteMemberBook(memberBookId)
@@ -130,6 +135,8 @@ class LibraryDetailViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _event.emit(LibraryDetailToastEvent("네트워크 오류가 발생했습니다.", false))
+            } finally {
+                deleting = false
             }
         }
     }
