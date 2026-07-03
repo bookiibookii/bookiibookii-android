@@ -79,7 +79,10 @@ class TrackerBookReviewViewModel(
     }
 
     fun submitReview(star: Double, comment: String?, onSuccess: () -> Unit) {
+        // 더블탭 가드 — 제출 진행 중이면 중복 호출/중복 네비 차단
+        if (_state.value.submitting) return
         viewModelScope.launch {
+            _state.update { it.copy(submitting = true) }
             try {
                 val res = if (isEdit) {
                     val reviewId = editReviewId ?: return@launch
@@ -92,6 +95,8 @@ class TrackerBookReviewViewModel(
                 }
             } catch (_: Exception) {
                 // 실패 시 무시 (다음 단계에서 에러 UI)
+            } finally {
+                _state.update { it.copy(submitting = false) }
             }
         }
     }

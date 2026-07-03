@@ -7,5 +7,7 @@ data class TrackerBookReviewUiState(
     val initialStar: Double = 0.0,
     val initialComment: String = "",
     val loading: Boolean = false,
+    // 후기 제출 진행 중 — 더블탭으로 중복 제출/중복 네비 방지용
+    val submitting: Boolean = false,
     val error: String? = null,
 )
