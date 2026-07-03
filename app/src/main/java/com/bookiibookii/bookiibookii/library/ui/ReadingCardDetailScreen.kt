@@ -666,7 +666,8 @@ fun ReadingCardDetailScreen(
                                     targetY   = -(180..400).random().toFloat(),
                                     rotation  = (-35..35).random().toFloat(),
                                 )
-                            }
+                            )
+                        }
                         }
                     }
                     val apiKey = reactionToApiKey[label] ?: label
