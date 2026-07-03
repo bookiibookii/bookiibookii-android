@@ -73,6 +73,7 @@ fun TrackerPartnerReviewRoute(
         partnerBookTitle = uiState.partnerBookTitle,
         partnerBookCoverUrl = uiState.partnerBookCoverUrl,
         partnerProfileImageUrl = uiState.partnerProfileImageUrl,
+        submitting = uiState.submitting,
         onBackClick = onBackClick,
         onSubmit = { reaction, comment ->
             viewModel.submitReview(reaction, comment, onSuccess = onSubmitDone)
@@ -93,6 +94,7 @@ fun TrackerPartnerReviewScreen(
     partnerProfileImageUrl: String?,
     onBackClick: () -> Unit,
     onSubmit: (reaction: String?, comment: String) -> Unit,
+    submitting: Boolean = false,
 ) {
     var rating by remember { mutableStateOf(PartnerRating.NONE) }
     var commentInput by remember { mutableStateOf("") }
@@ -101,7 +103,7 @@ fun TrackerPartnerReviewScreen(
         topBar = { TrackerPartnerReviewHeader(onBackClick = onBackClick) },
         bottomBar = {
             TrackerPartnerReviewFooter(
-                enabled = commentInput.isNotBlank(),
+                enabled = commentInput.isNotBlank() && !submitting,
                 onSubmit = { onSubmit(rating.toReaction(), commentInput) },
             )
         },
