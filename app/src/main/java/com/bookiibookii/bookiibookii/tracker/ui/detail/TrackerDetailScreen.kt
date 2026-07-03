@@ -74,10 +74,10 @@ fun TrackerDetailRoute(
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
 
-    // 삭제된/존재하지 않는 그룹(404) → 삭제된 페이지 화면
+    // 트래커 없음(404) → 종료된 그룹 화면
     LaunchedEffect(uiState.notFound) {
         if (uiState.notFound) {
-            context.startActivity(ErrorActivity.newIntent(context, ErrorType.GROUP_DELETED))
+            context.startActivity(ErrorActivity.newIntent(context, ErrorType.GROUP_CLOSED))
         }
     }
 

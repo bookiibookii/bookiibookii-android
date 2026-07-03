@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,15 +37,16 @@ fun ErrorScreen(
     onGoMain: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val is404 = type == ErrorType.NO_PERMISSION || type == ErrorType.GROUP_DELETED
+    val is404 = type == ErrorType.NO_PERMISSION || type == ErrorType.GROUP_DELETED || type == ErrorType.GROUP_CLOSED
 
-    val illustration = if (is404) R.drawable.img_404_graphic else R.drawable.img_error_graphic
+    val illustration = if (is404) R.drawable.il_404_graphic else R.drawable.il_error_graphic
 
     val title = when (type) {
         ErrorType.SYSTEM -> stringResource(R.string.type_system_error_title)
         ErrorType.NETWORK -> stringResource(R.string.type_network_error_title)
         ErrorType.NO_PERMISSION -> stringResource(R.string.type_permission_title)
         ErrorType.GROUP_DELETED -> stringResource(R.string.type_group_delete_title)
+        ErrorType.GROUP_CLOSED -> stringResource(R.string.type_group_close_title)
     }
     val desc = if (type == ErrorType.NETWORK) {
         stringResource(R.string.type_network_error_desc)
@@ -52,70 +54,91 @@ fun ErrorScreen(
         null
     }
 
-    Column(
+    // 그래픽은 상단 고정, Footer는 하단 고정
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(BookiiBookiiTheme.colors.grey100)
-            .padding(horizontal = 20.dp)
             .padding(bottom = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(Modifier.weight(1f))
-
-        Image(
-            painter = painterResource(illustration),
-            contentDescription = null,
-            modifier = Modifier
-                .width(220.dp)
-                .height(260.dp),
-            contentScale = ContentScale.Fit,
-        )
-
-        Spacer(Modifier.weight(1f))
-
-        Text(
-            text = title,
-            style = BookiiBookiiTheme.typography.medium18,
-            color = BookiiBookiiTheme.colors.grey900,
-            textAlign = TextAlign.Center,
-        )
-
-        Box(
+        // 상단: 그래픽 + 텍스트
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(88.dp),
+                .align(Alignment.TopCenter),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // 그래픽 영역: Figma 비율 412:560 유지
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(412f / 560f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.il_error_graphic_bg),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit,
+                )
+                Image(
+                    painter = painterResource(illustration),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(220.dp)
+                        .height(260.dp),
+                    contentScale = ContentScale.Fit,
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            Text(
+                text = title,
+                style = BookiiBookiiTheme.typography.medium18,
+                color = BookiiBookiiTheme.colors.grey900,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+
             if (desc != null) {
+                Spacer(Modifier.height(4.dp))
                 Text(
                     text = desc,
                     style = BookiiBookiiTheme.typography.regular16,
                     color = BookiiBookiiTheme.colors.grey700,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 10.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
         }
 
         // 하단 CTA
-        if (is404) {
-            FooterButton(
-                text = stringResource(R.string.com_btn_main),
-                onClick = onGoMain,
-            )
-        } else {
-            FooterButton(
-                text = stringResource(R.string.com_btn_back),
-                onClick = onBack,
-                style = FooterButtonStyle.Grey,
-            )
-            Spacer(Modifier.height(12.dp))
-            FooterButton(
-                text = stringResource(R.string.com_btn_retry),
-                onClick = onRetry,
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter),
+        ) {
+            if (is404) {
+                FooterButton(
+                    text = stringResource(R.string.com_btn_main),
+                    onClick = onGoMain,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            } else {
+                FooterButton(
+                    text = stringResource(R.string.com_btn_back),
+                    onClick = onBack,
+                    style = FooterButtonStyle.Grey,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(Modifier.height(12.dp))
+                FooterButton(
+                    text = stringResource(R.string.com_btn_retry),
+                    onClick = onRetry,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
         }
     }
 }
@@ -165,6 +188,19 @@ private fun ErrorScreenGroupDeletedPreview() {
     BookiiPreview {
         ErrorScreen(
             type = ErrorType.GROUP_DELETED,
+            onRetry = {},
+            onBack = {},
+            onGoMain = {},
+        )
+    }
+}
+
+@Preview(name = "종료된 그룹", showBackground = true)
+@Composable
+private fun ErrorScreenGroupClosedPreview() {
+    BookiiPreview {
+        ErrorScreen(
+            type = ErrorType.GROUP_CLOSED,
             onRetry = {},
             onBack = {},
             onGoMain = {},

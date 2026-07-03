@@ -117,7 +117,7 @@ fun TrackerCommentRoute(
                     context.showCustomToast(event.message, isSuccess = false)
                 }
                 is TrackerCommentViewModel.Event.NotFound ->
-                    context.startActivity(ErrorActivity.newIntent(context, ErrorType.GROUP_DELETED))
+                    context.startActivity(ErrorActivity.newIntent(context, ErrorType.GROUP_CLOSED))
             }
         }
     }
