@@ -75,6 +75,7 @@ fun BottomSheetTwoBtnShort(
             borderColor = null
         }
     }
+    val debouncedClick = rememberDebouncedClick(onClick = onClick)
     Box(
         modifier = modifier
             .height(56.dp)
@@ -87,7 +88,7 @@ fun BottomSheetTwoBtnShort(
                     Modifier
                 },
             )
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(enabled = enabled, onClick = debouncedClick)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -152,13 +153,14 @@ fun FooterButton(
             contentColor = BookiiBookiiTheme.colors.white
         }
     }
+    val debouncedClick = rememberDebouncedClick(onClick = onClick)
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(72.dp)
             .clip(shape)
             .background(containerColor)
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(enabled = enabled, onClick = debouncedClick)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -230,6 +232,7 @@ fun CardButton(
             borderColor = BookiiBookiiTheme.colors.grey200
         }
     }
+    val debouncedClick = rememberDebouncedClick(onClick = onClick)
     Box(
         modifier = modifier
             .height(height)
@@ -242,7 +245,7 @@ fun CardButton(
                     Modifier
                 },
             )
-            .clickable(onClick = onClick)
+            .clickable(onClick = debouncedClick)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
     ) {
