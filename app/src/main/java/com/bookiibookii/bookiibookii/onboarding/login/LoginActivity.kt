@@ -11,7 +11,6 @@ import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.StyleSpan
-import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -69,12 +68,6 @@ class LoginActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_login)
 
-        // TODO: 추후 로그 삭제 (온보딩/토큰 분기 디버깅용)
-        Log.d(
-            "ONB_FLOW",
-            "token=${TokenManager.hasAccessToken(this)} done=${TokenManager.isOnboardingDone(this)}"
-        )
-
         // 자동 로그인 분기
         if (routeAutoLoginIfPossible()) return
 
@@ -82,8 +75,6 @@ class LoginActivity : AppCompatActivity() {
         setupTermsNotice()
         setupTagline()
 
-        // TODO: 추후 로그 삭제 (카카오 키해시 확인용)
-        Log.e("KeyHash_Check", "내 앱의 현재 키 해시: ${com.kakao.sdk.common.KakaoSdk.keyHash}")
     }
 
     private fun routeAutoLoginIfPossible(): Boolean {
@@ -131,8 +122,6 @@ class LoginActivity : AppCompatActivity() {
                     showLoadingState(false)
                 }
             } catch (e: GetCredentialException) {
-                // TODO: 추후 로그 삭제 (Google 로그인 실패 확인용)
-                Log.e("Login", "Google 로그인 실패", e)
                 showLoadingState(false)
             }
         }
@@ -141,11 +130,8 @@ class LoginActivity : AppCompatActivity() {
     private fun loginToKakao() {
         val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
             if (error != null) {
-                // TODO: 추후 로그 삭제 (카카오 로그인 실패 원인 확인용)
-                Log.e("KakaoLogin", "카카오 로그인 실패", error)
                 showLoadingState(false)
             } else if (token != null) {
-                Log.d("TokenCheck", "카카오 SDK에서 받은 토큰: ${token.accessToken}")
                 sendTokenToBackend("KAKAO", token.accessToken)
             } else {
                 showLoadingState(false)
@@ -155,9 +141,6 @@ class LoginActivity : AppCompatActivity() {
         if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
             UserApiClient.instance.loginWithKakaoTalk(this) { token, error ->
                 if (error != null) {
-                    // TODO: 추후 로그 삭제 (카카오톡 앱 로그인 실패 원인 확인용)
-                    Log.e("KakaoLogin", "카카오톡 앱 로그인 실패", error)
-
                     if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
                         showLoadingState(false)
                         return@loginWithKakaoTalk
@@ -168,7 +151,6 @@ class LoginActivity : AppCompatActivity() {
                 }
 
                 if (token != null) {
-                    Log.d("TokenCheck", "카카오 SDK에서 받은 토큰: ${token.accessToken}")
                     sendTokenToBackend(socialType = "KAKAO", token = token.accessToken)
                 } else {
                     showLoadingState(false)
@@ -180,10 +162,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun sendTokenToBackend(socialType: String, token: String) {
-        Log.d("TokenCheck", "서버에 전송하는 토큰: $token")
-        // TODO: 추후 로그 삭제 (서버 전송 파라미터 확인용)
-        Log.d("CheckToken", "[보내는 타입]=$socialType, tokenLength=${token.length}")
-
         lifecycleScope.launch {
             try {
                 val request = LoginRequest(socialType = socialType, token = token)
@@ -212,13 +190,9 @@ class LoginActivity : AppCompatActivity() {
                         showLoadingState(false)
                     }
                 } else {
-                    // TODO: 추후 로그 삭제 (서버 응답 실패 디버깅용)
-                    Log.e("Login", "백엔드 에러: ${response.code()} ${response.errorBody()?.string()}")
                     showLoadingState(false)
                 }
             } catch (e: Exception) {
-                // TODO: 추후 로그 삭제 (네트워크/예외 디버깅용)
-                Log.e("Login", "네트워크 오류", e)
                 showLoadingState(false)
             }
         }
