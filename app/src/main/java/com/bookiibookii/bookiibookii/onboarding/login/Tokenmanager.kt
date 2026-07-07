@@ -18,6 +18,8 @@ object TokenManager {
     private const val KEY_USER_ID = "user_id"
     private const val KEY_ONBOARDING = "onboarding_done"
     private const val KEY_NICKNAME = "nickname"
+    private const val KEY_READING_CARD_COACH_MARK = "reading_card_coach_mark_done"
+    private const val KEY_TRACKER_COMMENT_COACH_MARK = "tracker_comment_coach_mark_done"
 
     @Volatile private var encryptedPrefs: SharedPreferences? = null
 
@@ -65,6 +67,22 @@ object TokenManager {
 
     fun saveOnboardingDone(context: Context, onboardingDone: Boolean) {
         prefs(context).edit().putBoolean(KEY_ONBOARDING, onboardingDone).apply()
+    }
+
+    fun isReadingCardCoachMarkDone(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_READING_CARD_COACH_MARK, false)
+    }
+
+    fun saveReadingCardCoachMarkDone(context: Context) {
+        prefs(context).edit().putBoolean(KEY_READING_CARD_COACH_MARK, true).apply()
+    }
+
+    fun isTrackerCommentCoachMarkDone(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_TRACKER_COMMENT_COACH_MARK, false)
+    }
+
+    fun saveTrackerCommentCoachMarkDone(context: Context) {
+        prefs(context).edit().putBoolean(KEY_TRACKER_COMMENT_COACH_MARK, true).apply()
     }
 
     fun saveNickname(context: Context, nickname: String) {
