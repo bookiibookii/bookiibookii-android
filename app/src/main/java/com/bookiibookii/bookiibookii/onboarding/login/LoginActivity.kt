@@ -145,6 +145,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.e("KakaoLogin", "카카오 로그인 실패", error)
                 showLoadingState(false)
             } else if (token != null) {
+                Log.d("TokenCheck", "카카오 SDK에서 받은 토큰: ${token.accessToken}")
                 sendTokenToBackend("KAKAO", token.accessToken)
             } else {
                 showLoadingState(false)
@@ -167,6 +168,7 @@ class LoginActivity : AppCompatActivity() {
                 }
 
                 if (token != null) {
+                    Log.d("TokenCheck", "카카오 SDK에서 받은 토큰: ${token.accessToken}")
                     sendTokenToBackend(socialType = "KAKAO", token = token.accessToken)
                 } else {
                     showLoadingState(false)
@@ -178,6 +180,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun sendTokenToBackend(socialType: String, token: String) {
+        Log.d("TokenCheck", "서버에 전송하는 토큰: $token")
         // TODO: 추후 로그 삭제 (서버 전송 파라미터 확인용)
         Log.d("CheckToken", "[보내는 타입]=$socialType, tokenLength=${token.length}")
 
@@ -189,6 +192,8 @@ class LoginActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
                     if (result != null) {
+                        getSharedPreferences("bookii_prefs", android.content.Context.MODE_PRIVATE)
+                            .edit().putBoolean("push_notification_enabled", true).apply()
                         TokenManager.saveTokens(
                             this@LoginActivity,
                             result.accessToken,

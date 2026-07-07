@@ -665,7 +665,7 @@ fun ReadingCardDetailScreen(
                                     startX    = (-10..80).random().toFloat(),
                                     targetY   = -(180..400).random().toFloat(),
                                     rotation  = (-35..35).random().toFloat(),
-                                )
+                                ))
                             }
                         }
                     }

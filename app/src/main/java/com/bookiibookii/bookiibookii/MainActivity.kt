@@ -83,8 +83,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         handleNavigationIntent(intent)
         requestNotificationPermissionIfNeeded()
 
-        // FCM 토큰 서버 등록
-        FcmTokenRegistrar.registerCurrentToken(this)
+        val prefs = getSharedPreferences("bookii_prefs", android.content.Context.MODE_PRIVATE)
+        if (prefs.getBoolean("push_notification_enabled", true)) {
+            FcmTokenRegistrar.registerCurrentToken(this)
+        }
     }
 
     // 안드13(TIRAMISU)+ 에서만 런타임 요청 필요
