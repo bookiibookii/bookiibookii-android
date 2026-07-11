@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -45,9 +44,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     // 안드13+ 알림 권한 요청 런처. 거부해도 앱 동작엔 지장 없음(푸시 알림만 안 옴).
     private val requestNotificationPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            Log.d("FCM", "POST_NOTIFICATIONS granted=$granted")
-        }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun getViewBinding(): ActivityMainBinding {
         return ActivityMainBinding.inflate(layoutInflater)
@@ -83,8 +80,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         handleNavigationIntent(intent)
         requestNotificationPermissionIfNeeded()
 
-        // FCM 토큰 서버 등록
-        FcmTokenRegistrar.registerCurrentToken(this)
+        val prefs = getSharedPreferences("bookii_prefs", android.content.Context.MODE_PRIVATE)
+        if (prefs.getBoolean("push_notification_enabled", true)) {
+            FcmTokenRegistrar.registerCurrentToken(this)
+        }
     }
 
     // 안드13(TIRAMISU)+ 에서만 런타임 요청 필요
@@ -155,8 +154,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 if (groupId != null && cardId != null) openCardDetail(groupId, cardId)
                 else showCustomToast("카드를 불러오지 못했어요", false)
             }
-            else -> Log.d("FCM", "라우팅 보류 redirectType=${redirect.redirectType}")
-            // NOTICE_DETAIL만 else로 남았음
+            else -> { /* NOTICE_DETAIL 등 미구현 라우트 */ }
         }
     }
 

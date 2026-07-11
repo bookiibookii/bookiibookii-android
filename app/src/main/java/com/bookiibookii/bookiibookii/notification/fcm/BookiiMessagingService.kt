@@ -25,8 +25,8 @@ class BookiiMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d(TAG, "onNewToken: $token")
-        // 로그인 상태일 때만 서버에 갱신 토큰 등록
-        if (TokenManager.hasAccessToken(applicationContext)) {
+        val prefs = applicationContext.getSharedPreferences("bookii_prefs", android.content.Context.MODE_PRIVATE)
+        if (TokenManager.hasAccessToken(applicationContext) && prefs.getBoolean("push_notification_enabled", true)) {
             FcmTokenRegistrar.registerToken(token)
         }
     }
