@@ -2,6 +2,7 @@ package com.bookiibookii.bookiibookii.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -48,9 +49,11 @@ fun ProfilePlaceholder(
     imageUrl: String? = null,
     innerStroke: Boolean = false,
     imageLoader: coil.ImageLoader? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
-    Box(modifier = modifier.clip(ProfileSquircleShape)) {
+    val clickableModifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+    Box(modifier = modifier.clip(ProfileSquircleShape).then(clickableModifier)) {
         // 배경 placeholder — 항상 깔아둠. AsyncImage 로딩 전/실패 시 노출
         Image(
             painter = painterResource(R.drawable.ic_profile_placeholder),

@@ -74,6 +74,7 @@ import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.CardButton
 import com.bookiibookii.bookiibookii.ui.component.CardButtonStyle
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
@@ -590,6 +591,7 @@ private fun GroupDetailBookInfo(
     bookImage: String?,
     hostProfileImageUrl: String?,
 ) {
+    val onProfileClick = LocalOnProfileClick.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -653,6 +655,7 @@ private fun GroupDetailBookInfo(
                     ProfilePlaceholder(
                         modifier = Modifier.size(20.dp),
                         imageUrl = hostProfileImageUrl,
+                        onClick = { onProfileClick(nickname) },
                     )
                     Text(
                         text = nickname,
@@ -854,6 +857,7 @@ private fun GroupDetailMembersCard(
 // 슬롯 한 줄 (HOST / GUEST / EMPTY)
 @Composable
 private fun ParticipantSlotRow(slot: ParticipantSlot) {
+    val onProfileClick = LocalOnProfileClick.current
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -861,6 +865,7 @@ private fun ParticipantSlotRow(slot: ParticipantSlot) {
         ProfilePlaceholder(
             modifier = Modifier.size(40.dp),
             imageUrl = slot.profileImageUrl,
+            onClick = slot.nickname?.let { nick -> { onProfileClick(nick) } },
         )
         when (slot.role) {
             "HOST" -> Row(

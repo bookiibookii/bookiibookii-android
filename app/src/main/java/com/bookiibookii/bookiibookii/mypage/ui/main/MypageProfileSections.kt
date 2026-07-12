@@ -47,6 +47,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 internal fun ProfileSection(
     nickname: String,
     profileImageUrl: String? = null,
+    isOwner: Boolean = true,
     onProfileSettingClick: () -> Unit = {},
     onAddressManagementClick: () -> Unit = {},
     onProfileShareClick: () -> Unit = {},
@@ -69,50 +70,52 @@ internal fun ProfileSection(
                 color = BookiiBookiiTheme.colors.grey900,
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-                    .clip(btnShape)
-                    .background(BookiiBookiiTheme.colors.white)
-                    .border(1.dp, BookiiBookiiTheme.colors.grey200, btnShape)
-                    .clickable(onClick = onProfileSettingClick),
-                contentAlignment = Alignment.Center,
+        if (isOwner) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(text = "프로필 수정", style = BookiiBookiiTheme.typography.semibold15, color = BookiiBookiiTheme.colors.grey900, maxLines = 1)
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-                    .clip(btnShape)
-                    .background(BookiiBookiiTheme.colors.white)
-                    .border(1.dp, BookiiBookiiTheme.colors.grey200, btnShape)
-                    .clickable(onClick = onAddressManagementClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(text = "주소지 관리", style = BookiiBookiiTheme.typography.semibold15, color = BookiiBookiiTheme.colors.grey900, maxLines = 1)
-            }
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(btnShape)
-                    .background(BookiiBookiiTheme.colors.white)
-                    .border(1.dp, BookiiBookiiTheme.colors.grey200, btnShape)
-                    .clickable(onClick = onProfileShareClick)
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_share),
-                    contentDescription = "공유",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(btnShape)
+                        .background(BookiiBookiiTheme.colors.white)
+                        .border(1.dp, BookiiBookiiTheme.colors.grey200, btnShape)
+                        .clickable(onClick = onProfileSettingClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = "프로필 수정", style = BookiiBookiiTheme.typography.semibold15, color = BookiiBookiiTheme.colors.grey900, maxLines = 1)
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(btnShape)
+                        .background(BookiiBookiiTheme.colors.white)
+                        .border(1.dp, BookiiBookiiTheme.colors.grey200, btnShape)
+                        .clickable(onClick = onAddressManagementClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = "주소지 관리", style = BookiiBookiiTheme.typography.semibold15, color = BookiiBookiiTheme.colors.grey900, maxLines = 1)
+                }
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(btnShape)
+                        .background(BookiiBookiiTheme.colors.white)
+                        .border(1.dp, BookiiBookiiTheme.colors.grey200, btnShape)
+                        .clickable(onClick = onProfileShareClick)
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_share),
+                        contentDescription = "공유",
+                        tint = BookiiBookiiTheme.colors.grey900,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
     }
@@ -122,6 +125,7 @@ internal fun ProfileSection(
 internal fun MottoSection(
     motto: String,
     isEditing: Boolean,
+    showEditButton: Boolean = true,
     editText: String,
     onEditTextChange: (String) -> Unit,
     onEditClick: () -> Unit,
@@ -140,19 +144,21 @@ internal fun MottoSection(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = "나를 대표하는 문구",
+                text = "한 줄 소개",
                 modifier = Modifier.weight(1f),
                 style = BookiiBookiiTheme.typography.semibold16,
                 color = BookiiBookiiTheme.colors.grey900,
             )
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(BookiiBookiiTheme.colors.grey200)
-                    .clickable(onClick = onEditClick)
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-            ) {
-                Text(text = "수정", style = BookiiBookiiTheme.typography.medium11, color = BookiiBookiiTheme.colors.grey700)
+            if (showEditButton) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(BookiiBookiiTheme.colors.grey200)
+                        .clickable(onClick = onEditClick)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                ) {
+                    Text(text = "수정", style = BookiiBookiiTheme.typography.medium11, color = BookiiBookiiTheme.colors.grey700)
+                }
             }
         }
 
@@ -227,7 +233,7 @@ internal fun MottoSection(
                     modifier = Modifier.size(28.dp),
                 )
                 if (motto.isBlank()) {
-                    Text(text = "나를 대표하는 문구가 없어요", style = BookiiBookiiTheme.typography.regular15, color = BookiiBookiiTheme.colors.grey400)
+                    Text(text = "한 줄 소개가 없어요", style = BookiiBookiiTheme.typography.regular15, color = BookiiBookiiTheme.colors.grey400)
                 } else {
                     Text(text = motto, style = BookiiBookiiTheme.typography.medium15, color = BookiiBookiiTheme.colors.grey700)
                 }
@@ -237,7 +243,7 @@ internal fun MottoSection(
 }
 
 @Composable
-internal fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: () -> Unit = {}) {
+internal fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: (() -> Unit)? = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -250,7 +256,7 @@ internal fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: 
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(text = "나를 대표하는 책", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
+                Text(text = "나의 책장", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -260,12 +266,14 @@ internal fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: 
                     Text(text = "${books.size}/7권", style = BookiiBookiiTheme.typography.medium11, color = BookiiBookiiTheme.colors.grey900)
                 }
             }
-            Icon(
-                painter = painterResource(R.drawable.ic_chevron),
-                contentDescription = null,
-                tint = BookiiBookiiTheme.colors.grey900,
-                modifier = Modifier.size(24.dp).graphicsLayer { scaleX = -1f }.clickable { onArrowClick() },
-            )
+            if (onArrowClick != null) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_chevron),
+                    contentDescription = null,
+                    tint = BookiiBookiiTheme.colors.grey900,
+                    modifier = Modifier.size(24.dp).graphicsLayer { scaleX = -1f }.clickable { onArrowClick() },
+                )
+            }
         }
 
         BoxWithConstraints(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {

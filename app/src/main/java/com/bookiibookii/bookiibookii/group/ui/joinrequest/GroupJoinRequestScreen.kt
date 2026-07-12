@@ -42,6 +42,7 @@ import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
@@ -246,6 +247,7 @@ private fun JoinRequestUserRow(
     date: String,
     profileImageUrl: String?,
 ) {
+    val onProfileClick = LocalOnProfileClick.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -253,6 +255,7 @@ private fun JoinRequestUserRow(
         ProfilePlaceholder(
             modifier = Modifier.size(48.dp),
             imageUrl = profileImageUrl,
+            onClick = { onProfileClick(nickname) },
         )
         Column {
             Text(

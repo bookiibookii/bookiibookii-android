@@ -80,6 +80,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
@@ -1307,6 +1308,7 @@ private fun CardInfoArea(
     onBookmarkToggle: () -> Unit,
     onBookmarkPositioned: (androidx.compose.ui.geometry.Offset) -> Unit = {},
 ) {
+    val onProfileClick = LocalOnProfileClick.current
     val pageText = card?.page?.let { if (it.isNotBlank() && it != "0") "p.$it" else "" } ?: ""
 
     Column(
@@ -1323,7 +1325,11 @@ private fun CardInfoArea(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ProfilePlaceholder(imageUrl = card?.creatorProfileImageUrl, modifier = Modifier.size(32.dp))
+                    ProfilePlaceholder(
+                        imageUrl = card?.creatorProfileImageUrl,
+                        modifier = Modifier.size(32.dp),
+                        onClick = card?.username?.let { nick -> { onProfileClick(nick) } },
+                    )
                     Text(text = card?.username ?: "", style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey800)
                 }
                 Box(

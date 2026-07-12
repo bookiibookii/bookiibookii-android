@@ -3,7 +3,7 @@ package com.bookiibookii.bookiibookii.data.api
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.user.NicknameValidationResult
 import com.bookiibookii.bookiibookii.data.model.user.OnboardingRequest
-import com.bookiibookii.bookiibookii.data.model.user.OtherProfileResult
+import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.data.model.user.PresignedUrlResult
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -44,5 +44,5 @@ interface UserApi {
     @GET("/api/profiles/{nickname}")
     suspend fun getUserProfile(
         @Path("nickname") nickname: String
-    ): Response<ApiResponse<OtherProfileResult>>
+    ): Response<ApiResponse<UserProfileResDTO>>
 }

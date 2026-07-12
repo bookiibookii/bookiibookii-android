@@ -7,10 +7,14 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import androidx.compose.runtime.CompositionLocalProvider
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.library.nav.LibraryDestinations
 import com.bookiibookii.bookiibookii.library.nav.LibraryNavHost
 import com.bookiibookii.bookiibookii.mypage.MypageFragment
+import com.bookiibookii.bookiibookii.mypage.feat.OtherUserProfileFragment
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 class LibraryFragment : Fragment() {
@@ -31,6 +35,17 @@ class LibraryFragment : Fragment() {
         currentRoute = startDestination
         setContent {
             BookiiBookiiTheme {
+                CompositionLocalProvider(
+                    LocalOnProfileClick provides { nickname ->
+                        val myNickname = TokenManager.getNickname(requireContext())
+                        val fragment = if (myNickname != null && nickname == myNickname) MypageFragment()
+                                       else OtherUserProfileFragment.newInstance(nickname)
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, fragment)
+                            .addToBackStack(null)
+                            .commit()
+                    },
+                ) {
                 LibraryNavHost(
                     onExitLibrary = { parentFragmentManager.popBackStack() },
                     onProfileClick = {
@@ -45,6 +60,7 @@ class LibraryFragment : Fragment() {
                     onRouteChanged = { currentRoute = it },
                     startDestination = startDestination,
                 )
+                }
             }
         }
     }

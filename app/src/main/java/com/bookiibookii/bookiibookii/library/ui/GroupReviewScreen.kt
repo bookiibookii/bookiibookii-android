@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -222,6 +223,7 @@ private fun MemberReviewCard(data: GroupReviewData) {
 
 @Composable
 private fun MemberMessageRow(msg: ExchangeMessage) {
+    val onProfileClick = LocalOnProfileClick.current
     val hasReaction = msg.reaction == "BOOM_UP" || msg.reaction == "BOOM_DOWN"
     val isGood = msg.reaction == "BOOM_UP"
     Column(
@@ -230,7 +232,11 @@ private fun MemberMessageRow(msg: ExchangeMessage) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ProfilePlaceholder(modifier = Modifier.size(20.dp), imageUrl = msg.profileImageUrl)
+            ProfilePlaceholder(
+                modifier = Modifier.size(20.dp),
+                imageUrl = msg.profileImageUrl,
+                onClick = { onProfileClick(msg.username) },
+            )
             Text(text = msg.username, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.grey800)
         }
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -350,13 +356,18 @@ private fun BookReviewCard(
 
 @Composable
 private fun ReviewBlock(username: String, profileImageUrl: String?, rating: Int, date: String, review: String, alignEnd: Boolean) {
+    val onProfileClick = LocalOnProfileClick.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ProfilePlaceholder(modifier = Modifier.size(20.dp), imageUrl = profileImageUrl)
+            ProfilePlaceholder(
+                modifier = Modifier.size(20.dp),
+                imageUrl = profileImageUrl,
+                onClick = { onProfileClick(username) },
+            )
             Text(text = username, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.grey800)
         }
         Column(

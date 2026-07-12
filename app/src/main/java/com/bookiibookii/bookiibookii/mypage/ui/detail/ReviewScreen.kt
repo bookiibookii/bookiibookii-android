@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -298,6 +299,7 @@ private fun BookReviewCard(review: WrittenReviewItem) {
 
 @Composable
 private fun ReceivedReviewCard(review: ReceivedReviewItem) {
+    val onProfileClick = LocalOnProfileClick.current
     val isGood = review.partnerReviewType == "BOOM_UP"
     val displayDate = review.reviewedAt?.let { DateUtils.formatDate(it) } ?: ""
 
@@ -307,7 +309,11 @@ private fun ReceivedReviewCard(review: ReceivedReviewItem) {
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ProfilePlaceholder(modifier = Modifier.size(32.dp))
+                ProfilePlaceholder(
+                    imageUrl = review.reviewerProfileImageUrl,
+                    modifier = Modifier.size(32.dp),
+                    onClick = review.reviewerNickname?.let { nick -> { onProfileClick(nick) } },
+                )
                 Text(review.reviewerNickname.orEmpty(), style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey800)
             }
             ReviewTypeChip(isGood = isGood)

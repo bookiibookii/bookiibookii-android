@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.ui.component.BookCover
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
@@ -40,6 +41,7 @@ fun ExploreGroupCard(
     imageUrl: String? = null,
     hostProfileImageUrl: String? = null,
 ) {
+    val onProfileClick = LocalOnProfileClick.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -111,6 +113,7 @@ fun ExploreGroupCard(
                     ProfilePlaceholder(
                         modifier = Modifier.size(20.dp),
                         imageUrl = hostProfileImageUrl,
+                        onClick = { onProfileClick(nickname) },
                     )
                     Text(
                         text = nickname,

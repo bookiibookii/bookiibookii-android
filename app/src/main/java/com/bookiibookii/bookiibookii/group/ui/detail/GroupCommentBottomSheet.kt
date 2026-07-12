@@ -76,6 +76,7 @@ import com.bookiibookii.bookiibookii.group.vm.GroupCommentViewModel
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.ui.component.DeletePopover
 import com.bookiibookii.bookiibookii.ui.component.bottomSheetTopShadow
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -309,6 +310,7 @@ private fun CommentItemRow(
     onTap: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    val onProfileClick = LocalOnProfileClick.current
     var showPopover by remember { mutableStateOf(false) }
     var rowSize by remember { mutableStateOf(IntSize.Zero) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -336,6 +338,7 @@ private fun CommentItemRow(
             ProfilePlaceholder(
                 modifier = Modifier.size(profileSize),
                 imageUrl = comment.writer.profileImage,
+                onClick = { onProfileClick(comment.writer.name) },
             )
             CommentMetaAndBody(
                 nickname = comment.writer.name,

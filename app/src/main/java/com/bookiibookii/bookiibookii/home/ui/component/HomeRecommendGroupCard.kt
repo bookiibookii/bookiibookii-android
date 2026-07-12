@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.data.model.group.GroupItem
 import com.bookiibookii.bookiibookii.ui.component.BookCover
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
@@ -100,6 +101,7 @@ private fun HomeRecommendGroupCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val onProfileClick = LocalOnProfileClick.current
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
     val shape = BookiiBookiiTheme.shape.round20
@@ -198,6 +200,7 @@ private fun HomeRecommendGroupCard(
                         ProfilePlaceholder(
                             modifier = Modifier.size(20.dp),
                             imageUrl = group.hostProfileImageUrl,
+                            onClick = group.hostNickname?.let { nick -> { onProfileClick(nick) } },
                         )
                         Text(
                             text = group.hostNickname.orEmpty(),
