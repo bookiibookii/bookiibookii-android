@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
@@ -171,7 +172,7 @@ private fun OnbStepHeader(onBack: () -> Unit) {
                 painter = painterResource(R.drawable.ic_logo_wordmark),
                 contentDescription = null,
                 colorFilter = ColorFilter.tint(colors.uiMain),
-                modifier = Modifier.width(204.dp).height(22.dp)
+                modifier = Modifier.widthIn(max = 204.dp).height(22.dp)
             )
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.size(40.dp))
