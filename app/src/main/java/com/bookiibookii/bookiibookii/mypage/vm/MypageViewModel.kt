@@ -74,7 +74,6 @@ class MypageViewModel : ViewModel() {
                 val response = RetrofitClient.mypApi().getMypage()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     response.body()!!.result?.let {
-                        Log.d("ProfileDebug", "[프로필 조회 응답] nickname=${it.nickname}, profileImageUrl=${it.profileImageUrl}")
                         _profileData.value = it
                         confirmedNickname = it.nickname
                     }
@@ -237,9 +236,7 @@ class MypageViewModel : ViewModel() {
                     }
                 }
 
-                Log.d("ProfileDebug", "[프로필 수정 요청] nickname=${finalRequest.nickname}, gender=${finalRequest.gender}, birth=${finalRequest.birth}, s3Key=${finalRequest.s3Key.let { if (it == null) "null" else if (it.isEmpty()) "\"\"(빈문자열)" else it }}")
                 val updateRes = RetrofitClient.mypApi().updateProfile(finalRequest)
-                Log.d("ProfileDebug", "[프로필 수정 응답] code=${updateRes.code()}, isSuccess=${updateRes.body()?.isSuccess}, message=${updateRes.body()?.message}")
 
                 if (updateRes.isSuccessful && updateRes.body()?.isSuccess == true) {
                     _eventFlow.emit(Event.ShowToast("프로필이 성공적으로 수정되었습니다.", true))

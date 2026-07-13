@@ -135,7 +135,8 @@ fun MypageScreen(
                     )
                     RepresentativeBooksSection(
                         books = profile?.userBooks ?: emptyList(),
-                        onArrowClick = if (isOwner) onBookshelfClick else null,
+                        sectionTitle = if (isOwner) "나의 책장" else "${profile?.nickname ?: ""} 님의 책장",
+                        onArrowClick = onBookshelfClick,
                     )
                 }
 

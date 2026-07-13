@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.data.api
 import com.bookiibookii.bookiibookii.data.model.common.ApiResponse
 import com.bookiibookii.bookiibookii.data.model.user.NicknameValidationResult
 import com.bookiibookii.bookiibookii.data.model.user.OnboardingRequest
+import com.bookiibookii.bookiibookii.data.model.mypage.OtherUserBookshelfResult
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.data.model.user.PresignedUrlResult
 import okhttp3.RequestBody
@@ -45,4 +46,10 @@ interface UserApi {
     suspend fun getUserProfile(
         @Path("nickname") nickname: String
     ): Response<ApiResponse<UserProfileResDTO>>
+
+    // 타 유저 책장 조회
+    @GET("/api/profiles/{nickname}/bookshelf")
+    suspend fun getOtherUserBookshelf(
+        @Path("nickname") nickname: String
+    ): Response<ApiResponse<OtherUserBookshelfResult>>
 }

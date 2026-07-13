@@ -243,7 +243,7 @@ internal fun MottoSection(
 }
 
 @Composable
-internal fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: (() -> Unit)? = {}) {
+internal fun RepresentativeBooksSection(books: List<UserBookDto>, sectionTitle: String = "나의 책장", onArrowClick: (() -> Unit)? = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -256,7 +256,7 @@ internal fun RepresentativeBooksSection(books: List<UserBookDto>, onArrowClick: 
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(text = "나의 책장", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
+                Text(text = sectionTitle, style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
