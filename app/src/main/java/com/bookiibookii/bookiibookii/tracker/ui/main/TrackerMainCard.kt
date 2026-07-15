@@ -228,7 +228,6 @@ private fun TrackerProfileColumn(
                 .size(44.dp),
             imageUrl = profile.profileImageUrl,
             innerStroke = true,
-            onClick = null,
         )
     }
 }
