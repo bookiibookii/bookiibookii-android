@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
-import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -223,7 +222,6 @@ private fun MemberReviewCard(data: GroupReviewData) {
 
 @Composable
 private fun MemberMessageRow(msg: ExchangeMessage) {
-    val onProfileClick = LocalOnProfileClick.current
     val hasReaction = msg.reaction == "BOOM_UP" || msg.reaction == "BOOM_DOWN"
     val isGood = msg.reaction == "BOOM_UP"
     Column(
@@ -235,7 +233,7 @@ private fun MemberMessageRow(msg: ExchangeMessage) {
             ProfilePlaceholder(
                 modifier = Modifier.size(20.dp),
                 imageUrl = msg.profileImageUrl,
-                onClick = { onProfileClick(msg.username) },
+                onClick = null,
             )
             Text(text = msg.username, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.grey800)
         }
@@ -356,7 +354,6 @@ private fun BookReviewCard(
 
 @Composable
 private fun ReviewBlock(username: String, profileImageUrl: String?, rating: Int, date: String, review: String, alignEnd: Boolean) {
-    val onProfileClick = LocalOnProfileClick.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start,
@@ -366,7 +363,7 @@ private fun ReviewBlock(username: String, profileImageUrl: String?, rating: Int,
             ProfilePlaceholder(
                 modifier = Modifier.size(20.dp),
                 imageUrl = profileImageUrl,
-                onClick = { onProfileClick(username) },
+                onClick = null,
             )
             Text(text = username, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.grey800)
         }

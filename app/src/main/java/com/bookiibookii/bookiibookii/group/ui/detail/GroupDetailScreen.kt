@@ -591,7 +591,6 @@ private fun GroupDetailBookInfo(
     bookImage: String?,
     hostProfileImageUrl: String?,
 ) {
-    val onProfileClick = LocalOnProfileClick.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -655,7 +654,7 @@ private fun GroupDetailBookInfo(
                     ProfilePlaceholder(
                         modifier = Modifier.size(20.dp),
                         imageUrl = hostProfileImageUrl,
-                        onClick = { onProfileClick(nickname) },
+                        onClick = null,
                     )
                     Text(
                         text = nickname,

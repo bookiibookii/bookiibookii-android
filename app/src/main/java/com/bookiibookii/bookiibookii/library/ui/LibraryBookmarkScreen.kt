@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
-import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -213,7 +212,6 @@ private fun BookmarkCardItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val onProfileClick = LocalOnProfileClick.current
     Column(
         modifier = modifier
             .height(275.dp)
@@ -237,7 +235,7 @@ private fun BookmarkCardItem(
                     ProfilePlaceholder(
                         imageUrl = card.creatorProfileImageUrl,
                         modifier = Modifier.size(24.dp),
-                        onClick = { onProfileClick(card.username) },
+                        onClick = null,
                     )
                     Text(text = card.username, style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey800)
                 }

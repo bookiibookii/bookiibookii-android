@@ -44,7 +44,6 @@ import com.bookiibookii.bookiibookii.tracker.vm.TrackerPartnerReviewViewModel
 import com.bookiibookii.bookiibookii.ui.component.BookCover
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
-import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
@@ -214,7 +213,6 @@ private fun ReviewCard(
     comment: String,
     onCommentChange: (String) -> Unit,
 ) {
-    val onProfileClick = LocalOnProfileClick.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,7 +231,7 @@ private fun ReviewCard(
             ProfilePlaceholder(
                 modifier = Modifier.size(20.dp),
                 imageUrl = partnerProfileImageUrl,
-                onClick = { onProfileClick(partnerNickname) },
+                onClick = null,
             )
             Text(
                 text = buildAnnotatedString {
@@ -380,7 +378,6 @@ private fun BookColumn(
     isMyBook: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val onProfileClick = LocalOnProfileClick.current
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -425,7 +422,7 @@ private fun BookColumn(
                     .size(44.dp),
                 imageUrl = profileImageUrl,
                 innerStroke = true,
-                onClick = { onProfileClick(nickname) },
+                onClick = null,
             )
         }
         Text(
