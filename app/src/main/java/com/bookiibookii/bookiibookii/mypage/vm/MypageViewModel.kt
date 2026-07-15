@@ -81,7 +81,7 @@ class MypageViewModel : ViewModel() {
                     _eventFlow.emit(Event.ShowToast("정보를 불러오지 못했습니다.", false))
                 }
             } catch (e: Exception) {
-                Log.e("MypageViewModel", "fetch error", e)
+                Log.e("UpdateProfile", "fetch error", e)
                 _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다.", false))
             }
         }
@@ -110,7 +110,7 @@ class MypageViewModel : ViewModel() {
                     _writtenReviews.value = _writtenReviews.value?.copy(isLoading = false)
                 }
             } catch (e: Exception) {
-                Log.e("MypageViewModel", "fetchWrittenReviews error", e)
+                Log.e("UpdateProfile", "fetchWrittenReviews error", e)
                 _writtenReviews.value = _writtenReviews.value?.copy(isLoading = false)
             }
         }
@@ -139,7 +139,7 @@ class MypageViewModel : ViewModel() {
                     _receivedReviews.value = _receivedReviews.value?.copy(isLoading = false)
                 }
             } catch (e: Exception) {
-                Log.e("MypageViewModel", "fetchReceivedReviews error", e)
+                Log.e("UpdateProfile", "fetchReceivedReviews error", e)
                 _receivedReviews.value = _receivedReviews.value?.copy(isLoading = false)
             }
         }
@@ -196,7 +196,7 @@ class MypageViewModel : ViewModel() {
                     _profileData.value = _profileData.value?.copy(introduction = introduction.ifBlank { null })
                 }
             } catch (e: Exception) {
-                Log.e("MypageViewModel", "updateIntroduction error", e)
+                Log.e("UpdateProfile", "updateIntroduction error", e)
             } finally {
                 profileMutating = false
             }

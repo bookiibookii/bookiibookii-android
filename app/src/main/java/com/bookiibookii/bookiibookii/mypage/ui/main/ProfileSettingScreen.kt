@@ -186,7 +186,10 @@ fun ProfileSettingRoute(
         isDefaultImageSelected = isDefaultImageSelected,
         onCheckNickname = { nickname -> viewModel.checkNickname(nickname) },
         onSaveClick = { request ->
-            val finalRequest = if (isDefaultImageSelected) request.copy(s3Key = null) else request
+            val finalRequest = when {
+                isDefaultImageSelected -> request.copy(s3Key = "DEFAULT")
+                else -> request.copy(s3Key = null)
+            }
             viewModel.updateProfile(finalRequest, selectedImageFile)
         },
     )

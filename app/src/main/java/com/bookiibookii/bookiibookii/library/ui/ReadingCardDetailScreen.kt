@@ -110,7 +110,7 @@ private val reactionToApiKey = mapOf(
     "좋아요"  to "LIKE",
     "웃겨요"  to "FUN",
     "슬퍼요"  to "SAD",
-    "화나요"  to "CHEERUP",
+    "화나요"  to "ANGRY",
 )
 
 private val apiKeyToReaction: Map<String, Reaction> by lazy {
@@ -119,7 +119,7 @@ private val apiKeyToReaction: Map<String, Reaction> by lazy {
         "LIKE"    to reactionList[1],
         "FUN"     to reactionList[2],
         "SAD"     to reactionList[3],
-        "CHEERUP" to reactionList[4],
+        "ANGRY"   to reactionList[4],
     )
 }
 

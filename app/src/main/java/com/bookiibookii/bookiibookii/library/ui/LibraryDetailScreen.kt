@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
-import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -96,7 +95,7 @@ data class ReadingCard(
 internal val reactionIconByApiKey: Map<String, Int> = mapOf(
     "LIKE"    to R.drawable.ic_good,
     "SAD"     to R.drawable.ic_sad,
-    "CHEERUP" to R.drawable.ic_angry,
+    "ANGRY"   to R.drawable.ic_angry,
     "FEELYOU" to R.drawable.ic_empathy,
     "FUN"     to R.drawable.ic_fun,
 )
@@ -643,7 +642,6 @@ private fun CardGrid(cards: List<ReadingCard>, onCardClick: (Int) -> Unit, modif
 
 @Composable
 private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val onProfileClick = LocalOnProfileClick.current
     Column(modifier = modifier.height(275.dp).clip(RoundedCornerShape(20.dp)).background(BookiiBookiiTheme.colors.white).clickable { onClick() }) {
         Column(
             modifier = Modifier.fillMaxWidth().height(147.dp).padding(12.dp),
@@ -654,7 +652,7 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
                     ProfilePlaceholder(
                         imageUrl = card.creatorProfileImageUrl,
                         modifier = Modifier.size(24.dp),
-                        onClick = { onProfileClick(card.username) },
+                        onClick = null,
                     )
                     Text(text = card.username, style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey800)
                 }
