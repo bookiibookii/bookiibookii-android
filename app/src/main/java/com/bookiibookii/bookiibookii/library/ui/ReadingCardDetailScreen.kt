@@ -1319,7 +1319,7 @@ private fun CardInfoArea(
             Box(modifier = Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(30.dp)).background(BookiiBookiiTheme.colors.grey200)) {
                 Box(modifier = Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).fillMaxHeight().background(BookiiBookiiTheme.colors.uiMain))
             }
-            Text(text = "| ${if (sortByLatest) "최신순" else "페이지순"}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
+            Text(text = "| ${if (sortByLatest) "최신순" else "과거순"}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
