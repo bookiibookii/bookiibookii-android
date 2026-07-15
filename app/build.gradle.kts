@@ -23,7 +23,7 @@ android {
         applicationId = "com.bookiibookii.bookiibookii_d"
         minSdk = 28
         targetSdk = 36
-        versionCode = 3
+        versionCode = 4
         versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
