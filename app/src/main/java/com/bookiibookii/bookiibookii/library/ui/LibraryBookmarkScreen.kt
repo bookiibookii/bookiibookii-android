@@ -232,7 +232,11 @@ private fun BookmarkCardItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ProfilePlaceholder(imageUrl = card.creatorProfileImageUrl, modifier = Modifier.size(24.dp))
+                    ProfilePlaceholder(
+                        imageUrl = card.creatorProfileImageUrl,
+                        modifier = Modifier.size(24.dp),
+                        onClick = null,
+                    )
                     Text(text = card.username, style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey800)
                 }
                 Box(

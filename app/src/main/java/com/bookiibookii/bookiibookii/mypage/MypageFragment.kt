@@ -4,15 +4,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
+import com.bookiibookii.bookiibookii.mypage.feat.OtherUserProfileFragment
 import com.bookiibookii.bookiibookii.mypage.nav.MypageDestinations
 import com.bookiibookii.bookiibookii.mypage.nav.MypageNavHost
 import com.bookiibookii.bookiibookii.mypage.vm.MypageViewModel
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 class MypageFragment : Fragment() {
@@ -30,6 +34,17 @@ class MypageFragment : Fragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             BookiiBookiiTheme {
+                CompositionLocalProvider(
+                    LocalOnProfileClick provides { nickname ->
+                        val myNickname = TokenManager.getNickname(requireContext())
+                        val fragment = if (myNickname != null && nickname == myNickname) MypageFragment()
+                                       else OtherUserProfileFragment.newInstance(nickname)
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, fragment)
+                            .addToBackStack(null)
+                            .commit()
+                    },
+                ) {
                 MypageNavHost(
                     mypageViewModel = viewModel,
                     onBackClick = { parentFragmentManager.popBackStack() },
@@ -69,6 +84,7 @@ class MypageFragment : Fragment() {
                     },
                     startDestination = startDestination,
                 )
+                }
             }
         }
     }

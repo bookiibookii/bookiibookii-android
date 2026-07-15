@@ -34,6 +34,7 @@ import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.data.model.mypage.BookReviewSummaryDto
 import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedMemberReviewDto
 import com.bookiibookii.bookiibookii.ui.component.ExchangeTypeChip
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.component.ReviewTypeChip
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
@@ -44,7 +45,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 internal fun WrittenReviewsSection(
     reviewCount: Int,
     reviews: List<BookReviewSummaryDto>?,
-    onArrowClick: () -> Unit = {},
+    onArrowClick: (() -> Unit)? = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -56,12 +57,14 @@ internal fun WrittenReviewsSection(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(text = "작성한 후기", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
-            Icon(
-                painter = painterResource(R.drawable.ic_chevron),
-                contentDescription = null,
-                tint = BookiiBookiiTheme.colors.grey900,
-                modifier = Modifier.size(24.dp).graphicsLayer { scaleX = -1f }.clickable { onArrowClick() },
-            )
+            if (onArrowClick != null) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_chevron),
+                    contentDescription = null,
+                    tint = BookiiBookiiTheme.colors.grey900,
+                    modifier = Modifier.size(24.dp).graphicsLayer { scaleX = -1f }.clickable { onArrowClick() },
+                )
+            }
         }
 
         Row(
@@ -140,7 +143,7 @@ internal fun ReceivedReviewsSection(
     boomUpCount: Int,
     nickname: String,
     reviews: List<ReceivedMemberReviewDto>?,
-    onArrowClick: () -> Unit = {},
+    onArrowClick: (() -> Unit)? = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -152,12 +155,14 @@ internal fun ReceivedReviewsSection(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(text = "받은 후기", style = BookiiBookiiTheme.typography.semibold16, color = BookiiBookiiTheme.colors.grey900)
-            Icon(
-                painter = painterResource(R.drawable.ic_chevron),
-                contentDescription = null,
-                tint = BookiiBookiiTheme.colors.grey900,
-                modifier = Modifier.size(24.dp).graphicsLayer { scaleX = -1f }.clickable { onArrowClick() },
-            )
+            if (onArrowClick != null) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_chevron),
+                    contentDescription = null,
+                    tint = BookiiBookiiTheme.colors.grey900,
+                    modifier = Modifier.size(24.dp).graphicsLayer { scaleX = -1f }.clickable { onArrowClick() },
+                )
+            }
         }
 
         Row(
@@ -196,6 +201,7 @@ internal fun ReceivedReviewsSection(
 
 @Composable
 private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
+    val onProfileClick = LocalOnProfileClick.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -206,7 +212,11 @@ private fun ReceivedReviewCard(review: ReceivedMemberReviewDto) {
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ProfilePlaceholder(modifier = Modifier.size(32.dp))
+                ProfilePlaceholder(
+                    modifier = Modifier.size(32.dp),
+                    imageUrl = review.reviewerProfileUrl,
+                    onClick = { onProfileClick(review.reviewerNickname) },
+                )
                 Text(text = review.reviewerNickname, style = BookiiBookiiTheme.typography.medium16, color = BookiiBookiiTheme.colors.grey800)
             }
             ReviewTypeChip(isGood = review.reaction == "BOOM_UP", modifier = Modifier)

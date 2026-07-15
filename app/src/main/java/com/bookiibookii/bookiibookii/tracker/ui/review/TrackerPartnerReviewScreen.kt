@@ -231,6 +231,7 @@ private fun ReviewCard(
             ProfilePlaceholder(
                 modifier = Modifier.size(20.dp),
                 imageUrl = partnerProfileImageUrl,
+                onClick = null,
             )
             Text(
                 text = buildAnnotatedString {
@@ -421,6 +422,7 @@ private fun BookColumn(
                     .size(44.dp),
                 imageUrl = profileImageUrl,
                 innerStroke = true,
+                onClick = null,
             )
         }
         Text(
