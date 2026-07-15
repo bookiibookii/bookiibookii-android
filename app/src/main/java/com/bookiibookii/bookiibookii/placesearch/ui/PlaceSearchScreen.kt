@@ -102,6 +102,7 @@ private fun PlaceSearchContent(
             onQueryChange = onQueryChange,
             onSearch = onSearch,
             hint = "장소명, 주소로 검색",
+            autoFocus = true,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),

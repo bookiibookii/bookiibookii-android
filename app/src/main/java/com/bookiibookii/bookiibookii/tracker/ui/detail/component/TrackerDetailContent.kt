@@ -50,7 +50,6 @@ import com.bookiibookii.bookiibookii.tracker.ui.component.TrackerBookCover
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetTwoBtnShort
-import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
@@ -411,7 +410,6 @@ private fun ProfileColumn(
     showProgress: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val onProfileClick = LocalOnProfileClick.current
     Box(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -472,7 +470,6 @@ private fun ProfileColumn(
                 .size(44.dp),
             imageUrl = profile.profileImageUrl,
             innerStroke = true,
-            onClick = { onProfileClick(profile.nickname) },
         )
     }
 }

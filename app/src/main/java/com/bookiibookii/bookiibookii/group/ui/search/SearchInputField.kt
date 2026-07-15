@@ -33,6 +33,7 @@ import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 // 인라인 검색 입력바. 제출(키보드 검색 액션 / 돋보기 아이콘) 시 onSearch 호출
+// autoFocus는 검색 전용 화면에서만 켤 것. 목록·탐색 화면에서 켜면 진입/뒤로가기마다 키보드가 목록을 덮음
 @Composable
 fun SearchInputField(
     query: String,
@@ -40,6 +41,7 @@ fun SearchInputField(
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
     hint: String = "그룹명, 도서명, 저자로 검색",
+    autoFocus: Boolean = false,
 ) {
     val shape = RoundedCornerShape(
         topStart = 20.dp,
@@ -54,8 +56,8 @@ fun SearchInputField(
         onSearch()
     }
 
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+    LaunchedEffect(autoFocus) {
+        if (autoFocus) focusRequester.requestFocus()
     }
 
     Row(
