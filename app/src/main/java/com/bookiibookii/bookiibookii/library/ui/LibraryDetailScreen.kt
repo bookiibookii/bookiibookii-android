@@ -95,7 +95,7 @@ data class ReadingCard(
 internal val reactionIconByApiKey: Map<String, Int> = mapOf(
     "LIKE"    to R.drawable.ic_good,
     "SAD"     to R.drawable.ic_sad,
-    "CHEERUP" to R.drawable.ic_angry,
+    "ANGRY"   to R.drawable.ic_angry,
     "FEELYOU" to R.drawable.ic_empathy,
     "FUN"     to R.drawable.ic_fun,
 )
@@ -649,7 +649,11 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
         ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ProfilePlaceholder(imageUrl = card.creatorProfileImageUrl, modifier = Modifier.size(24.dp))
+                    ProfilePlaceholder(
+                        imageUrl = card.creatorProfileImageUrl,
+                        modifier = Modifier.size(24.dp),
+                        onClick = null,
+                    )
                     Text(text = card.username, style = BookiiBookiiTheme.typography.medium14, color = BookiiBookiiTheme.colors.grey800)
                 }
                 if (card.isBookmarked) {

@@ -230,7 +230,11 @@ private fun MemberMessageRow(msg: ExchangeMessage) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ProfilePlaceholder(modifier = Modifier.size(20.dp), imageUrl = msg.profileImageUrl)
+            ProfilePlaceholder(
+                modifier = Modifier.size(20.dp),
+                imageUrl = msg.profileImageUrl,
+                onClick = null,
+            )
             Text(text = msg.username, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.grey800)
         }
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -356,7 +360,11 @@ private fun ReviewBlock(username: String, profileImageUrl: String?, rating: Int,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ProfilePlaceholder(modifier = Modifier.size(20.dp), imageUrl = profileImageUrl)
+            ProfilePlaceholder(
+                modifier = Modifier.size(20.dp),
+                imageUrl = profileImageUrl,
+                onClick = null,
+            )
             Text(text = username, style = BookiiBookiiTheme.typography.medium12, color = BookiiBookiiTheme.colors.grey800)
         }
         Column(

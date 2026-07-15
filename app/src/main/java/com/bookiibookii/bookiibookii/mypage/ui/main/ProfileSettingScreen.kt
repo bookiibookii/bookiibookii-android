@@ -93,6 +93,7 @@ fun ProfileSettingRoute(
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedImageFile by remember { mutableStateOf<java.io.File?>(null) }
+    var isDefaultImageSelected by remember { mutableStateOf(false) }
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
 
     fun createUploadTempFile(uri: Uri): java.io.File? {
@@ -114,6 +115,7 @@ fun ProfileSettingRoute(
             cameraImageUri?.let { uri ->
                 selectedImageUri = uri
                 selectedImageFile = createUploadTempFile(uri)
+                isDefaultImageSelected = false
             }
         }
     }
@@ -156,6 +158,7 @@ fun ProfileSettingRoute(
         uri?.let {
             selectedImageUri = it
             selectedImageFile = createUploadTempFile(it)
+            isDefaultImageSelected = false
         }
     }
 
@@ -179,9 +182,16 @@ fun ProfileSettingRoute(
         onBackClick = onBackClick,
         onOpenCamera = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) },
         onOpenGallery = { pickMediaLauncher.launch("image/*") },
-        onClearProfileImage = { selectedImageUri = null; selectedImageFile = null },
+        onClearProfileImage = { selectedImageUri = null; selectedImageFile = null; isDefaultImageSelected = true },
+        isDefaultImageSelected = isDefaultImageSelected,
         onCheckNickname = { nickname -> viewModel.checkNickname(nickname) },
-        onSaveClick = { request -> viewModel.updateProfile(request, selectedImageFile) },
+        onSaveClick = { request ->
+            val finalRequest = when {
+                isDefaultImageSelected -> request.copy(s3Key = "DEFAULT")
+                else -> request.copy(s3Key = null)
+            }
+            viewModel.updateProfile(finalRequest, selectedImageFile)
+        },
     )
 }
 
@@ -190,6 +200,7 @@ fun ProfileSettingRoute(
 fun ProfileSettingScreen(
     profile: UserProfileResDTO? = null,
     profileImageUri: Uri? = null,
+    isDefaultImageSelected: Boolean = false,
     nicknameCheckState: NicknameCheckState? = NicknameCheckState.Idle,
     onBackClick: () -> Unit = {},
     onOpenCamera: () -> Unit = {},
@@ -276,7 +287,7 @@ fun ProfileSettingScreen(
                         )
                     } else {
                         ProfilePlaceholder(
-                            imageUrl = profile?.profileImageUrl,
+                            imageUrl = if (isDefaultImageSelected) null else profile?.profileImageUrl,
                             modifier = Modifier.size(128.dp),
                         )
                     }

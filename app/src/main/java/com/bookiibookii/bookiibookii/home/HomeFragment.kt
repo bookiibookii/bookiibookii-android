@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
@@ -13,7 +14,10 @@ import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.home.ui.HomeRoute
 import com.bookiibookii.bookiibookii.mypage.MypageFragment
+import com.bookiibookii.bookiibookii.mypage.feat.OtherUserProfileFragment
 import com.bookiibookii.bookiibookii.notification.NotificationFragment
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 class HomeFragment : Fragment() {
@@ -45,6 +49,17 @@ class HomeFragment : Fragment() {
         }
         setContent {
             BookiiBookiiTheme {
+                CompositionLocalProvider(
+                    LocalOnProfileClick provides { nickname ->
+                        val myNickname = TokenManager.getNickname(requireContext())
+                        val fragment = if (myNickname != null && nickname == myNickname) MypageFragment()
+                                       else OtherUserProfileFragment.newInstance(nickname)
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, fragment)
+                            .addToBackStack(null)
+                            .commit()
+                    },
+                ) {
                 HomeRoute(
                     viewModel = vm,
                     onGroupClick = { groupId ->
@@ -97,6 +112,7 @@ class HomeFragment : Fragment() {
                             .commit()
                     },
                 )
+                }
             }
         }
     }

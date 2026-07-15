@@ -198,6 +198,7 @@ private fun HomeRecommendGroupCard(
                         ProfilePlaceholder(
                             modifier = Modifier.size(20.dp),
                             imageUrl = group.hostProfileImageUrl,
+                            onClick = null,
                         )
                         Text(
                             text = group.hostNickname.orEmpty(),

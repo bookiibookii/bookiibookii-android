@@ -480,6 +480,7 @@ private fun CommentItemRow(
             ProfilePlaceholder(
                 modifier = Modifier.size(profileSize),
                 imageUrl = comment.writer.profileImage,
+                onClick = null,
             )
             CommentMetaAndBody(
                 nickname = comment.writer.name,

@@ -111,6 +111,7 @@ fun ExploreGroupCard(
                     ProfilePlaceholder(
                         modifier = Modifier.size(20.dp),
                         imageUrl = hostProfileImageUrl,
+                        onClick = null,
                     )
                     Text(
                         text = nickname,

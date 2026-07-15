@@ -7,15 +7,19 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import androidx.compose.runtime.CompositionLocalProvider
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
 import com.bookiibookii.bookiibookii.mypage.MypageFragment
+import com.bookiibookii.bookiibookii.mypage.feat.OtherUserProfileFragment
 import com.bookiibookii.bookiibookii.notification.NotificationFragment
 import com.bookiibookii.bookiibookii.tracker.nav.TrackerDestinations
 import com.bookiibookii.bookiibookii.tracker.nav.TrackerNavHost
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
+import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 class TrackerFragment : Fragment() {
@@ -32,6 +36,17 @@ class TrackerFragment : Fragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             BookiiBookiiTheme {
+                CompositionLocalProvider(
+                    LocalOnProfileClick provides { nickname ->
+                        val myNickname = TokenManager.getNickname(requireContext())
+                        val fragment = if (myNickname != null && nickname == myNickname) MypageFragment()
+                                       else OtherUserProfileFragment.newInstance(nickname)
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, fragment)
+                            .addToBackStack(null)
+                            .commit()
+                    },
+                ) {
                 TrackerNavHost(
                     startDestination = startDestination,
                     // 딥링크 진입 시 백버튼이 팝할 게 없으면 트래커 Fragment를 닫음
@@ -87,6 +102,7 @@ class TrackerFragment : Fragment() {
                             .commit()
                     },
                 )
+                }
             }
         }
     }

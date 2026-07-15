@@ -78,6 +78,7 @@ fun MypageMainRoute(
 @Composable
 fun MypageScreen(
     profile: UserProfileResDTO? = null,
+    isOwner: Boolean = true,
     onSaveIntroduction: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
     onSettingClick: () -> Unit = {},
@@ -98,7 +99,12 @@ fun MypageScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.uiBg)) {
             Box(modifier = Modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white)) {
-                MypTopBar(onBackClick = onBackClick, onSettingClick = onSettingClick)
+                MypTopBar(
+                    title = if (isOwner) "마이페이지" else "${profile?.nickname ?: ""}님의 프로필",
+                    onBackClick = onBackClick,
+                    showSettings = isOwner,
+                    onSettingClick = onSettingClick,
+                )
             }
 
             Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -112,6 +118,7 @@ fun MypageScreen(
                     ProfileSection(
                         nickname = profile?.nickname ?: "",
                         profileImageUrl = profile?.profileImageUrl,
+                        isOwner = isOwner,
                         onProfileSettingClick = onProfileSettingClick,
                         onAddressManagementClick = onAddressManagementClick,
                         onProfileShareClick = { showShareDialog = true },
@@ -119,6 +126,7 @@ fun MypageScreen(
                     MottoSection(
                         motto = profile?.introduction ?: "",
                         isEditing = isMottoEditing,
+                        showEditButton = isOwner,
                         editText = mottoInput,
                         onEditTextChange = { mottoInput = it },
                         onEditClick = { mottoInput = profile?.introduction ?: ""; isMottoEditing = true },
@@ -127,6 +135,7 @@ fun MypageScreen(
                     )
                     RepresentativeBooksSection(
                         books = profile?.userBooks ?: emptyList(),
+                        sectionTitle = if (isOwner) "나의 책장" else "${profile?.nickname ?: ""} 님의 책장",
                         onArrowClick = onBookshelfClick,
                     )
                 }
@@ -135,7 +144,7 @@ fun MypageScreen(
                 WrittenReviewsSection(
                     reviewCount = profile?.bookReviewCount ?: 0,
                     reviews = profile?.recentBookReviews,
-                    onArrowClick = onWrittenReviewClick,
+                    onArrowClick = if (isOwner) onWrittenReviewClick else null,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -143,7 +152,7 @@ fun MypageScreen(
                     boomUpCount = profile?.boomUpCount ?: 0,
                     nickname = profile?.nickname ?: "",
                     reviews = profile?.recentReceivedReviews,
-                    onArrowClick = onReceivedReviewClick,
+                    onArrowClick = if (isOwner) onReceivedReviewClick else null,
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -168,7 +177,12 @@ fun MypageScreen(
 }
 
 @Composable
-private fun MypTopBar(onBackClick: () -> Unit, onSettingClick: () -> Unit) {
+private fun MypTopBar(
+    title: String,
+    onBackClick: () -> Unit,
+    showSettings: Boolean = true,
+    onSettingClick: () -> Unit = {},
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -179,14 +193,18 @@ private fun MypTopBar(onBackClick: () -> Unit, onSettingClick: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             BookiiBackButton(onClick = onBackClick)
-            Text(text = "마이페이지", style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
-            IconButton(onClick = onSettingClick, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_gear),
-                    contentDescription = "설정",
-                    tint = BookiiBookiiTheme.colors.grey900,
-                    modifier = Modifier.size(32.dp),
-                )
+            Text(text = title, style = BookiiBookiiTheme.typography.medium20, color = BookiiBookiiTheme.colors.grey900)
+            if (showSettings) {
+                IconButton(onClick = onSettingClick, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_gear),
+                        contentDescription = "설정",
+                        tint = BookiiBookiiTheme.colors.grey900,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+            } else {
+                Box(modifier = Modifier.size(40.dp))
             }
         }
         HorizontalDivider(color = BookiiBookiiTheme.colors.grey200, thickness = 1.dp)

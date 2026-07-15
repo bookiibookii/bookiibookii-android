@@ -36,6 +36,21 @@ data class RepresentativeBook(
     val category: String? = null,
 )
 
+// GET /api/profiles/{nickname}/bookshelf
+data class OtherUserBookshelfResult(
+    val completedBooks: List<CompletedBook>?,
+    val favoriteBooks: List<FavoriteBook>?,
+    val representativeBooks: List<OtherRepresentativeBook>?,
+)
+
+data class OtherRepresentativeBook(
+    val title: String,
+    val author: String?,
+    val image: String?,
+    val displayOrder: Int,
+    val rating: Double?,
+)
+
 // POST /api/mypage/bookshelf/favorites
 data class AddFavoriteBookRequest(
     val isbn13: String,
