@@ -74,6 +74,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.common.DateUtils
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.CommentItem
@@ -109,6 +110,10 @@ fun TrackerCommentRoute(
     val context = LocalContext.current
     val currentUserId = remember { TokenManager.getUserId(context) }
     var showCoachMark by remember { mutableStateOf(!TokenManager.isTrackerCommentCoachMarkDone(context)) }
+
+    LaunchedEffect(Unit) {
+        ComRetryBus.retryFlow.collect { viewModel.load() }
+    }
 
     // 바텀 네비 표시는 TrackerNavHost에서 현재 라우트 기준으로 일괄 제어
     LaunchedEffect(Unit) {

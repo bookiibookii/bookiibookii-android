@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.common.openExternalUrl
 import com.bookiibookii.bookiibookii.common.openReportChannel
 import com.bookiibookii.bookiibookii.common.showCustomToast
@@ -73,6 +74,10 @@ fun TrackerDetailRoute(
     val partnerDelivery by viewModel.partnerDelivery.collectAsStateWithLifecycle()
     val meetingPlace by viewModel.meetingPlace.collectAsStateWithLifecycle()
     val meetingInfo by viewModel.meetingInfo.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        ComRetryBus.retryFlow.collect { viewModel.load() }
+    }
 
     // 트래커 없음(404) → 종료된 그룹 화면
     LaunchedEffect(uiState.notFound) {

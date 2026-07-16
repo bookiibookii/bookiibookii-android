@@ -167,12 +167,12 @@ class MypageViewModel : ViewModel() {
                     }
                 } else {
                     _isNicknameChecked.value = false
-                    _nicknameCheckState.value = NicknameCheckState.Error(serverMsg)
+                    _nicknameCheckState.value = NicknameCheckState.SystemError
                     _eventFlow.emit(Event.NicknameCheckResult(false, serverMsg))
                 }
             } catch (e: Exception) {
                 Log.e("NickCheck", "오류 발생", e)
-                _nicknameCheckState.value = NicknameCheckState.Error("네트워크 오류")
+                _nicknameCheckState.value = NicknameCheckState.NetworkError
                 _eventFlow.emit(Event.ShowToast("네트워크 오류", false))
             }
         }

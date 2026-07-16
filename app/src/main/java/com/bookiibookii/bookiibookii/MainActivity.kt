@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.common.BaseActivity
+import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
@@ -41,6 +42,8 @@ private enum class NavTab { HOME, TRACKER, LIBRARY }
 
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
+
+    private var currentTab = NavTab.HOME
 
     // 안드13+ 알림 권한 요청 런처. 거부해도 앱 동작엔 지장 없음(푸시 알림만 안 옴).
     private val requestNotificationPermission =
@@ -73,6 +76,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         if (savedInstanceState == null) {
             setBottomNavSelected(NavTab.HOME)
             replaceFragment(HomeFragment())
+        }
+
+        lifecycleScope.launch {
+            ComRetryBus.retryFlow.collect {
+                // 딥 스택(상세 화면)이 있으면 해당 화면이 직접 retry 처리
+                if (supportFragmentManager.backStackEntryCount > 0) return@collect
+                // 탑레벨 탭이면 새 인스턴스로 교체해 데이터 재로드
+                val fresh = when (currentTab) {
+                    NavTab.HOME -> HomeFragment()
+                    NavTab.TRACKER -> TrackerFragment()
+                    NavTab.LIBRARY -> LibraryFragment()
+                }
+                selectTab(currentTab, fresh)
+            }
         }
 
         initBottomNav()
@@ -214,6 +231,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     private fun selectTab(tab: NavTab, fragment: Fragment) {
+        currentTab = tab
         // 탑레벨 탭으로 전환 — 트래커 상세 등에서 GONE된 바텀네비를 다시 표시
         binding.bottomNav.root.visibility = View.VISIBLE
         setBottomNavSelected(tab)

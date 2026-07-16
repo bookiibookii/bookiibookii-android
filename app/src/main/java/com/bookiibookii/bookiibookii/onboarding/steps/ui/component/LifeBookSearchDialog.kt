@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
@@ -168,6 +169,19 @@ private fun LifeBookSearchDialogContent(
                             }
                         }
                     }
+                }
+            }
+            is BookSearchState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "검색 중 오류가 발생했습니다.\n다시 시도해주세요.",
+                        style = typography.regular16,
+                        color = colors.grey600,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
             else -> Unit
@@ -359,6 +373,19 @@ private fun LifeBookSearchDialogEmptyPreview() {
     BookiiBookiiTheme {
         LifeBookSearchDialogContent(
             bookSearchState = BookSearchState.Success(emptyList()),
+            onQueryChange = {},
+            onBookSelected = {},
+            onDismiss = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "검색 다이얼로그 - 오류")
+@Composable
+private fun LifeBookSearchDialogErrorPreview() {
+    BookiiBookiiTheme {
+        LifeBookSearchDialogContent(
+            bookSearchState = BookSearchState.Error("네트워크 오류가 발생했습니다."),
             onQueryChange = {},
             onBookSelected = {},
             onDismiss = {}

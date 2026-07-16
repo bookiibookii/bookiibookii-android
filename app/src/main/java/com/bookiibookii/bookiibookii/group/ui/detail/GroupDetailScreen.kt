@@ -56,6 +56,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.GroupDetailResponse
 import com.bookiibookii.bookiibookii.error.ErrorActivity
@@ -101,6 +102,10 @@ fun GroupDetailRoute(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showApplyDialog by remember { mutableStateOf(false) }
     var showAddressRequiredDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        ComRetryBus.retryFlow.collect { viewModel.load() }
+    }
 
     // 삭제 결과 처리: 성공 -> 그룹 목록 이동, 실패 -> 토스트
     LaunchedEffect(Unit) {

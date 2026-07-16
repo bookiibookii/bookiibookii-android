@@ -4,5 +4,6 @@ sealed class OnboardingSubmitState {
     data object Idle : OnboardingSubmitState()
     data object Loading : OnboardingSubmitState()
     data object Success : OnboardingSubmitState()
-    data class Error(val message: String) : OnboardingSubmitState()
+    data object NetworkError : OnboardingSubmitState()
+    data object SystemError : OnboardingSubmitState()
 }

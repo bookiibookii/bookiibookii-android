@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.common.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.GroupAppItem
 import com.bookiibookii.bookiibookii.error.ErrorActivity
@@ -61,6 +62,9 @@ fun GroupJoinRequestRoute(
     // 진입 시 및 groupId 변경 시 명단 로드
     LaunchedEffect(groupId) {
         viewModel.loadApplicationList(groupId)
+    }
+    LaunchedEffect(Unit) {
+        ComRetryBus.retryFlow.collect { viewModel.loadApplicationList(groupId) }
     }
     // 수락/거절 결과 처리 — 성공 시 토스트(공통 디자인), 실패 시 에러 토스트
     LaunchedEffect(Unit) {

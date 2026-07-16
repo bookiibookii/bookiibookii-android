@@ -389,7 +389,6 @@ private fun NicknameFieldWithCheck(
     val (validationText, validationColor) = when (nicknameCheckState) {
         is NicknameCheckState.Available -> nicknameCheckState.message to colors.uiPointGreen200
         is NicknameCheckState.Duplicated -> nicknameCheckState.message to colors.uiPointRed
-        is NicknameCheckState.Error -> nicknameCheckState.message to colors.uiPointRed
         else -> null to colors.uiPointRed
     }
 
