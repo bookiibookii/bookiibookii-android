@@ -15,6 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.toArgb
+import android.graphics.BlurMaskFilter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,6 +43,21 @@ internal fun HomeGroupCard(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .drawBehind {
+                drawIntoCanvas { canvas ->
+                    val paint = Paint()
+                    paint.asFrameworkPaint().apply {
+                        isAntiAlias = true
+                        color = Color(0x0F000000).toArgb()
+                        maskFilter = BlurMaskFilter(5.dp.toPx(), BlurMaskFilter.Blur.NORMAL)
+                    }
+                    canvas.drawRoundRect(
+                        0f, 0f, size.width, size.height,
+                        20.dp.toPx(), 20.dp.toPx(),
+                        paint,
+                    )
+                }
+            }
             .clip(BookiiBookiiTheme.shape.round20)
             .background(colors.white)
             .clickable(onClick = onClick)
