@@ -63,7 +63,7 @@ fun LibraryBookmarkRoute(
         onSortChange = { isLatest -> viewModel.sortByLatest(isLatest) },
         onBackClick = onBackClick,
         onMoveToLibrary = onBackClick,
-        onCardClick = { index, bookmarkedCards -> onCardClick(index, true, bookmarkedCards) },
+        onCardClick = { index, isLatest, bookmarkedCards -> onCardClick(index, isLatest, bookmarkedCards) },
     )
 }
 
@@ -73,7 +73,7 @@ fun LibraryBookmarkScreen(
     isLoading: Boolean = false,
     onSortChange: (isLatest: Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
-    onCardClick: (index: Int, bookmarkedCards: List<ReadingCard>) -> Unit = { _, _ -> },
+    onCardClick: (index: Int, isLatest: Boolean, bookmarkedCards: List<ReadingCard>) -> Unit = { _, _, _ -> },
     onMoveToLibrary: () -> Unit = {},
 ) {
     var sortType by remember { mutableStateOf(BookmarkSortType.RECENT) }
@@ -154,7 +154,7 @@ fun LibraryBookmarkScreen(
                         row.forEachIndexed { colIndex, card ->
                             BookmarkCardItem(
                                 card = card,
-                                onClick = { onCardClick(rowIndex * 2 + colIndex, bookmarkedCards) },
+                                onClick = { onCardClick(rowIndex * 2 + colIndex, sortType == BookmarkSortType.RECENT, bookmarkedCards) },
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -326,13 +326,16 @@ private fun BookmarkCardItem(
                         tint = BookiiBookiiTheme.colors.white,
                         modifier = Modifier.size(16.dp),
                     )
-                    Text(
-                        text = card.content,
-                        style = BookiiBookiiTheme.typography.regular12,
-                        color = BookiiBookiiTheme.colors.white,
-                        maxLines = 4,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    val displayText = card.quotation.ifBlank { card.content }
+                    if (displayText.isNotBlank()) {
+                        Text(
+                            text = displayText,
+                            style = BookiiBookiiTheme.typography.regular12,
+                            color = BookiiBookiiTheme.colors.white,
+                            maxLines = 4,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }
