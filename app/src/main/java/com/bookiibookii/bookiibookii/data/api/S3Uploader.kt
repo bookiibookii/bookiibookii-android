@@ -12,6 +12,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 object S3Uploader {
 
@@ -23,7 +24,11 @@ object S3Uploader {
     private const val MIME_JPEG = "image/jpeg"
 
     // Presigned URL 업로드는 Authorization 인터셉터가 없어야 안전
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
+        .build()
 
     suspend fun uploadImage(
         contentResolver: ContentResolver,

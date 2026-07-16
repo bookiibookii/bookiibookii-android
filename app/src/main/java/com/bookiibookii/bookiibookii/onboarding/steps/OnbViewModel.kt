@@ -106,7 +106,7 @@ class OnbViewModel : ViewModel() {
                 }
             }.onFailure { e ->
                 _nicknameCheckState.value =
-                    NicknameCheckState.Error(e.message ?: "네트워크 오류가 발생했습니다.")
+                    NicknameCheckState.Error(e.toUserMessage("네트워크 오류가 발생했습니다."))
             }
         }
     }
@@ -128,7 +128,7 @@ class OnbViewModel : ViewModel() {
                 _imageUploadState.value = ProfileImageUploadState.Success(s3Key)
             }.onFailure { e ->
                 _imageUploadState.value =
-                    ProfileImageUploadState.Error(e.message ?: "이미지 업로드에 실패했습니다.")
+                    ProfileImageUploadState.Error(e.toUserMessage("이미지 업로드에 실패했습니다."))
             }
         }
     }
@@ -182,7 +182,7 @@ class OnbViewModel : ViewModel() {
             }
         }.onFailure { e ->
             _bookSearchState.value =
-                BookSearchState.Error(e.message ?: "네트워크 오류가 발생했습니다.")
+                BookSearchState.Error(e.toUserMessage("네트워크 오류가 발생했습니다."))
         }
     }
 
@@ -259,8 +259,23 @@ class OnbViewModel : ViewModel() {
                 }
             }.onFailure { e ->
                 _onboardingSubmitState.value =
-                    OnboardingSubmitState.Error(e.message ?: "네트워크 오류가 발생했습니다.")
+                    OnboardingSubmitState.Error(e.toUserMessage("네트워크 오류가 발생했습니다."))
             }
         }
     }
+}
+
+/**
+ * 예외 메시지를 토스트에 표시하기 적합한 형태로 변환합니다.
+ *
+ * 내부에서 throw한 오류 메시지는 "한글 설명: 기술 상세" 형태이므로
+ * 콜론(:) 앞의 한글 부분만 추출해서 보여줍니다.
+ * - "S3 업로드 실패: HTTP 403" → "S3 업로드 실패"
+ * - "Unable to resolve host ...": 한글 없음 → fallback 반환
+ */
+private fun Throwable.toUserMessage(fallback: String): String {
+    val raw = message ?: return fallback
+    val beforeColon = raw.substringBefore(":").trim()
+    // 콜론 앞에 한글이 있을 때만 분할 결과 사용 (영문 기술 메시지는 fallback 처리)
+    return if (beforeColon.any { it in '\uAC00'..'\uD7A3' }) beforeColon else fallback
 }
