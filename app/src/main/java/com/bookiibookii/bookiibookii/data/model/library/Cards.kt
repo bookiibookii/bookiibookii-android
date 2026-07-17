@@ -63,8 +63,9 @@ data class MemberCardCreateResponseDTO(
     val cardId: Int,
     val cardType: String,
     val page: Int,
-    val memo: String,
-    val quotation: String,
+    // 카드 종류에 따라 둘 중 하나만 채워짐
+    val memo: String?,
+    val quotation: String?,
     val cardImage: MemberCardImageResponseDTO?,
     val createdAt: String,
     val creatorName: String,

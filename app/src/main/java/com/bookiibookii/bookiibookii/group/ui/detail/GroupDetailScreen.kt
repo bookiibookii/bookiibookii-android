@@ -379,7 +379,7 @@ private fun GroupDetailContent(
                 body = detail.groupComment.orEmpty(),
                 // 택배 교환은 주소 정보를 노출하지 않음. 직접 교환만 희망 장소 표시
                 exchangePlaceName = if (detail.tradeType == "DELIVERY") null else detail.address,
-                exchangePlaceAddress = detail.detailAddress.takeIf { it.isNotBlank() },
+                exchangePlaceAddress = detail.detailAddress?.takeIf { it.isNotBlank() },
                 exchangePlaceLabel = "교환 희망 장소",
             )
             GroupDetailDescriptionCard(

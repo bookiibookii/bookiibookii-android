@@ -19,7 +19,7 @@ data class BookResult(
     val hostId: Int,
     val hostProfileImageUrl: String?,
     val hostNickName: String?,
-    val startDate: String,
+    val startDate: String?,      // 아직 시작 안 한 그룹은 null
     val endDate: String?,
     val genre: String? = null,
     val completedAt: String? = null,
