@@ -247,7 +247,7 @@ internal fun ProfileShareCardContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            ProfilePlaceholder(imageUrl = imageUrl, modifier = Modifier.size(92.dp), imageLoader = imageLoader)
+            ProfilePlaceholder(imageUrl = imageUrl, modifier = Modifier.size(72.dp), imageLoader = imageLoader)
             Text(
                 text = name,
                 style = BookiiBookiiTheme.typography.semibold20,

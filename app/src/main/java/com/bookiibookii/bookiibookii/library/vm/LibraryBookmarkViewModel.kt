@@ -30,7 +30,7 @@ class LibraryBookmarkViewModel : ViewModel() {
                 val response = RetrofitClient.libApi().getBookmarkedCards()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val cards = (response.body()?.result ?: emptyList()).map { it.toReadingCard() }
-                    originalCards = cards.sortedByDescending { it.date }
+                    originalCards = cards.sortedByDescending { it.cardId }
                     _uiState.update { it.copy(isLoading = false, cards = originalCards) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, errorMessage = "북마크를 불러오지 못했습니다.") }
@@ -43,9 +43,9 @@ class LibraryBookmarkViewModel : ViewModel() {
 
     fun sortByLatest(isLatest: Boolean) {
         val sorted = if (isLatest) {
-            originalCards.sortedByDescending { it.date }
+            originalCards.sortedByDescending { it.cardId }
         } else {
-            originalCards.sortedBy { it.date }
+            originalCards.sortedBy { it.cardId }
         }
         _uiState.update { it.copy(cards = sorted) }
     }

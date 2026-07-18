@@ -177,7 +177,7 @@ internal fun MottoSection(
                 ) {
                     if (editText.isEmpty()) {
                         Text(
-                            text = "나만의 인용구를 입력하세요...",
+                            text = "한 줄 소개를 입력하세요...",
                             style = BookiiBookiiTheme.typography.regular15,
                             color = BookiiBookiiTheme.colors.grey500,
                         )
@@ -233,7 +233,7 @@ internal fun MottoSection(
                     modifier = Modifier.size(28.dp),
                 )
                 if (motto.isBlank()) {
-                    Text(text = "한 줄 소개가 없어요", style = BookiiBookiiTheme.typography.regular15, color = BookiiBookiiTheme.colors.grey400)
+                    Text(text = "한 줄 소개를 입력하세요...", style = BookiiBookiiTheme.typography.regular15, color = BookiiBookiiTheme.colors.grey400)
                 } else {
                     Text(text = motto, style = BookiiBookiiTheme.typography.medium15, color = BookiiBookiiTheme.colors.grey700)
                 }

@@ -320,14 +320,14 @@ private fun captureProfileCardBitmap(
 }
 
 
-private fun compositeProfileCardFullBleed(card: Bitmap): Bitmap {
+private fun compositeProfileCardFullBleed(card: Bitmap, isDark: Boolean): Bitmap {
     val storyW = 1080
     val storyH = 1920
     val out = Bitmap.createBitmap(storyW, storyH, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(out)
-    canvas.drawColor(android.graphics.Color.WHITE)
+    canvas.drawColor(if (isDark) 0xFF242322.toInt() else android.graphics.Color.WHITE)
 
-    val scale = maxOf(storyW.toFloat() / card.width, storyH.toFloat() / card.height)
+    val scale = minOf(storyW.toFloat() / card.width, storyH.toFloat() / card.height)
     val drawW = (card.width * scale).toInt()
     val drawH = (card.height * scale).toInt()
     val dx = ((storyW - drawW) / 2).toFloat()
@@ -353,7 +353,7 @@ private fun shareProfileToInstagram(
             try {
                 val imagesDir = File(context.cacheDir, "images").apply { mkdirs() }
 
-                val fullBleedBitmap = compositeProfileCardFullBleed(bitmap)
+                val fullBleedBitmap = compositeProfileCardFullBleed(bitmap, isDark)
                 bitmap.recycle()
                 val backgroundFile = File(imagesDir, "profile_bg_${System.currentTimeMillis()}.png")
                 backgroundFile.outputStream().use { fullBleedBitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -384,7 +384,7 @@ private fun saveProfileCardToGallery(
             return@captureProfileCardBitmap
         }
         coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val finalBitmap = compositeProfileCardFullBleed(bitmap)
+            val finalBitmap = compositeProfileCardFullBleed(bitmap, isDark)
             bitmap.recycle()
             val saved = saveProfileBitmapToGallery(context, finalBitmap)
             finalBitmap.recycle()

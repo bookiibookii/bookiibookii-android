@@ -31,8 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bookiibookii.bookiibookii.R
@@ -102,6 +107,7 @@ fun LibraryScreen(
     onBookClick: (LibraryBook) -> Unit = {},
     onMatchingStatusClick: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
     var viewType by remember { mutableStateOf(LibraryViewType.GRID) }
     val allBooks = readingBooks + doneBooks
@@ -196,12 +202,26 @@ fun LibraryScreen(
             }
 
             Text(
-                text = "도서 DB 제공 : 알라딘 인터넷서점(www.aladin.co.kr)",
+                text = buildAnnotatedString {
+                    append("도서 DB 제공 : 알라딘 인터넷서점(")
+                    withStyle(SpanStyle(color = Color(0xFF1E88E5), textDecoration = TextDecoration.Underline)) {
+                        append("www.aladin.co.kr")
+                    }
+                    append(")")
+                },
                 style = BookiiBookiiTheme.typography.regular14,
                 color = BookiiBookiiTheme.colors.grey700,
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
-                    .padding(top = 40.dp),
+                    .padding(top = 40.dp)
+                    .clickable {
+                        context.startActivity(
+                            android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse("https://www.aladin.co.kr"),
+                            )
+                        )
+                    },
             )
 
             Spacer(modifier = Modifier.height(192.dp))
