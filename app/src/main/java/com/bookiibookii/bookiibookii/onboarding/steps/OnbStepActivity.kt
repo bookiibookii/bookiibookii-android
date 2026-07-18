@@ -17,6 +17,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
+import com.bookiibookii.bookiibookii.common.ComRetryBus
+import com.bookiibookii.bookiibookii.error.ErrorActivity
+import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.onboarding.steps.model.OnboardingSubmitState
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.OnbStepScreen
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -33,6 +36,7 @@ class OnbStepActivity : AppCompatActivity() {
     private val cameraPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) launchCamera()
+            else showCustomToast("카메라 권한이 필요합니다. 설정에서 허용해주세요.", false)
         }
 
     private val takePictureLauncher =
@@ -61,6 +65,10 @@ class OnbStepActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        lifecycleScope.launch {
+            ComRetryBus.retryFlow.collect { vm.submitOnboarding() }
+        }
+
         vm.onboardingSubmitState.observe(this) { state ->
             when (state) {
                 is OnboardingSubmitState.Success -> {
@@ -75,8 +83,11 @@ class OnbStepActivity : AppCompatActivity() {
                     )
                     finish()
                 }
-                is OnboardingSubmitState.Error -> {
-                    showCustomToast(state.message, false)
+                is OnboardingSubmitState.NetworkError -> {
+                    startActivity(ErrorActivity.newIntent(this, ErrorType.NETWORK))
+                }
+                is OnboardingSubmitState.SystemError -> {
+                    startActivity(ErrorActivity.newIntent(this, ErrorType.SYSTEM))
                 }
                 else -> Unit
             }

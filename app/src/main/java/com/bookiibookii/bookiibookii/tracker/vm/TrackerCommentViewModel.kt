@@ -43,7 +43,7 @@ class TrackerCommentViewModel(
 
     // -- 데이터 로드 --
 
-    private fun load() {
+    fun load() {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             try {

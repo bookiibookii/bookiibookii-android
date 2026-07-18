@@ -1,7 +1,6 @@
 package com.bookiibookii.bookiibookii.onboarding.steps.ui.content
 
 import android.net.Uri
-import com.bookiibookii.bookiibookii.common.showCustomToast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,6 +55,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
+import com.bookiibookii.bookiibookii.error.ErrorActivity
+import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.onboarding.steps.OnbViewModel
 import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.OnbState
@@ -96,12 +98,12 @@ fun OnbStep1Content(
     var showPhotoSheet by remember { mutableStateOf(false) }
     var showBirthdateSheet by remember { mutableStateOf(false) }
 
-    LaunchedEffect(imageUploadState) {
-        when (val s = imageUploadState) {
-            is ProfileImageUploadState.Success ->
-                context.showCustomToast("프로필 이미지가 업로드되었습니다.", true)
-            is ProfileImageUploadState.Error ->
-                context.showCustomToast(s.message, false)
+    LaunchedEffect(nicknameCheckState) {
+        when (nicknameCheckState) {
+            is NicknameCheckState.NetworkError ->
+                context.startActivity(ErrorActivity.newIntent(context, ErrorType.NETWORK))
+            is NicknameCheckState.SystemError ->
+                context.startActivity(ErrorActivity.newIntent(context, ErrorType.SYSTEM))
             else -> {}
         }
     }
@@ -123,6 +125,7 @@ fun OnbStep1Content(
 
         ProfileImageSection(
             profileUri = state.profileUri,
+            isUploading = imageUploadState is ProfileImageUploadState.Loading,
             onEditClick = { showPhotoSheet = true },
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
@@ -174,6 +177,7 @@ fun OnbStep1Content(
 @Composable
 internal fun ProfileImageSection(
     profileUri: Uri?,
+    isUploading: Boolean = false,
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -196,13 +200,28 @@ internal fun ProfileImageSection(
                 contentScale = ContentScale.FillBounds
             )
         }
+        if (isUploading) {
+            Box(
+                modifier = Modifier
+                    .size(128.dp)
+                    .clip(SquircleShape)
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = colors.white,
+                    modifier = Modifier.size(36.dp),
+                    strokeWidth = 3.dp
+                )
+            }
+        }
         Box(
             modifier = Modifier
                 .size(32.dp)
                 .align(Alignment.BottomEnd)
                 .clip(CircleShape)
                 .background(colors.grey600)
-                .clickable(onClick = onEditClick)
+                .clickable(enabled = !isUploading, onClick = onEditClick)
                 .padding(6.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -230,7 +249,6 @@ private fun NicknameSection(
     val (validationText, validationColor) = when (nicknameState) {
         is NicknameCheckState.Available -> nicknameState.message to colors.uiPointGreen200
         is NicknameCheckState.Duplicated -> nicknameState.message to colors.uiPointRed
-        is NicknameCheckState.Error -> nicknameState.message to colors.uiPointRed
         else -> null to colors.uiPointRed
     }
 
@@ -395,6 +413,16 @@ private fun ProfileImageSectionPreview() {
     }
 }
 
+@Preview(showBackground = true, name = "ProfileImageSection - 업로드 중")
+@Composable
+private fun ProfileImageSectionUploadingPreview() {
+    BookiiPreview {
+        Box(modifier = Modifier.padding(16.dp)) {
+            ProfileImageSection(profileUri = null, isUploading = true, onEditClick = {})
+        }
+    }
+}
+
 @Preview(showBackground = true, name = "NicknameSection - 기본")
 @Composable
 private fun NicknameSectionIdlePreview() {
@@ -458,6 +486,7 @@ private fun NicknameSectionDuplicatedPreview() {
         }
     }
 }
+
 
 @Preview(showBackground = true, name = "GenderSection - 미선택")
 @Composable

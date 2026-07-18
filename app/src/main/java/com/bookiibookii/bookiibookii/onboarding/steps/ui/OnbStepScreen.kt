@@ -3,7 +3,9 @@ package com.bookiibookii.bookiibookii.onboarding.steps.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,15 +22,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -45,6 +53,8 @@ import com.bookiibookii.bookiibookii.onboarding.steps.ui.content.OnbStep3Content
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.content.OnbStep4Content
 import com.bookiibookii.bookiibookii.ui.component.FooterButton
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
+
+private data class ToastInfo(val message: String, val isSuccess: Boolean)
 
 // ─── Stateful 진입점 ──────────────────────────────────────────────────────────
 
@@ -63,6 +73,18 @@ fun OnbStepScreen(
     var currentStep by remember { mutableIntStateOf(1) }
     BackHandler(enabled = currentStep > 1) { currentStep-- }
 
+    var toastInfo by remember { mutableStateOf<ToastInfo?>(null) }
+    LaunchedEffect(imageUploadState) {
+        val info = when (val s = imageUploadState) {
+            is ProfileImageUploadState.Success -> ToastInfo("프로필 이미지가 업로드되었습니다.", true)
+            is ProfileImageUploadState.Error -> ToastInfo(s.message, false)
+            else -> null
+        } ?: return@LaunchedEffect
+        toastInfo = info
+        delay(2000L)
+        toastInfo = null
+    }
+
     val isNextEnabled = when (currentStep) {
         1 -> nicknameCheckState is NicknameCheckState.Available &&
                 state.gender != null &&
@@ -77,6 +99,7 @@ fun OnbStepScreen(
     OnbStepLayout(
         currentStep = currentStep,
         isNextEnabled = isNextEnabled,
+        toastInfo = toastInfo,
         onBack = { if (currentStep == 1) onBack() else currentStep-- },
         onNext = { if (currentStep < 4) currentStep++ else onFinish() },
     ) {
@@ -102,37 +125,92 @@ fun OnbStepScreen(
 private fun OnbStepLayout(
     currentStep: Int,
     isNextEnabled: Boolean,
+    toastInfo: ToastInfo? = null,
     onBack: () -> Unit,
     onNext: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     val colors = BookiiBookiiTheme.colors
-    Column(
+    val maxToastWidth = LocalConfiguration.current.screenWidthDp.dp - 48.dp
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.uiBg)
     ) {
-        OnbStepHeader(onBack = onBack)
+        Column(modifier = Modifier.fillMaxSize()) {
+            OnbStepHeader(onBack = onBack)
 
-        OnbStepProgressBar(
-            currentStep = currentStep,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(top = 16.dp)
-        )
+            OnbStepProgressBar(
+                currentStep = currentStep,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp)
+            )
 
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            content()
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                content()
+            }
+
+            FooterButton(
+                text = if (currentStep < 4) "다음" else "완료",
+                enabled = isNextEnabled,
+                onClick = onNext,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+            )
         }
 
-        FooterButton(
-            text = if (currentStep < 4) "다음" else "완료",
-            enabled = isNextEnabled,
-            onClick = onNext,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp)
+        toastInfo?.let {
+            InAppToastBanner(
+                message = it.message,
+                isSuccess = it.isSuccess,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .widthIn(max = maxToastWidth)
+                    .padding(bottom = 112.dp)
+            )
+        }
+    }
+}
+
+// ─── In-app 토스트 배너 ────────────────────────────────────────────────────────
+
+@Composable
+private fun InAppToastBanner(
+    message: String,
+    isSuccess: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val colors = BookiiBookiiTheme.colors
+    val typography = BookiiBookiiTheme.typography
+    val shape = BookiiBookiiTheme.shape.round16
+    Row(
+        modifier = modifier
+            .shadow(
+                elevation = 8.dp,
+                shape = shape,
+                ambientColor = Color.Black.copy(alpha = 0.10f),
+                spotColor = Color.Black.copy(alpha = 0.10f),
+            )
+            .clip(shape)
+            .background(colors.white)
+            .border(1.dp, colors.grey200, shape)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            painter = painterResource(if (isSuccess) R.drawable.ic_check else R.drawable.ic_info),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(24.dp)
+        )
+        Text(
+            text = message,
+            style = typography.regular14,
+            color = colors.grey700,
         )
     }
 }

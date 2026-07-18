@@ -87,14 +87,12 @@ class OnbViewModel : ViewModel() {
                 RetrofitClient.userApi().postNicknameValidation(nickname)
             }.onSuccess { response ->
                 if (!response.isSuccessful) {
-                    _nicknameCheckState.value =
-                        NicknameCheckState.Error("서버 오류가 발생했습니다. (${response.code()})")
+                    _nicknameCheckState.value = NicknameCheckState.SystemError
                     return@onSuccess
                 }
                 val body = response.body()
                 if (body?.isSuccess != true || body.result == null) {
-                    _nicknameCheckState.value =
-                        NicknameCheckState.Error(body?.message ?: "요청에 실패했습니다.")
+                    _nicknameCheckState.value = NicknameCheckState.SystemError
                     return@onSuccess
                 }
                 val result = body.result
@@ -102,11 +100,10 @@ class OnbViewModel : ViewModel() {
                 _nicknameCheckState.value = when (result.code) {
                     "SUCCESS" -> NicknameCheckState.Available(msg)
                     "DUPLICATE", "BAD_WORD" -> NicknameCheckState.Duplicated(msg)
-                    else -> NicknameCheckState.Error(msg)
+                    else -> NicknameCheckState.SystemError
                 }
-            }.onFailure { e ->
-                _nicknameCheckState.value =
-                    NicknameCheckState.Error(e.toUserMessage("네트워크 오류가 발생했습니다."))
+            }.onFailure {
+                _nicknameCheckState.value = NicknameCheckState.NetworkError
             }
         }
     }
@@ -254,12 +251,10 @@ class OnbViewModel : ViewModel() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _onboardingSubmitState.value = OnboardingSubmitState.Success
                 } else {
-                    _onboardingSubmitState.value =
-                        OnboardingSubmitState.Error(response.body()?.message ?: "오류가 발생했습니다.")
+                    _onboardingSubmitState.value = OnboardingSubmitState.SystemError
                 }
-            }.onFailure { e ->
-                _onboardingSubmitState.value =
-                    OnboardingSubmitState.Error(e.toUserMessage("네트워크 오류가 발생했습니다."))
+            }.onFailure {
+                _onboardingSubmitState.value = OnboardingSubmitState.NetworkError
             }
         }
     }

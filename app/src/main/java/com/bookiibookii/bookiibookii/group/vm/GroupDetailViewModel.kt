@@ -41,7 +41,7 @@ class GroupDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         load()
     }
 
-    private fun load() {
+    fun load() {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             try {

@@ -5,5 +5,6 @@ sealed class NicknameCheckState {
     data object Loading : NicknameCheckState()
     data class Available(val message: String) : NicknameCheckState()
     data class Duplicated(val message: String) : NicknameCheckState()
-    data class Error(val message: String) : NicknameCheckState()
+    data object NetworkError : NicknameCheckState()
+    data object SystemError : NicknameCheckState()
 }
