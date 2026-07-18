@@ -7,9 +7,10 @@ data class GroupDetailResponse(
     val groupStatus: String,        // RECRUITING, MATCHED
     val isHost: Boolean,            // 조회자가 방장인지 여부
     val tradeType: String,          // DIRECT, DELIVERY
-    val placeName: String,
-    val address: String,
-    val detailAddress: String,      // 상세주소 (없으면 "")
+    // 장소 미지정 그룹(택배 교환 등)은 서버가 세 필드 모두 null로 내려줌
+    val placeName: String?,
+    val address: String?,
+    val detailAddress: String?,
 
     // 2. 도서 상세 정보
     val title: String,

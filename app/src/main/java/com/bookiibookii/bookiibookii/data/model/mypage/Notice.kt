@@ -13,7 +13,8 @@ data class NoticeSummary(
     val title: String,
     val summary: String,
     val isRead: Boolean,
-    val authorNickname: String,
+    // 작성자 계정이 없거나 탈퇴한 공지는 null
+    val authorNickname: String?,
     val authorProfileImageUrl: String?,
 )
 
@@ -29,7 +30,7 @@ data class NoticeDetail(
     val title: String,
     val summary: String,
     val content: String,
-    val authorNickname: String,
+    val authorNickname: String?,
     val authorProfileImageUrl: String?,
     val createdAt: String,
     val updatedAt: String,

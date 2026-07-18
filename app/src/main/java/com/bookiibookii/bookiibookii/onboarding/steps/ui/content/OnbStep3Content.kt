@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -83,7 +84,7 @@ private fun RecordMethodItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .heightIn(min = 56.dp)
             .clip(BookiiBookiiTheme.shape.round16)
             .border(1.dp, if (selected) colors.uiMain150 else colors.grey200, BookiiBookiiTheme.shape.round16)
             .background(if (selected) colors.uiMainPale else colors.white)

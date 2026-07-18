@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -316,11 +318,11 @@ private fun GenderSection(selectedGender: String?, onGenderSelected: (String) ->
             Text("*", style = typography.medium16, color = colors.uiMain)
         }
         Row(
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            GenderButton("여성", selectedGender == "FEMALE", { onGenderSelected("FEMALE") }, Modifier.width(120.dp))
-            GenderButton("남성", selectedGender == "MALE", { onGenderSelected("MALE") }, Modifier.width(120.dp))
+            GenderButton("여성", selectedGender == "FEMALE", { onGenderSelected("FEMALE") }, Modifier.weight(1f))
+            GenderButton("남성", selectedGender == "MALE", { onGenderSelected("MALE") }, Modifier.weight(1f))
             GenderButton("선택 안함", selectedGender == "NONE", { onGenderSelected("NONE") }, Modifier.weight(1f))
         }
     }
@@ -332,11 +334,12 @@ private fun GenderButton(text: String, selected: Boolean, onClick: () -> Unit, m
     val typography = BookiiBookiiTheme.typography
     Box(
         modifier = modifier
-            .fillMaxHeight()
+            .defaultMinSize(minHeight = 48.dp)
             .clip(BookiiBookiiTheme.shape.round16)
             .background(if (selected) colors.uiMainPale else colors.white)
             .border(1.dp, if (selected) colors.uiMain150 else colors.grey300, BookiiBookiiTheme.shape.round16)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(text, style = typography.regular15, color = if (selected) colors.uiMain else colors.grey500)

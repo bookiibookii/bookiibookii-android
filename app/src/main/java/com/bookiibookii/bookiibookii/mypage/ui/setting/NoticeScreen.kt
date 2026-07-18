@@ -252,7 +252,7 @@ private fun NoticeItemCard(notice: NoticeSummary, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.size(8.dp))
             Text(
-                text = notice.authorNickname,
+                text = notice.authorNickname.orEmpty(),
                 style = BookiiBookiiTheme.typography.medium14,
                 color = colors.grey800,
             )

@@ -24,8 +24,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.toArgb
+import android.graphics.BlurMaskFilter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,7 +53,7 @@ internal fun RecommendGroupRow(
             state = pagerState,
             pageSize = PageSize.Fixed(334.dp),
             pageSpacing = 12.dp,
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 5.dp),
             // 한 번 스와이프 = 한 장씩(Pager 기본) + 느리고 묵직한 스냅으로 무게감.
             // 더 빠르게/덜 묵직하게 하려면 stiffness를 올리면 됨(StiffnessLow→MediumLow→Medium).
             flingBehavior = PagerDefaults.flingBehavior(
@@ -107,6 +111,21 @@ private fun HomeRecommendGroupCard(
     Column(
         modifier = modifier
             .width(334.dp)
+            .drawBehind {
+                drawIntoCanvas { canvas ->
+                    val paint = Paint()
+                    paint.asFrameworkPaint().apply {
+                        isAntiAlias = true
+                        color = Color(0x0F000000).toArgb()
+                        maskFilter = BlurMaskFilter(5.dp.toPx(), BlurMaskFilter.Blur.NORMAL)
+                    }
+                    canvas.drawRoundRect(
+                        0f, 0f, size.width, size.height,
+                        20.dp.toPx(), 20.dp.toPx(),
+                        paint,
+                    )
+                }
+            }
             .clip(shape)
             .background(colors.white)
             .clickable(onClick = onClick)
