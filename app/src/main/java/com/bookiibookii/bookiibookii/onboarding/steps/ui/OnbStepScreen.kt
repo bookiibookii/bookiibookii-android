@@ -46,6 +46,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.onboarding.steps.OnbViewModel
 import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.OnbState
+import com.bookiibookii.bookiibookii.onboarding.steps.model.OnboardingSubmitState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.ProfileImageUploadState
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.content.OnbStep1Content
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.content.OnbStep2Content
@@ -69,6 +70,7 @@ fun OnbStepScreen(
     val state by vm.state.observeAsState(OnbState())
     val nicknameCheckState by vm.nicknameCheckState.observeAsState(NicknameCheckState.Idle)
     val imageUploadState by vm.imageUploadState.observeAsState(ProfileImageUploadState.Idle)
+    val submitState by vm.onboardingSubmitState.observeAsState(OnboardingSubmitState.Idle)
 
     var currentStep by remember { mutableIntStateOf(1) }
     BackHandler(enabled = currentStep > 1) { currentStep-- }
@@ -83,6 +85,16 @@ fun OnbStepScreen(
         toastInfo = info
         delay(2000L)
         toastInfo = null
+    }
+
+    // 제출 실패 사유를 토스트로 노출 (Success는 Activity가 처리)
+    LaunchedEffect(submitState) {
+        val s = submitState
+        if (s is OnboardingSubmitState.Error) {
+            toastInfo = ToastInfo(s.message, false)
+            delay(2000L)
+            toastInfo = null
+        }
     }
 
     val isNextEnabled = when (currentStep) {

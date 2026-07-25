@@ -122,18 +122,18 @@ private fun BirthdatePickerContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("생년월일", style = typography.semibold20, color = colors.grey900)
-            // 선택값이 오늘 이후면 미래 날짜이므로 완료를 막는다.
+            // 생년월일은 오늘 이전 날짜여야 하므로, 오늘 또는 미래면 완료를 막는다.
             val selYear = 1924 + selectedYearIndex
             val selMonth = selectedMonthIndex + 1
             val selDay = selectedDayIndex + 1
-            val isFuture = selYear > currentYear ||
+            val isTodayOrFuture = selYear > currentYear ||
                     (selYear == currentYear && selMonth > currentMonth) ||
-                    (selYear == currentYear && selMonth == currentMonth && selDay > currentDay)
+                    (selYear == currentYear && selMonth == currentMonth && selDay >= currentDay)
             Text(
                 text = "완료",
                 style = typography.regular20,
-                color = if (isFuture) colors.grey300 else colors.grey500,
-                modifier = if (isFuture) Modifier else Modifier.clickable {
+                color = if (isTodayOrFuture) colors.grey300 else colors.grey500,
+                modifier = if (isTodayOrFuture) Modifier else Modifier.clickable {
                     onDone(selYear, selMonth, selDay)
                 }
             )

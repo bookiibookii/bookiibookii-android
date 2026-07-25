@@ -20,6 +20,7 @@ import com.bookiibookii.bookiibookii.onboarding.steps.model.OnboardingSubmitStat
 import com.bookiibookii.bookiibookii.onboarding.steps.model.RecordMethod
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class OnbViewModel : ViewModel() {
 
@@ -251,10 +252,14 @@ class OnbViewModel : ViewModel() {
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     _onboardingSubmitState.value = OnboardingSubmitState.Success
                 } else {
-                    _onboardingSubmitState.value = OnboardingSubmitState.SystemError
+                    // 실패 응답(주로 400/404) — errorBody에서 사용자용 사유를 추출해 토스트로 노출
+                    val msg = parseSubmitErrorMessage(response.errorBody()?.string())
+                    _onboardingSubmitState.value = OnboardingSubmitState.Error(msg)
                 }
             }.onFailure {
-                _onboardingSubmitState.value = OnboardingSubmitState.NetworkError
+                // 네트워크 예외 → AuthInterceptor가 전역 에러화면을 이미 띄움. fallback 문구만.
+                _onboardingSubmitState.value =
+                    OnboardingSubmitState.Error("네트워크 연결을 확인한 뒤 다시 시도해주세요.")
             }
         }
     }
@@ -273,4 +278,27 @@ private fun Throwable.toUserMessage(fallback: String): String {
     val beforeColon = raw.substringBefore(":").trim()
     // 콜론 앞에 한글이 있을 때만 분할 결과 사용 (영문 기술 메시지는 fallback 처리)
     return if (beforeColon.any { it in '\uAC00'..'\uD7A3' }) beforeColon else fallback
+}
+
+/**
+ * \uC628\uBCF4\uB529 \uC81C\uCD9C \uC2E4\uD328 \uC751\uB2F5 body\uC5D0\uC11C \uC0AC\uC6A9\uC790\uC5D0\uAC8C \uBCF4\uC5EC\uC904 \uC0AC\uC720\uB97C \uCD94\uCD9C\uD569\uB2C8\uB2E4.
+ *
+ * \uC11C\uBC84 \uC751\uB2F5 \uD615\uC2DD(ApiResponse)\uC5D0 \uB530\uB77C \uC0AC\uC720 \uC704\uCE58\uAC00 \uB2E4\uB985\uB2C8\uB2E4.
+ * - \uBE44\uC988\uB2C8\uC2A4 \uC5D0\uB7EC(UserException \uB4F1): \uC0AC\uC720\uAC00 \uCD5C\uC0C1\uC704 "message"\uC5D0 \uB2F4\uAE40
+ *   \uC608) {"isSuccess":false,"code":"USER400_2","message":"\uC774\uBBF8 \uC0AC\uC6A9 \uC911\uC778 \uB2C9\uB124\uC784\uC785\uB2C8\uB2E4.","result":null}
+ * - @Valid \uAC80\uC99D \uC5D0\uB7EC(COMMON400_1): \uCD5C\uC0C1\uC704 "message"\uB294 \uC81C\uB124\uB9AD("\uC798\uBABB\uB41C \uC694\uCCAD\uC785\uB2C8\uB2E4.")\uC774\uACE0
+ *   \uC2E4\uC81C \uD544\uB4DC \uC0AC\uC720\uAC00 "result" \uBC30\uC5F4\uC5D0 \uB2F4\uAE30\uBBC0\uB85C \uC774\uB97C \uC6B0\uC120 \uC0AC\uC6A9
+ *   \uC608) {"isSuccess":false,"code":"COMMON400_1","message":"\uC798\uBABB\uB41C \uC694\uCCAD\uC785\uB2C8\uB2E4.","result":["\uC131\uBCC4\uC740 \uD544\uC218 \uC785\uB825 \uC0AC\uD56D\uC785\uB2C8\uB2E4."]}
+ */
+private fun parseSubmitErrorMessage(errorBody: String?): String {
+    val fallback = "\uC7A0\uC2DC \uD6C4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694."
+    if (errorBody.isNullOrBlank()) return fallback
+    return try {
+        val json = JSONObject(errorBody)
+        val result = json.optJSONArray("result")
+        val fromResult = result?.takeIf { it.length() > 0 }?.optString(0)?.takeIf { it.isNotBlank() }
+        fromResult ?: json.optString("message").takeIf { it.isNotBlank() } ?: fallback
+    } catch (_: Exception) {
+        fallback
+    }
 }
