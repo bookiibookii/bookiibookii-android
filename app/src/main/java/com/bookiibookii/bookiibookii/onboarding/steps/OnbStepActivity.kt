@@ -14,16 +14,11 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
-import com.bookiibookii.bookiibookii.common.ComRetryBus
-import com.bookiibookii.bookiibookii.error.ErrorActivity
-import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.onboarding.steps.model.OnboardingSubmitState
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.OnbStepScreen
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
-import kotlinx.coroutines.launch
 import java.io.File
 
 class OnbStepActivity : AppCompatActivity() {
@@ -65,31 +60,19 @@ class OnbStepActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        lifecycleScope.launch {
-            ComRetryBus.retryFlow.collect { vm.submitOnboarding() }
-        }
-
         vm.onboardingSubmitState.observe(this) { state ->
-            when (state) {
-                is OnboardingSubmitState.Success -> {
-                    TokenManager.saveOnboardingDone(this, true)
-                    vm.state.value?.nickname?.let { TokenManager.saveNickname(this, it) }
-                    startActivity(
-                        Intent(this, MainActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                                    Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        }
-                    )
-                    finish()
-                }
-                is OnboardingSubmitState.NetworkError -> {
-                    startActivity(ErrorActivity.newIntent(this, ErrorType.NETWORK))
-                }
-                is OnboardingSubmitState.SystemError -> {
-                    startActivity(ErrorActivity.newIntent(this, ErrorType.SYSTEM))
-                }
-                else -> Unit
+            // 성공 시에만 화면 전환. 실패(Error)는 OnbStepScreen이 토스트로 사유를 노출.
+            if (state is OnboardingSubmitState.Success) {
+                TokenManager.saveOnboardingDone(this, true)
+                vm.state.value?.nickname?.let { TokenManager.saveNickname(this, it) }
+                startActivity(
+                    Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                Intent.FLAG_ACTIVITY_NEW_TASK or
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                )
+                finish()
             }
         }
 
