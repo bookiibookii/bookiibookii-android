@@ -66,7 +66,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.DateUtils
-import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.group.CommentItem
 import com.bookiibookii.bookiibookii.data.model.group.CommentWriter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle

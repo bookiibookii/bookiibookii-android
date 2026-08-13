@@ -6,22 +6,35 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.FrameLayout
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.lifecycleScope
-import com.bookiibookii.bookiibookii.common.BaseActivity
 import com.bookiibookii.bookiibookii.common.ComRetryBus
-import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.databinding.ActivityMainBinding
 import com.bookiibookii.bookiibookii.group.GroupFragment
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
 import com.bookiibookii.bookiibookii.home.HomeFragment
@@ -35,26 +48,26 @@ import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.tracker.TrackerFragment
 import com.bookiibookii.bookiibookii.tracker.nav.TrackerDestinations
+import com.bookiibookii.bookiibookii.ui.component.BottomNavBar
+import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
-private enum class NavTab { HOME, TRACKER, LIBRARY }
+enum class NavTab { HOME, TRACKER, LIBRARY }
 
+class MainActivity : AppCompatActivity() {
 
-class MainActivity : BaseActivity<ActivityMainBinding>() {
+    private var currentTab by mutableStateOf(NavTab.HOME)
 
-    private var currentTab = NavTab.HOME
+    private lateinit var fragmentContainerView: FragmentContainerView
+    private lateinit var bottomNavView: ComposeView
 
-    // 안드13+ 알림 권한 요청 런처. 거부해도 앱 동작엔 지장 없음(푸시 알림만 안 옴).
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
-    override fun getViewBinding(): ActivityMainBinding {
-        return ActivityMainBinding.inflate(layoutInflater)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         if (!TokenManager.hasAccessToken(this)) {
@@ -73,16 +86,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             return
         }
 
+        setupLayout()
+        hideNavigationBar()
+
         if (savedInstanceState == null) {
-            setBottomNavSelected(NavTab.HOME)
+            currentTab = NavTab.HOME
             replaceFragment(HomeFragment())
         }
 
         lifecycleScope.launch {
             ComRetryBus.retryFlow.collect {
-                // 딥 스택(상세 화면)이 있으면 해당 화면이 직접 retry 처리
                 if (supportFragmentManager.backStackEntryCount > 0) return@collect
-                // 탑레벨 탭이면 새 인스턴스로 교체해 데이터 재로드
                 val fresh = when (currentTab) {
                     NavTab.HOME -> HomeFragment()
                     NavTab.TRACKER -> TrackerFragment()
@@ -92,7 +106,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
         }
 
-        initBottomNav()
         observeFragmentChanges()
         handleNavigationIntent(intent)
         requestNotificationPermissionIfNeeded()
@@ -103,7 +116,74 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    // 안드13(TIRAMISU)+ 에서만 런타임 요청 필요
+    private fun setupLayout() {
+        fragmentContainerView = FragmentContainerView(this).apply {
+            id = R.id.fragmentContainer
+        }
+
+        bottomNavView = ComposeView(this).apply {
+            id = R.id.bottomNav
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                BookiiBookiiTheme {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.BottomCenter,
+                    ) {
+                        BottomNavBar(
+                            groupSelected = currentTab == NavTab.HOME,
+                            trackerSelected = currentTab == NavTab.TRACKER,
+                            librarySelected = currentTab == NavTab.LIBRARY,
+                            onGroupClick = { selectTab(NavTab.HOME, HomeFragment()) },
+                            onTrackerClick = { selectTab(NavTab.TRACKER, TrackerFragment()) },
+                            onLibraryClick = { selectTab(NavTab.LIBRARY, LibraryFragment()) },
+                            modifier = Modifier
+                                .navigationBarsPadding()
+                                .padding(bottom = 20.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        val root = FrameLayout(this).apply {
+            addView(
+                fragmentContainerView,
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                )
+            )
+            addView(
+                bottomNavView,
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                )
+            )
+        }
+
+        setContentView(root)
+
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            fragmentContainerView.updatePadding(top = systemBars.top)
+            insets
+        }
+    }
+
+    private fun hideNavigationBar() {
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.hide(WindowInsetsCompat.Type.navigationBars())
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideNavigationBar()
+    }
+
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         if (ContextCompat.checkSelfPermission(
@@ -114,7 +194,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
-    // 탑레벨 Fragment(홈·트래커·서재 메인)일 때만 BottomNav 표시
     private fun observeFragmentChanges() {
         supportFragmentManager.addOnBackStackChangedListener {
             refreshBottomNavVisibility()
@@ -122,15 +201,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    // fragmentContainer의 현재 프래그먼트가 top-level(홈·트래커·서재)일 때만 BottomNav 표시.
-    // 백스택 복귀 시 콜백 순서(onDetach vs onBackStackChanged)와 무관하게 항상 올바른 값으로
-    // 맞추기 위해 Base*Fragment.onDetach 에서도 이 메서드를 호출한다.
     fun refreshBottomNavVisibility() {
         val current = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
         val isTopLevel = current is HomeFragment
-                || current is TrackerFragment
-                || (current is LibraryFragment && current.isAtMainRoute())
-        binding.bottomNav.root.visibility = if (isTopLevel) View.VISIBLE else View.GONE
+            || current is TrackerFragment
+            || (current is LibraryFragment && current.isAtMainRoute())
+        bottomNavView.visibility = if (isTopLevel) View.VISIBLE else View.GONE
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -139,16 +215,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         handleNavigationIntent(intent)
     }
 
-    // 알림(FCM 포그라운드/백그라운드, 인앱) 클릭 → 화면 이동.
-    // FCM data 또는 OS 가 주입한 extra를 라우터가 한 번에 파싱한다.
     private fun handleNavigationIntent(intent: Intent?) {
         val redirect = NotificationRedirectRouter.fromIntent(intent) ?: return
         dispatchNotificationRedirect(redirect)
-        // 회전·onNewIntent 재설정 시 중복 처리 방지
         intent?.removeExtra(NotificationRedirectRouter.KEY_REDIRECT_TYPE)
     }
 
-    // redirectType(백엔드 RedirectType) → 목적지. groupId 없으면 해당 분기는 무시.
     fun dispatchNotificationRedirect(redirect: NotificationRedirect) {
         val groupId = redirect.groupId
         when (redirect.redirectType) {
@@ -175,8 +247,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    // 알림 → 독서카드 상세. groupId로 카드 목록을 받아 cardId와 매칭,
-    // 같은 책 카드만 추려(일반 진입과 동일 범위) 라이브러리 상세화면을 그대로 재사용해 연다.
     private fun openCardDetail(groupId: Long, cardId: Long) {
         lifecycleScope.launch {
             val allCards = try {
@@ -209,32 +279,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    // 상세류 화면 진입 — 바텀네비 숨기고 백스택에 쌓아 뒤로가기 시 이전 화면 복귀
     private fun pushDeepFragment(fragment: Fragment) {
-        binding.bottomNav.root.visibility = View.GONE
+        bottomNavView.visibility = View.GONE
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .addToBackStack(null)
             .commit()
     }
 
-    private fun initBottomNav() {
-        binding.bottomNav.itemGroup.setOnClickListener {
-            selectTab(NavTab.HOME, HomeFragment())
-        }
-        binding.bottomNav.itemTracker.setOnClickListener {
-            selectTab(NavTab.TRACKER, TrackerFragment())
-        }
-        binding.bottomNav.itemLibrary.setOnClickListener {
-            selectTab(NavTab.LIBRARY, LibraryFragment())
-        }
-    }
-
     private fun selectTab(tab: NavTab, fragment: Fragment) {
         currentTab = tab
-        // 탑레벨 탭으로 전환 — 트래커 상세 등에서 GONE된 바텀네비를 다시 표시
-        binding.bottomNav.root.visibility = View.VISIBLE
-        setBottomNavSelected(tab)
+        bottomNavView.visibility = View.VISIBLE
         replaceFragment(fragment)
     }
 
@@ -242,22 +297,19 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         selectTab(NavTab.HOME, HomeFragment())
     }
 
-    // 홈 탭의 "내 그룹"(매칭 현황) 탭으로 바로 이동 (서재 메인의 빈 상태 CTA 등에서 사용)
     fun moveToHomeMyGroupsTab() {
         selectTab(NavTab.HOME, HomeFragment.newInstanceAtMyGroups())
     }
 
-    // 서재 탭으로 이동 (바텀네비 '서재'를 누른 것과 동일)
-    // 서재 탭으로 이동
     fun moveToLibraryTab() {
         selectTab(NavTab.LIBRARY, LibraryFragment())
     }
 
     private fun updateBottomNavSelection(current: Fragment?) {
         when (current) {
-            is HomeFragment -> setBottomNavSelected(NavTab.HOME)
-            is TrackerFragment -> setBottomNavSelected(NavTab.TRACKER)
-            is LibraryFragment -> setBottomNavSelected(NavTab.LIBRARY)
+            is HomeFragment -> currentTab = NavTab.HOME
+            is TrackerFragment -> currentTab = NavTab.TRACKER
+            is LibraryFragment -> currentTab = NavTab.LIBRARY
         }
     }
 
@@ -266,36 +318,4 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             .replace(R.id.fragmentContainer, fragment)
             .commit()
     }
-
-    private fun setBottomNavSelected(tab: NavTab) {
-        fun setItem(item: LinearLayout, tv: TextView, selected: Boolean) {
-            item.background = if (selected)
-                ContextCompat.getDrawable(this, R.drawable.bg_grey100_circle)
-            else null
-            tv.visibility = if (selected) View.GONE else View.VISIBLE
-        }
-
-        setItem(binding.bottomNav.itemGroup, binding.bottomNav.tvGroup, tab == NavTab.HOME)
-        setItem(binding.bottomNav.itemTracker, binding.bottomNav.tvTracker, tab == NavTab.TRACKER)
-        setItem(binding.bottomNav.itemLibrary, binding.bottomNav.tvLibrary, tab == NavTab.LIBRARY)
-    }
-
-    override fun setupWindowInsets(view: View) {
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
-
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-            binding.fragmentContainer.updatePadding(
-                top = systemBars.top
-            )
-
-            val params = binding.bottomNav.root.layoutParams as ConstraintLayout.LayoutParams
-            val bottomNavMargin = (20 * resources.displayMetrics.density).toInt()
-            params.bottomMargin = systemBars.bottom + bottomNavMargin
-            binding.bottomNav.root.layoutParams = params
-
-            insets
-        }
-    }
-
 }
