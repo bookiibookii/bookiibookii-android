@@ -2,7 +2,11 @@ package com.bookiibookii.bookiibookii.ui.component
 
 import android.app.Activity
 import android.content.Context
-import android.widget.FrameLayout
+import android.content.ContextWrapper
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.WindowManager
+import androidx.activity.ComponentDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,13 +27,28 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
+private const val TOAST_DURATION_MS = 2000L
+
+/**
+ * Compose Dialog 안에서는 LocalContext가 ContextThemeWrapper라 Activity로 바로 캐스팅되지 않는다.
+ * baseContext를 타고 올라가면서 실제 Activity를 찾는다.
+ */
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
 fun Context.showCustomToast(message: String, isSuccess: Boolean) {
-    val activity = this as? Activity ?: return
-    val decorView = activity.window.decorView as? FrameLayout ?: return
+    val activity = findActivity() ?: return
+    if (activity.isFinishing || activity.isDestroyed) return
 
     val composeView = ComposeView(activity).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
@@ -48,17 +67,45 @@ fun Context.showCustomToast(message: String, isSuccess: Boolean) {
         }
     }
 
-    decorView.addView(
-        composeView,
-        FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT,
+    // 액티비티 decorView에 붙이면 Dialog/BottomSheet(별도 윈도우) 뒤에 가려진다.
+    // 나중에 추가된 윈도우가 위에 쌓이니까 토스트도 자체 윈도우로 띄운다.
+    val dialog = ComponentDialog(activity, R.style.Theme_Bookii_Toast)
+    dialog.setContentView(composeView)
+    dialog.setCancelable(false)
+    dialog.window?.apply {
+        setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
         )
-    )
+        clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        // 포커스랑 터치를 안 가져가야 아래 다이얼로그의 입력이랑 IME가 그대로 유지된다.
+        addFlags(
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+        )
+        setWindowAnimations(0)
+        WindowCompat.setDecorFitsSystemWindows(this, false)
+    }
+
+    // 액티비티가 먼저 죽으면 WindowLeaked가 뜨니까 같이 정리한다.
+    val lifecycleOwner = activity as? LifecycleOwner
+    val observer = object : DefaultLifecycleObserver {
+        override fun onDestroy(owner: LifecycleOwner) {
+            runCatching { dialog.dismiss() }
+        }
+    }
+    lifecycleOwner?.lifecycle?.addObserver(observer)
+    dialog.setOnDismissListener { lifecycleOwner?.lifecycle?.removeObserver(observer) }
+
+    dialog.show()
 
     composeView.postDelayed({
-        decorView.removeView(composeView)
-    }, 2000L)
+        if (dialog.isShowing && !activity.isFinishing && !activity.isDestroyed) {
+            runCatching { dialog.dismiss() }
+        }
+    }, TOAST_DURATION_MS)
 }
 
 @Composable
