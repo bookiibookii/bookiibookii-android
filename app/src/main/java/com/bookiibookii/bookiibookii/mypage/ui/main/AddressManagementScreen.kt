@@ -66,7 +66,7 @@ import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddress
 import com.bookiibookii.bookiibookii.data.model.location.ExchangeAddressRequest
 import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
-import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 
 @Composable
 fun AddressManagementRoute(

@@ -18,7 +18,7 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.common.openExternalUrl
 import com.bookiibookii.bookiibookii.common.openReportChannel
-import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 import com.bookiibookii.bookiibookii.error.ErrorActivity
 import com.bookiibookii.bookiibookii.error.model.ErrorType
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.deliveryTrackingUrl
