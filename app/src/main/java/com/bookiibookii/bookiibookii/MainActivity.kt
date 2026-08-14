@@ -3,8 +3,10 @@ package com.bookiibookii.bookiibookii
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
@@ -28,6 +30,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
@@ -61,6 +64,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var fragmentContainerView: FragmentContainerView
     private lateinit var bottomNavView: ComposeView
+    private lateinit var statusBarBackground: View
 
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -146,6 +150,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // 엣지투엣지라 상태바가 투명해서 windowBackground(@color/ui_bg)가 비친다.
+        // 흰색 View를 상태바 높이만큼 덮어준다.
+        statusBarBackground = View(this).apply {
+            setBackgroundColor(Color.WHITE)
+        }
+
         val root = FrameLayout(this).apply {
             addView(
                 fragmentContainerView,
@@ -161,6 +171,14 @@ class MainActivity : AppCompatActivity() {
                     FrameLayout.LayoutParams.MATCH_PARENT,
                 )
             )
+            addView(
+                statusBarBackground,
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    Gravity.TOP,
+                )
+            )
         }
 
         setContentView(root)
@@ -168,6 +186,7 @@ class MainActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             fragmentContainerView.updatePadding(top = systemBars.top)
+            statusBarBackground.updateLayoutParams { height = systemBars.top }
             insets
         }
     }
