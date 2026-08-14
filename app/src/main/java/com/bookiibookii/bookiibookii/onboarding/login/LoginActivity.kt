@@ -44,7 +44,8 @@ class LoginActivity : AppCompatActivity() {
 
         AuthInterceptor.unlockRouting()
 
-        if (routeAutoLoginIfPossible()) return
+        // 자동 로그인이면 상태만 완료 화면으로 켜 두고, 화면 구성은 아래 setContent 하나로 끝낸다.
+        routeAutoLoginIfPossible()
 
         setContent {
             BookiiBookiiTheme {
@@ -70,12 +71,11 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun routeAutoLoginIfPossible(): Boolean {
-        if (!TokenManager.hasAccessToken(this)) return false
-        if (!TokenManager.isOnboardingDone(this)) return false
+    private fun routeAutoLoginIfPossible() {
+        if (!TokenManager.hasAccessToken(this)) return
+        if (!TokenManager.isOnboardingDone(this)) return
 
         showLoginCompleteThenRoute()
-        return true
     }
 
     private fun signInWithGoogle() {
@@ -188,20 +188,9 @@ class LoginActivity : AppCompatActivity() {
         if (isNavigating) return
         isNavigating = true
 
+        // setContent를 다시 부르면 onResume에서 상태를 되돌려도 화면이 안 바뀐다. 상태만 갱신한다.
         isLoading = true
-
-        setContent {
-            BookiiBookiiTheme {
-                LoginScreen(
-                    isLoading = true,
-                    showLoginComplete = true,
-                    onKakaoClick = {},
-                    onGoogleClick = {},
-                    onTermsClick = {},
-                    onPrivacyClick = {},
-                )
-            }
-        }
+        showLoginComplete = true
 
         window.decorView.postDelayed({
             if (TokenManager.isOnboardingDone(this)) moveToMain() else moveToOnboarding()

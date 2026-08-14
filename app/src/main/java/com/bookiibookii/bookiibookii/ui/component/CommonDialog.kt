@@ -35,8 +35,10 @@ fun CommonDialog(
     confirmBtnText: String,
     confirmBtnColor: Color,
     onConfirmClick: () -> Unit,
+    // X 버튼, 취소 버튼, 바깥 터치까지 전부 이 콜백 하나로 닫는다.
+    // 기본값을 주면 닫을 수 없는 다이얼로그가 만들어지니까 필수로 받는다.
+    onDismiss: () -> Unit,
     subtitle: String = "",
-    onDismiss: () -> Unit = {},
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Column(
