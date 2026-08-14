@@ -7,7 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 import androidx.activity.compose.setContent
 import androidx.core.content.FileProvider
 import androidx.activity.result.PickVisualMediaRequest

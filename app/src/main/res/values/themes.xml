@@ -13,6 +13,16 @@
         <item name="android:windowBackground">@color/ui_main</item>
     </style>
 
+    <!-- 토스트 전용 테마: 전면 투명 + 딤/애니메이션 없음 (다이얼로그 위에 뜨도록 별도 윈도우로 띄운다) -->
+    <style name="Theme.Bookii.Toast" parent="Theme.BookiiBookii">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
     <!-- bottomSheet 배경 어두워짐 제거 -->
     <style name="Theme.Bookii.BottomSheet.NoDim"
         parent="Theme.Material3.Light.BottomSheetDialog">

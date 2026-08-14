@@ -89,7 +89,7 @@ import com.bookiibookii.bookiibookii.ui.theme.MaruBuri
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.bookiibookii.bookiibookii.common.showCustomToast
+import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 import java.util.UUID
 
 private data class Reaction(

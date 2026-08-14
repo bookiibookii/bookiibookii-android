@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.common
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 
 // 부키부키 신고/문의 카카오 채널
 private const val KAKAO_REPORT_CHANNEL_URL = "https://pf.kakao.com/_cIxlxjX"
