@@ -77,8 +77,6 @@ android {
     }
     buildFeatures {
         buildConfig = true
-        dataBinding = true
-        viewBinding = true
         compose = true
     }
 }
@@ -89,7 +87,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -111,17 +108,7 @@ dependencies {
     // chip
     implementation("com.google.android.material:material:1.13.0")
 
-    //glide
-    implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("androidx.fragment:fragment-ktx:1.8.9")
-
-    implementation("com.vanniktech:android-image-cropper:4.5.0")
-
-    //안드로이드 표준 SwipeRefreshLayout
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-
-
-    implementation("com.google.android.flexbox:flexbox:3.0.0")
 
     // 2. OkHttp (통신 로그 확인용)
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
@@ -138,8 +125,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.analytics)
-
-    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
     implementation("io.coil-kt:coil:2.6.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
