@@ -45,9 +45,6 @@
             android:name=".onboarding.steps.OnbStepActivity"
             android:exported="false" />
         <activity
-            android:name=".common.BaseActivity"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
             android:exported="true">
             <intent-filter>
