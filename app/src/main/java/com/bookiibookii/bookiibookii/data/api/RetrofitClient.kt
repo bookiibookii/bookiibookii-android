@@ -24,8 +24,13 @@ object RetrofitClient {
         synchronized(this) {
             if (initialized) return
 
+            // 릴리즈 빌드에서는 토큰 등 민감정보가 로그에 남지 않도록 비활성화
             val loggingInterceptor = HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                level = if (BuildConfig.DEBUG) {
+                    HttpLoggingInterceptor.Level.BODY
+                } else {
+                    HttpLoggingInterceptor.Level.NONE
+                }
             }
 
             val authedClient = OkHttpClient.Builder()
