@@ -21,9 +21,9 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 // 일부 응답(예: 베스트셀러)이 coversum/cover 저해상도로 내려와도 cover500으로 올려 표시.
 // 경로 마지막 세그먼트(파일명) 바로 앞의 cover/coversum/cover{n} 만 교체.
 // TODO: 백엔드에서 수정하면 이거 삭제
-private val ALADIN_COVER_SIZE = Regex("""/(coversum|cover\d+|cover)/(?=[^/]+$)""")
+internal val ALADIN_COVER_SIZE = Regex("""/(coversum|cover\d+|cover)/(?=[^/]+$)""")
 
-private fun String.toAladinCover(size: String): String =
+internal fun String.toAladinCover(size: String): String =
     if (contains("image.aladin.co.kr")) replace(ALADIN_COVER_SIZE, "/$size/") else this
 
 // 책 표지 영역. 사이즈는 호출처에서 modifier로 지정
