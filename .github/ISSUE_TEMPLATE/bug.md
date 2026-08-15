@@ -2,7 +2,7 @@
 name: 오류 수정
 about: 버그/오류 설명 및 수정
 title: "[DEBUG] "
-labels: "\U0001F577️ BUG"
+labels: "🐛 bug"
 assignees: ''
 ---
 
