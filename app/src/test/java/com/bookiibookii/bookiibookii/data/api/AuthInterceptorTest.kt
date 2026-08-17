@@ -175,4 +175,29 @@ class AuthInterceptorTest {
             body.contains("\"refreshToken\":\"R2\""),
         )
     }
+
+    // --- 버그 2: 라우팅 쿨다운이 토큰 삭제까지 삼킴 ---
+    // routeLogout이 3초 쿨다운에 걸리면 화면 이동뿐 아니라 TokenManager.clear도 스킵되어
+    // 로그아웃 사유가 발생했는데 토큰이 살아남는다. clear는 쿨다운과 무관해야 한다.
+    @Test fun `로그아웃 사유 발생 시 쿨다운과 무관하게 토큰은 항상 클리어`() {
+        // 리프레시가 400 → INVALID_TOKEN → 로그아웃 경로
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(400).setBody("""{"isSuccess":false}""") },
+            apiResponses = ArrayDeque(
+                listOf(
+                    MockResponse().setResponseCode(401),
+                    MockResponse().setResponseCode(401),
+                )
+            ),
+        )
+        runCatching { call() } // 1차: 로그아웃 + clear
+        assertTrue("1차 로그아웃에서 토큰이 클리어되어야 함", store.cleared)
+
+        // 저장소를 되살려 "쿨다운(3초) 내 두 번째 로그아웃 사유" 상황 재현
+        store.cleared = false
+        store.access = "A1"
+        store.refresh = "R1"
+        runCatching { call() } // 2차: 쿨다운에 걸려도 clear는 되어야 함
+        assertTrue("쿨다운 중에도 토큰은 클리어되어야 함", store.cleared)
+    }
 }

@@ -97,7 +97,7 @@ class AuthInterceptor(
                 if (isAuthFailure(err)) {
                     // 인증 토큰이 깨졌거나(형식 오류), AccessToken이 없다는 서버 판단이면 즉시 로그아웃
                     response.close()
-                    router.routeLogout()
+                    logout()
                     throw IOException("Auth failed with $code")
                 }
             }
@@ -122,7 +122,7 @@ class AuthInterceptor(
         if (path == "/api/auth/refresh") {
             Log.e("AUTH_INT", "[401] refresh endpoint got 401 -> routeLogout")
             response.close()
-            router.routeLogout()
+            logout()
             throw IOException("Unauthorized on refresh endpoint")
         }
 
@@ -131,7 +131,7 @@ class AuthInterceptor(
         // 무효화된 옛 토큰으로 2차 리프레시를 시도해 정상 세션이 로그아웃된다.
         if (tokenStore.getRefreshToken().isNullOrEmpty()) {
             response.close()
-            router.routeLogout()
+            logout()
             throw IOException("Missing refresh token")
         }
 
@@ -167,7 +167,7 @@ class AuthInterceptor(
             }
 
             RefreshOutcome.INVALID_TOKEN -> {
-                router.routeLogout()
+                logout()
                 throw IOException("Invalid refresh token (refresh 400/401)")
             }
 
@@ -257,6 +257,13 @@ class AuthInterceptor(
         }
 
         return outcome
+    }
+
+    // 토큰 삭제는 라우팅 쿨다운과 무관하게 항상 수행한다.
+    // 라우터에 맡기면 쿨다운에 걸린 두 번째 로그아웃 사유에서 토큰이 살아남는다.
+    private fun logout() {
+        tokenStore.clear()
+        router.routeLogout()
     }
 
     private fun peekErrorBody(response: Response, maxBytes: Long = 1024 * 1024): String {

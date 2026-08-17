@@ -43,8 +43,6 @@ class ActivityAuthRouter(context: Context) : AuthRouter {
             return
         }
 
-        TokenManager.clear(appContext)
-
         val intent = Intent(appContext, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
