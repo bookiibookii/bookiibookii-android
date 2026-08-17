@@ -131,9 +131,7 @@ class GroupCommentViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         }
         if (content.isEmpty() || s.submitting) return
 
-        // secret은 대댓글일 때만 가능. 일반 댓글이면 false 강제
-        val isReply = s.replyTargetId != null
-        val secret = isReply && s.draftSecret
+        val secret = s.draftSecret
 
         viewModelScope.launch {
             _state.update { it.copy(submitting = true) }

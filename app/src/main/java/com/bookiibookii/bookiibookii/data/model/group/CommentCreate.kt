@@ -3,7 +3,7 @@ package com.bookiibookii.bookiibookii.data.model.group
 data class CommentCreateRequest(
     val content: String,
     val parentId: Long?,
-    val secret: Boolean = false,    // 대댓글일 때만 true
+    val secret: Boolean = false,
 )
 
 data class CommentCreateResponse(
