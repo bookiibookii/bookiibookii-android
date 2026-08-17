@@ -190,7 +190,11 @@ class AuthInterceptor(
             if (isRefreshing) {
                 Log.d("AUTH_INT", "[WAIT] already refreshing, wait for completion")
                 while (isRefreshing) {
-                    try { refreshLock.wait() } catch (_: InterruptedException) {}
+                    try {
+                        refreshLock.wait()
+                    } catch (_: InterruptedException) {
+                        Thread.currentThread().interrupt() // 인터럽트 플래그 복원
+                    }
                 }
                 val shared = lastRefreshOutcome ?: RefreshOutcome.SYSTEM_ERROR
                 Log.d("AUTH_INT", "[WAIT_DONE] sharedOutcome=$shared")

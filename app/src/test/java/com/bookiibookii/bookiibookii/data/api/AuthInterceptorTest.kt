@@ -200,4 +200,64 @@ class AuthInterceptorTest {
         runCatching { call() } // 2차: 쿨다운에 걸려도 clear는 되어야 함
         assertTrue("쿨다운 중에도 토큰은 클리어되어야 함", store.cleared)
     }
+
+    // --- 나머지 경로 계약 테스트: 현재 동작 고정 ---
+
+    @Test fun `리프레시 400이면 로그아웃 라우팅 + IOException`() {
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(400).setBody("{}") },
+            apiResponses = ArrayDeque(listOf(MockResponse().setResponseCode(401))),
+        )
+        var thrown = false
+        try { call() } catch (_: java.io.IOException) { thrown = true }
+        assertTrue(thrown)
+        assertEquals(1, router.logouts.get())
+        assertTrue(store.cleared)
+    }
+
+    @Test fun `400 응답 body의 code가 AUTH로 시작하면 즉시 로그아웃`() {
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(500) },
+            apiResponses = ArrayDeque(
+                listOf(MockResponse().setResponseCode(400).setBody("""{"code":"AUTH4001","message":"만료"}"""))
+            ),
+        )
+        var thrown = false
+        try { call() } catch (_: java.io.IOException) { thrown = true }
+        assertTrue(thrown)
+        assertEquals(1, router.logouts.get())
+        assertTrue(store.cleared)
+    }
+
+    @Test fun `400인데 body가 JSON이 아니면 응답 그대로 통과`() {
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(500) },
+            apiResponses = ArrayDeque(listOf(MockResponse().setResponseCode(400).setBody("<html>err</html>"))),
+        )
+        assertEquals(400, call().code)
+        assertEquals(0, router.logouts.get())
+    }
+
+    @Test fun `500이면 SYSTEM 에러 라우팅 후 응답 반환`() {
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(500) },
+            apiResponses = ArrayDeque(listOf(MockResponse().setResponseCode(503).setBody("{}"))),
+        )
+        assertEquals(503, call().code)
+        assertEquals(listOf(ErrorType.SYSTEM), router.comErrors)
+    }
+
+    @Test fun `리프레시 토큰이 없으면 리프레시 시도 없이 로그아웃`() {
+        store.refresh = null
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(200) },
+            apiResponses = ArrayDeque(listOf(MockResponse().setResponseCode(401))),
+        )
+        var thrown = false
+        try { call() } catch (_: java.io.IOException) { thrown = true }
+        assertTrue(thrown)
+        assertEquals(0, refreshRequests.size)
+        assertEquals(1, router.logouts.get())
+        assertTrue(store.cleared)
+    }
 }
