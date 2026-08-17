@@ -1,13 +1,9 @@
 package com.bookiibookii.bookiibookii.data.api
 
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import com.bookiibookii.bookiibookii.data.model.auth.TokenRefreshRequest
-import com.bookiibookii.bookiibookii.error.ErrorActivity
 import com.bookiibookii.bookiibookii.error.model.ErrorType
-import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
-import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -16,7 +12,12 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.atomic.AtomicLong
 
-class AuthInterceptor(private val context: Context) : Interceptor {
+class AuthInterceptor(
+    context: Context,
+    private val tokenStore: AuthTokenStore = TokenManagerStore(context.applicationContext),
+    private val refreshApi: () -> AuthApi = { RetrofitClient.authApiNoAuth() },
+    private val router: AuthRouter = ActivityAuthRouter(context.applicationContext),
+) : Interceptor {
 
     private enum class RefreshOutcome { SUCCESS, INVALID_TOKEN, NETWORK_ERROR, SYSTEM_ERROR }
 
@@ -28,7 +29,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             lastRouteAt.set(0L)
         }
 
-        private fun tryClaimRoute(): Boolean {
+        internal fun tryClaimRoute(): Boolean {
             val now = System.currentTimeMillis()
             val last = lastRouteAt.get()
             if (now - last < ROUTE_COOLDOWN_MS) return false
@@ -50,8 +51,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         val originalMethod = originalRequest.method
         Log.d("AUTH_INT", "[ENTER] $originalMethod $originalUrl")
 
-        val appContext = context.applicationContext
-        val accessToken = TokenManager.getAccessToken(appContext)
+        val accessToken = tokenStore.getAccessToken()
 
         val authedRequest = if (accessToken.isNullOrEmpty()) {
             originalRequest
@@ -67,7 +67,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             if (chain.call().isCanceled()) {
                 throw e
             } else {
-                routeComError(appContext, ErrorType.NETWORK)
+                router.routeComError(ErrorType.NETWORK)
                 throw e
             }
         }
@@ -97,7 +97,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                 if (isAuthFailure(err)) {
                     // 인증 토큰이 깨졌거나(형식 오류), AccessToken이 없다는 서버 판단이면 즉시 로그아웃
                     response.close()
-                    routeLogout(appContext)
+                    router.routeLogout()
                     throw IOException("Auth failed with $code")
                 }
             }
@@ -108,7 +108,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             }
 
             if (code >= 500) {
-                routeComError(appContext, ErrorType.SYSTEM)
+                router.routeComError(ErrorType.SYSTEM)
             }
 
             return response
@@ -122,26 +122,27 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         if (path == "/api/auth/refresh") {
             Log.e("AUTH_INT", "[401] refresh endpoint got 401 -> routeLogout")
             response.close()
-            routeLogout(appContext)
+            router.routeLogout()
             throw IOException("Unauthorized on refresh endpoint")
         }
 
-        val refreshToken = TokenManager.getRefreshToken(appContext)
-
-        if (refreshToken.isNullOrEmpty()) {
+        // 존재 여부만 사전 확인. 실제 리프레시에 쓸 토큰은 락 획득 후 재읽기 —
+        // 여기서 캡처한 값을 그대로 쓰면 다른 스레드의 리프레시(토큰 회전) 직후
+        // 무효화된 옛 토큰으로 2차 리프레시를 시도해 정상 세션이 로그아웃된다.
+        if (tokenStore.getRefreshToken().isNullOrEmpty()) {
             response.close()
-            routeLogout(appContext)
+            router.routeLogout()
             throw IOException("Missing refresh token")
         }
 
         // 401 원본 응답은 반드시 닫기
         response.close()
 
-        val outcome: RefreshOutcome = waitOrRefreshToken(appContext, refreshToken)
+        val outcome: RefreshOutcome = waitOrRefreshToken()
 
         return when (outcome) {
             RefreshOutcome.SUCCESS -> {
-                val newAccessToken = TokenManager.getAccessToken(appContext)
+                val newAccessToken = tokenStore.getAccessToken()
 
                 val retryRequest = if (newAccessToken.isNullOrEmpty()) {
                     originalRequest
@@ -159,33 +160,30 @@ class AuthInterceptor(private val context: Context) : Interceptor {
                     if (chain.call().isCanceled()) {
                         throw e
                     } else {
-                        routeComError(appContext, ErrorType.NETWORK)
+                        router.routeComError(ErrorType.NETWORK)
                         throw e
                     }
                 }
             }
 
             RefreshOutcome.INVALID_TOKEN -> {
-                routeLogout(appContext)
+                router.routeLogout()
                 throw IOException("Invalid refresh token (refresh 400/401)")
             }
 
             RefreshOutcome.NETWORK_ERROR -> {
-                routeComError(appContext, ErrorType.NETWORK)
+                router.routeComError(ErrorType.NETWORK)
                 throw IOException("Network error during token refresh")
             }
 
             RefreshOutcome.SYSTEM_ERROR -> {
-                routeComError(appContext, ErrorType.SYSTEM)
+                router.routeComError(ErrorType.SYSTEM)
                 throw IOException("System error during token refresh")
             }
         }
     }
 
-    private fun waitOrRefreshToken(
-        context: Context,
-        refreshToken: String
-    ): RefreshOutcome {
+    private fun waitOrRefreshToken(): RefreshOutcome {
 
         // 이미 다른 요청이 refresh 중이면 끝날 때까지 기다리고 "그 결과"를 그대로 사용
         synchronized(refreshLock) {
@@ -206,15 +204,22 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             try {
                 Log.d("AUTH_INT", "[REFRESH] call refresh api (noAuth client)")
 
-                val currentAccessToken = TokenManager.getAccessToken(context)
+                val currentAccessToken = tokenStore.getAccessToken()
                 if (currentAccessToken.isNullOrEmpty()) {
                     Log.e("AUTH_INT", "[REFRESH] accessToken is null/empty -> INVALID_TOKEN")
                     return@runBlocking RefreshOutcome.INVALID_TOKEN
                 }
 
-                val refreshRes = RetrofitClient.authApiNoAuth().postRefresh(
+                // 락 획득 후 재읽기: 대기 중 다른 스레드가 회전시킨 최신 토큰을 사용
+                val currentRefreshToken = tokenStore.getRefreshToken()
+                if (currentRefreshToken.isNullOrEmpty()) {
+                    Log.e("AUTH_INT", "[REFRESH] refreshToken is null/empty -> INVALID_TOKEN")
+                    return@runBlocking RefreshOutcome.INVALID_TOKEN
+                }
+
+                val refreshRes = refreshApi().postRefresh(
                     authorization = "Bearer $currentAccessToken",
-                    request = TokenRefreshRequest(refreshToken)
+                    request = TokenRefreshRequest(currentRefreshToken)
                 )
 
                 if (refreshRes.isSuccessful && refreshRes.body()?.isSuccess == true) {
@@ -222,8 +227,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 
                     Log.d("TOKEN_REFRESH", "새 AccessToken 발급 성공")
 
-                    TokenManager.saveTokens(
-                        context,
+                    tokenStore.saveTokens(
                         result.accessToken,
                         result.refreshToken,
                         result.userId
@@ -253,39 +257,6 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         }
 
         return outcome
-    }
-
-    private fun routeLogout(context: Context) {
-        Log.e("AUTH_ROUTE", "[LOGOUT] routeLogout called")
-
-        if (!tryClaimRoute()) {
-            Log.w("AUTH_ROUTE", "[SKIP] already routing in progress")
-            return
-        }
-
-        TokenManager.clear(context)
-
-        val intent = Intent(context, LoginActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            context.startActivity(intent)
-        }
-    }
-
-    private fun routeComError(context: Context, type: ErrorType) {
-        Log.e("AUTH_ROUTE", "[COM_ERROR] type=$type called")
-
-        if (!tryClaimRoute()) return
-
-        val intent = ErrorActivity.newIntent(context, type).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            context.startActivity(intent)
-        }
     }
 
     private fun peekErrorBody(response: Response, maxBytes: Long = 1024 * 1024): String {
