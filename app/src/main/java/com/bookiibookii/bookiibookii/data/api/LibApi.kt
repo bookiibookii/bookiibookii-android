@@ -50,9 +50,10 @@ interface LibApi {
 
     // ── Cards ──────────────────────────────────────────────────────────────────
 
-    @GET("api/member-books/group/{groupId}/cards")
-    suspend fun getGroupCards(
-        @Path("groupId") groupId: Int
+    // memberBookId 기준으로 같은 그룹·같은 책의 카드를 조회 (교환 후 상대방 카드 포함)
+    @GET("api/member-books/{memberBookId}/cards")
+    suspend fun getMemberBookCards(
+        @Path("memberBookId") memberBookId: Int
     ): Response<ApiResponse<MemberCardListResponseDTO>>
 
     @GET("api/member-books/cards/detail/{cardId}")

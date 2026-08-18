@@ -30,6 +30,27 @@ class NotificationRedirectRouterTest {
         assertNull(r!!.groupId)
     }
 
+    @Test fun `FCM String memberBookId는 Long 변환`() {
+        val r = NotificationRedirectRouter.fromPayload(
+            mapOf("redirectType" to "BOOK_CARD_DETAIL", "memberBookId" to "34", "cardId" to "56")
+        )
+        assertEquals(34L, r!!.memberBookId)
+    }
+
+    @Test fun `인앱 Number memberBookId도 Long 변환`() {
+        val r = NotificationRedirectRouter.fromPayload(
+            mapOf("redirectType" to "BOOK_CARD_DETAIL", "memberBookId" to 34.0)
+        )
+        assertEquals(34L, r!!.memberBookId)
+    }
+
+    @Test fun `memberBookId 없으면 null - 구버전 알림 payload`() {
+        val r = NotificationRedirectRouter.fromPayload(
+            mapOf("redirectType" to "BOOK_CARD_DETAIL", "groupId" to "1", "cardId" to "56")
+        )
+        assertNull(r!!.memberBookId)
+    }
+
     @Test fun `title blank면 null로 정규화`() {
         val r = NotificationRedirectRouter.fromPayload(mapOf("redirectType" to "GROUP", "title" to " "))
         assertNull(r!!.title)

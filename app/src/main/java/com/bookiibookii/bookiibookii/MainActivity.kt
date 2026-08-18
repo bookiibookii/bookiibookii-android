@@ -258,18 +258,21 @@ class MainActivity : AppCompatActivity() {
                 pushDeepFragment(TrackerFragment.newInstance(TrackerDestinations.comment(it, redirect.title.orEmpty())))
             }
             "BOOK_CARD_DETAIL" -> {
+                val memberBookId = redirect.memberBookId
                 val cardId = redirect.cardId
-                if (groupId != null && cardId != null) openCardDetail(groupId, cardId)
+                // memberBookId 없는 구버전 알림은 지원하지 않음
+                if (memberBookId != null && cardId != null) openCardDetail(memberBookId, cardId)
                 else showCustomToast("카드를 불러오지 못했어요", false)
             }
             else -> { /* NOTICE_DETAIL 등 미구현 라우트 */ }
         }
     }
 
-    private fun openCardDetail(groupId: Long, cardId: Long) {
+    private fun openCardDetail(memberBookId: Long, cardId: Long) {
         lifecycleScope.launch {
-            val allCards = try {
-                val resp = RetrofitClient.libApi().getGroupCards(groupId.toInt())
+            // 서버가 memberBookId 기준으로 같은 그룹·같은 책 카드만 반환
+            val bookCards = try {
+                val resp = RetrofitClient.libApi().getMemberBookCards(memberBookId.toInt())
                 if (resp.isSuccessful && resp.body()?.isSuccess == true) {
                     resp.body()?.result?.cards?.map { it.toReadingCard() }
                 } else null
@@ -277,13 +280,11 @@ class MainActivity : AppCompatActivity() {
                 null
             }
 
-            val target = allCards?.firstOrNull { it.cardId == cardId }
-            val sorted = allCards
-                ?.filter { it.bookTitle == target?.bookTitle }
+            val sorted = bookCards
                 ?.sortedWith(compareByDescending<ReadingCard> { it.date }.thenByDescending { it.cardId })
             val index = sorted?.indexOfFirst { it.cardId == cardId } ?: -1
 
-            if (target == null || sorted == null || index < 0) {
+            if (sorted == null || index < 0) {
                 showCustomToast("카드를 불러오지 못했어요", false)
                 return@launch
             }
