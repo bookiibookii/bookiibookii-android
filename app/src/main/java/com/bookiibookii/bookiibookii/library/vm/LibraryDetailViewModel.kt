@@ -34,20 +34,15 @@ class LibraryDetailViewModel : ViewModel() {
     private val _event = MutableSharedFlow<LibraryDetailToastEvent>()
     val event: SharedFlow<LibraryDetailToastEvent> = _event.asSharedFlow()
 
-    fun fetchGroupCards(groupId: Int, bookTitle: String = "") {
+    // 서버가 memberBookId 기준으로 같은 그룹·같은 책 카드만 반환하므로 클라이언트 필터링 불필요
+    fun fetchCards(memberBookId: Int) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                val response = RetrofitClient.libApi().getGroupCards(groupId)
+                val response = RetrofitClient.libApi().getMemberBookCards(memberBookId)
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val result = response.body()?.result
-                    val allCards = result?.cards ?: emptyList()
-                    val bookCards = if (bookTitle.isNotBlank()) {
-                        allCards.filter { it.bookTitle == bookTitle }
-                    } else {
-                        allCards
-                    }
-                    val cards = bookCards.map { it.toReadingCard() }
+                    val cards = (result?.cards ?: emptyList()).map { it.toReadingCard() }
                     _uiState.update { it.copy(isLoading = false, cards = cards) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, errorMessage = "독서카드를 불러오지 못했습니다.") }
