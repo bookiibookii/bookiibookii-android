@@ -55,5 +55,8 @@ local.properties
 # Claude Code
 .claude/
 
+# Claude 작업 산출물 (설계/계획 문서, 로컬 전용)
+docs/superpowers/
+
 # understand-anything 지식 그래프 (로컬 전용)
 .understand-anything/

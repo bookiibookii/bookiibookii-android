@@ -19,8 +19,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.BookiiBookii"
-        android:usesCleartextTraffic="true">
+        android:theme="@style/Theme.BookiiBookii">
         <activity
             android:name=".error.ErrorActivity"
             android:exported="false" />
@@ -45,9 +44,6 @@
         <activity
             android:name=".onboarding.steps.OnbStepActivity"
             android:exported="false" />
-        <activity
-            android:name=".common.BaseActivity"
-            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
             android:exported="true">

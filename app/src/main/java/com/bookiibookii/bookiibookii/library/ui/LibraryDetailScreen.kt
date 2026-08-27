@@ -163,7 +163,7 @@ fun LibraryDetailRoute(
     }
 
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-        if (groupId != -1) viewModel.fetchGroupCards(groupId, bookTitle)
+        if (memberBookId != -1) viewModel.fetchCards(memberBookId)
         if (memberBookId != -1 && bookTitle.isNotBlank()) {
             viewModel.checkRepresentativeStatus(memberBookId, bookTitle)
         }

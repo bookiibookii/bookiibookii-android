@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.data.api
 
+import com.bookiibookii.bookiibookii.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -12,8 +13,13 @@ object KakaoRetrofitClient {
     private const val BASE_URL = "https://dapi.kakao.com/"
 
     private val retrofit: Retrofit by lazy {
+        // 릴리즈 빌드에서는 API 키 등 민감정보가 로그에 남지 않도록 비활성화
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
 
         val client = OkHttpClient.Builder()

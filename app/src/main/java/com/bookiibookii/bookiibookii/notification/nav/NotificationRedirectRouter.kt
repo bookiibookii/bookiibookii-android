@@ -6,6 +6,7 @@ import android.content.Intent
 data class NotificationRedirect(
     val redirectType: String,
     val groupId: Long? = null,
+    val memberBookId: Long? = null,
     val cardId: Long? = null,
     val title: String? = null,
 )
@@ -24,10 +25,11 @@ object NotificationRedirectRouter {
 
     const val KEY_REDIRECT_TYPE = "redirectType"
     const val KEY_GROUP_ID = "groupId"
+    const val KEY_MEMBER_BOOK_ID = "memberBookId"
     const val KEY_CARD_ID = "cardId"
     const val KEY_TITLE = "title"
 
-    private val KEYS = listOf(KEY_REDIRECT_TYPE, KEY_GROUP_ID, KEY_CARD_ID, KEY_TITLE)
+    private val KEYS = listOf(KEY_REDIRECT_TYPE, KEY_GROUP_ID, KEY_MEMBER_BOOK_ID, KEY_CARD_ID, KEY_TITLE)
 
     // 인앱 알림 payload (Map) 용
     fun fromPayload(data: Map<String, *>?): NotificationRedirect? {
@@ -36,6 +38,7 @@ object NotificationRedirectRouter {
         return NotificationRedirect(
             redirectType = redirectType,
             groupId = asLong(data[KEY_GROUP_ID]),
+            memberBookId = asLong(data[KEY_MEMBER_BOOK_ID]),
             cardId = asLong(data[KEY_CARD_ID]),
             title = data[KEY_TITLE]?.toString()?.takeIf { it.isNotBlank() },
         )
