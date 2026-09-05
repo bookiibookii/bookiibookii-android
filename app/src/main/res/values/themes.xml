@@ -23,10 +23,4 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
 
-    <!-- bottomSheet 배경 어두워짐 제거 -->
-    <style name="Theme.Bookii.BottomSheet.NoDim"
-        parent="Theme.Material3.Light.BottomSheetDialog">
-        <item name="android:backgroundDimEnabled">false</item>
-    </style>
-
 </resources>

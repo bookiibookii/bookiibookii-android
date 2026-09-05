@@ -3,7 +3,7 @@ package com.bookiibookii.bookiibookii.common
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-// bindTags는 Material Chip(View) 의존이라 제외 — toKoreanTag만 검증
+// bindTags(Material Chip 의존)는 미사용으로 제거됨 — toKoreanTag만 남는다
 class GroupTagMapperTest {
     @Test fun `알려진 태그 매핑`() = assertEquals("#메모환영", GroupTagMapper.toKoreanTag("MEMO"))
     @Test fun `미지 태그는 # 접두`() = assertEquals("#커스텀", GroupTagMapper.toKoreanTag("커스텀"))

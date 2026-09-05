@@ -98,8 +98,6 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.robolectric)
     testImplementation(libs.okhttp.mockwebserver)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 
     // splash screen
     implementation("androidx.core:core-splashscreen:1.0.1")
@@ -114,9 +112,6 @@ dependencies {
 
     //viewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
-
-    // chip
-    implementation("com.google.android.material:material:1.13.0")
 
     implementation("androidx.fragment:fragment-ktx:1.8.9")
 

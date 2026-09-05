@@ -1,8 +1,5 @@
 package com.bookiibookii.bookiibookii.common
 
-import android.view.View
-import com.google.android.material.chip.Chip
-
 object GroupTagMapper {
     fun toKoreanTag(tag: String): String {
         return when(tag) {
@@ -66,22 +63,6 @@ object GroupTagMapper {
 
             // 매칭되는 게 없을 경우 (사용자가 직접 입력한 커스텀 태그 등)
             else -> if (tag.startsWith("#")) tag else "#$tag"
-        }
-    }
-
-    /**
-     * 칩 리스트와 태그 데이터를 받아서 화면에 표시해주는 헬퍼 함수
-     */
-    fun bindTags(chipList: List<Chip>, tags: List<String>?) {
-        // 1. 모든 칩 초기화 (숨김)
-        chipList.forEach { it.visibility = View.GONE }
-
-        // 2. 데이터가 있는 만큼만 변환하여 표시
-        tags?.forEachIndexed { index, tagCode ->
-            if (index < chipList.size) {
-                chipList[index].text = toKoreanTag(tagCode)
-                chipList[index].visibility = View.VISIBLE
-            }
         }
     }
 }
