@@ -6,7 +6,7 @@ import com.bookiibookii.bookiibookii.library.ui.ReadingCard
 import com.bookiibookii.bookiibookii.library.ui.ReadingCardType
 
 object LibraryDestinations {
-    const val MAIN = "main"
+    const val MAIN = "library_main"
 
     const val DETAIL_ARG_GROUP_ID = "groupId"
     const val DETAIL_ARG_MEMBER_BOOK_ID = "memberBookId"
@@ -23,7 +23,7 @@ object LibraryDestinations {
     const val DETAIL_ARG_PROGRESS_RATE = "progressRate"
     const val DETAIL_ARG_TOTAL_PAGES = "totalPages"
 
-    const val DETAIL_ROUTE = "detail/{$DETAIL_ARG_GROUP_ID}/{$DETAIL_ARG_MEMBER_BOOK_ID}" +
+    const val DETAIL_ROUTE = "library_detail/{$DETAIL_ARG_GROUP_ID}/{$DETAIL_ARG_MEMBER_BOOK_ID}" +
         "?$DETAIL_ARG_GROUP_NAME={$DETAIL_ARG_GROUP_NAME}" +
         "&$DETAIL_ARG_BOOK_TITLE={$DETAIL_ARG_BOOK_TITLE}" +
         "&$DETAIL_ARG_AUTHOR={$DETAIL_ARG_AUTHOR}" +
@@ -52,7 +52,7 @@ object LibraryDestinations {
         isDone: Boolean = false,
         progressRate: Int = 0,
         totalPages: Int = 0,
-    ): String = "detail/$groupId/$memberBookId" +
+    ): String = "library_detail/$groupId/$memberBookId" +
         "?$DETAIL_ARG_GROUP_NAME=${Uri.encode(groupName)}" +
         "&$DETAIL_ARG_BOOK_TITLE=${Uri.encode(bookTitle)}" +
         "&$DETAIL_ARG_AUTHOR=${Uri.encode(author)}" +
