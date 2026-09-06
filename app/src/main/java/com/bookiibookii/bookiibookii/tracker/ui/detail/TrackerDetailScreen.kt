@@ -26,7 +26,7 @@ import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
-import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
+import com.bookiibookii.bookiibookii.ui.nav.LibraryDetailTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
@@ -59,7 +59,7 @@ fun TrackerDetailRoute(
     onNavigatePartnerReview: () -> Unit,
     onNavigateComment: (title: String) -> Unit = {},
     onNavigatePlaceSearch: () -> Unit = {},
-    onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
+    onNavigateLibraryDetail: (LibraryDetailTarget) -> Unit = {},
     onNavigateLibrary: () -> Unit = {},
     selectedPlace: PlaceSearchResult? = null,
     onPlaceConsumed: () -> Unit = {},

@@ -50,7 +50,7 @@ import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.deliveryTrackingUrl
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
-import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
+import com.bookiibookii.bookiibookii.ui.nav.LibraryDetailTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
@@ -456,7 +456,7 @@ fun TrackerMainRoute(
     onNavigatePartnerReview: (groupId: Long) -> Unit,
     onNavigateComment: (groupId: Long, title: String) -> Unit = { _, _ -> },
     onNavigatePlaceSearch: () -> Unit = {},
-    onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
+    onNavigateLibraryDetail: (LibraryDetailTarget) -> Unit = {},
     selectedPlace: PlaceSearchResult? = null,
     onPlaceConsumed: () -> Unit = {},
     viewModel: TrackerMainViewModel = viewModel(),

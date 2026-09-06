@@ -1,10 +1,10 @@
-package com.bookiibookii.bookiibookii.tracker.model
+package com.bookiibookii.bookiibookii.ui.nav
 
 import com.bookiibookii.bookiibookii.data.model.library.BookResult
 
-// 트래커 "독서카드 작성" → LibraryFragment.newInstanceAtDetail 진입에 필요한 책 식별/표시 정보.
-// 트래커는 groupId만 제공, getLibraryBooks로 groupId에 해당하는 memberBookId 등을 해석
-data class ReadingCardTarget(
+// 서재 상세 진입 인자. 트래커·마이페이지가 공유하므로 도메인 중립 위치에 둔다.
+// 필드는 LibraryDestinations.detail(...) 파라미터와 1:1 대응.
+data class LibraryDetailTarget(
     val groupId: Int,
     val memberBookId: Int,
     val groupName: String,
@@ -22,7 +22,7 @@ data class ReadingCardTarget(
 )
 
 // 서재 목록 응답 항목 → 진입 인자. isDone 판정은 서재와 동일
-fun BookResult.toReadingCardTarget() = ReadingCardTarget(
+fun BookResult.toLibraryDetailTarget() = LibraryDetailTarget(
     groupId = groupId,
     memberBookId = memberBookId,
     groupName = groupName,

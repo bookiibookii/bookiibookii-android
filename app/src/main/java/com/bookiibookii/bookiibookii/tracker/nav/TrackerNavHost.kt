@@ -19,7 +19,7 @@ import androidx.navigation.navArgument
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
-import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
+import com.bookiibookii.bookiibookii.ui.nav.LibraryDetailTarget
 import com.bookiibookii.bookiibookii.tracker.ui.comment.TrackerCommentRoute
 import com.bookiibookii.bookiibookii.tracker.ui.detail.TrackerDetailRoute
 import com.bookiibookii.bookiibookii.tracker.ui.main.TrackerMainRoute
@@ -29,7 +29,7 @@ import com.bookiibookii.bookiibookii.tracker.ui.review.TrackerPartnerReviewRoute
 @Composable
 fun TrackerNavHost(
     onCreateGroupClick: () -> Unit,
-    onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
+    onNavigateLibraryDetail: (LibraryDetailTarget) -> Unit = {},
     onNavigateLibrary: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onAlertClick: () -> Unit = {},
