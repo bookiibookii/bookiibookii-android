@@ -1,21 +1,12 @@
 package com.bookiibookii.bookiibookii.library.nav
 
-import android.app.Activity
-import android.view.View
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.bookiibookii.bookiibookii.R
+import androidx.navigation.navigation
+import com.bookiibookii.bookiibookii.home.HomeTab
 import com.bookiibookii.bookiibookii.library.ui.AddCardMode
 import com.bookiibookii.bookiibookii.library.ui.GroupReviewRoute
 import com.bookiibookii.bookiibookii.library.ui.LibraryAddCardRoute
@@ -24,46 +15,22 @@ import com.bookiibookii.bookiibookii.library.ui.LibraryDetailRoute
 import com.bookiibookii.bookiibookii.library.ui.LibraryMainRoute
 import com.bookiibookii.bookiibookii.library.ui.ReadingCardDetailRoute
 import com.bookiibookii.bookiibookii.library.ui.ReviewEditRoute
+import com.bookiibookii.bookiibookii.ui.nav.AppNavigator
+import com.bookiibookii.bookiibookii.ui.nav.Graph
 import com.google.gson.Gson
 
-@Composable
-fun LibraryNavHost(
-    onProfileClick: () -> Unit = {},
-    onExitLibrary: () -> Unit = {},
-    onRouteChanged: (String) -> Unit = {},
-    onMatchingStatusClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
-    startDestination: String = LibraryDestinations.MAIN,
+fun NavGraphBuilder.libraryGraph(
+    navController: NavController,
+    navigator: AppNavigator,
 ) {
-    val navController = rememberNavController()
+    val popOrExit: () -> Unit = navigator::back
 
-    val popOrExit: () -> Unit = {
-        if (!navController.popBackStack()) onExitLibrary()
-    }
-
-    val context = LocalContext.current
-    val currentRoute by navController.currentBackStackEntryAsState()
-    LaunchedEffect(currentRoute) {
-        val route = currentRoute?.destination?.route ?: return@LaunchedEffect
-        val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (route == LibraryDestinations.MAIN) View.VISIBLE else View.GONE
-        onRouteChanged(route)
-    }
-
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier,
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
-        popExitTransition = { ExitTransition.None },
-    ) {
+    navigation(route = Graph.LIBRARY, startDestination = LibraryDestinations.MAIN) {
         composable(LibraryDestinations.MAIN) {
             LibraryMainRoute(
-                onProfileClick = onProfileClick,
+                onProfileClick = { navigator.toProfile() },
                 onBookmarkClick = { navController.navigate(LibraryDestinations.BOOKMARK) },
-                onMatchingStatusClick = onMatchingStatusClick,
+                onMatchingStatusClick = { navigator.toHomeTab(HomeTab.MY_GROUPS) },
                 onBookClick = { book ->
                     navController.navigate(
                         LibraryDestinations.detail(

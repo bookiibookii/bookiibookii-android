@@ -1,73 +1,36 @@
 package com.bookiibookii.bookiibookii.tracker.nav
 
-import android.app.Activity
-import android.view.View
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.bookiibookii.bookiibookii.R
+import androidx.navigation.navigation
 import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.placesearch.ui.PlaceSearchScreen
-import com.bookiibookii.bookiibookii.ui.nav.LibraryDetailTarget
 import com.bookiibookii.bookiibookii.tracker.ui.comment.TrackerCommentRoute
 import com.bookiibookii.bookiibookii.tracker.ui.detail.TrackerDetailRoute
 import com.bookiibookii.bookiibookii.tracker.ui.main.TrackerMainRoute
 import com.bookiibookii.bookiibookii.tracker.ui.review.TrackerBookReviewRoute
 import com.bookiibookii.bookiibookii.tracker.ui.review.TrackerPartnerReviewRoute
+import com.bookiibookii.bookiibookii.ui.nav.AppNavigator
+import com.bookiibookii.bookiibookii.ui.nav.Graph
 
-@Composable
-fun TrackerNavHost(
-    onCreateGroupClick: () -> Unit,
-    onNavigateLibraryDetail: (LibraryDetailTarget) -> Unit = {},
-    onNavigateLibrary: () -> Unit = {},
-    onProfileClick: () -> Unit = {},
-    onAlertClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
-    startDestination: String = TrackerDestinations.MAIN,
-    // 딥링크(알림)로 하위 화면이 시작점이 된 경우, 백버튼이 팝할 게 없으면 트래커 밖으로 나감
-    onExit: () -> Unit = {},
+fun NavGraphBuilder.trackerGraph(
+    navController: NavController,
+    navigator: AppNavigator,
 ) {
-    val navController = rememberNavController()
-
-    // 바텀 네비 표시는 여기서만 제어
-    // 현재 라우트 기준으로만 판단하여 dispose 순서와 무관하게 결정 — MAIN에서만 표시
-    val context = LocalContext.current
-    val currentRoute by navController.currentBackStackEntryAsState()
-    LaunchedEffect(currentRoute) {
-        val route = currentRoute?.destination?.route ?: return@LaunchedEffect
-        val bottomNav = (context as? Activity)?.findViewById<View>(R.id.bottomNav)
-        bottomNav?.visibility = if (route == TrackerDestinations.MAIN) View.VISIBLE else View.GONE
-    }
-
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier,
-        // 화면 전환 애니메이션 제거(기본 크로스페이드 시 이전 화면이 잔상처럼 겹쳐 보이는 현상 방지)
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
-        popExitTransition = { ExitTransition.None },
-    ) {
+    navigation(route = Graph.TRACKER, startDestination = TrackerDestinations.MAIN) {
         composable(TrackerDestinations.MAIN) { entry ->
             val selectedPlace by entry.savedStateHandle
                 .getStateFlow<PlaceSearchResult?>(TrackerDestinations.RESULT_SELECTED_PLACE, null)
                 .collectAsStateWithLifecycle()
             TrackerMainRoute(
-                onProfileClick = onProfileClick,
-                onAlertClick = onAlertClick,
-                onCreateGroupClick = onCreateGroupClick,
+                onProfileClick = { navigator.toProfile() },
+                onAlertClick = navigator::toNotification,
+                onCreateGroupClick = navigator::toGroupEditor,
                 onCardClick = { groupId ->
                     navController.navigate(TrackerDestinations.detail(groupId))
                 },
@@ -83,7 +46,7 @@ fun TrackerNavHost(
                 onNavigatePlaceSearch = {
                     navController.navigate(TrackerDestinations.PLACE_SEARCH)
                 },
-                onNavigateLibraryDetail = onNavigateLibraryDetail,
+                onNavigateLibraryDetail = navigator::toLibraryDetail,
                 selectedPlace = selectedPlace,
                 onPlaceConsumed = {
                     entry.savedStateHandle[TrackerDestinations.RESULT_SELECTED_PLACE] = null
@@ -105,7 +68,7 @@ fun TrackerNavHost(
                 .collectAsStateWithLifecycle()
             TrackerDetailRoute(
                 groupId = groupId,
-                onBackClick = { if (!navController.popBackStack()) onExit() },
+                onBackClick = navigator::back,
                 onNavigateBookReview = { edit ->
                     navController.navigate(TrackerDestinations.bookReview(groupId, edit))
                 },
@@ -118,8 +81,8 @@ fun TrackerNavHost(
                 onNavigatePlaceSearch = {
                     navController.navigate(TrackerDestinations.PLACE_SEARCH)
                 },
-                onNavigateLibraryDetail = onNavigateLibraryDetail,
-                onNavigateLibrary = onNavigateLibrary,
+                onNavigateLibraryDetail = navigator::toLibraryDetail,
+                onNavigateLibrary = navigator::toLibraryTab,
                 selectedPlace = selectedPlace,
                 onPlaceConsumed = {
                     backStackEntry.savedStateHandle[TrackerDestinations.RESULT_SELECTED_PLACE] = null
@@ -144,7 +107,7 @@ fun TrackerNavHost(
                 ?.getBoolean(TrackerDestinations.BOOK_REVIEW_ARG_EDIT) ?: false
             TrackerBookReviewRoute(
                 groupId = groupId,
-                onBackClick = { if (!navController.popBackStack()) onExit() },
+                onBackClick = navigator::back,
                 isEdit = isEdit,
             )
         }
@@ -160,7 +123,7 @@ fun TrackerNavHost(
                 ?.getLong(TrackerDestinations.PARTNER_REVIEW_ARG_GROUP_ID) ?: return@composable
             TrackerPartnerReviewRoute(
                 groupId = groupId,
-                onBackClick = { if (!navController.popBackStack()) onExit() },
+                onBackClick = navigator::back,
                 // 등록 완료 시 상세가 아니라 메인까지 되돌아감
                 onSubmitDone = {
                     navController.popBackStack(TrackerDestinations.MAIN, inclusive = false)
@@ -186,12 +149,12 @@ fun TrackerNavHost(
             TrackerCommentRoute(
                 groupId = groupId,
                 title = title,
-                onBackClick = { if (!navController.popBackStack()) onExit() },
+                onBackClick = navigator::back,
             )
         }
         composable(TrackerDestinations.PLACE_SEARCH) {
             PlaceSearchScreen(
-                onBackClick = { if (!navController.popBackStack()) onExit() },
+                onBackClick = navigator::back,
                 onPlaceClick = { result ->
                     // 선택 결과를 이전 화면(약속 다이얼로그)으로 반환하고 복귀
                     navController.previousBackStackEntry
