@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.common.observeSearchQuery
+import com.bookiibookii.bookiibookii.common.runCatchingCancellable
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.api.S3Uploader
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
@@ -168,7 +169,8 @@ class OnbViewModel : ViewModel() {
 
     private suspend fun performBookSearch(query: String) {
         _bookSearchState.value = BookSearchState.Loading
-        runCatching {
+        // 취소(쿼리 변경·화면 이탈)는 오류가 아니므로 runCatching 대신 사용
+        runCatchingCancellable {
             RetrofitClient.grpApi().searchBooks(query)
         }.onSuccess { response ->
             val body = response.body()

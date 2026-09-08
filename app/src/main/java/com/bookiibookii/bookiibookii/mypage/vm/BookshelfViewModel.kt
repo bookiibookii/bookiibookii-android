@@ -16,6 +16,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.FavoriteBook
 import com.bookiibookii.bookiibookii.data.model.mypage.RepresentativeBook
 import com.bookiibookii.bookiibookii.data.model.mypage.UpdateRepresentativeOrderRequest
 import com.bookiibookii.bookiibookii.common.observeSearchQuery
+import com.bookiibookii.bookiibookii.common.runCatchingCancellable
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -137,7 +138,8 @@ class BookshelfViewModel : ViewModel() {
 
     private suspend fun performBookSearch(query: String) {
         _bookSearchState.value = BookSearchState.Loading
-        runCatching { RetrofitClient.grpApi().searchBooks(query) }
+        // 취소(쿼리 변경·화면 이탈)는 오류가 아니므로 runCatching 대신 사용
+        runCatchingCancellable { RetrofitClient.grpApi().searchBooks(query) }
             .onSuccess { response ->
                 val body = response.body()
                 if (body?.isSuccess == true && body.result != null) {

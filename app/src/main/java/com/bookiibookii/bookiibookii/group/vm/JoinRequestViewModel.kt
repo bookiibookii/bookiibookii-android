@@ -10,6 +10,7 @@ import com.bookiibookii.bookiibookii.data.model.group.GroupApplyRequest
 import com.bookiibookii.bookiibookii.group.model.ApplicationListUiState
 import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.model.GroupApplyUiState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +43,13 @@ class JoinRequestViewModel : ViewModel() {
         observeSearchQuery(
             queryFlow = _bookSearchQuery,
             onBelowMinLength = {
-                _state.update { it.copy(bookSearchResults = emptyList(), bookSearchError = null) }
+                _state.update {
+                    it.copy(
+                        bookSearchResults = emptyList(),
+                        bookSearchError = null,
+                        bookSearchLoading = false,
+                    )
+                }
             },
             onSearch = { performBookSearch(it) },
         )
@@ -110,6 +117,9 @@ class JoinRequestViewModel : ViewModel() {
                     it.copy(bookSearchError = "검색에 실패했어요", bookSearchLoading = false)
                 }
             }
+        } catch (e: CancellationException) {
+            // 쿼리가 바뀌거나 화면을 벗어나 취소된 것 — 오류가 아니므로 그대로 전파
+            throw e
         } catch (e: Exception) {
             _state.update {
                 it.copy(bookSearchError = "네트워크 오류가 발생했어요", bookSearchLoading = false)
