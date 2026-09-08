@@ -57,6 +57,7 @@ local.properties
 
 # Claude 작업 산출물 (설계/계획 문서, 로컬 전용)
 docs/superpowers/
+docs/compose-migration-journal.md
 
 # understand-anything 지식 그래프 (로컬 전용)
 .understand-anything/

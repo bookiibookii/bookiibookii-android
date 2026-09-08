@@ -15,9 +15,9 @@ import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.PartnerDeliveryResponseDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.toMeetingPlace
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
-import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
+import com.bookiibookii.bookiibookii.ui.nav.LibraryDetailTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerDetailUiState
-import com.bookiibookii.bookiibookii.tracker.model.toReadingCardTarget
+import com.bookiibookii.bookiibookii.ui.nav.toLibraryDetailTarget
 import com.bookiibookii.bookiibookii.tracker.model.toUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -230,7 +230,7 @@ class TrackerDetailViewModel(
     }
 
     // "독서카드 작성" — groupId + 현재 읽는 책 제목으로 매칭해 해석
-    fun openReadingCard(groupId: Long, bookTitle: String, onResolved: (ReadingCardTarget) -> Unit) {
+    fun openReadingCard(groupId: Long, bookTitle: String, onResolved: (LibraryDetailTarget) -> Unit) {
         viewModelScope.launch {
             try {
                 val res = RetrofitClient.libApi().getLibraryBooks()
@@ -238,7 +238,7 @@ class TrackerDetailViewModel(
                 if (res.isSuccessful && body?.isSuccess == true) {
                     body.result
                         ?.firstOrNull { it.groupId.toLong() == groupId && it.title == bookTitle }
-                        ?.let { onResolved(it.toReadingCardTarget()) }
+                        ?.let { onResolved(it.toLibraryDetailTarget()) }
                 }
             } catch (_: Exception) {
                 // 실패 시 무시

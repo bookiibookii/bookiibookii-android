@@ -12,7 +12,7 @@ object GroupDestinations {
 
     // keyword는 선택 인자 — 있으면 진입 시 해당 검색어로 검색(홈에서 책 탭)
     const val SEARCH = "search?$ARG_KEYWORD={$ARG_KEYWORD}"
-    const val DETAIL = "detail/{$ARG_GROUP_ID}"
+    const val DETAIL = "group_detail/{$ARG_GROUP_ID}"
     const val EDITOR = "editor?$ARG_GROUP_ID={$ARG_GROUP_ID}"
     const val JOIN_REQUESTS = "joinRequests/{$ARG_GROUP_ID}"
 
@@ -20,7 +20,7 @@ object GroupDestinations {
     fun search(keyword: String? = null) =
         if (keyword.isNullOrBlank()) "search" else "search?$ARG_KEYWORD=${Uri.encode(keyword)}"
 
-    fun detail(groupId: Long) = "detail/$groupId"
+    fun detail(groupId: Long) = "group_detail/$groupId"
 
     // groupId == null -> 생성, not null -> 수정
     fun editor(groupId: String? = null) =

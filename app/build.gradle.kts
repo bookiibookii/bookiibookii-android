@@ -23,8 +23,8 @@ android {
         applicationId = "com.bookiibookii.bookiibookii_d"
         minSdk = 28
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.2"
+        versionCode = 6
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -98,8 +98,6 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.robolectric)
     testImplementation(libs.okhttp.mockwebserver)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 
     // splash screen
     implementation("androidx.core:core-splashscreen:1.0.1")
@@ -114,9 +112,6 @@ dependencies {
 
     //viewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
-
-    // chip
-    implementation("com.google.android.material:material:1.13.0")
 
     implementation("androidx.fragment:fragment-ktx:1.8.9")
 
