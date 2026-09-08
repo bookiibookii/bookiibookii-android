@@ -3,6 +3,8 @@ package com.bookiibookii.bookiibookii.group.vm
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_FAILED
+import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_NETWORK_ERROR
 import com.bookiibookii.bookiibookii.common.observeSearchQuery
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
@@ -17,6 +19,7 @@ import com.bookiibookii.bookiibookii.group.model.GroupEditorUiState
 import com.bookiibookii.bookiibookii.group.model.ReadingStyle
 import com.bookiibookii.bookiibookii.group.model.SelectablePlace
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,17 +50,28 @@ class GroupEditorViewModel(
         data class PrefillFailed(val message: String) : Event()
     }
 
-    // 실시간 도서 검색: 타이핑은 이 쿼리만 갱신하고 디바운스(공통 헬퍼)가 검색을 호출.
-    // ic_search 버튼/키보드 액션은 searchBooks()로 즉시 검색(둘 다 지원)
+    // 실시간 도서 검색: 타이핑은 이 쿼리만 갱신하고 디바운스(공통 헬퍼)가 검색을 호출
     private val _bookSearchQuery = MutableStateFlow("")
+
+    // ic_search 버튼/키보드 액션 — 자동 검색과 같은 트리거로 합쳐 응답 경쟁을 막는다
+    private val _searchNow = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
     init {
         // 수정 모드면 기존 그룹 데이터를 폼에 프리필
         groupId?.let { loadGroupForEdit(it) }
         observeSearchQuery(
             queryFlow = _bookSearchQuery,
+            searchNowFlow = _searchNow,
             onBelowMinLength = {
-                _state.update { it.copy(bookSearchResults = emptyList(), bookSearchError = null) }
+                _state.update {
+                    it.copy(
+                        bookSearchResults = emptyList(),
+                        bookSearchError = null,
+                        bookSearchLoading = false,
+                        bookSearchNoResult = false,
+                        bookSearchDropdownVisible = false,
+                    )
+                }
             },
             onSearch = { performBookSearch(it) },
         )
@@ -112,15 +126,26 @@ class GroupEditorViewModel(
     // 입력 텍스트 변경. 텍스트를 수정하면 기존 선택은 해제.
     // 쿼리를 디바운스 플로우에도 흘려 타이핑 검색이 동작하게 함
     fun onBookSearchQueryChange(value: String) {
-        _state.update { it.copy(bookSearchQuery = value, isbn13 = null) }
+        _state.update { it.copy(bookSearchQuery = value, isbn13 = null, bookSearchNoResult = false) }
         _bookSearchQuery.value = value
     }
 
-    // ic_search 클릭 또는 키보드 검색 액션 — 디바운스 기다리지 않고 즉시 검색
+    // ic_search 클릭 또는 키보드 검색 액션 — 디바운스를 건너뛰고 즉시 검색.
+    // 별도 코루틴이 아니라 공통 트리거로 흘려보내 자동 검색과 함께 관리되게 한다
     fun searchBooks() {
         val q = _state.value.bookSearchQuery.trim()
         if (q.isBlank()) return
-        viewModelScope.launch { performBookSearch(q) }
+        _searchNow.tryEmit(q)
+    }
+
+    // 드롭다운 바깥 탭 / 포커스 아웃 / 뒤로가기 — 결과는 남겨 두고 목록만 접는다
+    fun onDismissBookDropdown() {
+        _state.update { it.copy(bookSearchDropdownVisible = false) }
+    }
+
+    // 검색 필드를 다시 누르면 남아 있는 결과로 목록을 다시 편다
+    fun onBookFieldFocused() {
+        _state.update { it.copy(bookSearchDropdownVisible = it.bookSearchResults.isNotEmpty()) }
     }
 
     private suspend fun performBookSearch(query: String) {
@@ -129,21 +154,32 @@ class GroupEditorViewModel(
         _state.update { it.copy(bookSearchLoading = true, bookSearchError = null) }
         try {
             val res = RetrofitClient.grpApi().searchBooks(query, page = 1, size = 10)
+            // 응답을 기다리는 사이 책이 선택됐으면 늦게 온 결과다 — 선택을 덮지 않도록 버린다
+            if (_state.value.isbn13 != null) {
+                _state.update { it.copy(bookSearchLoading = false) }
+                return
+            }
             if (res.isSuccessful && res.body()?.isSuccess == true) {
+                val books = res.body()?.result?.books.orEmpty()
                 _state.update {
                     it.copy(
-                        bookSearchResults = res.body()?.result?.books.orEmpty(),
+                        bookSearchResults = books,
                         bookSearchLoading = false,
+                        bookSearchNoResult = books.isEmpty(),
+                        bookSearchDropdownVisible = books.isNotEmpty(),
                     )
                 }
             } else {
                 _state.update {
-                    it.copy(bookSearchError = "검색에 실패했어요", bookSearchLoading = false)
+                    it.copy(bookSearchError = BOOK_SEARCH_FAILED, bookSearchLoading = false)
                 }
             }
+        } catch (e: CancellationException) {
+            // 쿼리가 바뀌거나 화면을 벗어나 취소된 것 — 오류가 아니므로 그대로 전파
+            throw e
         } catch (e: Exception) {
             _state.update {
-                it.copy(bookSearchError = "네트워크 오류가 발생했어요", bookSearchLoading = false)
+                it.copy(bookSearchError = BOOK_SEARCH_NETWORK_ERROR, bookSearchLoading = false)
             }
         }
     }
@@ -153,6 +189,11 @@ class GroupEditorViewModel(
             isbn13 = book.isbn13,
             bookSearchQuery = book.title,
             bookSearchResults = emptyList(),
+            bookSearchDropdownVisible = false,
+            bookSearchNoResult = false,
+            // 진행 중이던 검색의 스피너가 선택 후에도 남지 않도록 내린다
+            // (늦게 온 응답은 performBookSearch의 isbn13 가드가 버린다)
+            bookSearchLoading = false,
             // 이전 검색에서 남은 에러 메시지가 책 선택 후 다시 드러나지 않도록 비움
             bookSearchError = null,
         )
@@ -167,6 +208,9 @@ class GroupEditorViewModel(
                 isbn13 = null,
                 bookSearchResults = emptyList(),
                 bookSearchError = null,
+                bookSearchNoResult = false,
+                bookSearchDropdownVisible = false,
+                bookSearchLoading = false,
             )
         }
     }

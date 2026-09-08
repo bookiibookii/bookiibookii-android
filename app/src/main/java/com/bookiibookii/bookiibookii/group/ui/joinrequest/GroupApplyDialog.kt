@@ -45,8 +45,12 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.material3.CircularProgressIndicator
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.focus.onFocusChanged
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.group.ui.component.BookSearchDropdown
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -64,6 +68,11 @@ fun GroupApplyDialog(
     onSearchClick: () -> Unit,
     onClearClick: () -> Unit,
     onBookSelect: (BookItem) -> Unit,
+    showBookDropdown: Boolean = false,
+    onDismissBookDropdown: () -> Unit = {},
+    onBookFieldFocused: () -> Unit = {},
+    bookSearchHint: String? = null,
+    bookSearchLoading: Boolean = false,
     onApplyMsgChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onDismiss: () -> Unit,
@@ -108,7 +117,12 @@ fun GroupApplyDialog(
         BookSearchField(
             query = bookSearchQuery,
             results = bookSearchResults,
+            showDropdown = showBookDropdown,
+            onDismissDropdown = onDismissBookDropdown,
+            onFieldFocused = onBookFieldFocused,
             bookSelected = bookSelected,
+            loading = bookSearchLoading,
+            hint = bookSearchHint,
             onQueryChange = onQueryChange,
             onSearchClick = onSearchClick,
             onClearClick = onClearClick,
@@ -133,7 +147,12 @@ fun GroupApplyDialog(
 private fun BookSearchField(
     query: String,
     results: List<BookItem>,
+    showDropdown: Boolean,
+    onDismissDropdown: () -> Unit,
+    onFieldFocused: () -> Unit,
     bookSelected: Boolean,
+    loading: Boolean,
+    hint: String?,
     onQueryChange: (String) -> Unit,
     onSearchClick: () -> Unit,
     onClearClick: () -> Unit,
@@ -143,10 +162,13 @@ private fun BookSearchField(
     val density = LocalDensity.current
     // 커서 제어를 위해 TextFieldValue 사용. 외부 query 변경(도서 선택/초기화) 시 커서를 맨 앞으로
     // (긴 책 제목도 처음부터 보이도록)
-    var fieldValue by remember { mutableStateOf(TextFieldValue(query)) }
-    LaunchedEffect(query) {
-        if (fieldValue.text != query) {
-            fieldValue = TextFieldValue(text = query, selection = TextRange(0))
+    // 선택 후에는 드롭다운에서 본 것과 같은 표시용 제목(부제 제거)을 보여준다.
+    // 선택 상태에서는 입력이 잠기므로 이 값이 상태로 되돌아갈 일은 없다
+    val displayedQuery = if (bookSelected) query.stripBookSubtitle() else query
+    var fieldValue by remember { mutableStateOf(TextFieldValue(displayedQuery)) }
+    LaunchedEffect(displayedQuery) {
+        if (fieldValue.text != displayedQuery) {
+            fieldValue = TextFieldValue(text = displayedQuery, selection = TextRange(0))
         }
     }
     // 도서 선택 시 검색 필드를 한 번 하이라이트
@@ -160,7 +182,7 @@ private fun BookSearchField(
     val fraction = highlight.value
     val fieldBorderColor = lerp(BookiiBookiiTheme.colors.grey200, BookiiBookiiTheme.colors.uiMain, fraction)
     val fieldBgColor = lerp(BookiiBookiiTheme.colors.white, BookiiBookiiTheme.colors.uiMainPale, fraction)
-    Box(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -177,14 +199,28 @@ private fun BookSearchField(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_search),
-                contentDescription = "검색",
-                tint = BookiiBookiiTheme.colors.grey500,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onSearchClick() },
-            )
+            if (loading) {
+                // 검색 아이콘과 같은 24dp라 자리 이동 없이 바뀐다
+                Box(
+                    modifier = Modifier.size(24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(
+                        color = BookiiBookiiTheme.colors.uiMain,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            } else {
+                Icon(
+                    painter = painterResource(R.drawable.ic_search),
+                    contentDescription = "검색",
+                    tint = BookiiBookiiTheme.colors.grey500,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { onSearchClick() },
+                )
+            }
             BasicTextField(
                 value = fieldValue,
                 onValueChange = { newValue ->
@@ -200,7 +236,10 @@ private fun BookSearchField(
                 cursorBrush = SolidColor(BookiiBookiiTheme.colors.uiMain),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { onSearchClick() }),
-                modifier = Modifier.weight(1f),
+                // 포커스를 잃으면(바깥 탭·키보드 내림) 목록을 접고, 다시 누르면 남은 결과로 편다
+                modifier = Modifier
+                    .weight(1f)
+                    .onFocusChanged { if (it.isFocused) onFieldFocused() else onDismissDropdown() },
                 decorationBox = { innerTextField ->
                     Box {
                         if (fieldValue.text.isEmpty()) {
@@ -223,14 +262,16 @@ private fun BookSearchField(
                     .clickable { onClearClick() },
             )
         }
-        if (results.isNotEmpty()) {
+        if (showDropdown) {
+            // 목록이 열려 있는 동안은 뒤로가기가 다이얼로그를 닫지 않고 목록만 닫는다
+            BackHandler(onBack = onDismissDropdown)
             Popup(
                 alignment = Alignment.TopStart,
                 offset = IntOffset(
                     x = 0,
                     y = fieldSize.height + with(density) { 8.dp.roundToPx() },
                 ),
-                onDismissRequest = {},
+                onDismissRequest = onDismissDropdown,
                 properties = PopupProperties(focusable = false),
             ) {
                 BookSearchDropdown(
@@ -244,6 +285,15 @@ private fun BookSearchField(
                         .heightIn(max = 240.dp),
                 )
             }
+        }
+        // 텍스트만 채우고 목록에서 고르지 않으면 isbn13이 없어 완료 버튼이 계속 비활성이다
+        if (hint != null) {
+            Text(
+                text = hint,
+                style = BookiiBookiiTheme.typography.regular14,
+                color = BookiiBookiiTheme.colors.grey600,
+                modifier = Modifier.padding(top = 8.dp),
+            )
         }
     }
 }
