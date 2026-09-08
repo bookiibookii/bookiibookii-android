@@ -7,7 +7,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -63,8 +66,10 @@ class SearchDebounceTest {
         vm: ViewModel,
         queryFlow: MutableStateFlow<String>,
         recorder: SearchRecorder,
+        searchNowFlow: Flow<String> = emptyFlow(),
     ) = vm.observeSearchQuery(
         queryFlow = queryFlow,
+        searchNowFlow = searchNowFlow,
         onBelowMinLength = recorder::onBelowMinLength,
         onSearch = recorder::onSearch,
     )
@@ -128,6 +133,69 @@ class SearchDebounceTest {
 
         assertEquals(listOf("ab", "abc"), recorder.started)
         assertEquals(listOf("abc"), recorder.completed)
+
+        vm.viewModelScope.cancel()
+    }
+
+    // ── 즉시 검색(검색 버튼 · 키보드 Search) ──────────────────────────────────
+    // 별도 코루틴으로 돌리면 자동검색과 경쟁해 늦게 온 응답이 이긴다.
+    // 같은 트리거로 합쳐 collectLatest가 둘을 함께 관리하게 한다.
+
+    @Test
+    fun `즉시 검색은 디바운스를 기다리지 않고 바로 검색한다`() = runTest(dispatcher) {
+        val vm = FakeViewModel()
+        val query = MutableStateFlow("")
+        val searchNow = MutableSharedFlow<String>(extraBufferCapacity = 1)
+        val recorder = SearchRecorder()
+        observe(vm, query, recorder, searchNow)
+        advanceUntilIdle()
+
+        searchNow.tryEmit("해리포터")
+        runCurrent()
+
+        assertEquals(listOf("해리포터"), recorder.started)
+
+        vm.viewModelScope.cancel()
+    }
+
+    // 사용자가 직접 누른 검색이므로 자동검색용 제약(최소 길이·조합 중 자모)은 적용하지 않는다
+    @Test
+    fun `즉시 검색은 최소 길이와 자모 필터를 무시한다`() = runTest(dispatcher) {
+        val vm = FakeViewModel()
+        val query = MutableStateFlow("")
+        val searchNow = MutableSharedFlow<String>(extraBufferCapacity = 1)
+        val recorder = SearchRecorder()
+        observe(vm, query, recorder, searchNow)
+        advanceUntilIdle()
+
+        searchNow.tryEmit("책")
+        runCurrent()
+        searchNow.tryEmit("ㅋㅋ")
+        runCurrent()
+
+        assertEquals(listOf("책", "ㅋㅋ"), recorder.started)
+
+        vm.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `즉시 검색 뒤 디바운스가 같은 쿼리를 흘려도 검색이 취소되지 않는다`() = runTest(dispatcher) {
+        val vm = FakeViewModel()
+        val query = MutableStateFlow("")
+        val searchNow = MutableSharedFlow<String>(extraBufferCapacity = 1)
+        val recorder = SearchRecorder()
+        observe(vm, query, recorder, searchNow)
+        advanceUntilIdle()
+
+        // 타이핑으로 자동검색이 시작된 직후 검색 버튼을 누른 상황
+        query.value = "해리포터"
+        runCurrent()
+        searchNow.tryEmit("해리포터")
+        // 디바운스가 같은 쿼리를 흘리는 구간을 지난다
+        advanceTimeBy(400)
+        advanceUntilIdle()
+
+        assertEquals(listOf("해리포터"), recorder.completed)
 
         vm.viewModelScope.cancel()
     }

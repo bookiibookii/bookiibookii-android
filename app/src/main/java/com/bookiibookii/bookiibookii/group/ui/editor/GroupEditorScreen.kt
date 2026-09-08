@@ -33,6 +33,8 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -51,6 +53,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -67,6 +71,7 @@ import com.bookiibookii.bookiibookii.group.model.ExchangeType
 import com.bookiibookii.bookiibookii.group.model.GroupEditorUiState
 import com.bookiibookii.bookiibookii.group.model.ReadingStyle
 import com.bookiibookii.bookiibookii.group.model.SelectablePlace
+import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.group.ui.component.BookSearchDropdown
 import com.bookiibookii.bookiibookii.group.vm.GroupEditorViewModel
 import com.bookiibookii.bookiibookii.ui.component.AddressButton
@@ -113,6 +118,8 @@ fun GroupEditorRoute(
         onBookSearchQueryChange = viewModel::onBookSearchQueryChange,
         onSearchBooks = viewModel::searchBooks,
         onClearBookSearch = viewModel::onClearBookSearch,
+        onDismissBookDropdown = viewModel::onDismissBookDropdown,
+        onBookFieldFocused = viewModel::onBookFieldFocused,
         onBookSelect = viewModel::onBookSelect,
         onGroupNameChange = viewModel::onGroupNameChange,
         onTradeTypeSelect = viewModel::onTradeTypeSelect,
@@ -147,6 +154,8 @@ fun GroupEditorScreen(
     onBookSearchQueryChange: (String) -> Unit,
     onSearchBooks: () -> Unit,
     onClearBookSearch: () -> Unit,
+    onDismissBookDropdown: () -> Unit = {},
+    onBookFieldFocused: () -> Unit = {},
     onBookSelect: (BookItem) -> Unit,
     onGroupNameChange: (String) -> Unit,
     onTradeTypeSelect: (ExchangeType) -> Unit,
@@ -174,11 +183,16 @@ fun GroupEditorScreen(
             onBack = onBack,
         )
 
+        // 폼 빈 곳을 누르면 포커스를 놓아 키보드와 도서 검색 드롭다운을 함께 닫는다
+        val formFocusManager = LocalFocusManager.current
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { formFocusManager.clearFocus() })
+                }
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
@@ -194,9 +208,13 @@ fun GroupEditorScreen(
                         onSearchClick = onSearchBooks,
                         onClearClick = onClearBookSearch,
                         results = uiState.bookSearchResults,
+                        showDropdown = uiState.showBookDropdown,
+                        onDismissDropdown = onDismissBookDropdown,
+                        onFieldFocused = onBookFieldFocused,
                         onBookSelect = onBookSelect,
                         bookSelected = uiState.isbn13 != null,
                         error = uiState.bookSearchError,
+                        hint = uiState.bookSearchHint,
                     )
                 }
                 GroupNameSection(
@@ -334,9 +352,13 @@ private fun BookSearchSection(
     onSearchClick: () -> Unit,
     onClearClick: () -> Unit,
     results: List<BookItem>,
+    showDropdown: Boolean,
+    onDismissDropdown: () -> Unit,
+    onFieldFocused: () -> Unit,
     onBookSelect: (BookItem) -> Unit,
     bookSelected: Boolean = false,
     error: String? = null,
+    hint: String? = null,
 ) {
     var fieldSize by remember { mutableStateOf(IntSize.Zero) }
     val density = LocalDensity.current
@@ -344,10 +366,13 @@ private fun BookSearchSection(
     val focusManager = LocalFocusManager.current
     // 커서 제어를 위해 TextFieldValue 사용. 외부 query 변경(도서 선택/초기화) 시 동기화하며 커서를 맨 앞으로
     // (긴 책 제목도 처음부터 보이도록)
-    var fieldValue by remember { mutableStateOf(TextFieldValue(query)) }
-    LaunchedEffect(query) {
-        if (fieldValue.text != query) {
-            fieldValue = TextFieldValue(text = query, selection = TextRange(0))
+    // 선택 후에는 드롭다운에서 본 것과 같은 표시용 제목(부제 제거)을 보여준다.
+    // 선택 상태에서는 입력이 잠기므로 이 값이 상태로 되돌아갈 일은 없다
+    val displayedQuery = if (bookSelected) query.stripBookSubtitle() else query
+    var fieldValue by remember { mutableStateOf(TextFieldValue(displayedQuery)) }
+    LaunchedEffect(displayedQuery) {
+        if (fieldValue.text != displayedQuery) {
+            fieldValue = TextFieldValue(text = displayedQuery, selection = TextRange(0))
         }
     }
     // 도서 선택 시 검색 필드를 한 번 하이라이트
@@ -402,7 +427,11 @@ private fun BookSearchSection(
                     cursorBrush = SolidColor(BookiiBookiiTheme.colors.uiMain),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { onSearchClick() }),
-                    modifier = Modifier.weight(1f),
+                    // 포커스를 잃으면(다른 필드 탭·바깥 탭·키보드 내림) 목록을 접고,
+                    // 다시 누르면 남아 있는 결과로 편다
+                    modifier = Modifier
+                        .weight(1f)
+                        .onFocusChanged { if (it.isFocused) onFieldFocused() else onDismissDropdown() },
                     decorationBox = { innerTextField ->
                         Box {
                             if (fieldValue.text.isEmpty()) {
@@ -425,14 +454,16 @@ private fun BookSearchSection(
                         .clickable { onClearClick() },
                 )
             }
-            if (results.isNotEmpty()) {
+            if (showDropdown) {
+                // 목록이 열려 있는 동안은 뒤로가기가 화면을 벗어나지 않고 목록만 닫는다
+                BackHandler(onBack = onDismissDropdown)
                 Popup(
                     alignment = Alignment.TopStart,
                     offset = IntOffset(
                         x = 0,
                         y = fieldSize.height + with(density) { 8.dp.roundToPx() },
                     ),
-                    onDismissRequest = {},
+                    onDismissRequest = onDismissDropdown,
                     properties = PopupProperties(focusable = false),
                 ) {
                     BookSearchDropdown(
@@ -455,6 +486,14 @@ private fun BookSearchSection(
                 text = error,
                 style = BookiiBookiiTheme.typography.regular14,
                 color = BookiiBookiiTheme.colors.uiPointRed,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        } else if (hint != null) {
+            // 텍스트만 채우고 목록에서 고르지 않으면 isbn13이 없어 제출 버튼이 계속 비활성이다
+            Text(
+                text = hint,
+                style = BookiiBookiiTheme.typography.regular14,
+                color = BookiiBookiiTheme.colors.grey600,
                 modifier = Modifier.padding(top = 8.dp),
             )
         }
@@ -1197,6 +1236,9 @@ private fun BookSearchSectionWithErrorPreview() {
                 onSearchClick = {},
                 onClearClick = {},
                 results = emptyList(),
+                showDropdown = false,
+                onDismissDropdown = {},
+                onFieldFocused = {},
                 onBookSelect = {},
                 error = "네트워크 오류가 발생했어요",
             )

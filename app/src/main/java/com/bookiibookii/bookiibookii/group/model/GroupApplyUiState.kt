@@ -11,10 +11,25 @@ data class GroupApplyUiState(
     val bookSearchResults: List<BookItem> = emptyList(),
     val bookSearchLoading: Boolean = false,
     val bookSearchError: String? = null,
+    val bookSearchNoResult: Boolean = false,       // 마지막 검색이 성공했지만 0건
+    val bookSearchDropdownVisible: Boolean = false, // 결과가 있어도 사용자가 닫았으면 false
     val isbn13: String? = null,
     val applyMsg: String = "",
     val submitting: Boolean = false,
 ) {
+    // 결과가 남아 있으면 다시 열 수 있으므로 닫힘 여부와 결과 유무를 함께 본다
+    val showBookDropdown: Boolean
+        get() = bookSearchDropdownVisible && bookSearchResults.isNotEmpty()
+
+    val bookSearchHint: String?
+        get() = bookSelectionHint(
+            query = bookSearchQuery,
+            isbn13 = isbn13,
+            hasResults = bookSearchResults.isNotEmpty(),
+            noResult = bookSearchNoResult,
+            error = bookSearchError,
+        )
+
     val canSubmit: Boolean
         get() = isbn13 != null &&
             applyMsg.isNotBlank() &&

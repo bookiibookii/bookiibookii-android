@@ -9,6 +9,8 @@ data class GroupEditorUiState(
     val bookSearchResults: List<BookItem> = emptyList(),
     val bookSearchLoading: Boolean = false,
     val bookSearchError: String? = null,
+    val bookSearchNoResult: Boolean = false,       // 마지막 검색이 성공했지만 0건
+    val bookSearchDropdownVisible: Boolean = false, // 결과가 있어도 사용자가 닫았으면 false
     val groupName: String = "",
     val tradeType: ExchangeType? = null,
     val places: List<SelectablePlace> = emptyList(),  // tradeType에 해당하는 주소 목록
@@ -23,6 +25,20 @@ data class GroupEditorUiState(
     val editOriginal: EditOriginal? = null,       // 수정 모드 프리필 원본(변경 여부 판정용). 생성=null
 ) {
     val readingPeriod: Int get() = PERIODS[readingPeriodIndex]
+
+    // 결과가 남아 있으면 다시 열 수 있으므로 닫힘 여부와 결과 유무를 함께 본다
+    val showBookDropdown: Boolean
+        get() = bookSearchDropdownVisible && bookSearchResults.isNotEmpty()
+
+    // 수정 모드는 도서를 바꿀 수 없으므로 안내하지 않는다
+    val bookSearchHint: String?
+        get() = if (isEdit) null else bookSelectionHint(
+            query = bookSearchQuery,
+            isbn13 = isbn13,
+            hasResults = bookSearchResults.isNotEmpty(),
+            noResult = bookSearchNoResult,
+            error = bookSearchError,
+        )
 
     // 수정 가능 필드(그룹명/독서기간/소개/규칙)가 프리필 원본과 달라졌는지.
     // 생성 모드(editOriginal=null)는 항상 true라 버튼 활성 조건에 영향 없음.
