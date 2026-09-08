@@ -3,13 +3,27 @@ package com.bookiibookii.bookiibookii.ui.nav
 import android.content.Context
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
@@ -19,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.unit.dp
 import androidx.navigation.navArgument
 import com.bookiibookii.bookiibookii.common.ComRetryBus
 import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
@@ -40,12 +55,13 @@ import com.bookiibookii.bookiibookii.tracker.nav.TrackerDestinations
 import com.bookiibookii.bookiibookii.tracker.nav.trackerGraph
 import com.bookiibookii.bookiibookii.ui.component.BottomNavBar
 import com.bookiibookii.bookiibookii.ui.component.LocalOnProfileClick
+import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 /**
  * 앱 루트. NavController를 소유하고 바텀네비 가시성을 단일 규칙으로 판정한다.
  *
  * @param pendingRedirect 알림 딥링크. 소비 후 [onRedirectConsumed]로 알린다.
- * @param onCardDetailRequest 카드 상세는 이동 전 서버 조회가 필요해 Activity가 처리한다. (이슈 B에서 제거 예정)
+ * @param onCardDetailRequest 카드 상세는 이동 전 서버 조회가 필요해 Activity가 처리한다.
  */
 @Composable
 fun BookiiApp(
@@ -65,7 +81,6 @@ fun BookiiApp(
 
     LaunchedEffect(pendingCardDetailRoute) {
         val route = pendingCardDetailRoute ?: return@LaunchedEffect
-        navController.navigateToTab(Graph.LIBRARY)
         navController.navigate(route)
         onCardDetailRouteConsumed()
     }
@@ -94,24 +109,13 @@ fun BookiiApp(
     }
 
     CompositionLocalProvider(LocalOnProfileClick provides { nickname -> navigator.toProfile(nickname) }) {
-        Scaffold(
-            bottomBar = {
-                if (isTopLevelRoute(currentRoute)) {
-                    BottomNavBar(
-                        groupSelected = currentRoute == Graph.HOME,
-                        trackerSelected = currentRoute == TrackerDestinations.MAIN,
-                        librarySelected = currentRoute == LibraryDestinations.MAIN,
-                        onGroupClick = { navigator.toHomeTab() },
-                        onTrackerClick = { navController.navigateToTab(Graph.TRACKER) },
-                        onLibraryClick = navigator::toLibraryTab,
-                    )
-                }
-            },
-        ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize()) {
             NavHost(
                 navController = navController,
                 startDestination = Graph.HOME,
-                modifier = Modifier.padding(innerPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
                 // 기본 크로스페이드 시 이전 화면이 잔상처럼 겹쳐 보여 제거
                 enterTransition = { EnterTransition.None },
                 exitTransition = { ExitTransition.None },
@@ -133,6 +137,19 @@ fun BookiiApp(
                     LaunchedEffect(startTab) {
                         startTab?.let { vm.selectTab(HomeTab.valueOf(it)) }
                     }
+
+                    // 최초 진입은 VM init/탭 선택이 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
+                    // 이후 복귀(상세에서 수락 후 등) 때마다 현재 탭 재조회.
+                    var skipNextResumeRefresh by rememberSaveable { mutableStateOf(true) }
+                    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                        if (skipNextResumeRefresh) {
+                            skipNextResumeRefresh = false
+                        } else {
+                            vm.refreshCurrentTab()
+                            vm.fetchNotificationDot()
+                        }
+                    }
+
                     HomeRoute(
                         viewModel = vm,
                         onGroupClick = navigator::toGroupDetail,
@@ -153,6 +170,31 @@ fun BookiiApp(
                     navController.handleRedirect(redirect, onCardDetailRequest, onUnsupportedRedirect)
                 }
             }
+
+            // 콘텐츠 위에 떠 있다. 레이아웃 공간을 차지하지 않는다.
+            if (isTopLevelRoute(currentRoute)) {
+                BottomNavBar(
+                    groupSelected = currentRoute == Graph.HOME,
+                    trackerSelected = currentRoute == TrackerDestinations.MAIN,
+                    librarySelected = currentRoute == LibraryDestinations.MAIN,
+                    onGroupClick = { navigator.toHomeTab() },
+                    onTrackerClick = { navController.navigateToTab(Graph.TRACKER) },
+                    onLibraryClick = navigator::toLibraryTab,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(bottom = 20.dp),
+                )
+            }
+
+            // 엣지투엣지라 상태바가 투명해 windowBackground(@color/ui_bg)가 비친다. 흰색으로 덮는다.
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .windowInsetsTopHeight(WindowInsets.statusBars)
+                    .background(BookiiBookiiTheme.colors.white),
+            )
         }
     }
 }
@@ -164,20 +206,14 @@ private fun NavController.handleRedirect(
 ) {
     when (val target = redirect.toTarget()) {
         is RedirectTarget.ToGraph -> navigateToTab(target.graph)
-        is RedirectTarget.ToDestination -> {
-            navigateToTab(target.graph)
-            navigate(target.route)
-        }
+        // 원본 pushDeepFragment와 동일하게 현재 스택 위에 쌓는다. 뒤로가면 보던 탭으로 돌아온다.
+        is RedirectTarget.ToDestination -> navigate(target.route)
         is RedirectTarget.ToCardDetail -> onCardDetailRequest(target.memberBookId, target.cardId)
         RedirectTarget.Unsupported -> onUnsupported()
         null -> Unit // 미구현 라우트는 무시
     }
 }
 
-/**
- * 탭 전환. 이슈 A에서는 통합 전 동작(탭을 누를 때마다 초기화)을 그대로 재현한다.
- * saveState/restoreState는 이슈 C에서 켠다.
- */
 private fun NavController.navigateToTab(graphRoute: String) {
     navigate(graphRoute) {
         popUpTo(graph.findStartDestination().id) { inclusive = true }
@@ -190,18 +226,17 @@ private class NavControllerAppNavigator(
     private val context: Context,
 ) : AppNavigator {
 
-    override fun toGroupDetail(groupId: Long) = go(Graph.GROUP, GroupDestinations.detail(groupId))
-    override fun toGroupSearch(keyword: String?) = go(Graph.GROUP, GroupDestinations.search(keyword))
-    override fun toGroupEditor() = go(Graph.GROUP, GroupDestinations.editor())
+    override fun toGroupDetail(groupId: Long) = go(GroupDestinations.detail(groupId))
+    override fun toGroupSearch(keyword: String?) = go(GroupDestinations.search(keyword))
+    override fun toGroupEditor() = go(GroupDestinations.editor())
     override fun toGroupJoinRequests(groupId: Long) =
-        go(Graph.GROUP, GroupDestinations.joinRequests(groupId.toString()))
+        go(GroupDestinations.joinRequests(groupId.toString()))
 
-    override fun toTrackerDetail(groupId: Long) = go(Graph.TRACKER, TrackerDestinations.detail(groupId))
+    override fun toTrackerDetail(groupId: Long) = go(TrackerDestinations.detail(groupId))
     override fun toTrackerComment(groupId: Long, title: String) =
-        go(Graph.TRACKER, TrackerDestinations.comment(groupId, title))
+        go(TrackerDestinations.comment(groupId, title))
 
     override fun toLibraryDetail(target: LibraryDetailTarget) = go(
-        Graph.LIBRARY,
         LibraryDestinations.detail(
             groupId = target.groupId,
             memberBookId = target.memberBookId,
@@ -221,7 +256,6 @@ private class NavControllerAppNavigator(
     )
 
     override fun toLibraryGroupReview(target: GroupReviewNavTarget) = go(
-        Graph.LIBRARY,
         LibraryDestinations.groupReview(
             groupId = target.groupId,
             groupName = target.groupName,
@@ -246,7 +280,7 @@ private class NavControllerAppNavigator(
     }
 
     override fun toAddressManagement(initialTab: Int) =
-        go(Graph.MYPAGE, MypageDestinations.addressManagement(initialTab))
+        go(MypageDestinations.addressManagement(initialTab))
 
     override fun toHomeTab(tab: HomeTab?) {
         navController.navigate(Graph.home(tab)) {
@@ -261,9 +295,9 @@ private class NavControllerAppNavigator(
         navController.popBackStack()
     }
 
-    // 그래프 시작 목적지를 먼저 쌓아 도메인 밖에서 진입해도 뒤로가기가 그 도메인 홈으로 가게 한다.
-    private fun go(graph: String, route: String) {
-        navController.navigate(graph)
+    // 목적지로 바로 이동한다. 중첩 그래프의 시작 목적지는 쌓지 않는다.
+    // 통합 전 XxxFragment.newInstance(목적지)가 그 목적지를 시작점으로 띄우던 것과 같다.
+    private fun go(route: String) {
         navController.navigate(route)
     }
 }
