@@ -242,6 +242,7 @@ fun GroupDetailRoute(
                     onDismissBookDropdown = applyViewModel::onDismissBookDropdown,
                     onBookFieldFocused = applyViewModel::onBookFieldFocused,
                     bookSearchHint = applyState.bookSearchHint,
+                    bookSearchLoading = applyState.bookSearchLoading,
                     onApplyMsgChange = applyViewModel::onApplyMsgChange,
                     onSubmit = {
                         uiState.detail?.let { applyViewModel.apply(it.groupId) }

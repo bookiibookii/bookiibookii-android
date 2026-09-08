@@ -1,4 +1,4 @@
-package com.bookiibookii.bookiibookii.group.model
+package com.bookiibookii.bookiibookii.common
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -10,7 +10,7 @@ import org.junit.Test
  * 그룹 생성/참여 신청은 isbn13이 있어야 제출할 수 있는데, 검색어만 입력하고 목록에서
  * 고르지 않으면 텍스트는 채워져 있는데 버튼이 비활성이라 사용자가 이유를 알 수 없다.
  */
-class BookSelectionHintTest {
+class BookSearchMessagesTest {
 
     private fun hint(
         query: String = "해리포터",

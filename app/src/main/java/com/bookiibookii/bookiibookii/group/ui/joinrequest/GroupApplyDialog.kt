@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.material3.CircularProgressIndicator
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import androidx.activity.compose.BackHandler
@@ -71,6 +72,7 @@ fun GroupApplyDialog(
     onDismissBookDropdown: () -> Unit = {},
     onBookFieldFocused: () -> Unit = {},
     bookSearchHint: String? = null,
+    bookSearchLoading: Boolean = false,
     onApplyMsgChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onDismiss: () -> Unit,
@@ -119,6 +121,7 @@ fun GroupApplyDialog(
             onDismissDropdown = onDismissBookDropdown,
             onFieldFocused = onBookFieldFocused,
             bookSelected = bookSelected,
+            loading = bookSearchLoading,
             hint = bookSearchHint,
             onQueryChange = onQueryChange,
             onSearchClick = onSearchClick,
@@ -148,6 +151,7 @@ private fun BookSearchField(
     onDismissDropdown: () -> Unit,
     onFieldFocused: () -> Unit,
     bookSelected: Boolean,
+    loading: Boolean,
     hint: String?,
     onQueryChange: (String) -> Unit,
     onSearchClick: () -> Unit,
@@ -195,14 +199,28 @@ private fun BookSearchField(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_search),
-                contentDescription = "검색",
-                tint = BookiiBookiiTheme.colors.grey500,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onSearchClick() },
-            )
+            if (loading) {
+                // 검색 아이콘과 같은 24dp라 자리 이동 없이 바뀐다
+                Box(
+                    modifier = Modifier.size(24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(
+                        color = BookiiBookiiTheme.colors.uiMain,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            } else {
+                Icon(
+                    painter = painterResource(R.drawable.ic_search),
+                    contentDescription = "검색",
+                    tint = BookiiBookiiTheme.colors.grey500,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { onSearchClick() },
+                )
+            }
             BasicTextField(
                 value = fieldValue,
                 onValueChange = { newValue ->

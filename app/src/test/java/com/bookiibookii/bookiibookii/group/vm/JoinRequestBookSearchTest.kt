@@ -195,6 +195,34 @@ class JoinRequestBookSearchTest {
         vm.viewModelScope.cancel()
     }
 
+    // bookSearchLoading을 화면에 표시하게 됐으므로, 검색이 끝나지 않은 채로
+    // 선택/초기화하면 스피너가 남지 않아야 한다
+    @Test
+    fun `검색 중 책을 선택하면 로딩 표시가 사라진다`() = runTest(dispatcher) {
+        val vm = searchingViewModel()
+        advanceUntilIdle()
+        assertTrue("요청이 진행 중이어야 한다", vm.state.value.bookSearchLoading)
+
+        vm.onBookSelect(book("해리 포터와 마법사의 돌", "9788983920775"))
+
+        assertFalse("선택했는데 스피너가 남으면 안 된다", vm.state.value.bookSearchLoading)
+
+        vm.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `검색 중 초기화하면 로딩 표시가 사라진다`() = runTest(dispatcher) {
+        val vm = searchingViewModel()
+        advanceUntilIdle()
+        assertTrue("요청이 진행 중이어야 한다", vm.state.value.bookSearchLoading)
+
+        vm.onClearBookSearch()
+
+        assertFalse("초기화했는데 스피너가 남으면 안 된다", vm.state.value.bookSearchLoading)
+
+        vm.viewModelScope.cancel()
+    }
+
     @Test
     fun `책을 선택하면 드롭다운이 닫히고 안내가 사라진다`() = runTest(dispatcher) {
         coEvery { api.searchBooks(any(), any(), any()) } returns

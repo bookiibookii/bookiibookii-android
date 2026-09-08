@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.group.model
 
+import com.bookiibookii.bookiibookii.common.bookSelectionHint
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
 
 // 그룹 참여 신청 다이얼로그 UI 상태

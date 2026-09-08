@@ -2,6 +2,8 @@ package com.bookiibookii.bookiibookii.group.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_FAILED
+import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_NETWORK_ERROR
 import com.bookiibookii.bookiibookii.common.observeSearchQuery
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
@@ -141,7 +143,7 @@ class JoinRequestViewModel : ViewModel() {
                 }
             } else {
                 _state.update {
-                    it.copy(bookSearchError = "검색에 실패했어요", bookSearchLoading = false)
+                    it.copy(bookSearchError = BOOK_SEARCH_FAILED, bookSearchLoading = false)
                 }
             }
         } catch (e: CancellationException) {
@@ -149,7 +151,7 @@ class JoinRequestViewModel : ViewModel() {
             throw e
         } catch (e: Exception) {
             _state.update {
-                it.copy(bookSearchError = "네트워크 오류가 발생했어요", bookSearchLoading = false)
+                it.copy(bookSearchError = BOOK_SEARCH_NETWORK_ERROR, bookSearchLoading = false)
             }
         }
     }
@@ -162,6 +164,9 @@ class JoinRequestViewModel : ViewModel() {
             bookSearchResults = emptyList(),
             bookSearchDropdownVisible = false,
             bookSearchNoResult = false,
+            // 진행 중이던 검색의 스피너가 선택 후에도 남지 않도록 내린다
+            // (늦게 온 응답은 performBookSearch의 isbn13 가드가 버린다)
+            bookSearchLoading = false,
             // 이전 검색에서 남은 에러 메시지가 책 선택 후 다시 드러나지 않도록 비움
             bookSearchError = null,
         )
@@ -178,6 +183,7 @@ class JoinRequestViewModel : ViewModel() {
                 bookSearchError = null,
                 bookSearchNoResult = false,
                 bookSearchDropdownVisible = false,
+                bookSearchLoading = false,
             )
         }
     }

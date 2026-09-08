@@ -41,6 +41,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.TextRange
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -213,6 +214,7 @@ fun GroupEditorScreen(
                         onFieldFocused = onBookFieldFocused,
                         onBookSelect = onBookSelect,
                         bookSelected = uiState.isbn13 != null,
+                        loading = uiState.bookSearchLoading,
                         error = uiState.bookSearchError,
                         hint = uiState.bookSearchHint,
                     )
@@ -357,6 +359,7 @@ private fun BookSearchSection(
     onFieldFocused: () -> Unit,
     onBookSelect: (BookItem) -> Unit,
     bookSelected: Boolean = false,
+    loading: Boolean = false,
     error: String? = null,
     hint: String? = null,
 ) {
@@ -404,14 +407,28 @@ private fun BookSearchSection(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_search),
-                    contentDescription = "검색",
-                    tint = BookiiBookiiTheme.colors.grey500,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable { onSearchClick() },
-                )
+                if (loading) {
+                    // 검색 아이콘과 같은 24dp라 자리 이동 없이 바뀐다
+                    Box(
+                        modifier = Modifier.size(24.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(
+                            color = BookiiBookiiTheme.colors.uiMain,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                } else {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search),
+                        contentDescription = "검색",
+                        tint = BookiiBookiiTheme.colors.grey500,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable { onSearchClick() },
+                    )
+                }
                 BasicTextField(
                     value = fieldValue,
                     onValueChange = { newValue ->

@@ -6,6 +6,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_FAILED
+import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_NETWORK_ERROR
 import com.bookiibookii.bookiibookii.common.observeSearchQuery
 import com.bookiibookii.bookiibookii.common.runCatchingCancellable
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
@@ -19,6 +21,7 @@ import com.bookiibookii.bookiibookii.onboarding.steps.model.OnbState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.ProfileImageUploadState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.OnboardingSubmitState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.RecordMethod
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -43,9 +46,13 @@ class OnbViewModel : ViewModel() {
     // 실시간 도서 검색: UI 입력은 이 쿼리만 갱신하고, 실제 호출은 디바운스(공통 헬퍼)가 담당
     private val _bookSearchQuery = MutableStateFlow("")
 
+    // 검색 버튼/키보드 액션 — 자동 검색과 같은 트리거로 합쳐 응답 경쟁을 막는다
+    private val _searchNow = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
     init {
         observeSearchQuery(
             queryFlow = _bookSearchQuery,
+            searchNowFlow = _searchNow,
             onBelowMinLength = { _bookSearchState.value = BookSearchState.Idle },
             onSearch = { performBookSearch(it) },
         )
@@ -161,10 +168,12 @@ class OnbViewModel : ViewModel() {
     }
 
     // ic_search 클릭/키보드 검색 — 디바운스 기다리지 않고 현재 쿼리로 바로 검색
+    // ic_search 클릭 또는 키보드 검색 액션 — 디바운스를 건너뛰고 즉시 검색.
+    // 별도 코루틴이 아니라 공통 트리거로 흘려보내야 자동 검색과 함께 취소·관리된다
     fun searchBooks() {
         val query = _bookSearchQuery.value.trim()
         if (query.isBlank()) return
-        viewModelScope.launch { performBookSearch(query) }
+        _searchNow.tryEmit(query)
     }
 
     private suspend fun performBookSearch(query: String) {
@@ -178,11 +187,11 @@ class OnbViewModel : ViewModel() {
                 _bookSearchState.value = BookSearchState.Success(body.result.books)
             } else {
                 _bookSearchState.value =
-                    BookSearchState.Error(body?.message ?: "검색에 실패했습니다.")
+                    BookSearchState.Error(body?.message ?: BOOK_SEARCH_FAILED)
             }
         }.onFailure { e ->
             _bookSearchState.value =
-                BookSearchState.Error(e.toUserMessage("네트워크 오류가 발생했습니다."))
+                BookSearchState.Error(e.toUserMessage(BOOK_SEARCH_NETWORK_ERROR))
         }
     }
 

@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.group.model
 
+import com.bookiibookii.bookiibookii.common.bookSelectionHint
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
 
 // 그룹 생성/수정 화면 UI 상태
