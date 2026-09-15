@@ -97,11 +97,11 @@ fun BookiiApp(
         ComRetryBus.retryFlow.collect {
             val route = navController.currentBackStackEntry?.destination?.route
             if (isTopLevelRoute(route)) {
-                navController.navigateToTab(
+                navController.recreateTab(
                     when (route) {
                         TrackerDestinations.MAIN -> Graph.TRACKER
                         LibraryDestinations.MAIN -> Graph.LIBRARY
-                        else -> Graph.HOME
+                        else -> Graph.home()
                     },
                 )
             }
@@ -214,8 +214,30 @@ private fun NavController.handleRedirect(
     }
 }
 
+/**
+ * 탭 전환. 떠나는 탭의 상태를 저장하고 들어가는 탭의 상태를 복원한다.
+ *
+ * 시작 목적지(홈)는 popUpTo에서 제외되므로 스택 바닥에 남는다.
+ * 그래서 다른 탭에서 뒤로가기를 하면 앱이 종료되지 않고 홈으로 돌아온다.
+ */
 private fun NavController.navigateToTab(graphRoute: String) {
     navigate(graphRoute) {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
+/**
+ * 탭을 저장된 상태 없이 새로 띄운다.
+ *
+ * 재조회가 목적이거나(에러 화면 '다시 시도') 라우트 인자로 진입 상태를 지정하는 경로는
+ * 상태를 복원하면 목적을 달성하지 못한다.
+ *
+ * 두 경로 모두 대상 탭이 지금 화면에 떠 있어(보관된 상태가 아니라) 여기서 버릴 상태는 없다.
+ */
+private fun NavController.recreateTab(route: String) {
+    navigate(route) {
         popUpTo(graph.findStartDestination().id) { inclusive = true }
         launchSingleTop = true
     }
@@ -282,10 +304,13 @@ private class NavControllerAppNavigator(
     override fun toAddressManagement(initialTab: Int) =
         go(MypageDestinations.addressManagement(initialTab))
 
+    // 탭을 지정해 들어오는 경로는 선택 탭을 라우트 인자로 넘긴다.
+    // 상태를 복원하면 저장돼 있던 옛 인자가 살아나 지정한 탭이 무시되므로 새로 띄운다.
     override fun toHomeTab(tab: HomeTab?) {
-        navController.navigate(Graph.home(tab)) {
-            popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-            launchSingleTop = true
+        if (tab == null) {
+            navController.navigateToTab(Graph.home())
+        } else {
+            navController.recreateTab(Graph.home(tab))
         }
     }
 
