@@ -33,18 +33,28 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    init {
-        Log.d("TabState", "HomeViewModel init #${hashCode()}")
-        // 닉네임은 마이페이지가 갱신해 둔 캐시를 읽는다.
+    private var hasLoadedOnce = false
+
+    /**
+     * 화면이 보이게 됐음을 알린다. 최초 진입인지 복귀인지는 데이터를 가진 이쪽에서 판단한다.
+     *
+     * 화면은 자기가 처음인지 알 수 없다. 탭 전환·백스택 복귀·앱 복귀가 모두 같은
+     * ON_RESUME으로 오기 때문이다. 판단을 화면에 두면 화면 상태와 이 ViewModel의
+     * 실제 보유 상태가 어긋날 수 있다(프로세스 사망 복원 시 ViewModel만 다시 만들어진다).
+     */
+    fun onScreenResumed() {
+        // 닉네임은 마이페이지가 갱신해 둔 캐시를 매번 읽는다.
+        val hasCachedNickname = syncNicknameFromCache()
+        if (hasLoadedOnce) {
+            refreshCurrentTab()
+            fetchNotificationDot()
+            return
+        }
+        hasLoadedOnce = true
         // 캐시가 비어 있을 때만(로그인 직후 등) 직접 조회한다.
-        if (!syncNicknameFromCache()) fetchNickname()
+        if (!hasCachedNickname) fetchNickname()
         fetchRecommendedGroups()
         fetchNotificationDot()
-    }
-
-    override fun onCleared() {
-        Log.d("TabState", "HomeViewModel cleared #${hashCode()}")
-        super.onCleared()
     }
 
     /**
@@ -55,7 +65,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
      *
      * @return 캐시에 닉네임이 있었으면 true
      */
-    fun syncNicknameFromCache(): Boolean {
+    private fun syncNicknameFromCache(): Boolean {
         val cached = TokenManager.getNickname(getApplication()) ?: return false
         _uiState.update { it.copy(nickname = cached) }
         return true

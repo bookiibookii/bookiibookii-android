@@ -17,10 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.ui.Alignment
@@ -138,19 +135,8 @@ fun BookiiApp(
                         startTab?.let { vm.selectTab(HomeTab.valueOf(it)) }
                     }
 
-                    // 최초 진입은 VM init/탭 선택이 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
-                    // 이후 복귀(상세에서 수락 후 등) 때마다 현재 탭 재조회.
-                    var skipNextResumeRefresh by rememberSaveable { mutableStateOf(true) }
                     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-                        // 탭 전환으로 VM이 죽지 않으므로, 마이페이지에서 바뀐 닉네임은
-                        // 복귀할 때마다 캐시에서 다시 읽어야 인사말에 반영된다.
-                        vm.syncNicknameFromCache()
-                        if (skipNextResumeRefresh) {
-                            skipNextResumeRefresh = false
-                        } else {
-                            vm.refreshCurrentTab()
-                            vm.fetchNotificationDot()
-                        }
+                        vm.onScreenResumed()
                     }
 
                     HomeRoute(
