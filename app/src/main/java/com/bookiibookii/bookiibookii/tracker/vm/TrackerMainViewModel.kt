@@ -49,8 +49,13 @@ class TrackerMainViewModel(
     private val _meetingInfo = MutableStateFlow<MeetingResDTO?>(null)
     val meetingInfo: StateFlow<MeetingResDTO?> = _meetingInfo
 
-    // 최초 조회는 여기서. 화면의 ON_RESUME은 '첫 진입을 건너뛰고' 복귀 때만 재조회하므로 중복되지 않는다.
-    init {
+    /**
+     * 화면이 보이게 됐음을 알린다. 조회 시점은 데이터를 가진 이쪽이 정한다.
+     *
+     * 이 화면은 최초 진입과 복귀가 같은 것을 부르므로 분기가 없다.
+     * 최초 조회를 init에 두면 화면의 ON_RESUME과 겹쳐 진입 시 두 번 나갔다.
+     */
+    fun onScreenResumed() {
         load()
         fetchNotificationDot()
     }
