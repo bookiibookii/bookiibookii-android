@@ -28,6 +28,15 @@ class LibraryMainViewModel : ViewModel() {
     private var rawReadingBooks: List<LibraryBook> = emptyList()
     private var rawDoneBooks: List<LibraryBook> = emptyList()
 
+    init {
+        android.util.Log.d("TabState", "LibraryMainViewModel init #${hashCode()}")
+    }
+
+    override fun onCleared() {
+        android.util.Log.d("TabState", "LibraryMainViewModel cleared #${hashCode()}")
+        super.onCleared()
+    }
+
     fun fetchBooks() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }

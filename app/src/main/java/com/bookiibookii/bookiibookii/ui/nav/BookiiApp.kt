@@ -142,6 +142,9 @@ fun BookiiApp(
                     // 이후 복귀(상세에서 수락 후 등) 때마다 현재 탭 재조회.
                     var skipNextResumeRefresh by rememberSaveable { mutableStateOf(true) }
                     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                        // 탭 전환으로 VM이 죽지 않으므로, 마이페이지에서 바뀐 닉네임은
+                        // 복귀할 때마다 캐시에서 다시 읽어야 인사말에 반영된다.
+                        vm.syncNicknameFromCache()
                         if (skipNextResumeRefresh) {
                             skipNextResumeRefresh = false
                         } else {

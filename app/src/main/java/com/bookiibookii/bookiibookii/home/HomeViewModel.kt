@@ -34,12 +34,31 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        TokenManager.getNickname(app)?.let { cached ->
-            _uiState.update { it.copy(nickname = cached) }
-        }
-        fetchNickname()
+        Log.d("TabState", "HomeViewModel init #${hashCode()}")
+        // 닉네임은 마이페이지가 갱신해 둔 캐시를 읽는다.
+        // 캐시가 비어 있을 때만(로그인 직후 등) 직접 조회한다.
+        if (!syncNicknameFromCache()) fetchNickname()
         fetchRecommendedGroups()
         fetchNotificationDot()
+    }
+
+    override fun onCleared() {
+        Log.d("TabState", "HomeViewModel cleared #${hashCode()}")
+        super.onCleared()
+    }
+
+    /**
+     * 캐시에 저장된 닉네임을 화면 상태에 반영한다.
+     *
+     * 탭 전환으로는 이 ViewModel이 죽지 않으므로, 마이페이지에서 닉네임을 바꾸고
+     * 돌아왔을 때 갱신된 캐시를 다시 읽어야 인사말이 따라온다.
+     *
+     * @return 캐시에 닉네임이 있었으면 true
+     */
+    fun syncNicknameFromCache(): Boolean {
+        val cached = TokenManager.getNickname(getApplication()) ?: return false
+        _uiState.update { it.copy(nickname = cached) }
+        return true
     }
 
     // 화면 복귀(onResume) 시 현재 선택된 탭만 다시 불러옴 — 수락 후 상태 변경 반영

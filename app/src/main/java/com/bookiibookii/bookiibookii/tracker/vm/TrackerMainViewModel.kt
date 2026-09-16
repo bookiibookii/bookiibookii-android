@@ -51,8 +51,14 @@ class TrackerMainViewModel(
 
     // 최초 조회는 여기서. 화면의 ON_RESUME은 '첫 진입을 건너뛰고' 복귀 때만 재조회하므로 중복되지 않는다.
     init {
+        android.util.Log.d("TabState", "TrackerMainViewModel init #${hashCode()}")
         load()
         fetchNotificationDot()
+    }
+
+    override fun onCleared() {
+        android.util.Log.d("TabState", "TrackerMainViewModel cleared #${hashCode()}")
+        super.onCleared()
     }
 
     // 상단 알림 아이콘 배지 점: SYSTEM·KEYWORD 알림 중 미읽음이 하나라도 있으면 표시

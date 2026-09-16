@@ -1,9 +1,10 @@
 package com.bookiibookii.bookiibookii.mypage.vm
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.data.api.S3Uploader
@@ -12,6 +13,7 @@ import com.bookiibookii.bookiibookii.data.model.mypage.ReceivedReviewItem
 import com.bookiibookii.bookiibookii.data.model.mypage.UpdateIntroductionReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.WrittenReviewItem
+import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
 import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -36,7 +38,7 @@ data class ReceivedReviewUiState(
     val isLoading: Boolean = false,
 )
 
-class MypageViewModel : ViewModel() {
+class MypageViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _profileData = MutableLiveData<UserProfileResDTO>()
     val profileData: LiveData<UserProfileResDTO> get() = _profileData
@@ -76,6 +78,9 @@ class MypageViewModel : ViewModel() {
                     response.body()!!.result?.let {
                         _profileData.value = it
                         confirmedNickname = it.nickname
+                        // 닉네임 캐시의 갱신 책임은 프로필을 조회하는 이곳에 있다.
+                        // 홈은 이 캐시를 읽기만 하므로 여기서 갱신하지 않으면 옛 닉네임이 남는다.
+                        TokenManager.saveNickname(getApplication(), it.nickname)
                     }
                 } else {
                     _eventFlow.emit(Event.ShowToast("정보를 불러오지 못했습니다.", false))
