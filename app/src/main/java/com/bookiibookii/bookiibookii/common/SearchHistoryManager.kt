@@ -9,9 +9,8 @@ class SearchHistoryManager(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("search_history_prefs", Context.MODE_PRIVATE)
     private val KEY_HISTORY = "history_list"
-    private val MAX_SIZE = 10 // 최대 10개까지만 저장
+    private val MAX_SIZE = 10
 
-    // 1. 저장된 검색어 리스트 가져오기
     fun getHistoryList(): ArrayList<String> {
         val jsonString = prefs.getString(KEY_HISTORY, null) ?: return arrayListOf()
         val list = ArrayList<String>()
@@ -27,7 +26,7 @@ class SearchHistoryManager(context: Context) {
         return list
     }
 
-    // 2. 검색어 추가하기 (중복 제거 & 최신순 정렬)
+    // 중복 검색어는 맨 앞으로 옮겨 최근 검색 순서를 유지한다.
     fun addHistory(keyword: String) {
         val list = getHistoryList()
 
@@ -36,10 +35,8 @@ class SearchHistoryManager(context: Context) {
             list.remove(keyword)
         }
 
-        // 맨 앞에 추가
         list.add(0, keyword)
 
-        // 10개 넘으면 뒤에꺼 삭제
         if (list.size > MAX_SIZE) {
             list.removeAt(list.size - 1)
         }
@@ -47,7 +44,6 @@ class SearchHistoryManager(context: Context) {
         saveList(list)
     }
 
-    // 3. 검색어 삭제하기 (X 버튼)
     fun removeHistory(keyword: String) {
         val list = getHistoryList()
         if (list.contains(keyword)) {
@@ -56,12 +52,10 @@ class SearchHistoryManager(context: Context) {
         }
     }
 
-    // 4. 전체 삭제
     fun clearHistory() {
         prefs.edit().remove(KEY_HISTORY).apply()
     }
 
-    // 내부 저장 로직 (List -> JSON String 변환)
     private fun saveList(list: ArrayList<String>) {
         val jsonArray = JSONArray()
         for (item in list) {

@@ -189,7 +189,6 @@ private fun TrackerDetailHeader(
                 // 미트볼 + 더보기 드롭다운
                 Box {
                     var expanded by remember { mutableStateOf(false) }
-                    // 드롭다운 오프셋 일단 60dp
                     val popupOffsetY = with(LocalDensity.current) { 60.dp.roundToPx() }
                     IconCircleButton(
                         iconRes = R.drawable.ic_meetball,

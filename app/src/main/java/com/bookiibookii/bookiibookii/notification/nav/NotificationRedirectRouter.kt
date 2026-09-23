@@ -2,7 +2,7 @@ package com.bookiibookii.bookiibookii.notification.nav
 
 import android.content.Intent
 
-// 백엔드 RedirectType enum(8종) 기준이며, 모든 라우팅은 groupId 로 식별.
+// redirectType에 따라 그룹은 groupId, 카드 상세는 memberBookId와 cardId로 식별한다.
 data class NotificationRedirect(
     val redirectType: String,
     val groupId: Long? = null,

@@ -1208,7 +1208,7 @@ private fun GroupEditorScreenPreview() {
     }
 }
 
-// 수정 모드 Preview — 도서검색/교환유형 숨김, 헤더 "그룹 수정", 주소 섹션 표시
+// 수정 모드 Preview — 도서 검색·교환 유형·주소 숨김, 헤더 "그룹 수정"
 @Preview(widthDp = 412, heightDp = 917, showBackground = true)
 @Composable
 private fun GroupEditorScreenEditPreview() {

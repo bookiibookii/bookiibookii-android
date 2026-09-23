@@ -40,7 +40,7 @@ fun BookResult.toLibraryDetailTarget() = LibraryDetailTarget(
     totalPages = totalPages,
 )
 
-// 마이페이지 책장 항목 → 진입 인자. 통합 전 MypageFragment가 하던 매핑.
+// 마이페이지 책장 항목 → 서재 상세 진입 인자.
 // 완독 책장이라 isDone은 항상 true, 나머지 미제공 필드는 기본값.
 fun CompletedBook.toLibraryDetailTarget() = LibraryDetailTarget(
     groupId = groupId.toInt(),

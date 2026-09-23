@@ -3,23 +3,23 @@ package com.bookiibookii.bookiibookii.common
 object GroupTagMapper {
     fun toKoreanTag(tag: String): String {
         return when(tag) {
-            // --- 이미지 1: METHOD (방식) ---
+            // METHOD (방식)
             "MEMO" -> "#메모환영"
             "POSTIT" -> "#포스트잇"
             "CLEAN" -> "#깔끔하게"
 
-            // --- 이미지 1: VIBE (분위기) ---
+            // VIBE (분위기)
             "SERIOUS" -> "#진지함"
             "LIGHT_FUN" -> "#재미있게"
             "INSIGHT" -> "#인사이트"
 
-            // --- 이미지 1: SPEED (속도) ---
+            // SPEED (속도)
             "FAST" -> "#약 3일"
             "NORMAL" -> "#약 1주"
             "SLOW" -> "#약 1개월"
             "UNKNOWN" -> "#속도모름"
 
-            // --- 이미지 1: GENRE (장르) ---
+            // GENRE (장르)
             "ECON_BIZ" -> "#경제/경영"
             "SCI_IT" -> "#과학/IT"
             "NOVEL_GENRE" -> "#소설/장르"
@@ -52,7 +52,7 @@ object GroupTagMapper {
             "POLITICS_SOCIETY" -> "#정치/사회"
             "NON_LITERATURE_ETC" -> "#기타"
 
-            // --- 이미지 2: REVIEW (사용자 리뷰 태그) ---
+            // REVIEW (사용자 리뷰 태그)
             "KINDNESS" -> "#친절매너"
             "GOOD_HANDWRITING" -> "#예쁜글씨"
             "SWEET_COMMENT" -> "#다정한코멘트"

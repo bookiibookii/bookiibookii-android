@@ -14,7 +14,7 @@ import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
 /**
  * 공통 에러 화면 진입점
- * 종류는 [ErrorType]으로 전달받고, 버튼 동작은 기존 ComErrorActivity와 동일하게 유지
+ * [ErrorType]에 따라 재시도, 이전 화면 복귀, 메인 이동을 제공한다.
  */
 
 // TODO: 접근 권한이 없는 페이지(NO_PERMISSION) 진입점 없음

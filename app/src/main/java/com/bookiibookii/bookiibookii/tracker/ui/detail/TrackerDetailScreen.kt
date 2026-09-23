@@ -123,7 +123,6 @@ fun TrackerDetailRoute(
     // 교환 실패 안내 다이얼로그 표시 여부
     var showExchangeFailDialog by rememberSaveable { mutableStateOf(false) }
 
-    // 바텀 네비 표시는 TrackerNavHost에서 현재 라우트 기준으로 일괄 제어 (여기서 토글하지 않음)
     TrackerDetailScreen(
         groupName = uiState.groupName,
         dDay = uiState.dDay,

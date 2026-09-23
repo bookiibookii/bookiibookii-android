@@ -36,7 +36,6 @@ internal fun HomeTabRow(
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
 
-    // 피그마: 외부 컨테이너 border-bottom grey/100, overflow-clip, px=16dp
     Box(
         modifier = modifier
             .fillMaxWidth()

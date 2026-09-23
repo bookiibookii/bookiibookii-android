@@ -162,12 +162,11 @@ class OnbViewModel : ViewModel() {
         updateState(currentState().copy(lifeBooks = result))
     }
 
-    // UI 입력 콜백 — 쿼리만 갱신하면 디바운스 후 performBookSearch가 호출된다
+    // UI 입력은 쿼리만 갱신하고, 공통 검색 트리거가 performBookSearch를 호출한다.
     fun onBookSearchQueryChange(query: String) {
         _bookSearchQuery.value = query
     }
 
-    // ic_search 클릭/키보드 검색 — 디바운스 기다리지 않고 현재 쿼리로 바로 검색
     // ic_search 클릭 또는 키보드 검색 액션 — 디바운스를 건너뛰고 즉시 검색.
     // 별도 코루틴이 아니라 공통 트리거로 흘려보내야 자동 검색과 함께 취소·관리된다
     fun searchBooks() {
@@ -292,14 +291,8 @@ private fun Throwable.toUserMessage(fallback: String): String {
 }
 
 /**
- * \uC628\uBCF4\uB529 \uC81C\uCD9C \uC2E4\uD328 \uC751\uB2F5 body\uC5D0\uC11C \uC0AC\uC6A9\uC790\uC5D0\uAC8C \uBCF4\uC5EC\uC904 \uC0AC\uC720\uB97C \uCD94\uCD9C\uD569\uB2C8\uB2E4.
- *
- * \uC11C\uBC84 \uC751\uB2F5 \uD615\uC2DD(ApiResponse)\uC5D0 \uB530\uB77C \uC0AC\uC720 \uC704\uCE58\uAC00 \uB2E4\uB985\uB2C8\uB2E4.
- * - \uBE44\uC988\uB2C8\uC2A4 \uC5D0\uB7EC(UserException \uB4F1): \uC0AC\uC720\uAC00 \uCD5C\uC0C1\uC704 "message"\uC5D0 \uB2F4\uAE40
- *   \uC608) {"isSuccess":false,"code":"USER400_2","message":"\uC774\uBBF8 \uC0AC\uC6A9 \uC911\uC778 \uB2C9\uB124\uC784\uC785\uB2C8\uB2E4.","result":null}
- * - @Valid \uAC80\uC99D \uC5D0\uB7EC(COMMON400_1): \uCD5C\uC0C1\uC704 "message"\uB294 \uC81C\uB124\uB9AD("\uC798\uBABB\uB41C \uC694\uCCAD\uC785\uB2C8\uB2E4.")\uC774\uACE0
- *   \uC2E4\uC81C \uD544\uB4DC \uC0AC\uC720\uAC00 "result" \uBC30\uC5F4\uC5D0 \uB2F4\uAE30\uBBC0\uB85C \uC774\uB97C \uC6B0\uC120 \uC0AC\uC6A9
- *   \uC608) {"isSuccess":false,"code":"COMMON400_1","message":"\uC798\uBABB\uB41C \uC694\uCCAD\uC785\uB2C8\uB2E4.","result":["\uC131\uBCC4\uC740 \uD544\uC218 \uC785\uB825 \uC0AC\uD56D\uC785\uB2C8\uB2E4."]}
+ * 온보딩 실패 응답에서 사용자에게 보여줄 사유를 추출한다.
+ * 검증 오류의 result 배열 첫 메시지를 우선하고, 없으면 최상위 message를 사용한다.
  */
 private fun parseSubmitErrorMessage(errorBody: String?): String {
     val fallback = "\uC7A0\uC2DC \uD6C4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694."

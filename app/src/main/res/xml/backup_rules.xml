@@ -2,7 +2,7 @@
    Auto Backup 규칙 (API < 31).
    암호화 토큰 prefs(auth_prefs_enc)는 백업/복원 대상에서 제외.
    마스터키(AndroidKeyStore)는 복원되지 않으므로, 파일만 복원되면
-   복호화 실패(AEADBadTagException)로 앱이 크래시하기 때문.
+   복호화할 수 없어 저장된 토큰을 사용할 수 없기 때문.
 -->
 <full-backup-content>
     <exclude domain="sharedpref" path="auth_prefs_enc.xml" />

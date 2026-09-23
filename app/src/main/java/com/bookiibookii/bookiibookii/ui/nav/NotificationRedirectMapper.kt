@@ -19,7 +19,7 @@ sealed interface RedirectTarget {
 }
 
 // 백엔드 redirectType을 이동 대상으로 변환한다.
-// null은 '조용히 무시' — 미구현 타입이거나 groupId가 없는 경우이며 기존 동작과 같다.
+// 미지원 타입이나 그룹 목적지의 groupId 누락은 null, 카드 상세의 인자 누락은 Unsupported.
 fun NotificationRedirect.toTarget(): RedirectTarget? = when (redirectType) {
     "EXPLORE_HOME" -> RedirectTarget.ToGraph(Graph.HOME)
     "TRACKER_HOME" -> RedirectTarget.ToGraph(Graph.TRACKER)
