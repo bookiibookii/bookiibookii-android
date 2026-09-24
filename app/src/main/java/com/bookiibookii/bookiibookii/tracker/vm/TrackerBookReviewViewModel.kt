@@ -94,7 +94,7 @@ class TrackerBookReviewViewModel(
                     onSuccess()
                 }
             } catch (_: Exception) {
-                // 실패 시 무시 (다음 단계에서 에러 UI)
+                // TODO: 요청 실패 사유를 화면에 표시
             } finally {
                 _state.update { it.copy(submitting = false) }
             }

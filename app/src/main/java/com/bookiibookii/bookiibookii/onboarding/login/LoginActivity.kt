@@ -153,7 +153,7 @@ class LoginActivity : AppCompatActivity() {
                             result.userId
                         )
                         TokenManager.saveOnboardingDone(
-                            // TODO: 이거 확인해서 수정해야함
+                            // TODO: 온보딩 완료 상태로 COMPLETED와 SPLASH_DONE을 모두 허용해야 하는지 확인
                             this@LoginActivity,
                             result.onboardingStatus == "COMPLETED" ||
                                 result.onboardingStatus == "SPLASH_DONE",

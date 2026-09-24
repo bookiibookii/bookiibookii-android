@@ -89,7 +89,6 @@ fun BookiiApp(
     }
 
     // 공통 에러 화면에서 '다시 시도' → 최상위 화면이면 해당 탭을 새로 띄운다.
-    // 통합 전 MainActivity가 현재 탭 Fragment를 재생성하던 동작과 같다.
     LaunchedEffect(Unit) {
         ComRetryBus.retryFlow.collect {
             val route = navController.currentBackStackEntry?.destination?.route
@@ -195,7 +194,7 @@ private fun NavController.handleRedirect(
 ) {
     when (val target = redirect.toTarget()) {
         is RedirectTarget.ToGraph -> navigateToTab(target.graph)
-        // 원본 pushDeepFragment와 동일하게 현재 스택 위에 쌓는다. 뒤로가면 보던 탭으로 돌아온다.
+        // 현재 스택 위에 쌓아 뒤로가면 보던 화면으로 돌아온다.
         is RedirectTarget.ToDestination -> navigate(target.route)
         is RedirectTarget.ToCardDetail -> onCardDetailRequest(target.memberBookId, target.cardId)
         RedirectTarget.Unsupported -> onUnsupported()
@@ -280,7 +279,6 @@ private class NavControllerAppNavigator(
         navController.navigate(Graph.NOTIFICATION)
     }
 
-    // 통합 전 4개 Fragment에 중복돼 있던 판정을 여기 한 곳으로 모은다.
     override fun toProfile(nickname: String?) {
         val myNickname = TokenManager.getNickname(context)
         if (nickname == null || (myNickname != null && nickname == myNickname)) {
@@ -310,7 +308,6 @@ private class NavControllerAppNavigator(
     }
 
     // 목적지로 바로 이동한다. 중첩 그래프의 시작 목적지는 쌓지 않는다.
-    // 통합 전 XxxFragment.newInstance(목적지)가 그 목적지를 시작점으로 띄우던 것과 같다.
     private fun go(route: String) {
         navController.navigate(route)
     }

@@ -29,7 +29,7 @@ class GraphTest {
     @Test fun `서재 상세는 최상위가 아니다`() =
         assertFalse(isTopLevelRoute(LibraryDestinations.DETAIL_ROUTE))
 
-    // 마이페이지는 현재도 바텀네비가 숨겨진다 (MypageNavHost의 DisposableEffect)
+    // 마이페이지는 바텀네비를 표시하는 최상위 목적지에 포함하지 않는다.
     @Test fun `마이페이지 메인은 최상위가 아니다`() =
         assertFalse(isTopLevelRoute(MypageDestinations.MAIN))
 
@@ -52,7 +52,7 @@ class GraphTest {
         assertEquals(all.size, all.toSet().size)
     }
 
-    // --- 홈 라우트 빌더: HomeFragment.newInstanceAtMyGroups()를 대체한다 ---
+    // --- 홈 라우트 빌더: 진입 탭 지정 ---
 
     @Test fun `탭 없이 홈으로 가면 선택 인자가 없다`() =
         assertEquals("home", Graph.home())

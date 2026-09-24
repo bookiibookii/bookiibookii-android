@@ -33,7 +33,7 @@ data class BookResult(
     val mine: Boolean,
 )
 
-// UI 모델 (Fragment/ViewModel 용)
+// 서재 목록 UI 모델
 data class LibBook(
     val groupId: Int,
     val memberBookId: Int,

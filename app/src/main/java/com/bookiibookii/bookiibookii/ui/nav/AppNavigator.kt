@@ -3,7 +3,7 @@ package com.bookiibookii.bookiibookii.ui.nav
 import com.bookiibookii.bookiibookii.home.HomeTab
 import com.bookiibookii.bookiibookii.mypage.vm.GroupReviewNavTarget
 
-// 도메인 내부 이동은 각 그래프가 자기 navController로 처리하므로 여기 넣지 않는다.
+// 도메인 간 이동 인터페이스. 각 그래프의 내부 이동도 루트 NavController를 공유한다.
 interface AppNavigator {
 
     fun toGroupDetail(groupId: Long)
@@ -24,7 +24,7 @@ interface AppNavigator {
 
     fun toAddressManagement(initialTab: Int)
 
-    // 바텀네비 탭을 누른 것과 동일하게 이동
+    // 홈의 특정 탭을 지정하면 저장된 상태 대신 해당 탭으로 새로 진입한다.
     fun toHomeTab(tab: HomeTab? = null)
     fun toLibraryTab()
 

@@ -35,7 +35,7 @@ object DateUtils {
     fun meetingAtFromKst(local: LocalDateTime): String =
         local.atZone(KST).toOffsetDateTime().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
-    // 서버 응답(Z)/offset 문자열 → 수정 모드 프리필용 KST LocalDateTime (실패 시 null)
+    // 서버 응답(Z)/offset 문자열은 KST로 변환하고, offset 없는 값은 그대로 사용. 실패 시 null.
     fun parseKstLocalDateTime(raw: String?): LocalDateTime? {
         if (raw.isNullOrBlank()) return null
         return try {
@@ -56,7 +56,7 @@ object DateUtils {
     }
 
     // 서버 시간 문자열 → Instant
-    // "...Z"/offset 있으면 Instant.parse, 없으면 UTC LocalDateTime으로 간주
+    // Z/offset이 있으면 Instant로 파싱. 없으면 UTC로 간주하고, 날짜만 있으면 UTC 자정 사용.
     private fun parseInstant(serverTime: String): Instant = try {
         Instant.parse(serverTime)                                          // ISO-8601 with Z
     } catch (_: Exception) { try {

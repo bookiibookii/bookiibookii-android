@@ -196,7 +196,7 @@ class TrackerDetailViewModel(
                     load()
                 }
             } catch (_: Exception) {
-                // 실패 시 무시 (다음 단계에서 에러 표시)
+                // TODO: 요청 실패 사유를 화면에 표시
             } finally {
                 mutating = false
             }
@@ -396,7 +396,7 @@ class TrackerDetailViewModel(
                     load()
                 }
             } catch (_: Exception) {
-                // 실패 시 무시 (다음 단계에서 에러 표시 추가)
+                // TODO: 요청 실패 사유를 화면에 표시
             } finally {
                 mutating = false
             }

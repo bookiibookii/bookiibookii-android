@@ -83,8 +83,9 @@ fun ViewModel.observeSearchQuery(
                 .map { SearchTrigger(query = it.trim(), force = true) }
                 .filter { it.query.isNotBlank() },
         )
-            // 자동 트리거가 이미 검색한 값을 디바운스가 그대로 다시 흘리면, collectLatest가
-            // 진행 중인 요청을 취소만 하고 재검색은 하지 않아 응답이 영영 오지 않는다.
+            // 자동 트리거가 이미 검색한 값을 디바운스가 그대로 다시 흘리면, collectLatest는
+            // 진행 중인 요청을 취소하고 같은 쿼리로 다시 검색한다. 결과는 결국 오지만
+            // 취소된 첫 요청이 오류로 표시되고, 같은 쿼리를 두 번 요청하게 된다.
             // 중복을 상류에서 버려 취소 자체를 만들지 않는다
             .filter { it.force || it.query != lastTriggered }
             .onEach { lastTriggered = it.query }

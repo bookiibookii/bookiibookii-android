@@ -62,7 +62,7 @@ internal fun HomeWelcomeSection(
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
 
-    // 세션 동안 고정 — remember 키 없음: 탭 이동해도 recompose 시 값 유지
+    // 같은 Composition의 재구성 동안 유지하며, 화면이 다시 구성되면 새로 선택한다.
     val topGreeting = remember { pickTopGreeting() }
     val subtitle = remember { pickSubtitle() }
 
