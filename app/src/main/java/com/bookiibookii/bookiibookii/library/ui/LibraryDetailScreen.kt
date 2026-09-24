@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.common.DateUtils
 import androidx.compose.foundation.layout.Arrangement
@@ -696,7 +697,7 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
             ) {
                 if (!card.imageUrl.isNullOrBlank()) {
                     AsyncImage(
-                        model              = card.imageUrl,
+                        model              = readingCardImageRequest(LocalContext.current, card.imageUrl, card.s3Key),
                         contentDescription = null,
                         contentScale       = ContentScale.Crop,
                         modifier           = Modifier.matchParentSize(),
