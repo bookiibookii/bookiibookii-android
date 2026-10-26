@@ -105,14 +105,7 @@ fun SettingRoute(
         onPrivacyClick = { context.openPrivacyPolicy() },
         onWithdrawClick = onWithdrawClick,
         onLogoutClick = {
-            val ctx = context.applicationContext
-            com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar.deactivateCurrentToken {
-                com.bookiibookii.bookiibookii.onboarding.login.TokenManager.clear(ctx)
-                val intent = android.content.Intent(ctx, com.bookiibookii.bookiibookii.onboarding.login.LoginActivity::class.java).apply {
-                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
-                ctx.startActivity(intent)
-            }
+            com.bookiibookii.bookiibookii.onboarding.login.LogoutManager.logout(context)
         },
     )
 }

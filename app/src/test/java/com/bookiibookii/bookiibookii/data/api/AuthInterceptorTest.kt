@@ -260,4 +260,41 @@ class AuthInterceptorTest {
         assertEquals(1, router.logouts.get())
         assertTrue(store.cleared)
     }
+
+    // --- 로그아웃 요청: 화면 이동은 호출부 몫. 인터셉터는 토큰 처리만 한다 ---
+
+    @Test fun `로그아웃 요청이 401이면 리프레시 후 재시도`() {
+        dispatch(
+            refreshResponse = { MockResponse().setBody(refreshSuccessBody()) },
+            apiResponses = ArrayDeque(
+                listOf(
+                    MockResponse().setResponseCode(401),
+                    MockResponse().setResponseCode(200).setBody("{}"),
+                )
+            ),
+        )
+        assertEquals(200, call("/api/auth/logout").code)
+        assertEquals(1, refreshRequests.size)
+    }
+
+    @Test fun `로그아웃 요청의 리프레시가 실패하면 토큰은 클리어하되 라우팅하지 않음`() {
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(400).setBody("{}") },
+            apiResponses = ArrayDeque(listOf(MockResponse().setResponseCode(401))),
+        )
+        var thrown = false
+        try { call("/api/auth/logout") } catch (_: java.io.IOException) { thrown = true }
+        assertTrue(thrown)
+        assertTrue(store.cleared)
+        assertEquals(0, router.logouts.get())
+    }
+
+    @Test fun `로그아웃 요청이 500이면 에러 화면으로 라우팅하지 않음`() {
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(500) },
+            apiResponses = ArrayDeque(listOf(MockResponse().setResponseCode(503).setBody("{}"))),
+        )
+        assertEquals(503, call("/api/auth/logout").code)
+        assertTrue(router.comErrors.isEmpty())
+    }
 }
