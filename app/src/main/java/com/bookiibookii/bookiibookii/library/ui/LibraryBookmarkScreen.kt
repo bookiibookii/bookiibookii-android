@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -299,7 +300,7 @@ private fun BookmarkCardItem(
             ) {
                 if (!card.imageUrl.isNullOrBlank()) {
                     coil.compose.AsyncImage(
-                        model              = card.imageUrl,
+                        model              = readingCardImageRequest(LocalContext.current, card.imageUrl, card.s3Key),
                         contentDescription = null,
                         contentScale       = androidx.compose.ui.layout.ContentScale.Crop,
                         modifier           = Modifier.matchParentSize(),

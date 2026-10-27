@@ -75,7 +75,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.BottomSheetBtnStyle
@@ -885,7 +884,7 @@ private fun PhotoCard(
             Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
                 if (!card.imageUrl.isNullOrBlank()) {
                     AsyncImage(
-                        model              = card.imageUrl,
+                        model              = readingCardImageRequest(LocalContext.current, card.imageUrl, card.s3Key),
                         contentDescription = null,
                         contentScale       = ContentScale.Crop,
                         modifier           = Modifier.matchParentSize(),
@@ -914,7 +913,7 @@ private fun PhotoCard(
                 ) {
                     if (!card.imageUrl.isNullOrBlank()) {
                         AsyncImage(
-                            model              = card.imageUrl,
+                            model              = readingCardImageRequest(LocalContext.current, card.imageUrl, card.s3Key),
                             contentDescription = null,
                             contentScale       = ContentScale.Crop,
                             modifier           = Modifier.matchParentSize(),
@@ -1008,10 +1007,10 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                     Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
                         if (!card.imageUrl.isNullOrBlank()) {
                             AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(card.imageUrl)
-                                    .allowHardware(false)
-                                    .build(),
+                                model = readingCardImageRequest(
+                                    LocalContext.current, card.imageUrl, card.s3Key,
+                                    allowHardware = false,
+                                ),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.matchParentSize(),
@@ -1045,10 +1044,10 @@ internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Mo
                     Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(BookiiBookiiTheme.colors.grey300)) {
                         if (!card.imageUrl.isNullOrBlank()) {
                             AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(card.imageUrl)
-                                    .allowHardware(false)
-                                    .build(),
+                                model = readingCardImageRequest(
+                                    LocalContext.current, card.imageUrl, card.s3Key,
+                                    allowHardware = false,
+                                ),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.matchParentSize(),

@@ -1,44 +1,29 @@
 package com.bookiibookii.bookiibookii.notification.nav
 
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
 import com.bookiibookii.bookiibookii.notification.ui.KeywordSettingRoute
 import com.bookiibookii.bookiibookii.notification.ui.NotificationRoute
+import com.bookiibookii.bookiibookii.ui.nav.AppNavigator
+import com.bookiibookii.bookiibookii.ui.nav.Graph
 
-@Composable
-fun NotificationNavHost(
-    onExit: () -> Unit,
+fun NavGraphBuilder.notificationGraph(
+    navController: NavController,
+    navigator: AppNavigator,
     onRedirect: (NotificationRedirect) -> Unit,
-    modifier: Modifier = Modifier,
-    startDestination: String = NotificationDestinations.MAIN,
 ) {
-    val navController = rememberNavController()
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier,
-        // 화면 전환 애니메이션 제거(기본 크로스페이드 시 이전 화면이 잔상처럼 겹쳐 보이는 현상 방지)
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
-        popExitTransition = { ExitTransition.None },
-    ) {
+    navigation(route = Graph.NOTIFICATION, startDestination = NotificationDestinations.MAIN) {
         composable(NotificationDestinations.MAIN) {
             NotificationRoute(
-                onBackClick = { if (!navController.popBackStack()) onExit() },
+                onBackClick = navigator::back,
                 onAddClick = { navController.navigate(NotificationDestinations.KEYWORD_SETTING) },
                 onRedirect = onRedirect,
             )
         }
         composable(NotificationDestinations.KEYWORD_SETTING) {
-            KeywordSettingRoute(
-                onBackClick = { if (!navController.popBackStack()) onExit() },
-            )
+            KeywordSettingRoute(onBackClick = navigator::back)
         }
     }
 }

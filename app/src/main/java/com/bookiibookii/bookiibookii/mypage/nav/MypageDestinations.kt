@@ -4,7 +4,7 @@ import android.net.Uri
 import com.bookiibookii.bookiibookii.mypage.ui.detail.ReviewTab
 
 object MypageDestinations {
-    const val MAIN = "main"
+    const val MAIN = "mypage_main"
     const val PROFILE_SETTING = "profileSetting"
 
     const val ADDRESS_ARG_INITIAL_TAB = "initialTab"

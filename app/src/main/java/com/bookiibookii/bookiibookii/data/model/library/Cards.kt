@@ -107,7 +107,7 @@ data class ShareTokenResponseDTO(
 )
 
 // 공유 토큰 기반 독서카드 공개 조회 응답 (GET /api/public/reading-cards/{shareToken})
-// 공개 엔드포인트라 ApiResponse 래퍼 없이 DTO를 직접 반환한다. required 없음 → 전부 nullable.
+// ApiResponse.result에 담기는 공개 카드 정보. 누락 가능한 필드는 nullable로 받는다.
 data class PublicReadingCardResponseDTO(
     val shareLayout: String?,
     val cardType: String?,

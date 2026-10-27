@@ -46,6 +46,7 @@ import coil.compose.AsyncImage
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.data.model.group.BookItem
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
+import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_NO_RESULT
 import com.bookiibookii.bookiibookii.common.stripBookSubtitle
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
@@ -148,9 +149,10 @@ private fun LifeBookSearchDialogContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "검색 결과가 없습니다.",
+                                text = BOOK_SEARCH_NO_RESULT,
                                 style = typography.regular16,
-                                color = colors.grey600
+                                color = colors.grey600,
+                                textAlign = TextAlign.Center
                             )
                         }
                     } else {
@@ -177,7 +179,7 @@ private fun LifeBookSearchDialogContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "검색 중 오류가 발생했습니다.\n다시 시도해주세요.",
+                        text = bookSearchState.message,
                         style = typography.regular16,
                         color = colors.grey600,
                         textAlign = TextAlign.Center

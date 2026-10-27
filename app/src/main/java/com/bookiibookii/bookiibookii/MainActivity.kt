@@ -3,45 +3,23 @@ package com.bookiibookii.bookiibookii
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.view.Gravity
-import android.view.View
-import android.widget.FrameLayout
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.lifecycleScope
-import com.bookiibookii.bookiibookii.common.ComRetryBus
-import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
-import com.bookiibookii.bookiibookii.group.GroupFragment
-import com.bookiibookii.bookiibookii.group.nav.GroupDestinations
-import com.bookiibookii.bookiibookii.home.HomeFragment
-import com.bookiibookii.bookiibookii.library.feat.LibraryFragment
+import com.bookiibookii.bookiibookii.library.nav.LibraryDestinations
 import com.bookiibookii.bookiibookii.library.ui.ReadingCard
 import com.bookiibookii.bookiibookii.library.vm.toReadingCard
 import com.bookiibookii.bookiibookii.notification.fcm.FcmTokenRegistrar
@@ -49,22 +27,18 @@ import com.bookiibookii.bookiibookii.notification.nav.NotificationRedirect
 import com.bookiibookii.bookiibookii.notification.nav.NotificationRedirectRouter
 import com.bookiibookii.bookiibookii.onboarding.login.LoginActivity
 import com.bookiibookii.bookiibookii.onboarding.login.TokenManager
-import com.bookiibookii.bookiibookii.tracker.TrackerFragment
-import com.bookiibookii.bookiibookii.tracker.nav.TrackerDestinations
-import com.bookiibookii.bookiibookii.ui.component.BottomNavBar
+import com.bookiibookii.bookiibookii.ui.component.showCustomToast
+import com.bookiibookii.bookiibookii.ui.nav.BookiiApp
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
-enum class NavTab { HOME, TRACKER, LIBRARY }
-
 class MainActivity : AppCompatActivity() {
 
-    private var currentTab by mutableStateOf(NavTab.HOME)
+    private var pendingRedirect by mutableStateOf<NotificationRedirect?>(null)
 
-    private lateinit var fragmentContainerView: FragmentContainerView
-    private lateinit var bottomNavView: ComposeView
-    private lateinit var statusBarBackground: View
+    // 카드 상세는 이동 전 서버 조회가 필요해 여기서 처리하고 결과 라우트를 넘긴다.
+    private var pendingCardDetailRoute by mutableStateOf<String?>(null)
 
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -90,28 +64,22 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        setupLayout()
-        hideNavigationBar()
+        consumeRedirectIntent(intent)
 
-        if (savedInstanceState == null) {
-            currentTab = NavTab.HOME
-            replaceFragment(HomeFragment())
-        }
-
-        lifecycleScope.launch {
-            ComRetryBus.retryFlow.collect {
-                if (supportFragmentManager.backStackEntryCount > 0) return@collect
-                val fresh = when (currentTab) {
-                    NavTab.HOME -> HomeFragment()
-                    NavTab.TRACKER -> TrackerFragment()
-                    NavTab.LIBRARY -> LibraryFragment()
-                }
-                selectTab(currentTab, fresh)
+        setContent {
+            BookiiBookiiTheme {
+                BookiiApp(
+                    pendingRedirect = pendingRedirect,
+                    onRedirectConsumed = { pendingRedirect = null },
+                    onCardDetailRequest = ::openCardDetail,
+                    onUnsupportedRedirect = { showCustomToast("카드를 불러오지 못했어요", false) },
+                    pendingCardDetailRoute = pendingCardDetailRoute,
+                    onCardDetailRouteConsumed = { pendingCardDetailRoute = null },
+                )
             }
         }
 
-        observeFragmentChanges()
-        handleNavigationIntent(intent)
+        hideNavigationBar()
         requestNotificationPermissionIfNeeded()
 
         val prefs = getSharedPreferences("bookii_prefs", android.content.Context.MODE_PRIVATE)
@@ -120,157 +88,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupLayout() {
-        fragmentContainerView = FragmentContainerView(this).apply {
-            id = R.id.fragmentContainer
-        }
-
-        bottomNavView = ComposeView(this).apply {
-            id = R.id.bottomNav
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                BookiiBookiiTheme {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.BottomCenter,
-                    ) {
-                        BottomNavBar(
-                            groupSelected = currentTab == NavTab.HOME,
-                            trackerSelected = currentTab == NavTab.TRACKER,
-                            librarySelected = currentTab == NavTab.LIBRARY,
-                            onGroupClick = { selectTab(NavTab.HOME, HomeFragment()) },
-                            onTrackerClick = { selectTab(NavTab.TRACKER, TrackerFragment()) },
-                            onLibraryClick = { selectTab(NavTab.LIBRARY, LibraryFragment()) },
-                            modifier = Modifier
-                                .navigationBarsPadding()
-                                .padding(bottom = 20.dp),
-                        )
-                    }
-                }
-            }
-        }
-
-        // 엣지투엣지라 상태바가 투명해서 windowBackground(@color/ui_bg)가 비친다.
-        // 흰색 View를 상태바 높이만큼 덮어준다.
-        statusBarBackground = View(this).apply {
-            setBackgroundColor(Color.WHITE)
-        }
-
-        val root = FrameLayout(this).apply {
-            addView(
-                fragmentContainerView,
-                FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                )
-            )
-            addView(
-                bottomNavView,
-                FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                )
-            )
-            addView(
-                statusBarBackground,
-                FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    0,
-                    Gravity.TOP,
-                )
-            )
-        }
-
-        setContentView(root)
-
-        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            fragmentContainerView.updatePadding(top = systemBars.top)
-            statusBarBackground.updateLayoutParams { height = systemBars.top }
-            insets
-        }
-    }
-
-    private fun hideNavigationBar() {
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-        controller.hide(WindowInsetsCompat.Type.navigationBars())
-        controller.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) hideNavigationBar()
-    }
-
-    private fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) return
-        requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-    }
-
-    private fun observeFragmentChanges() {
-        supportFragmentManager.addOnBackStackChangedListener {
-            refreshBottomNavVisibility()
-            updateBottomNavSelection(supportFragmentManager.findFragmentById(R.id.fragmentContainer))
-        }
-    }
-
-    fun refreshBottomNavVisibility() {
-        val current = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
-        val isTopLevel = current is HomeFragment
-            || current is TrackerFragment
-            || (current is LibraryFragment && current.isAtMainRoute())
-        bottomNavView.visibility = if (isTopLevel) View.VISIBLE else View.GONE
-    }
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handleNavigationIntent(intent)
+        consumeRedirectIntent(intent)
     }
 
-    private fun handleNavigationIntent(intent: Intent?) {
-        val redirect = NotificationRedirectRouter.fromIntent(intent) ?: return
-        dispatchNotificationRedirect(redirect)
+    private fun consumeRedirectIntent(intent: Intent?) {
+        pendingRedirect = NotificationRedirectRouter.fromIntent(intent)
         intent?.removeExtra(NotificationRedirectRouter.KEY_REDIRECT_TYPE)
     }
 
-    fun dispatchNotificationRedirect(redirect: NotificationRedirect) {
-        val groupId = redirect.groupId
-        when (redirect.redirectType) {
-            "EXPLORE_HOME" -> selectTab(NavTab.HOME, HomeFragment())
-            "TRACKER_HOME" -> selectTab(NavTab.TRACKER, TrackerFragment())
-            "APPLICATION_MANAGEMENT" -> groupId?.let {
-                pushDeepFragment(GroupFragment.newInstance(GroupDestinations.joinRequests(it.toString())))
-            }
-            "GROUP_DETAIL" -> groupId?.let {
-                pushDeepFragment(GroupFragment.newInstance(GroupDestinations.detail(it)))
-            }
-            "TRACKER_DETAIL" -> groupId?.let {
-                pushDeepFragment(TrackerFragment.newInstance(TrackerDestinations.detail(it)))
-            }
-            "TRACKER_COMMENT" -> groupId?.let {
-                pushDeepFragment(TrackerFragment.newInstance(TrackerDestinations.comment(it, redirect.title.orEmpty())))
-            }
-            "BOOK_CARD_DETAIL" -> {
-                val memberBookId = redirect.memberBookId
-                val cardId = redirect.cardId
-                // memberBookId 없는 구버전 알림은 지원하지 않음
-                if (memberBookId != null && cardId != null) openCardDetail(memberBookId, cardId)
-                else showCustomToast("카드를 불러오지 못했어요", false)
-            }
-            else -> { /* NOTICE_DETAIL 등 미구현 라우트 */ }
-        }
-    }
-
+    // 서버가 memberBookId 기준으로 같은 그룹·같은 책 카드만 반환
     private fun openCardDetail(memberBookId: Long, cardId: Long) {
         lifecycleScope.launch {
-            // 서버가 memberBookId 기준으로 같은 그룹·같은 책 카드만 반환
             val bookCards = try {
                 val resp = RetrofitClient.libApi().getMemberBookCards(memberBookId.toInt())
                 if (resp.isSuccessful && resp.body()?.isSuccess == true) {
@@ -289,53 +120,32 @@ class MainActivity : AppCompatActivity() {
                 return@launch
             }
 
-            pushDeepFragment(
-                LibraryFragment.newInstanceAtCardDetail(
-                    initialIndex = index,
-                    sortByLatest = true,
-                    cardsJson = Gson().toJson(sorted),
-                ),
+            pendingCardDetailRoute = LibraryDestinations.cardDetail(
+                initialIndex = index,
+                sortByLatest = true,
+                cardsJson = Gson().toJson(sorted),
             )
         }
     }
 
-    private fun pushDeepFragment(fragment: Fragment) {
-        bottomNavView.visibility = View.GONE
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, fragment)
-            .addToBackStack(null)
-            .commit()
+    private fun hideNavigationBar() {
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.hide(WindowInsetsCompat.Type.navigationBars())
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
-    private fun selectTab(tab: NavTab, fragment: Fragment) {
-        currentTab = tab
-        bottomNavView.visibility = View.VISIBLE
-        replaceFragment(fragment)
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideNavigationBar()
     }
 
-    fun moveToGroupTab() {
-        selectTab(NavTab.HOME, HomeFragment())
-    }
-
-    fun moveToHomeMyGroupsTab() {
-        selectTab(NavTab.HOME, HomeFragment.newInstanceAtMyGroups())
-    }
-
-    fun moveToLibraryTab() {
-        selectTab(NavTab.LIBRARY, LibraryFragment())
-    }
-
-    private fun updateBottomNavSelection(current: Fragment?) {
-        when (current) {
-            is HomeFragment -> currentTab = NavTab.HOME
-            is TrackerFragment -> currentTab = NavTab.TRACKER
-            is LibraryFragment -> currentTab = NavTab.LIBRARY
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-    }
-
-    private fun replaceFragment(fragment: Fragment) {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, fragment)
-            .commit()
     }
 }

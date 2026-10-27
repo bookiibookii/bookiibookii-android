@@ -132,7 +132,6 @@ private fun HomeRecommendGroupCard(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Info 영역: 책 표지 + 상세 정보 — 피그마: gap=16dp
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -143,7 +142,6 @@ private fun HomeRecommendGroupCard(
                 modifier = Modifier.size(width = 72.dp, height = 100.dp),
             )
 
-            // 우측 정보 컬럼 — 피그마: h=100dp, SpaceBetween
             Column(
                 modifier = Modifier
                     .height(100.dp)
@@ -186,7 +184,6 @@ private fun HomeRecommendGroupCard(
 
                 // 하단: 독서 기간 + 호스트 정보
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    // 피그마: "예상 독서 기간"(grey700) + "7"(grey800) + "일"(grey700)
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -209,7 +206,6 @@ private fun HomeRecommendGroupCard(
                             )
                         }
                     }
-                    // 피그마: 프로필 이미지 + 호스트 닉네임 + "·" + 그룹명
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -242,7 +238,6 @@ private fun HomeRecommendGroupCard(
             }
         }
 
-        // 자세히 보기 버튼 — 피그마: h=48dp, round16, uiMainPale bg, regular15 orange
         Box(
             modifier = Modifier
                 .fillMaxWidth()

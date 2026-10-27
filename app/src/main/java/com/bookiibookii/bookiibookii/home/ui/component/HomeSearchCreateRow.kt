@@ -46,7 +46,6 @@ internal fun HomeSearchCreateRow(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // 검색 input — 피그마: tl=20 tr=30 bl=20 br=30, h=56dp, border grey/200
         Row(
             modifier = Modifier
                 .weight(1f)
@@ -65,7 +64,6 @@ internal fun HomeSearchCreateRow(
                 color = colors.grey500,
                 modifier = Modifier.weight(1f),
             )
-            // 검색 버튼 — 피그마: grey/300 bg, 44dp, rounded=30dp
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -82,7 +80,6 @@ internal fun HomeSearchCreateRow(
             }
         }
 
-        // 그룹 생성 버튼 — 피그마: orange, h=56dp, rounded=999dp
         Box(
             modifier = Modifier
                 .height(56.dp)

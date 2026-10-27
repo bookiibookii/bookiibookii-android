@@ -15,7 +15,10 @@ import com.bookiibookii.bookiibookii.data.model.mypage.CompletedBook
 import com.bookiibookii.bookiibookii.data.model.mypage.FavoriteBook
 import com.bookiibookii.bookiibookii.data.model.mypage.RepresentativeBook
 import com.bookiibookii.bookiibookii.data.model.mypage.UpdateRepresentativeOrderRequest
+import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_FAILED
+import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_NETWORK_ERROR
 import com.bookiibookii.bookiibookii.common.observeSearchQuery
+import com.bookiibookii.bookiibookii.common.runCatchingCancellable
 import com.bookiibookii.bookiibookii.onboarding.steps.model.BookSearchState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +43,9 @@ class BookshelfViewModel : ViewModel() {
     val bookSearchState: LiveData<BookSearchState> get() = _bookSearchState
 
     private val _bookSearchQuery = MutableStateFlow("")
+
+    // 검색 버튼/키보드 액션 — 자동 검색과 같은 트리거로 합쳐 응답 경쟁을 막는다
+    private val _searchNow = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
     private val _sortOrder = MutableLiveData<SortOrder>(SortOrder.LATEST)
     val sortOrder: LiveData<SortOrder> get() = _sortOrder
@@ -94,6 +100,7 @@ class BookshelfViewModel : ViewModel() {
         fetchBookshelf()
         observeSearchQuery(
             queryFlow = _bookSearchQuery,
+            searchNowFlow = _searchNow,
             onBelowMinLength = { _bookSearchState.value = BookSearchState.Idle },
             onSearch = { performBookSearch(it) },
         )
@@ -129,25 +136,29 @@ class BookshelfViewModel : ViewModel() {
         _bookSearchQuery.value = query
     }
 
+    // ic_search 클릭 또는 키보드 검색 액션 — 디바운스를 건너뛰고 즉시 검색.
+    // 별도 코루틴이 아니라 공통 트리거로 흘려보내야 자동 검색과 함께 취소·관리된다
     fun searchBooks() {
         val query = _bookSearchQuery.value.trim()
         if (query.isBlank()) return
-        viewModelScope.launch { performBookSearch(query) }
+        _searchNow.tryEmit(query)
     }
 
     private suspend fun performBookSearch(query: String) {
         _bookSearchState.value = BookSearchState.Loading
-        runCatching { RetrofitClient.grpApi().searchBooks(query) }
+        // 취소(쿼리 변경·화면 이탈)는 오류가 아니므로 runCatching 대신 사용
+        runCatchingCancellable { RetrofitClient.grpApi().searchBooks(query) }
             .onSuccess { response ->
                 val body = response.body()
                 if (body?.isSuccess == true && body.result != null) {
                     _bookSearchState.value = BookSearchState.Success(body.result.books)
                 } else {
-                    _bookSearchState.value = BookSearchState.Error(body?.message ?: "검색에 실패했습니다.")
+                    _bookSearchState.value = BookSearchState.Error(body?.message ?: BOOK_SEARCH_FAILED)
                 }
             }
-            .onFailure { e ->
-                _bookSearchState.value = BookSearchState.Error(e.message ?: "네트워크 오류가 발생했습니다.")
+            .onFailure {
+                // e.message는 "Unable to resolve host ..." 같은 기술 메시지라 사용자에게 보이면 안 된다
+                _bookSearchState.value = BookSearchState.Error(BOOK_SEARCH_NETWORK_ERROR)
             }
     }
 

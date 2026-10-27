@@ -2,12 +2,14 @@ package com.bookiibookii.bookiibookii.tracker.nav
 
 import android.net.Uri
 
+// route는 루트 NavHost에서 전역 유일해야 한다. navigate(route)의 해석이
+// 현재 위치에 의존하지 않도록 도메인 접두사를 붙인다.
 object TrackerDestinations {
-    const val MAIN = "main"
+    const val MAIN = "tracker_main"
 
     const val DETAIL_ARG_GROUP_ID = "groupId"
-    const val DETAIL_ROUTE = "detail/{$DETAIL_ARG_GROUP_ID}"
-    fun detail(groupId: Long): String = "detail/$groupId"
+    const val DETAIL_ROUTE = "tracker_detail/{$DETAIL_ARG_GROUP_ID}"
+    fun detail(groupId: Long): String = "tracker_detail/$groupId"
 
     const val BOOK_REVIEW_ARG_GROUP_ID = "groupId"
     const val BOOK_REVIEW_ARG_EDIT = "edit"

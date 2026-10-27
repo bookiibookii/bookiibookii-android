@@ -115,7 +115,6 @@ fun TrackerCommentRoute(
         ComRetryBus.retryFlow.collect { viewModel.load() }
     }
 
-    // 바텀 네비 표시는 TrackerNavHost에서 현재 라우트 기준으로 일괄 제어
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {

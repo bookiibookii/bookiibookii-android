@@ -8,32 +8,23 @@ import android.graphics.Canvas
 import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.bookiibookii.bookiibookii.MainActivity
 import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
@@ -58,97 +49,86 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.navigation
+import com.bookiibookii.bookiibookii.ui.nav.AppNavigator
+import com.bookiibookii.bookiibookii.ui.nav.Graph
+import com.bookiibookii.bookiibookii.ui.nav.toLibraryDetailTarget
 
-@Composable
-fun MypageNavHost(
-    mypageViewModel: MypageViewModel,
-    onBackClick: () -> Unit = {},
-    onLibraryDetailClick: (com.bookiibookii.bookiibookii.data.model.mypage.CompletedBook) -> Unit = {},
-    onGroupReviewClick: (com.bookiibookii.bookiibookii.mypage.vm.GroupReviewNavTarget) -> Unit = {},
-    modifier: Modifier = Modifier,
-    startDestination: String = MypageDestinations.MAIN,
+fun NavGraphBuilder.mypageGraph(
+    navController: NavController,
+    navigator: AppNavigator,
 ) {
-    val navController = rememberNavController()
-    val context = LocalContext.current
-    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+    navigation(route = Graph.MYPAGE, startDestination = MypageDestinations.MAIN) {
+        mypageDestinations(navController, navigator)
+    }
+}
 
-    var pendingDownloadProfile by remember { mutableStateOf<Pair<UserProfileResDTO, Boolean>?>(null) }
-    val storagePermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        val pending = pendingDownloadProfile
-        pendingDownloadProfile = null
-        if (granted && pending != null) {
-            saveProfileCardToGallery(context, coroutineScope, pending.first, pending.second)
-        } else {
-            context.showCustomToast("저장 권한이 필요해요", false)
+// 목적지 본문. navigation {} 안에서 Composable 컨텍스트를 쓰기 위해 분리한다.
+private fun NavGraphBuilder.mypageDestinations(
+    navController: NavController,
+    navigator: AppNavigator,
+) {
+    composable(MypageDestinations.MAIN) { entry ->
+        val mypageViewModel = entry.mypageViewModel(navController)
+        val context = LocalContext.current
+        val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
+        var pendingDownloadProfile by remember { mutableStateOf<Pair<UserProfileResDTO, Boolean>?>(null) }
+        val storagePermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+        ) { granted ->
+            val pending = pendingDownloadProfile
+            pendingDownloadProfile = null
+            if (granted && pending != null) {
+                saveProfileCardToGallery(context, coroutineScope, pending.first, pending.second)
+            } else {
+                context.showCustomToast("저장 권한이 필요해요", false)
+            }
         }
+
+        fun downloadProfileCard(profile: UserProfileResDTO, isDark: Boolean) {
+            if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P &&
+                androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                pendingDownloadProfile = profile to isDark
+                storagePermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                return
+            }
+            saveProfileCardToGallery(context, coroutineScope, profile, isDark)
+        }
+
+        MypageMainRoute(
+            viewModel = mypageViewModel,
+            onBackClick = navigator::back,
+            onSettingClick = { navController.navigate(MypageDestinations.SETTING) },
+            onProfileSettingClick = { navController.navigate(MypageDestinations.PROFILE_SETTING) },
+            onAddressManagementClick = { navController.navigate(MypageDestinations.addressManagement()) },
+            onBookshelfClick = { navController.navigate(MypageDestinations.MY_BOOKSHELF) },
+            onWrittenReviewClick = { navController.navigate(MypageDestinations.review(ReviewTab.WRITTEN)) },
+            onReceivedReviewClick = { navController.navigate(MypageDestinations.review(ReviewTab.RECEIVED)) },
+            onInstagramShareClick = { isDark ->
+                mypageViewModel.profileData.value?.let { shareProfileToInstagram(context, coroutineScope, it, isDark) }
+            },
+            onDownloadClick = { isDark ->
+                mypageViewModel.profileData.value?.let { downloadProfileCard(it, isDark) }
+            },
+            onXShareClick = { isDark ->
+                mypageViewModel.profileData.value?.let { shareProfileToX(context, coroutineScope, it, isDark) }
+            },
+            onLinkCopyClick = { isDark ->
+                copyProfileShareLink(context, coroutineScope, isDark)
+            },
+        )
     }
 
-    fun downloadProfileCard(profile: UserProfileResDTO, isDark: Boolean) {
-        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P &&
-            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED
-        ) {
-            pendingDownloadProfile = profile to isDark
-            storagePermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            return
-        }
-        saveProfileCardToGallery(context, coroutineScope, profile, isDark)
-    }
-
-    val popOrExit: () -> Unit = {
-        if (!navController.popBackStack()) onBackClick()
-    }
-
-    DisposableEffect(Unit) {
-        val activity = context as? Activity
-        activity?.findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-        activity?.window?.decorView?.post {
-            activity.findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
-        }
-        onDispose {
-            (activity as? MainActivity)?.refreshBottomNavVisibility()
-        }
-    }
-
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier,
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
-        popExitTransition = { ExitTransition.None },
-    ) {
-        composable(MypageDestinations.MAIN) {
-            MypageMainRoute(
-                viewModel = mypageViewModel,
-                onBackClick = onBackClick,
-                onSettingClick = { navController.navigate(MypageDestinations.SETTING) },
-                onProfileSettingClick = { navController.navigate(MypageDestinations.PROFILE_SETTING) },
-                onAddressManagementClick = { navController.navigate(MypageDestinations.addressManagement()) },
-                onBookshelfClick = { navController.navigate(MypageDestinations.MY_BOOKSHELF) },
-                onWrittenReviewClick = { navController.navigate(MypageDestinations.review(ReviewTab.WRITTEN)) },
-                onReceivedReviewClick = { navController.navigate(MypageDestinations.review(ReviewTab.RECEIVED)) },
-                onInstagramShareClick = { isDark ->
-                    mypageViewModel.profileData.value?.let { shareProfileToInstagram(context, coroutineScope, it, isDark) }
-                },
-                onDownloadClick = { isDark ->
-                    mypageViewModel.profileData.value?.let { downloadProfileCard(it, isDark) }
-                },
-                onXShareClick = { isDark ->
-                    mypageViewModel.profileData.value?.let { shareProfileToX(context, coroutineScope, it, isDark) }
-                },
-                onLinkCopyClick = { isDark ->
-                    copyProfileShareLink(context, coroutineScope, isDark)
-                },
-            )
-        }
-
-        composable(MypageDestinations.PROFILE_SETTING) {
+        composable(MypageDestinations.PROFILE_SETTING) { entry ->
             ProfileSettingRoute(
-                viewModel = mypageViewModel,
-                onBackClick = popOrExit,
+                viewModel = entry.mypageViewModel(navController),
+                onBackClick = navigator::back,
             )
         }
 
@@ -160,15 +140,15 @@ fun MypageNavHost(
         ) { backStackEntry ->
             AddressManagementRoute(
                 initialTab = backStackEntry.arguments?.getInt(MypageDestinations.ADDRESS_ARG_INITIAL_TAB) ?: 0,
-                onBackClick = popOrExit,
+                onBackClick = navigator::back,
             )
         }
 
         composable(MypageDestinations.MY_BOOKSHELF) {
             MyBookshelfRoute(
-                onBack = popOrExit,
-                onLibraryClick = onLibraryDetailClick,
-                onReviewClick = onGroupReviewClick,
+                onBack = navigator::back,
+                onLibraryClick = { navigator.toLibraryDetail(it.toLibraryDetailTarget()) },
+                onReviewClick = navigator::toLibraryGroupReview,
             )
         }
 
@@ -180,15 +160,15 @@ fun MypageNavHost(
         ) { backStackEntry ->
             val tabName = backStackEntry.arguments?.getString(MypageDestinations.REVIEW_ARG_TAB) ?: ReviewTab.WRITTEN.name
             ReviewRoute(
-                viewModel = mypageViewModel,
+                viewModel = backStackEntry.mypageViewModel(navController),
                 initialTab = ReviewTab.valueOf(tabName),
-                onBackClick = popOrExit,
+                onBackClick = navigator::back,
             )
         }
 
         composable(MypageDestinations.SETTING) {
             SettingRoute(
-                onBackClick = popOrExit,
+                onBackClick = navigator::back,
                 onNoticeClick = { navController.navigate(MypageDestinations.NOTICE) },
                 onQuestionClick = { navController.navigate(MypageDestinations.FAQ) },
                 onWithdrawClick = { navController.navigate(MypageDestinations.WITHDRAW) },
@@ -197,7 +177,7 @@ fun MypageNavHost(
 
         composable(MypageDestinations.NOTICE) {
             NoticeRoute(
-                onBackClick = popOrExit,
+                onBackClick = navigator::back,
                 onNoticeClick = { noticeId, title -> navController.navigate(MypageDestinations.noticeDetail(noticeId, title)) },
             )
         }
@@ -213,18 +193,18 @@ fun MypageNavHost(
             NoticeDetailRoute(
                 noticeId = args?.getLong(MypageDestinations.NOTICE_DETAIL_ARG_NOTICE_ID) ?: -1L,
                 title = args?.getString(MypageDestinations.NOTICE_DETAIL_ARG_TITLE).orEmpty(),
-                onBackClick = popOrExit,
+                onBackClick = navigator::back,
             )
         }
 
         composable(MypageDestinations.FAQ) {
-            FaqRoute(onBackClick = popOrExit)
+            FaqRoute(onBackClick = navigator::back)
         }
 
-        composable(MypageDestinations.WITHDRAW) {
+        composable(MypageDestinations.WITHDRAW) { entry ->
             WithdrawRoute(
-                mypageViewModel = mypageViewModel,
-                onBackClick = popOrExit,
+                mypageViewModel = entry.mypageViewModel(navController),
+                onBackClick = navigator::back,
             )
         }
 
@@ -239,10 +219,9 @@ fun MypageNavHost(
             WebViewRoute(
                 title = args?.getString(MypageDestinations.WEBVIEW_ARG_TITLE).orEmpty(),
                 assetFileName = args?.getString(MypageDestinations.WEBVIEW_ARG_ASSET).orEmpty(),
-                onBackClick = popOrExit,
+                onBackClick = navigator::back,
             )
         }
-    }
 }
 
 private fun captureProfileCardBitmap(
@@ -510,4 +489,12 @@ private fun launchInstagramStoryBackgroundOnly(context: android.content.Context,
     } catch (_: Exception) {
         context.showCustomToast("인스타그램 앱을 찾을 수 없습니다.", false)
     }
+}
+
+// 마이페이지 그래프 스코프. 통합 전 activityViewModels()로 Activity 전역이었으나,
+// 이 VM을 쓰는 곳이 마이페이지 도메인뿐이라 그래프 범위로 좁힌다.
+@Composable
+private fun NavBackStackEntry.mypageViewModel(navController: NavController): MypageViewModel {
+    val graphEntry = remember(this) { navController.getBackStackEntry(Graph.MYPAGE) }
+    return viewModel(graphEntry)
 }

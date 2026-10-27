@@ -50,7 +50,7 @@ import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.deliveryTrackingUrl
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
-import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
+import com.bookiibookii.bookiibookii.ui.nav.LibraryDetailTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerCardModel
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
@@ -456,26 +456,18 @@ fun TrackerMainRoute(
     onNavigatePartnerReview: (groupId: Long) -> Unit,
     onNavigateComment: (groupId: Long, title: String) -> Unit = { _, _ -> },
     onNavigatePlaceSearch: () -> Unit = {},
-    onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
+    onNavigateLibraryDetail: (LibraryDetailTarget) -> Unit = {},
     selectedPlace: PlaceSearchResult? = null,
     onPlaceConsumed: () -> Unit = {},
     viewModel: TrackerMainViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val uiState by viewModel.state.collectAsStateWithLifecycle()
-    // 최초 진입은 VM init에서 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
-    // 상세 화면 등에서 복귀할 때만 목록을 재조회한다. (rememberSaveable로 백스택 복귀 시에도 유지)
-    var isFirstResume by rememberSaveable { mutableStateOf(true) }
     // 장소 검색 화면으로 이동 중이면 2/3 다이얼로그를 즉시 숨김(복귀 시 ON_RESUME에서 해제)
     var placeSearchPending by rememberSaveable { mutableStateOf(false) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         placeSearchPending = false
-        if (isFirstResume) {
-            isFirstResume = false
-        } else {
-            viewModel.load()
-            viewModel.fetchNotificationDot()
-        }
+        viewModel.onScreenResumed()
     }
     var progressDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var trackingDialogGroupId by rememberSaveable { mutableStateOf<Long?>(null) }

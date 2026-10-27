@@ -12,8 +12,8 @@ import com.bookiibookii.bookiibookii.data.model.tracker.MeetingResDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.PartnerDeliveryResponseDTO
 import com.bookiibookii.bookiibookii.data.model.tracker.toMeetingPlace
 import com.bookiibookii.bookiibookii.tracker.data.TrackerRepository
-import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
-import com.bookiibookii.bookiibookii.tracker.model.toReadingCardTarget
+import com.bookiibookii.bookiibookii.ui.nav.LibraryDetailTarget
+import com.bookiibookii.bookiibookii.ui.nav.toLibraryDetailTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerMainUiState
 import com.bookiibookii.bookiibookii.tracker.model.toCardModel
 import com.bookiibookii.bookiibookii.tracker.model.toNotificationItem
@@ -49,8 +49,13 @@ class TrackerMainViewModel(
     private val _meetingInfo = MutableStateFlow<MeetingResDTO?>(null)
     val meetingInfo: StateFlow<MeetingResDTO?> = _meetingInfo
 
-    // 최초 조회는 여기서. 화면의 ON_RESUME은 '첫 진입을 건너뛰고' 복귀 때만 재조회하므로 중복되지 않는다.
-    init {
+    /**
+     * 화면이 보이게 됐음을 알린다. 조회 시점은 데이터를 가진 이쪽이 정한다.
+     *
+     * 이 화면은 최초 진입과 복귀가 같은 것을 부르므로 분기가 없다.
+     * 최초 조회를 init에 두면 화면의 ON_RESUME과 겹쳐 진입 시 두 번 나갔다.
+     */
+    fun onScreenResumed() {
         load()
         fetchNotificationDot()
     }
@@ -105,7 +110,7 @@ class TrackerMainViewModel(
     }
 
     // "독서카드 작성" — 한 그룹에 책이 여러 권일 수 있어 groupId + 현재 읽는 책 제목으로 매칭해 해석
-    fun openReadingCard(groupId: Long, bookTitle: String, onResolved: (ReadingCardTarget) -> Unit) {
+    fun openReadingCard(groupId: Long, bookTitle: String, onResolved: (LibraryDetailTarget) -> Unit) {
         viewModelScope.launch {
             try {
                 val res = RetrofitClient.libApi().getLibraryBooks()
@@ -113,7 +118,7 @@ class TrackerMainViewModel(
                 if (res.isSuccessful && body?.isSuccess == true) {
                     body.result
                         ?.firstOrNull { it.groupId.toLong() == groupId && it.title == bookTitle }
-                        ?.let { onResolved(it.toReadingCardTarget()) }
+                        ?.let { onResolved(it.toLibraryDetailTarget()) }
                 }
             } catch (_: Exception) {
                 // 실패 시 무시
@@ -359,7 +364,7 @@ class TrackerMainViewModel(
                     load()
                 }
             } catch (_: Exception) {
-                // 실패 시 무시 (다음 단계에서 에러 표시 추가)
+                // TODO: 요청 실패 사유를 화면에 표시
             }
         }
     }

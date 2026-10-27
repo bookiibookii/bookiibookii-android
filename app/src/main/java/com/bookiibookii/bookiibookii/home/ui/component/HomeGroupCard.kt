@@ -111,7 +111,6 @@ internal fun HomeGroupCard(
 
             // 하단: 예상 독서 기간 + 호스트 정보
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                // 피그마: "예상 독서 기간"(grey700) + "7"(grey800) + "일"(grey700) — 3개 분리
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically,

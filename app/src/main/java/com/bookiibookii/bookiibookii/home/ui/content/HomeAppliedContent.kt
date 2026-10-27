@@ -30,10 +30,8 @@ internal fun LazyListScope.homeAppliedContent(
     onGroupClick: (Long) -> Unit,
     onExploreGroupClick: () -> Unit = {},
 ) {
-    // 피그마: 탭 영역 ~ 첫 섹션 사이 8dp 회색 간격
     item { Box(Modifier.fillMaxWidth().height(8.dp)) }
 
-    // 피그마: 외부 컨테이너 px=16dp, py=12dp, gap=12dp
     item {
         Column(
             modifier = Modifier
@@ -41,9 +39,7 @@ internal fun LazyListScope.homeAppliedContent(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // 피그마: "N 권" + 안내 문구를 gap=4dp 서브그룹으로 묶음
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                // "N 권" 라벨 — 피그마: gap=4dp, h=20dp, regular14, grey900
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -60,7 +56,6 @@ internal fun LazyListScope.homeAppliedContent(
                         color = BookiiBookiiTheme.colors.grey900,
                     )
                 }
-                // 캡션 — 피그마: regular14, grey500
                 Text(
                     text = "매칭을 기다리는 그룹만 보여요.",
                     style = BookiiBookiiTheme.typography.regular14,
@@ -69,7 +64,6 @@ internal fun LazyListScope.homeAppliedContent(
             }
 
             if (appliedGroups.isEmpty()) {
-                // 피그마: NullModal — white bg, round24, padding=20dp, gap=20dp
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

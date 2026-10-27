@@ -26,7 +26,7 @@ import com.bookiibookii.bookiibookii.data.model.location.PlaceSearchResult
 import com.bookiibookii.bookiibookii.data.model.tracker.MeetingPlace
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.matchUserDeliveryId
 import com.bookiibookii.bookiibookii.tracker.ui.detail.delivery.toDeliveryAddressOption
-import com.bookiibookii.bookiibookii.tracker.model.ReadingCardTarget
+import com.bookiibookii.bookiibookii.ui.nav.LibraryDetailTarget
 import com.bookiibookii.bookiibookii.tracker.model.TrackerAction
 import com.bookiibookii.bookiibookii.tracker.model.TrackerProfileItem
 import com.bookiibookii.bookiibookii.tracker.model.TrackerStepLabelStyle
@@ -59,7 +59,7 @@ fun TrackerDetailRoute(
     onNavigatePartnerReview: () -> Unit,
     onNavigateComment: (title: String) -> Unit = {},
     onNavigatePlaceSearch: () -> Unit = {},
-    onNavigateLibraryDetail: (ReadingCardTarget) -> Unit = {},
+    onNavigateLibraryDetail: (LibraryDetailTarget) -> Unit = {},
     onNavigateLibrary: () -> Unit = {},
     selectedPlace: PlaceSearchResult? = null,
     onPlaceConsumed: () -> Unit = {},
@@ -86,18 +86,11 @@ fun TrackerDetailRoute(
         }
     }
 
-    // 최초 진입은 VM init에서 이미 로드하므로 첫 ON_RESUME은 건너뛰고,
-    // 하위 화면(서재/리뷰 등)에서 복귀할 때만 상세를 재조회한다. (rememberSaveable로 백스택 복귀 시에도 유지)
-    var isFirstResume by rememberSaveable { mutableStateOf(true) }
     // 장소 검색 화면으로 이동 중이면 2/3 다이얼로그를 즉시 숨김(복귀 시 ON_RESUME에서 해제)
     var placeSearchPending by rememberSaveable { mutableStateOf(false) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         placeSearchPending = false
-        if (isFirstResume) {
-            isFirstResume = false
-        } else {
-            viewModel.load()
-        }
+        viewModel.onScreenResumed()
     }
 
     // 장소 검색 화면에서 선택한 결과를 약속 장소로 반영 (복귀 시 step 2 다이얼로그 유지됨)
@@ -130,7 +123,6 @@ fun TrackerDetailRoute(
     // 교환 실패 안내 다이얼로그 표시 여부
     var showExchangeFailDialog by rememberSaveable { mutableStateOf(false) }
 
-    // 바텀 네비 표시는 TrackerNavHost에서 현재 라우트 기준으로 일괄 제어 (여기서 토글하지 않음)
     TrackerDetailScreen(
         groupName = uiState.groupName,
         dDay = uiState.dDay,
