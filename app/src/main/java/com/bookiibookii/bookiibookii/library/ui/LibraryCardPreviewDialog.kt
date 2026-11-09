@@ -4,10 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,8 +17,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -34,9 +29,6 @@ import com.bookiibookii.bookiibookii.R
 import com.bookiibookii.bookiibookii.ui.preview.BookiiPreview
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
 
-private const val TOP_WEIGHT = 336f
-private const val BOTTOM_WEIGHT = 128f
-
 @Composable
 internal fun LibraryCardPreviewDialog(
     mode: AddCardMode,
@@ -45,7 +37,7 @@ internal fun LibraryCardPreviewDialog(
     onDismiss: () -> Unit,
     imageUri: android.net.Uri? = null,
     bookTitle: String = "",
-    bookAuthor: String = "",
+    nickname: String = "",
 ) {
     Dialog(onDismissRequest = onDismiss) {
         val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
@@ -58,11 +50,15 @@ internal fun LibraryCardPreviewDialog(
             memo = memo,
             imageUri = imageUri,
             bookTitle = bookTitle,
-            bookAuthor = bookAuthor,
+            nickname = nickname,
         )
     }
 }
 
+/**
+ * 카드 작성 미리보기 (Figma LIB-04-02). 공유 카드와 같은 레이아웃을 쓴다.
+ * 글 모드 = 주황 인용구 카드, 사진 모드 = 사진 + 하단 글 카드.
+ */
 @Composable
 private fun LibraryCardPreviewContent(
     mode: AddCardMode,
@@ -70,7 +66,7 @@ private fun LibraryCardPreviewContent(
     memo: String,
     imageUri: android.net.Uri? = null,
     bookTitle: String = "",
-    bookAuthor: String = "",
+    nickname: String = "",
 ) {
     Box(
         modifier = Modifier
@@ -80,38 +76,53 @@ private fun LibraryCardPreviewContent(
             .background(BookiiBookiiTheme.colors.white),
     ) {
         when (mode) {
-            AddCardMode.TEXT -> QuoteCardPreview(
-                quote = quote,
-                memo = memo,
+            AddCardMode.TEXT -> QuoteCardLayout(
                 bookTitle = bookTitle,
-                bookAuthor = bookAuthor,
+                quotation = quote.ifBlank { "인용구를 입력해주세요." },
+                content = memo,
+                username = nickname,
+                isLight = false,
             )
-            AddCardMode.PHOTO -> PhotoCardPreview(
-                memo = memo,
-                imageUri = imageUri,
+            AddCardMode.PHOTO -> PhotoSplitCardLayout(
                 bookTitle = bookTitle,
-                bookAuthor = bookAuthor,
+                content = memo,
+                username = nickname,
+                image = {
+                    if (imageUri != null) {
+                        coil.compose.AsyncImage(
+                            model = imageUri,
+                            contentDescription = null,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.matchParentSize(),
+                        )
+                    }
+                },
             )
         }
     }
 }
 
-internal enum class BookTitleChipStyle { SOLID, PALE_FILL, WHITE_STROKE, MAIN_PALE_STROKE }
+internal enum class BookTitleChipStyle { SOLID, SOLID_PALE_STROKE, PALE_FILL, WHITE_STROKE, MAIN_PALE_STROKE }
 
 @Composable
 internal fun BookTitleChip(title: String, style: BookTitleChipStyle = BookTitleChipStyle.SOLID) {
-    val isPaleStyle = style == BookTitleChipStyle.PALE_FILL || style == BookTitleChipStyle.MAIN_PALE_STROKE
+    // PALE_FILL(사진 오버레이 카드)만 연한 배경 + 주황 글자 + 아이콘 없음, 나머지는 흰 글자 + 로고 아이콘
+    val isPaleStyle = style == BookTitleChipStyle.PALE_FILL
+    val chipShape = RoundedCornerShape(8.dp)
     val bgModifier: Modifier = when (style) {
         BookTitleChipStyle.SOLID           -> Modifier.background(BookiiBookiiTheme.colors.uiMain)
+        BookTitleChipStyle.SOLID_PALE_STROKE -> Modifier
+            .background(BookiiBookiiTheme.colors.uiMain)
+            .border(1.dp, BookiiBookiiTheme.colors.uiMainPale, chipShape)
         BookTitleChipStyle.PALE_FILL       -> Modifier.background(BookiiBookiiTheme.colors.uiMainPale)
-        BookTitleChipStyle.WHITE_STROKE    -> Modifier.border(1.dp, Color.White, RoundedCornerShape(8.dp))
-        BookTitleChipStyle.MAIN_PALE_STROKE -> Modifier.border(1.dp, BookiiBookiiTheme.colors.uiMainPale, RoundedCornerShape(8.dp))
+        BookTitleChipStyle.WHITE_STROKE    -> Modifier.border(1.dp, Color.White, chipShape)
+        BookTitleChipStyle.MAIN_PALE_STROKE -> Modifier.border(1.dp, BookiiBookiiTheme.colors.uiMainPale, chipShape)
     }
     val contentColor = if (isPaleStyle) BookiiBookiiTheme.colors.uiMain else Color.White
 
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(chipShape)
             .then(bgModifier)
             .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -119,145 +130,19 @@ internal fun BookTitleChip(title: String, style: BookTitleChipStyle = BookTitleC
     ) {
         if (!isPaleStyle) {
             Icon(
-                painter = painterResource(R.drawable.ic_logo_symbol),
+                painter = painterResource(R.drawable.ic_logo_symbol_card),
                 contentDescription = null,
                 tint = contentColor,
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(width = 18.587.dp, height = 16.dp),
             )
         }
         Text(
             text = title,
             style = BookiiBookiiTheme.typography.medium16,
-            color = BookiiBookiiTheme.colors.white,
+            color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-    }
-}
-
-@Composable
-private fun QuoteCardPreview(
-    quote: String,
-    memo: String,
-    bookTitle: String,
-    bookAuthor: String = "",
-) {
-    val displayQuote = if (quote.isBlank()) "인용구를 입력해주세요." else quote
-    Column(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(TOP_WEIGHT / (TOP_WEIGHT + BOTTOM_WEIGHT))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFFFF4E18), Color(0xFFFF7618), Color(0xFFFFC9A4)),
-                        start  = Offset(0f, 0f),
-                        end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
-                    )
-                ),
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-            ) {
-                if (bookTitle.isNotBlank()) {
-                    BookTitleChip(title = bookTitle, style = BookTitleChipStyle.MAIN_PALE_STROKE)
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_quote),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp),
-                    )
-                    Text(
-                        text = "“$displayQuote”",
-                        style = BookiiBookiiTheme.typography.semibold20,
-                        color = Color.White,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(BOTTOM_WEIGHT / (TOP_WEIGHT + BOTTOM_WEIGHT))
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-        ) {
-            if (memo.isNotBlank()) {
-                Text(
-                    text = memo,
-                    style = BookiiBookiiTheme.typography.regular16,
-                    color = BookiiBookiiTheme.colors.grey800,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.TopStart),
-                )
-            }
-            if (bookAuthor.isNotBlank()) {
-                Text(
-                    text = "by. $bookAuthor",
-                    style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey400,
-                    modifier = Modifier.align(Alignment.BottomEnd),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PhotoCardPreview(
-    memo: String,
-    imageUri: android.net.Uri? = null,
-    bookTitle: String = "",
-    bookAuthor: String = "",
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(TOP_WEIGHT / (TOP_WEIGHT + BOTTOM_WEIGHT))
-                .background(BookiiBookiiTheme.colors.grey300),
-        ) {
-            if (imageUri != null) {
-                coil.compose.AsyncImage(
-                    model = imageUri,
-                    contentDescription = null,
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-            if (bookTitle.isNotBlank()) {
-                Box(modifier = Modifier.align(Alignment.TopStart).padding(20.dp)) {
-                    BookTitleChip(title = bookTitle)
-                }
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(BOTTOM_WEIGHT / (TOP_WEIGHT + BOTTOM_WEIGHT))
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-        ) {
-            if (memo.isNotBlank()) {
-                Text(
-                    text = memo,
-                    style = BookiiBookiiTheme.typography.regular16,
-                    color = BookiiBookiiTheme.colors.grey800,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.TopStart),
-                )
-            }
-            if (bookAuthor.isNotBlank()) {
-                Text(
-                    text = "by. $bookAuthor",
-                    style = BookiiBookiiTheme.typography.regular14,
-                    color = BookiiBookiiTheme.colors.grey400,
-                    modifier = Modifier.align(Alignment.BottomEnd),
-                )
-            }
-        }
     }
 }
 
@@ -267,9 +152,10 @@ private fun LibraryCardPreviewContentTextPreview() {
     BookiiPreview {
         LibraryCardPreviewContent(
             mode = AddCardMode.TEXT,
-            quote = "내 안에서 솟아 나오려는 것, 바로 그것을 나는 살아 보려고 했다.",
-            memo = "헤르만 헤세의 데미안 중에서",
-            bookTitle = "데미안",
+            quote = "새는 알에서 나오려고 싸운다. 알은 세상이다. 태어나려는 자는 한 세계를 파괴해야 한다.",
+            memo = "책을 쓰지 않고 한 우물만 팠다면, 나는 그들이 원하는 자리에 앉아 행복했을까. 나는 오히려 우물을 나와서 많이 느낀다.",
+            bookTitle = "나는 당신을 편애합니다",
+            nickname = "foryxxng",
         )
     }
 }
@@ -281,8 +167,9 @@ private fun LibraryCardPreviewContentPhotoPreview() {
         LibraryCardPreviewContent(
             mode = AddCardMode.PHOTO,
             quote = "",
-            memo = "오늘 읽은 페이지의 한 장면",
-            bookTitle = "데미안",
+            memo = "책을 쓰지 않고 한 우물만 팠다면, 나는 그들이 원하는 자리에 앉아 행복했을까.",
+            bookTitle = "나는 당신을 편애합니다",
+            nickname = "foryxxng",
         )
     }
 }

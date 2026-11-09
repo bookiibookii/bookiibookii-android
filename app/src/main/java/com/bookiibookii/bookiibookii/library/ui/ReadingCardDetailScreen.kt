@@ -48,6 +48,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
@@ -159,7 +161,11 @@ private fun saveCardBitmapToGallery(context: android.content.Context, bitmap: an
     }
 }
 
-private fun compositeCardOnWhiteBackground(card: android.graphics.Bitmap): android.graphics.Bitmap {
+/**
+ * 공유 카드 이미지를 1080x1920 흰 배경 가운데에 올린다. (앱 다운로드·인스타 공유·공개 링크 이미지 저장 공통)
+ * 그림자는 Figma 카드 그림자(0,0 / blur 16 / 검정 10%)를 캡처 해상도에 맞춰 그린다.
+ */
+internal fun compositeCardOnWhiteBackground(card: android.graphics.Bitmap): android.graphics.Bitmap {
     val canvasWidth = 1080
     val canvasHeight = 1920
     val canvasBitmap = android.graphics.Bitmap.createBitmap(canvasWidth, canvasHeight, android.graphics.Bitmap.Config.ARGB_8888)
@@ -173,17 +179,38 @@ private fun compositeCardOnWhiteBackground(card: android.graphics.Bitmap): andro
     val drawHeight = (card.height * scale).toInt()
     val left = ((canvasWidth - drawWidth) / 2).toFloat()
     val top = ((canvasHeight - drawHeight) / 2).toFloat()
+    val rect = android.graphics.RectF(left, top, left + drawWidth, top + drawHeight)
 
+    val dpPx = drawWidth / 320f
     val shadowPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-        maskFilter = android.graphics.BlurMaskFilter(30f, android.graphics.BlurMaskFilter.Blur.NORMAL)
-        color = android.graphics.Color.argb(50, 0, 0, 0)
+        color = android.graphics.Color.WHITE
+        setShadowLayer(SHAREABLE_CARD_SHADOW_BLUR_DP / 2f * dpPx, 0f, 0f, SHAREABLE_CARD_SHADOW_COLOR)
     }
-    canvas.drawRect(left, top, left + drawWidth, top + drawHeight, shadowPaint)
+    canvas.drawRoundRect(rect, 20f * dpPx, 20f * dpPx, shadowPaint)
 
     val cardPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
-    canvas.drawBitmap(card, null, android.graphics.RectF(left, top, left + drawWidth, top + drawHeight), cardPaint)
+    canvas.drawBitmap(card, null, rect, cardPaint)
     return canvasBitmap
 }
+
+/** Figma 카드 그림자: x 0, y 0, blur 16, #000000 10% */
+internal const val SHAREABLE_CARD_SHADOW_BLUR_DP = 16f
+internal const val SHAREABLE_CARD_SHADOW_COLOR = 0x1A000000
+
+/** 화면에 그리는 카드용 Figma 그림자 (Compose 1.7에는 dropShadow가 없어 직접 그린다) */
+internal fun Modifier.shareableCardShadow(cornerRadius: androidx.compose.ui.unit.Dp = 20.dp): Modifier =
+    this.drawBehind {
+        val radiusPx = cornerRadius.toPx()
+        drawIntoCanvas { canvas ->
+            val paint = androidx.compose.ui.graphics.Paint()
+            paint.asFrameworkPaint().apply {
+                isAntiAlias = true
+                color = android.graphics.Color.WHITE
+                setShadowLayer((SHAREABLE_CARD_SHADOW_BLUR_DP / 2f).dp.toPx(), 0f, 0f, SHAREABLE_CARD_SHADOW_COLOR)
+            }
+            canvas.drawRoundRect(0f, 0f, size.width, size.height, radiusPx, radiusPx, paint)
+        }
+    }
 
 private fun captureShareableCardBitmap(
     context: android.content.Context,
@@ -191,15 +218,15 @@ private fun captureShareableCardBitmap(
     cardVersion: Int,
     onBitmap: (android.graphics.Bitmap?) -> Unit,
 ) {
-    val cardWidthPx = (context.resources.displayMetrics.widthPixels * 0.85f).toInt()
-    val cardHeightPx = (cardWidthPx * 464f / 320f).toInt()
+    val cardWidthPx = SHAREABLE_CARD_CAPTURE_WIDTH_PX
+    val cardHeightPx = shareableCardCaptureHeightPx()
 
     val cardView = androidx.compose.ui.platform.ComposeView(context).apply {
         setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         visibility = android.view.View.INVISIBLE
         setContent {
             BookiiBookiiTheme {
-                ShareableCard(card = card, cardVersion = cardVersion)
+                ShareableCardForCapture(card = card, cardVersion = cardVersion)
             }
         }
     }
@@ -383,7 +410,7 @@ fun ReadingCardDetailRoute(
             )
             val feed = com.kakao.sdk.template.model.FeedTemplate(
                 content = com.kakao.sdk.template.model.Content(
-                    title = card.bookTitle.ifBlank { "독서카드" },
+                    title = card.bookTitle.stripBookSubtitle().ifBlank { "독서카드" },
                     description = card.quotation.ifBlank { card.content },
                     imageUrl = card.imageUrl.orEmpty(),
                     link = link,
@@ -997,126 +1024,270 @@ private fun QuoteCard(
     }
 }
 
+// ── 공유용 독서카드 (Figma: 독서카드 공유 320x520) ──────────────────────────────
+// 공개 카드 화면 · 이미지 저장 · 인스타 공유/다운로드가 모두 이 컴포저블을 쓴다.
+// PHOTO: v1 = 이미지 그라데이션(OVERLAY), v2 = 이미지(SPLIT) | QUOTE: v1 = 연한 그라데이션, v2 = 주황 그라데이션
+
+/** 사진 오버레이 카드 상단 흰색 그라데이션 (카드 전체 높이 기준 stop) */
+private val shareablePhotoOverlayGradient = Brush.verticalGradient(
+    0f to Color.White,
+    0.0597f to Color.White,
+    0.2201f to Color.White.copy(alpha = 0.9f),
+    0.5377f to Color.White.copy(alpha = 0f),
+)
+
+/** 인용구 카드 상단/하단 영역 비율 (372 : 148, 합 520) */
+private const val SHAREABLE_QUOTE_TOP_WEIGHT = 372f
+private const val SHAREABLE_QUOTE_BOTTOM_WEIGHT = 148f
+
+/** CSS linear-gradient(angle, ...)와 같은 방향으로 그리는 그라데이션 */
+private fun cssLinearGradient(angleDeg: Float, vararg stops: Pair<Float, Color>): Brush =
+    object : androidx.compose.ui.graphics.ShaderBrush() {
+        override fun createShader(size: androidx.compose.ui.geometry.Size): androidx.compose.ui.graphics.Shader {
+            val rad = Math.toRadians(angleDeg.toDouble())
+            val dx = kotlin.math.sin(rad).toFloat()
+            val dy = -kotlin.math.cos(rad).toFloat()
+            val half = (kotlin.math.abs(size.width * dx) + kotlin.math.abs(size.height * dy)) / 2f
+            val cx = size.width / 2f
+            val cy = size.height / 2f
+            return androidx.compose.ui.graphics.LinearGradientShader(
+                from = Offset(cx - dx * half, cy - dy * half),
+                to = Offset(cx + dx * half, cy + dy * half),
+                colors = stops.map { it.second },
+                colorStops = stops.map { it.first },
+            )
+        }
+    }
+
+private val shareableQuoteLightGradient = cssLinearGradient(
+    128.66f,
+    0f to Color.White,
+    1f to Color(0xFFFFC9A4),
+)
+private val shareableQuoteOrangeGradient = cssLinearGradient(
+    128.66f,
+    0f to Color(0xFFFF4E18),
+    0.4952f to Color(0xFFFF7618),
+    1f to Color(0xFFFFC9A4),
+)
+
+private val shareableQuoteTextStyle = TextStyle(
+    fontFamily = MaruBuri,
+    fontWeight = FontWeight.Bold,
+    fontSize = 20.sp,
+    lineHeight = 32.sp,
+    letterSpacing = (-0.2).sp,
+)
+
 @Composable
 internal fun ShareableCard(card: ReadingCard, cardVersion: Int = 2, modifier: Modifier = Modifier) {
     Box(modifier = modifier.clip(RoundedCornerShape(20.dp)).background(BookiiBookiiTheme.colors.white)) {
         when (card.type) {
-            ReadingCardType.PHOTO -> if (cardVersion == 1) {
-                // OVERLAY (첫 번째 타입)
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.fillMaxSize().background(BookiiBookiiTheme.colors.grey300)) {
-                        if (!card.imageUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = readingCardImageRequest(
-                                    LocalContext.current, card.imageUrl, card.s3Key,
-                                    allowHardware = false,
-                                ),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.matchParentSize(),
-                            )
-                        }
-                    }
-                    Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(PHOTO_GRADIENT_HEIGHT_FRACTION).background(photoCardTopGradient))
-                    if (card.bookTitle.isNotBlank()) {
-                        Box(modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 40.dp)) {
-                            BookTitleChip(title = card.bookTitle.stripBookSubtitle(), style = BookTitleChipStyle.PALE_FILL)
-                        }
-                    }
-                    Icon(
-                        painter = painterResource(R.drawable.ic_logo_symbol),
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.85f),
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 18.dp).size(20.dp),
-                    )
-                    if (card.content.isNotBlank()) {
-                        Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 52.dp, end = 20.dp))
-                    }
-                    if (card.username.isNotBlank()) {
-                        Text("by. ${card.username}", style = BookiiBookiiTheme.typography.regular14, color = Color.White,
-                            modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 20.dp))
-                    }
+            ReadingCardType.PHOTO -> if (cardVersion == 1) ShareablePhotoOverlayCard(card) else ShareablePhotoSplitCard(card)
+            ReadingCardType.QUOTE -> ShareableQuoteCard(card, cardVersion)
+        }
+    }
+}
+
+/** 공유 이미지 캡처 크기(px). 카드 높이는 320:520 비율로 맞춘다. */
+internal const val SHAREABLE_CARD_CAPTURE_WIDTH_PX = 880
+
+internal fun shareableCardCaptureHeightPx(): Int = (SHAREABLE_CARD_CAPTURE_WIDTH_PX * 520f / 320f).toInt()
+
+/**
+ * 캡처용 카드. 기기 화면 크기·글꼴 설정과 관계없이 항상 320dp 폭 카드로 그린 뒤
+ * [SHAREABLE_CARD_CAPTURE_WIDTH_PX] 해상도로 확대한다. (폴더블 등 넓은 화면에서 레이아웃이 퍼지는 문제 방지)
+ */
+@Composable
+internal fun ShareableCardForCapture(card: ReadingCard, cardVersion: Int) {
+    val captureDensity = androidx.compose.ui.unit.Density(
+        density = SHAREABLE_CARD_CAPTURE_WIDTH_PX / 320f,
+        fontScale = 1f,
+    )
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides captureDensity) {
+        ShareableCard(card = card, cardVersion = cardVersion, modifier = Modifier.fillMaxSize())
+    }
+}
+
+@Composable
+private fun ShareableCardImage(card: ReadingCard, modifier: Modifier) {
+    Box(modifier = modifier.background(BookiiBookiiTheme.colors.grey300)) {
+        if (!card.imageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = readingCardImageRequest(
+                    LocalContext.current, card.imageUrl, card.s3Key,
+                    allowHardware = false,
+                ),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize(),
+            )
+        }
+    }
+}
+
+/** 하단 흰 영역: 본문(regular15 / grey900) + 오른쪽 정렬 작성자(regular14 / grey400) */
+@Composable
+private fun ShareableCardFooterText(content: String, username: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth().background(BookiiBookiiTheme.colors.white).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom),
+        horizontalAlignment = Alignment.End,
+    ) {
+        if (content.isNotBlank()) {
+            Text(
+                text = content,
+                style = BookiiBookiiTheme.typography.regular15,
+                color = BookiiBookiiTheme.colors.grey900,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        if (username.isNotBlank()) {
+            Text(
+                text = "by. $username",
+                style = BookiiBookiiTheme.typography.regular14,
+                color = BookiiBookiiTheme.colors.grey400,
+            )
+        }
+    }
+}
+
+/** 사진 v1 — 이미지 그라데이션 (Figma Type=image gradation) */
+@Composable
+private fun ShareablePhotoOverlayCard(card: ReadingCard) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        ShareableCardImage(card, Modifier.matchParentSize())
+        Box(modifier = Modifier.matchParentSize().background(shareablePhotoOverlayGradient))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (card.bookTitle.isNotBlank()) {
+                    BookTitleChip(title = card.bookTitle.stripBookSubtitle(), style = BookTitleChipStyle.PALE_FILL)
                 }
-            } else {
-                // SPLIT (두 번째 타입)
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(BookiiBookiiTheme.colors.grey300)) {
-                        if (!card.imageUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = readingCardImageRequest(
-                                    LocalContext.current, card.imageUrl, card.s3Key,
-                                    allowHardware = false,
-                                ),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.matchParentSize(),
-                            )
-                        }
-                        if (card.bookTitle.isNotBlank()) {
-                            Box(modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 40.dp)) {
-                                BookTitleChip(title = card.bookTitle.stripBookSubtitle())
-                            }
-                        }
-                    }
-                    Box(modifier = Modifier.fillMaxWidth().weight(128f / 464f)) {
-                        if (card.content.isNotBlank()) {
-                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 20.dp))
-                        }
-                        if (card.username.isNotBlank()) {
-                            Text("by. ${card.username}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400,
-                                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp))
-                        }
-                    }
+                if (card.content.isNotBlank()) {
+                    Text(
+                        text = card.content,
+                        style = BookiiBookiiTheme.typography.regular15,
+                        color = BookiiBookiiTheme.colors.grey900,
+                        maxLines = 4,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             }
-            ReadingCardType.QUOTE -> {
-                val quotationText = card.quotation.ifBlank { card.content }
-                val gradient = if (cardVersion == 1) {
-                    Brush.linearGradient(
-                        colors = listOf(Color.White, Color(0xFFFFC9A4)),
-                        start  = Offset(0f, 0f),
-                        end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
-                    )
-                } else {
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFFFF4E18), Color(0xFFFF7618), Color(0xFFFFC9A4)),
-                        start  = Offset(0f, 0f),
-                        end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
-                    )
-                }
-                val iconTint  = BookiiBookiiTheme.colors.uiMain150
-                val textColor = if (cardVersion == 1) BookiiBookiiTheme.colors.uiMain else Color.White
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.fillMaxWidth().weight(336f / 464f).background(gradient)) {
-                        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Spacer(modifier = Modifier.height(20.dp))
-                            if (card.bookTitle.isNotBlank()) {
-                                BookTitleChip(
-                                    title = card.bookTitle.stripBookSubtitle(),
-                                    style = if (cardVersion == 2) BookTitleChipStyle.WHITE_STROKE else BookTitleChipStyle.SOLID,
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Icon(painter = painterResource(R.drawable.ic_quote), contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
-                            val displayQuotation = "“$quotationText”"
-                            Text(displayQuotation, style = TextStyle(fontFamily = MaruBuri, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = textColor, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                    Box(modifier = Modifier.fillMaxWidth().weight(128f / 464f)) {
-                        if (card.content.isNotBlank()) {
-                            Text(card.content, style = BookiiBookiiTheme.typography.regular16, color = BookiiBookiiTheme.colors.grey800, maxLines = 4, overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 20.dp, end = 20.dp))
-                        }
-                        if (card.username.isNotBlank()) {
-                            Text("by. ${card.username}", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey400,
-                                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp))
-                        }
-                    }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = if (card.username.isNotBlank()) "by. ${card.username}" else "",
+                    style = BookiiBookiiTheme.typography.regular14,
+                    color = Color.White,
+                )
+                Icon(
+                    painter = painterResource(R.drawable.ic_logo_symbol_card),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(width = 18.587.dp, height = 16.dp),
+                )
+            }
+        }
+    }
+}
+
+/** 사진 v2 — 이미지 + 하단 텍스트 (Figma Type=image) */
+@Composable
+private fun ShareablePhotoSplitCard(card: ReadingCard) {
+    PhotoSplitCardLayout(
+        bookTitle = card.bookTitle.stripBookSubtitle(),
+        content = card.content,
+        username = card.username,
+        image = { ShareableCardImage(card, Modifier.matchParentSize()) },
+    )
+}
+
+/**
+ * 사진 + 하단 글 카드 레이아웃. 공유 카드와 카드 작성 미리보기(LibraryCardPreviewDialog)가 함께 쓴다.
+ * 사진 영역이 남는 높이를 모두 차지하고, 하단 글은 내용 높이만큼만 차지한다.
+ */
+@Composable
+internal fun PhotoSplitCardLayout(
+    bookTitle: String,
+    content: String,
+    username: String,
+    image: @Composable BoxScope.() -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxWidth().weight(1f).background(BookiiBookiiTheme.colors.grey300)) {
+            image()
+            if (bookTitle.isNotBlank()) {
+                Box(modifier = Modifier.padding(20.dp)) {
+                    BookTitleChip(title = bookTitle, style = BookTitleChipStyle.SOLID)
                 }
             }
         }
+        ShareableCardFooterText(content = content, username = username)
+    }
+}
+
+/** 인용구 v1(연한 그라데이션) / v2(주황 그라데이션) (Figma Type=quote) */
+@Composable
+private fun ShareableQuoteCard(card: ReadingCard, cardVersion: Int) {
+    QuoteCardLayout(
+        bookTitle = card.bookTitle.stripBookSubtitle(),
+        quotation = card.quotation.ifBlank { card.content },
+        content = card.content,
+        username = card.username,
+        isLight = cardVersion == 1,
+    )
+}
+
+/** 인용구 카드 레이아웃. 공유 카드와 카드 작성 미리보기(주황 = isLight false)가 함께 쓴다. */
+@Composable
+internal fun QuoteCardLayout(
+    bookTitle: String,
+    quotation: String,
+    content: String,
+    username: String,
+    isLight: Boolean,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(SHAREABLE_QUOTE_TOP_WEIGHT)
+                .background(if (isLight) shareableQuoteLightGradient else shareableQuoteOrangeGradient)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            if (bookTitle.isNotBlank()) {
+                BookTitleChip(
+                    title = bookTitle,
+                    style = if (isLight) BookTitleChipStyle.SOLID_PALE_STROKE else BookTitleChipStyle.MAIN_PALE_STROKE,
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_quote),
+                    contentDescription = null,
+                    tint = BookiiBookiiTheme.colors.uiMain150,
+                    modifier = Modifier.size(28.dp),
+                )
+                Text(
+                    text = "“$quotation”",
+                    style = shareableQuoteTextStyle,
+                    color = if (isLight) BookiiBookiiTheme.colors.uiMain else Color.White,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        ShareableCardFooterText(content = content, username = username, modifier = Modifier.weight(SHAREABLE_QUOTE_BOTTOM_WEIGHT))
     }
 }
 

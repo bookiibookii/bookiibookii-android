@@ -467,7 +467,7 @@ fun LibraryAddCardScreen(
             onDismiss = { showPreview = false },
             imageUri = selectedImageUri ?: initialImageUrl?.let(android.net.Uri::parse),
             bookTitle = bookTitle.stripBookSubtitle(),
-            bookAuthor = currentNickname,
+            nickname = currentNickname,
         )
     }
 }
