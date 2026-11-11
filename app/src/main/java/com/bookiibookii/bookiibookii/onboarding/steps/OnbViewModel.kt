@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_FAILED
 import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_NETWORK_ERROR
+import com.bookiibookii.bookiibookii.common.copyUriToCacheFile
 import com.bookiibookii.bookiibookii.common.observeSearchQuery
 import com.bookiibookii.bookiibookii.common.runCatchingCancellable
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
@@ -21,10 +22,12 @@ import com.bookiibookii.bookiibookii.onboarding.steps.model.OnbState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.ProfileImageUploadState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.OnboardingSubmitState
 import com.bookiibookii.bookiibookii.onboarding.steps.model.RecordMethod
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.io.File
 
 class OnbViewModel : ViewModel() {
 
@@ -85,6 +88,7 @@ class OnbViewModel : ViewModel() {
     }
 
     fun clearProfileUri() {
+        uploadJob?.cancel()
         updateState(currentState().copy(profileUri = null))
         _imageUploadState.value = ProfileImageUploadState.Idle
     }
@@ -117,25 +121,52 @@ class OnbViewModel : ViewModel() {
         }
     }
 
+    // 새 사진을 고르면 이전 작업을 취소해, 늦게 끝난 이전 사진이 새 사진을 덮어쓰지 않게 한다.
+    private var uploadJob: Job? = null
+
+    // 카메라 촬영본은 이미 앱 캐시에 있어 바로 올린다.
     fun uploadProfileImage(contentResolver: ContentResolver, uri: Uri) {
-        viewModelScope.launch {
+        uploadJob?.cancel()
+        uploadJob = viewModelScope.launch {
             _imageUploadState.value = ProfileImageUploadState.Loading
-            runCatching {
-                val presignedRes = RetrofitClient.userApi().postPresignedUrl()
-                if (!presignedRes.isSuccessful) error("Presigned URL 발급 실패 (HTTP ${presignedRes.code()})")
-                val body = presignedRes.body()
-                if (body?.isSuccess != true || body.result == null) error(body?.message ?: "Presigned URL 발급 실패")
-                val s3Key = body.result.s3Key
-                val putUrl = body.result.presignedPutUrl
-                S3Uploader.uploadImage(contentResolver, uri, putUrl).getOrThrow()
-                s3Key
-            }.onSuccess { s3Key ->
-                updateState(currentState().copy(profileS3Key = s3Key))
-                _imageUploadState.value = ProfileImageUploadState.Success(s3Key)
-            }.onFailure { e ->
-                _imageUploadState.value =
-                    ProfileImageUploadState.Error(e.toUserMessage("이미지 업로드에 실패했습니다."))
+            setProfileUri(uri)
+            uploadToS3(contentResolver, uri)
+        }
+    }
+
+    // 갤러리 사진은 캐시로 복사한 뒤 올린다. 복사 중에도 Loading이라 중복 선택과 다음 단계 이동이 막힌다.
+    fun uploadPickedProfileImage(contentResolver: ContentResolver, uri: Uri, cacheDir: File) {
+        uploadJob?.cancel()
+        uploadJob = viewModelScope.launch {
+            _imageUploadState.value = ProfileImageUploadState.Loading
+            val file = copyUriToCacheFile(contentResolver, uri, cacheDir)
+            if (file == null) {
+                _imageUploadState.value = ProfileImageUploadState.Error("이미지를 불러오지 못했습니다.")
+                return@launch
             }
+            val localUri = Uri.fromFile(file)
+            setProfileUri(localUri)
+            uploadToS3(contentResolver, localUri)
+        }
+    }
+
+    // 취소된 작업이 실패 상태를 남겨 새 작업의 Loading을 덮지 않도록 취소는 그대로 전파한다.
+    private suspend fun uploadToS3(contentResolver: ContentResolver, uri: Uri) {
+        runCatchingCancellable {
+            val presignedRes = RetrofitClient.userApi().postPresignedUrl()
+            if (!presignedRes.isSuccessful) error("Presigned URL 발급 실패 (HTTP ${presignedRes.code()})")
+            val body = presignedRes.body()
+            if (body?.isSuccess != true || body.result == null) error(body?.message ?: "Presigned URL 발급 실패")
+            val s3Key = body.result.s3Key
+            val putUrl = body.result.presignedPutUrl
+            S3Uploader.uploadImage(contentResolver, uri, putUrl).getOrThrow()
+            s3Key
+        }.onSuccess { s3Key ->
+            updateState(currentState().copy(profileS3Key = s3Key))
+            _imageUploadState.value = ProfileImageUploadState.Success(s3Key)
+        }.onFailure { e ->
+            _imageUploadState.value =
+                ProfileImageUploadState.Error(e.toUserMessage("이미지 업로드에 실패했습니다."))
         }
     }
 
