@@ -40,7 +40,10 @@ import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 import com.bookiibookii.bookiibookii.data.api.RetrofitClient
 import com.bookiibookii.bookiibookii.library.ui.PublicCardViewerScreen
 import com.bookiibookii.bookiibookii.library.ui.ReadingCard
-import com.bookiibookii.bookiibookii.library.ui.ShareableCard
+import com.bookiibookii.bookiibookii.library.ui.SHAREABLE_CARD_CAPTURE_WIDTH_PX
+import com.bookiibookii.bookiibookii.library.ui.ShareableCardForCapture
+import com.bookiibookii.bookiibookii.library.ui.compositeCardOnWhiteBackground
+import com.bookiibookii.bookiibookii.library.ui.shareableCardCaptureHeightPx
 import com.bookiibookii.bookiibookii.library.vm.toReadingCard
 import com.bookiibookii.bookiibookii.onboarding.Intro.LoginIntroActivity
 import com.bookiibookii.bookiibookii.ui.theme.BookiiBookiiTheme
@@ -148,8 +151,11 @@ class PublicCardViewerActivity : ComponentActivity() {
                 return@captureCard
             }
             lifecycleScope.launch(Dispatchers.IO) {
-                val saved = saveBitmapToGallery(bitmap)
+                // 앱 카드 상세의 다운로드와 같은 이미지(1080x1920 흰 배경 + 카드)로 저장
+                val finalBitmap = compositeCardOnWhiteBackground(bitmap)
                 bitmap.recycle()
+                val saved = saveBitmapToGallery(finalBitmap)
+                finalBitmap.recycle()
                 withContext(Dispatchers.Main) {
                     if (isDestroyed) return@withContext
                     showCustomToast(if (saved) "사진을 저장했어요" else "사진 저장에 실패했어요", saved)
@@ -159,16 +165,15 @@ class PublicCardViewerActivity : ComponentActivity() {
     }
 
     private fun captureCard(card: ReadingCard, cardVersion: Int, onBitmap: (Bitmap?) -> Unit) {
-        val maxWidthPx = (320 * resources.displayMetrics.density).toInt()
-        val cardWidthPx = (resources.displayMetrics.widthPixels * 0.82f).toInt().coerceAtMost(maxWidthPx)
-        val cardHeightPx = (cardWidthPx * 520f / 320f).toInt()
+        val cardWidthPx = SHAREABLE_CARD_CAPTURE_WIDTH_PX
+        val cardHeightPx = shareableCardCaptureHeightPx()
 
         val cardView = ComposeView(this).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             visibility = View.INVISIBLE
             setContent {
                 BookiiBookiiTheme {
-                    ShareableCard(card = card, cardVersion = cardVersion)
+                    ShareableCardForCapture(card = card, cardVersion = cardVersion)
                 }
             }
         }

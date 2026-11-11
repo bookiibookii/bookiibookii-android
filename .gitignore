@@ -61,3 +61,6 @@ docs/compose-migration-journal.md
 
 # understand-anything 지식 그래프 (로컬 전용)
 .understand-anything/
+
+# oh-my-claudecode 상태 파일 (로컬 전용)
+.omc/

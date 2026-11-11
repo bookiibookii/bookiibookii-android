@@ -229,6 +229,24 @@ private fun captureProfileCardBitmap(
     profile: UserProfileResDTO,
     isDark: Boolean,
     onBitmap: (Bitmap?) -> Unit,
+) = captureProfileCardBitmap(
+    context = context,
+    name = profile.nickname,
+    motto = profile.introduction ?: "",
+    imageUrl = profile.profileImageUrl,
+    representativeBooks = profile.userBooks ?: emptyList(),
+    isDark = isDark,
+    onBitmap = onBitmap,
+)
+
+internal fun captureProfileCardBitmap(
+    context: android.content.Context,
+    name: String,
+    motto: String,
+    imageUrl: String?,
+    representativeBooks: List<com.bookiibookii.bookiibookii.data.model.mypage.UserBookDto>,
+    isDark: Boolean,
+    onBitmap: (Bitmap?) -> Unit,
 ) {
     val density = context.resources.displayMetrics.density
     val cardWidth = (context.resources.displayMetrics.widthPixels - (40 * density).toInt())
@@ -246,10 +264,10 @@ private fun captureProfileCardBitmap(
                         .padding(vertical = 20.dp),
                 ) {
                     ProfileShareCardContent(
-                        name = profile.nickname,
-                        motto = profile.introduction ?: "",
-                        imageUrl = profile.profileImageUrl,
-                        representativeBooks = profile.userBooks ?: emptyList(),
+                        name = name,
+                        motto = motto,
+                        imageUrl = imageUrl,
+                        representativeBooks = representativeBooks,
                         isDark = isDark,
                         imageLoader = offscreenImageLoader,
                     )
@@ -299,7 +317,7 @@ private fun captureProfileCardBitmap(
 }
 
 
-private fun compositeProfileCardFullBleed(card: Bitmap, isDark: Boolean): Bitmap {
+internal fun compositeProfileCardFullBleed(card: Bitmap, isDark: Boolean): Bitmap {
     val storyW = 1080
     val storyH = 1920
     val out = Bitmap.createBitmap(storyW, storyH, Bitmap.Config.ARGB_8888)
@@ -375,7 +393,7 @@ private fun saveProfileCardToGallery(
     }
 }
 
-private fun saveProfileBitmapToGallery(context: android.content.Context, bitmap: Bitmap): Boolean {
+internal fun saveProfileBitmapToGallery(context: android.content.Context, bitmap: Bitmap): Boolean {
     val resolver = context.contentResolver
     val values = android.content.ContentValues().apply {
         put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, "bookii_profile_${System.currentTimeMillis()}.png")
