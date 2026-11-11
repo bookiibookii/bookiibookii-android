@@ -13,17 +13,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -76,7 +77,7 @@ fun LibraryMainRoute(
     onMatchingStatusClick: () -> Unit = {},
     viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryMainViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
         viewModel.fetchBooks()
@@ -107,18 +108,17 @@ fun LibraryScreen(
     onBookClick: (LibraryBook) -> Unit = {},
     onMatchingStatusClick: () -> Unit = {},
 ) {
-    val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
     var viewType by remember { mutableStateOf(LibraryViewType.GRID) }
-    val allBooks = readingBooks + doneBooks
+    val allBooks = remember(readingBooks, doneBooks) { readingBooks + doneBooks }
     val isSearchActive = searchQuery.isNotEmpty()
-    val filteredBooks = if (isSearchActive) {
-        allBooks.filter {
+    val filteredBooks = remember(allBooks, searchQuery) {
+        if (searchQuery.isEmpty()) allBooks else allBooks.filter {
             it.title.contains(searchQuery, ignoreCase = true) ||
             it.groupName.contains(searchQuery, ignoreCase = true) ||
             it.author.contains(searchQuery, ignoreCase = true)
         }
-    } else allBooks
+    }
 
     Column(
         modifier = Modifier
@@ -127,106 +127,121 @@ fun LibraryScreen(
     ) {
         LibraryHeader(onProfileClick = onProfileClick, onBookmarkClick = onBookmarkClick)
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            LibrarySearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp),
-            )
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            item(key = "search_bar") {
+                LibrarySearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 16.dp),
+                )
+            }
 
             if (isSearchActive) {
                 if (filteredBooks.isEmpty()) {
-                    LibraryEmptyStateBox(
-                        text = "그룹을 찾지 못했어요.\n검색어를 다시 확인해주세요.",
-                        textColor = BookiiBookiiTheme.colors.grey600,
-                        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp),
-                    )
+                    item(key = "search_empty") {
+                        LibraryEmptyStateBox(
+                            text = "그룹을 찾지 못했어요.\n검색어를 다시 확인해주세요.",
+                            textColor = BookiiBookiiTheme.colors.grey600,
+                            modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp),
+                        )
+                    }
                 } else {
-                    LibrarySearchResults(
-                        books = filteredBooks,
-                        viewType = viewType,
-                        onBookClick = onBookClick,
-                    )
+                    item(key = "search_count") {
+                        Text(
+                            text = "${filteredBooks.size}권",
+                            style = BookiiBookiiTheme.typography.regular15,
+                            color = BookiiBookiiTheme.colors.grey900,
+                            modifier = Modifier.padding(horizontal = 16.dp).padding(top = 12.dp, bottom = 16.dp),
+                        )
+                    }
+                    libraryBookRows("search", filteredBooks, viewType, onBookClick)
                 }
             } else {
-                LibraryFilterBar(
-                    bookCount = allBooks.size,
-                    sortType = sortType,
-                    viewType = viewType,
-                    onSortChange = { onSortChange(it) },
-                    onViewToggle = {
-                        viewType = if (viewType == LibraryViewType.GRID) LibraryViewType.LIST else LibraryViewType.GRID
-                    },
-                )
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    Text(
-                        text = "읽는 중",
-                        style = BookiiBookiiTheme.typography.semibold20,
-                        color = BookiiBookiiTheme.colors.grey900,
-                        modifier = Modifier.padding(vertical = 16.dp),
+                item(key = "filter_bar") {
+                    LibraryFilterBar(
+                        bookCount = allBooks.size,
+                        sortType = sortType,
+                        viewType = viewType,
+                        onSortChange = { onSortChange(it) },
+                        onViewToggle = {
+                            viewType = if (viewType == LibraryViewType.GRID) LibraryViewType.LIST else LibraryViewType.GRID
+                        },
                     )
-                    if (readingBooks.isNotEmpty()) {
-                        LibraryBookSectionContent(books = readingBooks, viewType = viewType, onBookClick = onBookClick)
-                    } else {
+                }
+                item(key = "reading_title") { LibrarySectionTitle("읽는 중") }
+                if (readingBooks.isNotEmpty()) {
+                    libraryBookRows("reading", readingBooks, viewType, onBookClick)
+                } else {
+                    item(key = "reading_empty") {
                         LibraryEmptyStateBox(
                             text = "아직 진행 중인 그룹이 없어요,\n독서메이트 매칭 현황을 확인해보세요.",
                             textColor = BookiiBookiiTheme.colors.grey900,
                             buttonText = "매칭 현황 확인하기",
                             onButtonClick = onMatchingStatusClick,
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(24.dp))
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    Text(
-                        text = "다 읽었어요",
-                        style = BookiiBookiiTheme.typography.semibold20,
-                        color = BookiiBookiiTheme.colors.grey900,
-                        modifier = Modifier.padding(vertical = 16.dp),
-                    )
-                    if (doneBooks.isNotEmpty()) {
-                        LibraryBookSectionContent(books = doneBooks, viewType = viewType, onBookClick = onBookClick)
-                    } else {
+                item(key = "done_title") { LibrarySectionTitle("다 읽었어요", Modifier.padding(top = 24.dp)) }
+                if (doneBooks.isNotEmpty()) {
+                    libraryBookRows("done", doneBooks, viewType, onBookClick)
+                } else {
+                    item(key = "done_empty") {
                         LibraryEmptyStateBox(
                             text = "아직 종료된 그룹이 없어요.",
                             textColor = BookiiBookiiTheme.colors.grey600,
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         )
                     }
                 }
             }
 
-            Text(
-                text = buildAnnotatedString {
-                    append("도서 DB 제공 : 알라딘 인터넷서점(")
-                    withStyle(SpanStyle(color = Color(0xFF1E88E5), textDecoration = TextDecoration.Underline)) {
-                        append("www.aladin.co.kr")
-                    }
-                    append(")")
-                },
-                style = BookiiBookiiTheme.typography.regular14,
-                color = BookiiBookiiTheme.colors.grey700,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 40.dp)
-                    .clickable {
-                        context.startActivity(
-                            android.content.Intent(
-                                android.content.Intent.ACTION_VIEW,
-                                android.net.Uri.parse("https://www.aladin.co.kr"),
-                            )
-                        )
-                    },
-            )
-
-            Spacer(modifier = Modifier.height(192.dp))
+            item(key = "footer") { LibraryFooter() }
         }
     }
+}
+
+@Composable
+private fun LibraryFooter() {
+    val context = LocalContext.current
+    Column {
+        Text(
+            text = buildAnnotatedString {
+                append("도서 DB 제공 : 알라딘 인터넷서점(")
+                withStyle(SpanStyle(color = Color(0xFF1E88E5), textDecoration = TextDecoration.Underline)) {
+                    append("www.aladin.co.kr")
+                }
+                append(")")
+            },
+            style = BookiiBookiiTheme.typography.regular14,
+            color = BookiiBookiiTheme.colors.grey700,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 40.dp)
+                .clickable {
+                    context.startActivity(
+                        android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse("https://www.aladin.co.kr"),
+                        )
+                    )
+                },
+        )
+
+        Spacer(modifier = Modifier.height(192.dp))
+    }
+}
+
+@Composable
+private fun LibrarySectionTitle(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = BookiiBookiiTheme.typography.semibold20,
+        color = BookiiBookiiTheme.colors.grey900,
+        modifier = modifier.padding(horizontal = 16.dp).padding(vertical = 16.dp),
+    )
 }
 
 @Composable
@@ -391,29 +406,37 @@ private fun LibraryFilterBar(
     }
 }
 
-@Composable
-private fun LibraryBookSectionContent(
+// 격자는 3권씩 한 행을 Lazy 항목 하나로 둔다. 행 간격은 격자 16dp, 목록 12dp로 기존과 같다.
+// shortcut: key가 memberBookId라 서버가 같은 책을 중복으로 주면 크래시한다. 중복이 실제로 생기면 index를 섞은 key로 바꾼다.
+private fun LazyListScope.libraryBookRows(
+    section: String,
     books: List<LibraryBook>,
     viewType: LibraryViewType,
     onBookClick: (LibraryBook) -> Unit,
 ) {
     if (viewType == LibraryViewType.GRID) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            books.chunked(3).forEach { row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    row.forEach { book ->
-                        LibraryBookGridItem(book = book, modifier = Modifier.weight(1f).clickable { onBookClick(book) })
-                    }
-                    repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+        val rows = books.chunked(3)
+        itemsIndexed(rows, key = { _, row -> "$section-grid-${row.first().memberBookId}" }) { index, row ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = if (index == 0) 0.dp else 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                row.forEach { book ->
+                    LibraryBookGridItem(book = book, modifier = Modifier.weight(1f).clickable { onBookClick(book) })
                 }
+                repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
             }
         }
     } else {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            books.forEach { book ->
+        itemsIndexed(books, key = { _, book -> "$section-list-${book.memberBookId}" }) { index, book ->
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = if (index == 0) 0.dp else 12.dp),
+            ) {
                 LibraryBookListItem(book = book, onClick = { onBookClick(book) })
             }
         }
@@ -458,37 +481,6 @@ private fun LibraryEmptyStateBox(
                     style = BookiiBookiiTheme.typography.regular15,
                     color = BookiiBookiiTheme.colors.white,
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun LibrarySearchResults(
-    books: List<LibraryBook>,
-    viewType: LibraryViewType,
-    onBookClick: (LibraryBook) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(top = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text(text = "${books.size}권", style = BookiiBookiiTheme.typography.regular15, color = BookiiBookiiTheme.colors.grey900)
-        if (viewType == LibraryViewType.GRID) {
-            books.chunked(3).forEach { row ->
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    row.forEach { book ->
-                        LibraryBookGridItem(book = book, modifier = Modifier.weight(1f).clickable { onBookClick(book) })
-                    }
-                    repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
-                }
-            }
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                books.forEach { book -> LibraryBookListItem(book = book, onClick = { onBookClick(book) }) }
             }
         }
     }

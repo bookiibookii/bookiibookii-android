@@ -22,10 +22,11 @@ import androidx.compose.foundation.layout.size
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,8 +41,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -141,7 +142,7 @@ fun LibraryDetailRoute(
     viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryDetailViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     val book = if (bookTitle.isNotBlank()) {
         LibraryDetailBook(
@@ -216,14 +217,17 @@ fun LibraryDetailScreen(
     var showFabMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val displayedCards = if (myCardsOnly) cards.filter { it.isMine } else cards
-    val sortedCards = if (sortByLatest) {
-        displayedCards.sortedWith(
-            compareByDescending<ReadingCard> { it.date }.thenByDescending { it.cardId },
-        )
-    } else {
-        displayedCards.sortedBy { it.page.toIntOrNull() ?: 0 }
+    val sortedCards = remember(cards, myCardsOnly, sortByLatest) {
+        val displayedCards = if (myCardsOnly) cards.filter { it.isMine } else cards
+        if (sortByLatest) {
+            displayedCards.sortedWith(
+                compareByDescending<ReadingCard> { it.date }.thenByDescending { it.cardId },
+            )
+        } else {
+            displayedCards.sortedBy { it.page.toIntOrNull() ?: 0 }
+        }
     }
+    val cardRows = remember(sortedCards) { sortedCards.chunked(2) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (showFabMenu) {
@@ -241,26 +245,28 @@ fun LibraryDetailScreen(
                 .background(BookiiBookiiTheme.colors.uiBg),
         ) {
             DetailHeader(title = book?.title ?: "", onBackClick = onBackClick, onMenuClick = { showBookSheet = true })
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 104.dp),
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(bottom = 104.dp),
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
-                if (book != null) {
-                    BookInfoCard(book = book, modifier = Modifier.padding(horizontal = 16.dp))
+                item(key = "header") {
+                    Column {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        if (book != null) {
+                            BookInfoCard(book = book, modifier = Modifier.padding(horizontal = 16.dp))
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        FilterRow(
+                            myCardsOnly = myCardsOnly,
+                            sortByLatest = sortByLatest,
+                            onMyCardsToggle = { myCardsOnly = !myCardsOnly },
+                            onSortChange = { latest -> sortByLatest = latest },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                FilterRow(
-                    myCardsOnly = myCardsOnly,
-                    sortByLatest = sortByLatest,
-                    onMyCardsToggle = { myCardsOnly = !myCardsOnly },
-                    onSortChange = { latest -> sortByLatest = latest },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                if (sortedCards.isEmpty()) {
+                if (sortedCards.isEmpty()) item(key = "empty") {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -278,13 +284,26 @@ fun LibraryDetailScreen(
                         )
                     }
                 } else {
-                    CardGrid(
-                        cards = sortedCards,
-                        onCardClick = { index -> onCardClick(index, sortedCards, sortByLatest) },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
+                    itemsIndexed(cardRows, key = { _, row -> row.first().cardId }) { rowIndex, row ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(top = if (rowIndex == 0) 0.dp else 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            row.forEachIndexed { colIndex, card ->
+                                ReadingCardItem(
+                                    card = card,
+                                    onClick = { onCardClick(rowIndex * 2 + colIndex, sortedCards, sortByLatest) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                item(key = "footer") { Spacer(modifier = Modifier.height(16.dp)) }
             }
         }
 
@@ -623,20 +642,6 @@ private fun FilterRow(
             Text(text = "최신순", style = if (sortByLatest) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14, color = if (sortByLatest) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500, modifier = Modifier.clickable { onSortChange(true) })
             Text(text = "|", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey500)
             Text(text = "페이지순", style = if (!sortByLatest) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14, color = if (!sortByLatest) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500, modifier = Modifier.clickable { onSortChange(false) })
-        }
-    }
-}
-
-@Composable
-private fun CardGrid(cards: List<ReadingCard>, onCardClick: (Int) -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        cards.chunked(2).forEachIndexed { rowIndex, row ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                row.forEachIndexed { colIndex, card ->
-                    ReadingCardItem(card = card, onClick = { onCardClick(rowIndex * 2 + colIndex) }, modifier = Modifier.weight(1f))
-                }
-                if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
-            }
         }
     }
 }
