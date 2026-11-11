@@ -102,7 +102,8 @@ fun OnbStepScreen(
                 state.gender != null &&
                 state.birthdate != null &&
                 imageUploadState !is ProfileImageUploadState.Loading
-        2 -> state.lifeBooks.any { it != null }
+        // 도서 검색 API 교체 전까지 책을 고를 수 없어 인생 책은 선택 문항이다 (#509)
+        2 -> true
         3 -> state.recordMethods.isNotEmpty() || state.isUnknownMethod
         4 -> true
         else -> false
