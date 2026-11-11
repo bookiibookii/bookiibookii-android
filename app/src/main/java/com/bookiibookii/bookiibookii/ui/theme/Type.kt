@@ -19,11 +19,8 @@ val Pretendard = FontFamily(
     Font(R.font.pretendard_bold, FontWeight.Bold)
 )
 
+// 인용문에서 Bold만 쓴다. 다른 굵기를 지정하면 Bold로 대체되어 보이니 필요하면 폰트를 다시 추가한다.
 val MaruBuri = FontFamily(
-    Font(R.font.maruburi_extralight, FontWeight.ExtraLight),
-    Font(R.font.maruburi_light, FontWeight.Light),
-    Font(R.font.maruburi_regular, FontWeight.Normal),
-    Font(R.font.maruburi_semibold, FontWeight.SemiBold),
     Font(R.font.maruburi_bold, FontWeight.Bold)
 )
 
