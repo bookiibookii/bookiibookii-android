@@ -6,28 +6,29 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import com.bookiibookii.bookiibookii.ui.component.BookiiBackButton
 import com.bookiibookii.bookiibookii.ui.component.ProfilePlaceholder
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,7 +53,7 @@ fun LibraryBookmarkRoute(
     onCardClick: (initialIndex: Int, sortByLatest: Boolean, cards: List<ReadingCard>) -> Unit,
     viewModel: com.bookiibookii.bookiibookii.library.vm.LibraryBookmarkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
         viewModel.fetchBookmarkedCards()
@@ -60,6 +61,7 @@ fun LibraryBookmarkRoute(
 
     LibraryBookmarkScreen(
         cards = state.cards,
+        isLatest = state.isLatest,
         isLoading = state.isLoading,
         onSortChange = { isLatest -> viewModel.sortByLatest(isLatest) },
         onBackClick = onBackClick,
@@ -71,14 +73,16 @@ fun LibraryBookmarkRoute(
 @Composable
 fun LibraryBookmarkScreen(
     cards: List<ReadingCard> = emptyList(),
+    isLatest: Boolean = true,
     isLoading: Boolean = false,
     onSortChange: (isLatest: Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onCardClick: (index: Int, isLatest: Boolean, bookmarkedCards: List<ReadingCard>) -> Unit = { _, _, _ -> },
     onMoveToLibrary: () -> Unit = {},
 ) {
-    var sortType by remember { mutableStateOf(BookmarkSortType.RECENT) }
+    val sortType = if (isLatest) BookmarkSortType.RECENT else BookmarkSortType.OLDEST
     val bookmarkedCards = cards
+    val rows = remember(bookmarkedCards) { bookmarkedCards.chunked(2) }
 
     Column(
         modifier = Modifier
@@ -126,28 +130,25 @@ fun LibraryBookmarkScreen(
                         text = "최신순",
                         style = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
                         color = if (sortType == BookmarkSortType.RECENT) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
-                        modifier = Modifier.clickable { sortType = BookmarkSortType.RECENT; onSortChange(true) },
+                        modifier = Modifier.clickable { onSortChange(true) },
                     )
                     Text(text = " | ", style = BookiiBookiiTheme.typography.regular14, color = BookiiBookiiTheme.colors.grey300)
                     Text(
                         text = "과거순",
                         style = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.typography.semibold14 else BookiiBookiiTheme.typography.regular14,
                         color = if (sortType == BookmarkSortType.OLDEST) BookiiBookiiTheme.colors.grey800 else BookiiBookiiTheme.colors.grey500,
-                        modifier = Modifier.clickable { sortType = BookmarkSortType.OLDEST; onSortChange(false) },
+                        modifier = Modifier.clickable { onSortChange(false) },
                     )
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
-                    .navigationBarsPadding()
-                    .padding(top = 16.dp, bottom = 24.dp),
+            val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 24.dp + navBarBottom),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                bookmarkedCards.chunked(2).forEachIndexed { rowIndex, row ->
+                itemsIndexed(rows, key = { _, row -> row.first().cardId }) { rowIndex, row ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -155,7 +156,7 @@ fun LibraryBookmarkScreen(
                         row.forEachIndexed { colIndex, card ->
                             BookmarkCardItem(
                                 card = card,
-                                onClick = { onCardClick(rowIndex * 2 + colIndex, sortType == BookmarkSortType.RECENT, bookmarkedCards) },
+                                onClick = { onCardClick(rowIndex * 2 + colIndex, isLatest, bookmarkedCards) },
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -343,8 +344,10 @@ private fun BookmarkCardItem(
     }
 }
 
+// 목록 key가 cardId라 미리보기 카드도 서로 다른 id가 필요하다 (같으면 크래시)
 private val previewBookmarkCards = listOf(
     ReadingCard(
+        cardId = 1L,
         username = "북이",
         content = "새는 알에서 나오려고 투쟁한다. 알은 세계다.",
         page = "123",
@@ -353,6 +356,7 @@ private val previewBookmarkCards = listOf(
         reactionCounts = mapOf("LIKE" to 3, "FUN" to 1),
     ),
     ReadingCard(
+        cardId = 2L,
         username = "부키",
         content = "이 장면이 특히 인상 깊었어요.",
         page = "45",
@@ -360,6 +364,7 @@ private val previewBookmarkCards = listOf(
         bookTitle = "데미안",
     ),
     ReadingCard(
+        cardId = 3L,
         username = "초록",
         content = "오래 남는 문장이었다.",
         page = "0",

@@ -46,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,7 +71,10 @@ import com.bookiibookii.bookiibookii.data.model.mypage.MypageReqDTO
 import com.bookiibookii.bookiibookii.data.model.mypage.UserProfileResDTO
 import com.bookiibookii.bookiibookii.onboarding.steps.model.NicknameCheckState
 import com.bookiibookii.bookiibookii.onboarding.steps.ui.component.ProfilePhotoBottomSheet
+import com.bookiibookii.bookiibookii.common.copyUriToCacheFile
 import java.util.Calendar
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 private val nicknameAllowedCharRegex = Regex("[가-힣ㄱ-ㅎㅏ-ㅣA-Za-z0-9._\\-_/()\\[\\]:!?]")
 private val nicknameAllowedRegex = Regex("^[가-힣A-Za-z0-9._\\-_/()\\[\\]:!?]+$")
@@ -96,28 +100,34 @@ fun ProfileSettingRoute(
     var isDefaultImageSelected by remember { mutableStateOf(false) }
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    fun createUploadTempFile(uri: Uri): java.io.File? {
-        return try {
-            val tempFile = java.io.File.createTempFile("profile_", ".jpg", context.cacheDir)
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                tempFile.outputStream().use { output -> input.copyTo(output) }
-            } ?: return null
-            tempFile
-        } catch (e: Exception) {
-            null
+    // 복사 중에는 저장을 막는다. 화면을 떠나면 scope와 함께 복사가 취소되고 만들던 파일은 지워진다.
+    val scope = rememberCoroutineScope()
+    var copyJob by remember { mutableStateOf<Job?>(null) }
+    var isImageProcessing by remember { mutableStateOf(false) }
+
+    fun selectImage(uri: Uri) {
+        copyJob?.cancel()
+        selectedImageUri = uri
+        selectedImageFile = null
+        isDefaultImageSelected = false
+        isImageProcessing = true
+        copyJob = scope.launch {
+            val file = copyUriToCacheFile(context.contentResolver, uri, context.cacheDir)
+            isImageProcessing = false
+            if (file != null) {
+                selectedImageFile = file
+            } else {
+                // 미리보기만 바뀌고 저장 시 반영되지 않는 상태를 막는다
+                selectedImageUri = null
+                context.showCustomToast("이미지를 불러오지 못했습니다.", false)
+            }
         }
     }
 
     val takePictureLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.TakePicture(),
     ) { success ->
-        if (success) {
-            cameraImageUri?.let { uri ->
-                selectedImageUri = uri
-                selectedImageFile = createUploadTempFile(uri)
-                isDefaultImageSelected = false
-            }
-        }
+        if (success) cameraImageUri?.let(::selectImage)
     }
 
     fun createCameraUri(): Uri? = try {
@@ -154,13 +164,7 @@ fun ProfileSettingRoute(
 
     val pickMediaLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.GetContent(),
-    ) { uri ->
-        uri?.let {
-            selectedImageUri = it
-            selectedImageFile = createUploadTempFile(it)
-            isDefaultImageSelected = false
-        }
-    }
+    ) { uri -> uri?.let(::selectImage) }
 
     LaunchedEffect(Unit) { viewModel.resetNicknameCheckState() }
 
@@ -182,8 +186,15 @@ fun ProfileSettingRoute(
         onBackClick = onBackClick,
         onOpenCamera = { cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA) },
         onOpenGallery = { pickMediaLauncher.launch("image/*") },
-        onClearProfileImage = { selectedImageUri = null; selectedImageFile = null; isDefaultImageSelected = true },
+        onClearProfileImage = {
+            copyJob?.cancel()
+            isImageProcessing = false
+            selectedImageUri = null
+            selectedImageFile = null
+            isDefaultImageSelected = true
+        },
         isDefaultImageSelected = isDefaultImageSelected,
+        isImageProcessing = isImageProcessing,
         onCheckNickname = { nickname -> viewModel.checkNickname(nickname) },
         onSaveClick = { request ->
             val finalRequest = when {
@@ -201,6 +212,7 @@ fun ProfileSettingScreen(
     profile: UserProfileResDTO? = null,
     profileImageUri: Uri? = null,
     isDefaultImageSelected: Boolean = false,
+    isImageProcessing: Boolean = false,
     nicknameCheckState: NicknameCheckState? = NicknameCheckState.Idle,
     onBackClick: () -> Unit = {},
     onOpenCamera: () -> Unit = {},
@@ -336,7 +348,7 @@ fun ProfileSettingScreen(
         FooterButton(
             text = "수정하기",
             onClick = {
-                if (canSave) {
+                if (canSave && !isImageProcessing) {
                     val finalNickname = if (nicknameChanged) nickname else originalNickname
                     val gender = selectedGenderIndex?.let { genderOptions.getOrNull(it) }
                     val birth = if (birthYear != null && birthMonth != null && birthDay != null) {
@@ -345,7 +357,7 @@ fun ProfileSettingScreen(
                     onSaveClick(MypageReqDTO(nickname = finalNickname, gender = gender, birth = birth))
                 }
             },
-            enabled = canSave,
+            enabled = canSave && !isImageProcessing,
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 16.dp)
                 .navigationBarsPadding(),
