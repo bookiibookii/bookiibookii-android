@@ -730,8 +730,10 @@ private fun ReadingCardItem(card: ReadingCard, onClick: () -> Unit, modifier: Mo
     }
 }
 
+// 목록 key가 cardId라 미리보기 카드도 서로 다른 id가 필요하다 (같으면 크래시)
 private val previewDetailCards = listOf(
     ReadingCard(
+        cardId = 1L,
         username = "북이",
         content = "다시 읽어도 오래 남는 문장이었다.",
         page = "123",
@@ -742,6 +744,7 @@ private val previewDetailCards = listOf(
         isMine = true,
     ),
     ReadingCard(
+        cardId = 2L,
         username = "부키",
         content = "이 장면이 특히 인상 깊었어요.",
         page = "45",

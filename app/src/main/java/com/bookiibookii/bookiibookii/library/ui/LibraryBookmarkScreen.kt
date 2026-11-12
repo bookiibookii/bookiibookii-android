@@ -344,8 +344,10 @@ private fun BookmarkCardItem(
     }
 }
 
+// 목록 key가 cardId라 미리보기 카드도 서로 다른 id가 필요하다 (같으면 크래시)
 private val previewBookmarkCards = listOf(
     ReadingCard(
+        cardId = 1L,
         username = "북이",
         content = "새는 알에서 나오려고 투쟁한다. 알은 세계다.",
         page = "123",
@@ -354,6 +356,7 @@ private val previewBookmarkCards = listOf(
         reactionCounts = mapOf("LIKE" to 3, "FUN" to 1),
     ),
     ReadingCard(
+        cardId = 2L,
         username = "부키",
         content = "이 장면이 특히 인상 깊었어요.",
         page = "45",
@@ -361,6 +364,7 @@ private val previewBookmarkCards = listOf(
         bookTitle = "데미안",
     ),
     ReadingCard(
+        cardId = 3L,
         username = "초록",
         content = "오래 남는 문장이었다.",
         page = "0",
