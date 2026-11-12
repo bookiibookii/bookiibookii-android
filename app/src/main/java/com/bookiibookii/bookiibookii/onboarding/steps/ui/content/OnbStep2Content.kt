@@ -61,12 +61,10 @@ internal fun OnbStep2Content(vm: OnbViewModel, state: OnbState) {
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         OnbSubHeadCard(
-            label = stringResource(R.string.onb_label_required),
+            label = stringResource(R.string.onb_label_optional),
             title = stringResource(R.string.onb_step2_title),
             description = stringResource(R.string.onb_step2_desc)
         )
-
-        val totalBooks = state.lifeBooks.count { it != null }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -75,7 +73,6 @@ internal fun OnbStep2Content(vm: OnbViewModel, state: OnbState) {
             repeat(3) { index ->
                 LifeBookSlot(
                     book = state.lifeBooks.getOrNull(index),
-                    totalBooks = totalBooks,
                     onClick = {
                         editingSlotIndex = index
                         vm.clearBookSearch()
@@ -105,7 +102,6 @@ internal fun OnbStep2Content(vm: OnbViewModel, state: OnbState) {
 @Composable
 private fun LifeBookSlot(
     book: BookItem?,
-    totalBooks: Int,
     onClick: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
@@ -114,7 +110,7 @@ private fun LifeBookSlot(
     val typography = BookiiBookiiTheme.typography
 
     if (book != null) {
-        val isSingleBook = totalBooks == 1
+        // 0권도 허용하므로 마지막 1권도 X로 지울 수 있다. 바꾸려면 지운 뒤 빈 칸에서 다시 고른다.
         Column(
             modifier = modifier,
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -140,14 +136,12 @@ private fun LifeBookSlot(
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(colors.grey100)
-                        .clickable(onClick = if (isSingleBook) onClick else onRemove),
+                        .clickable(onClick = onRemove),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(
-                            if (isSingleBook) R.drawable.ic_edit else R.drawable.ic_x
-                        ),
-                        contentDescription = if (isSingleBook) "수정" else "삭제",
+                        painter = painterResource(R.drawable.ic_x),
+                        contentDescription = "삭제",
                         tint = colors.grey700,
                         modifier = Modifier.size(16.dp)
                     )
@@ -203,34 +197,18 @@ private fun LifeBookSlot(
 private fun LifeBookSlotEmptyPreview() {
     BookiiBookiiTheme {
         Box(modifier = Modifier.padding(16.dp).width(120.dp)) {
-            LifeBookSlot(book = null, totalBooks = 0, onClick = {}, onRemove = {})
+            LifeBookSlot(book = null, onClick = {}, onRemove = {})
         }
     }
 }
 
-@Preview(showBackground = true, name = "LifeBookSlot - 채워짐 (1권, 수정 아이콘)")
+@Preview(showBackground = true, name = "LifeBookSlot - 채워짐 (X 아이콘)")
 @Composable
-private fun LifeBookSlotFilledSinglePreview() {
-    BookiiBookiiTheme {
-        Box(modifier = Modifier.padding(16.dp).width(120.dp)) {
-            LifeBookSlot(
-                book = BookItem("프로젝트 헤일메리", "앤디 위어", "", "알에이치코리아", "9788925563602", "소설", "소설", ""),
-                totalBooks = 1,
-                onClick = {},
-                onRemove = {}
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "LifeBookSlot - 채워짐 (2권+, X 아이콘)")
-@Composable
-private fun LifeBookSlotFilledMultiPreview() {
+private fun LifeBookSlotFilledPreview() {
     BookiiBookiiTheme {
         Box(modifier = Modifier.padding(16.dp).width(120.dp)) {
             LifeBookSlot(
                 book = BookItem("채식주의자", "한강", "", "창비", "9788936433598", "소설", "소설", ""),
-                totalBooks = 2,
                 onClick = {},
                 onRemove = {}
             )
