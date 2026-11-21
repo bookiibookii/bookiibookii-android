@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.ui.detail
 
+import com.bookiibookii.bookiibookii.mypage.vm.FavoriteSubmitState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -64,6 +65,7 @@ fun MyBookshelfRoute(
     val representativeTitles by viewModel.representativeTitles.observeAsState(emptySet())
     val sortOrder by viewModel.sortOrder.observeAsState(SortOrder.LATEST)
     val bookSearchState by viewModel.bookSearchState.observeAsState()
+    val favoriteSubmitState by viewModel.favoriteSubmitState.observeAsState(FavoriteSubmitState())
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
@@ -81,6 +83,8 @@ fun MyBookshelfRoute(
         representativeTitles = representativeTitles,
         sortOrder = sortOrder,
         bookSearchState = bookSearchState,
+        favoriteSubmitState = favoriteSubmitState,
+        onClearFavoriteError = viewModel::clearFavoriteError,
         onBack = onBack,
         onLibraryClick = onLibraryClick,
         onReviewClick = { book -> viewModel.fetchGroupReviewTarget(book.groupId, book.title, onReviewClick) },
@@ -106,6 +110,8 @@ fun MyBookshelfScreen(
     representativeTitles: Set<String> = emptySet(),
     sortOrder: SortOrder = SortOrder.LATEST,
     bookSearchState: BookSearchState? = null,
+    favoriteSubmitState: FavoriteSubmitState = FavoriteSubmitState(),
+    onClearFavoriteError: () -> Unit = {},
     onBack: () -> Unit = {},
     onLibraryClick: (CompletedBook) -> Unit = {},
     onReviewClick: (CompletedBook) -> Unit = {},
@@ -153,6 +159,8 @@ fun MyBookshelfScreen(
             LifeBookSection(
                 lifeBooks = favoriteBooks,
                 bookSearchState = bookSearchState,
+                favoriteSubmitState = favoriteSubmitState,
+                onClearFavoriteError = onClearFavoriteError,
                 onSearchBooks = onSearchBooks,
                 onSearch = onSearchClick,
                 onClearSearch = onClearBookSearch,

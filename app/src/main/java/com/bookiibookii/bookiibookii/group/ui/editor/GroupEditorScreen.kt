@@ -278,7 +278,7 @@ fun GroupEditorScreen(
                 )
             }
             FooterButton(
-                text = if (uiState.isEdit) "그룹 수정" else "그룹 만들기",
+                text = if (uiState.submitting) "저장 중…" else if (uiState.isEdit) "그룹 수정" else "그룹 만들기",
                 onClick = onSubmit,
                 // 수정 모드는 변경사항이 있을 때만 활성화(isDirty). 비활성 시 FooterButton이 자동 grey 처리
                 enabled = uiState.canSubmit && uiState.isDirty && !uiState.submitting,

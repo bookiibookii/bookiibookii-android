@@ -102,8 +102,7 @@ fun OnbStepScreen(
                 state.gender != null &&
                 state.birthdate != null &&
                 imageUploadState !is ProfileImageUploadState.Loading
-        // 도서 검색 API 교체 전까지 책을 고를 수 없어 인생 책은 선택 문항이다 (#509)
-        2 -> true
+        2 -> state.lifeBooks.any { it != null }
         3 -> state.recordMethods.isNotEmpty() || state.isUnknownMethod
         4 -> true
         else -> false
@@ -111,7 +110,8 @@ fun OnbStepScreen(
 
     OnbStepLayout(
         currentStep = currentStep,
-        isNextEnabled = isNextEnabled,
+        isNextEnabled = isNextEnabled && submitState !is OnboardingSubmitState.Loading,
+        submitting = submitState is OnboardingSubmitState.Loading,
         toastInfo = toastInfo,
         onBack = { if (currentStep == 1) onBack() else currentStep-- },
         onNext = { if (currentStep < 4) currentStep++ else onFinish() },
@@ -138,6 +138,7 @@ fun OnbStepScreen(
 private fun OnbStepLayout(
     currentStep: Int,
     isNextEnabled: Boolean,
+    submitting: Boolean = false,
     toastInfo: ToastInfo? = null,
     onBack: () -> Unit,
     onNext: () -> Unit,
@@ -166,7 +167,7 @@ private fun OnbStepLayout(
             }
 
             FooterButton(
-                text = if (currentStep < 4) "다음" else "완료",
+                text = if (submitting) "등록 중…" else if (currentStep < 4) "다음" else "완료",
                 enabled = isNextEnabled,
                 onClick = onNext,
                 modifier = Modifier

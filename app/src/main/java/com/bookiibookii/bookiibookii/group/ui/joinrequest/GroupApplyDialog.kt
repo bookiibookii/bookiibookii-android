@@ -64,6 +64,7 @@ fun GroupApplyDialog(
     bookSelected: Boolean,
     applyMsg: String,
     canSubmit: Boolean,
+    submitting: Boolean = false,
     onQueryChange: (String) -> Unit,
     onSearchClick: () -> Unit,
     onClearClick: () -> Unit,
@@ -135,7 +136,7 @@ fun GroupApplyDialog(
         )
         // 풋터 — "완료" (책 선택 + 한 마디 입력 시 활성)
         ApplyFooterButton(
-            text = "완료",
+            text = if (submitting) "신청 중…" else "완료",
             enabled = canSubmit,
             onClick = onSubmit,
         )

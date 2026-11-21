@@ -57,17 +57,21 @@ internal fun LifeBookSearchDialog(
     onBookSelected: (BookItem) -> Unit,
     onDismiss: () -> Unit,
     onSearch: () -> Unit = {},
+    submitting: Boolean = false,
+    submitError: String? = null,
 ) {
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!submitting) onDismiss() },
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         LifeBookSearchDialogContent(
             bookSearchState = bookSearchState,
             onQueryChange = onQueryChange,
-            onBookSelected = onBookSelected,
-            onDismiss = onDismiss,
+            onBookSelected = { if (!submitting) onBookSelected(it) },
+            onDismiss = { if (!submitting) onDismiss() },
             onSearch = onSearch,
+            submitting = submitting,
+            submitError = submitError,
         )
     }
 }
@@ -79,9 +83,12 @@ private fun LifeBookSearchDialogContent(
     onBookSelected: (BookItem) -> Unit,
     onDismiss: () -> Unit,
     onSearch: () -> Unit = {},
+    submitting: Boolean = false,
+    submitError: String? = null,
 ) {
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
+    var selectedBook by remember { mutableStateOf<BookItem?>(null) }
 
     Column(
         modifier = Modifier
@@ -127,6 +134,19 @@ private fun LifeBookSearchDialogContent(
             modifier = Modifier.fillMaxWidth()
         )
 
+        if (submitting) {
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = colors.uiMain)
+            Text("등록 중…", style = typography.regular16)
+        }
+        if (submitError != null) {
+            Text(submitError, color = colors.uiPointRed, style = typography.regular16)
+            selectedBook?.let { book ->
+                androidx.compose.material3.TextButton(
+                    enabled = !submitting,
+                    onClick = { onBookSelected(book) },
+                ) { Text("${book.title} 다시 시도") }
+            }
+        }
         // 검색 결과
         when (bookSearchState) {
             is BookSearchState.Loading -> {
@@ -159,14 +179,15 @@ private fun LifeBookSearchDialogContent(
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(max = 360.dp),
+                                .heightIn(max = 360.dp)
+                                .weight(1f, fill = false),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp)
                         ) {
                             items(bookSearchState.books) { book ->
                                 BookResultItem(
                                     book = book,
-                                    onClick = { onBookSelected(book) }
+                                    onClick = { if (!submitting) { selectedBook = book; onBookSelected(book) } }
                                 )
                             }
                         }
