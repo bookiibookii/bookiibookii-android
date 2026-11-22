@@ -148,7 +148,8 @@ fun LibraryBookmarkScreen(
                 contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 24.dp + navBarBottom),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                itemsIndexed(rows, key = { _, row -> row.first().cardId }) { rowIndex, row ->
+                // cardId가 겹쳐도 크래시하지 않도록 key에 index를 섞는다
+                itemsIndexed(rows, key = { index, row -> "card-$index-${row.first().cardId}" }) { rowIndex, row ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),

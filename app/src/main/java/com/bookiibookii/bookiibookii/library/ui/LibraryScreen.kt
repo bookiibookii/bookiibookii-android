@@ -407,7 +407,7 @@ private fun LibraryFilterBar(
 }
 
 // 격자는 3권씩 한 행을 Lazy 항목 하나로 둔다. 행 간격은 격자 16dp, 목록 12dp로 기존과 같다.
-// shortcut: key가 memberBookId라 서버가 같은 책을 중복으로 주면 크래시한다. 중복이 실제로 생기면 index를 섞은 key로 바꾼다.
+// key에 index를 섞는다. 서버가 같은 책을 두 번 주거나 id가 비어 0으로 오면 id만으로는 key가 겹쳐 크래시한다.
 private fun LazyListScope.libraryBookRows(
     section: String,
     books: List<LibraryBook>,
@@ -416,7 +416,7 @@ private fun LazyListScope.libraryBookRows(
 ) {
     if (viewType == LibraryViewType.GRID) {
         val rows = books.chunked(3)
-        itemsIndexed(rows, key = { _, row -> "$section-grid-${row.first().memberBookId}" }) { index, row ->
+        itemsIndexed(rows, key = { index, row -> "$section-grid-$index-${row.first().memberBookId}" }) { index, row ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -431,7 +431,7 @@ private fun LazyListScope.libraryBookRows(
             }
         }
     } else {
-        itemsIndexed(books, key = { _, book -> "$section-list-${book.memberBookId}" }) { index, book ->
+        itemsIndexed(books, key = { index, book -> "$section-list-$index-${book.memberBookId}" }) { index, book ->
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)

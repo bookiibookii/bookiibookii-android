@@ -284,7 +284,8 @@ fun LibraryDetailScreen(
                         )
                     }
                 } else {
-                    itemsIndexed(cardRows, key = { _, row -> row.first().cardId }) { rowIndex, row ->
+                    // cardId가 겹쳐도 크래시하지 않도록 key에 index를 섞는다
+                    itemsIndexed(cardRows, key = { index, row -> "card-$index-${row.first().cardId}" }) { rowIndex, row ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
