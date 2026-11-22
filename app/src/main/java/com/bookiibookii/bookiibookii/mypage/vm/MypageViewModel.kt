@@ -208,13 +208,25 @@ class MypageViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // 저장 중인 사진 복사본. 화면이 업로드 도중 버리려 하면 업로드가 끝난 뒤 지운다.
+    private var uploadingImageFile: File? = null
+    private var discardAfterUpload = false
+
+    // 프로필 화면이 더 쓰지 않는 사진 복사본을 넘긴다. 업로드 중인 파일이면 업로드가 끝난 뒤 지운다.
+    fun discardProfileImageFile(file: File) {
+        if (file == uploadingImageFile) discardAfterUpload = true else file.delete()
+    }
+
     fun updateProfile(
         request: MypageReqDTO,
         imageFile: File?,
     ) {
         if (profileMutating) return
         profileMutating = true
+        uploadingImageFile = imageFile
+        discardAfterUpload = false
         viewModelScope.launch {
+            var saved = false
             try {
                 var finalRequest = request
 
@@ -244,6 +256,7 @@ class MypageViewModel(app: Application) : AndroidViewModel(app) {
                 val updateRes = RetrofitClient.mypApi().updateProfile(finalRequest)
 
                 if (updateRes.isSuccessful && updateRes.body()?.isSuccess == true) {
+                    saved = true
                     _eventFlow.emit(Event.ShowToast("프로필이 성공적으로 수정되었습니다.", true))
                     fetchMypageData()
                     _eventFlow.emit(Event.NavigateBack)
@@ -256,6 +269,10 @@ class MypageViewModel(app: Application) : AndroidViewModel(app) {
                 Log.e("UpdateProfile", "Exception", e)
                 _eventFlow.emit(Event.ShowToast("요청 중 오류가 발생했습니다.", false))
             } finally {
+                // 실패하면 화면이 같은 파일로 다시 저장할 수 있어 남겨 둔다
+                if (saved || discardAfterUpload) imageFile?.delete()
+                uploadingImageFile = null
+                discardAfterUpload = false
                 profileMutating = false
             }
         }

@@ -40,6 +40,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -99,23 +100,42 @@ fun ProfileSettingRoute(
     var selectedImageFile by remember { mutableStateOf<java.io.File?>(null) }
     var isDefaultImageSelected by remember { mutableStateOf(false) }
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+    var cameraFile by remember { mutableStateOf<java.io.File?>(null) }
 
     // 복사 중에는 저장을 막는다. 화면을 떠나면 scope와 함께 복사가 취소되고 만들던 파일은 지워진다.
     val scope = rememberCoroutineScope()
     var copyJob by remember { mutableStateOf<Job?>(null) }
     var isImageProcessing by remember { mutableStateOf(false) }
 
-    fun selectImage(uri: Uri) {
+    // 더 쓰지 않는 사진 복사본은 바로 지운다. 저장 업로드 중인 파일이면 ViewModel이 업로드 뒤에 지운다.
+    fun replaceImageFile(file: java.io.File?) {
+        selectedImageFile?.takeIf { it != file }?.let(viewModel::discardProfileImageFile)
+        selectedImageFile = file
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            selectedImageFile?.let(viewModel::discardProfileImageFile)
+            cameraFile?.delete()
+        }
+    }
+
+    fun selectImage(uri: Uri, sourceToDelete: java.io.File? = null) {
         copyJob?.cancel()
         selectedImageUri = uri
-        selectedImageFile = null
+        replaceImageFile(null)
         isDefaultImageSelected = false
         isImageProcessing = true
         copyJob = scope.launch {
-            val file = copyUriToCacheFile(context.contentResolver, uri, context.cacheDir)
+            val file = try {
+                copyUriToCacheFile(context.contentResolver, uri, context.cacheDir)
+            } finally {
+                // 촬영 원본은 복사본을 만든 뒤에는 쓰지 않는다
+                sourceToDelete?.delete()
+            }
             isImageProcessing = false
             if (file != null) {
-                selectedImageFile = file
+                replaceImageFile(file)
             } else {
                 // 미리보기만 바뀌고 저장 시 반영되지 않는 상태를 막는다
                 selectedImageUri = null
@@ -127,12 +147,17 @@ fun ProfileSettingRoute(
     val takePictureLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.TakePicture(),
     ) { success ->
-        if (success) cameraImageUri?.let(::selectImage)
+        val shot = cameraFile
+        cameraFile = null
+        val uri = cameraImageUri
+        if (success && uri != null) selectImage(uri, sourceToDelete = shot) else shot?.delete()
     }
 
     fun createCameraUri(): Uri? = try {
         val cameraDir = java.io.File(context.cacheDir, "camera").apply { mkdirs() }
         val file = java.io.File(cameraDir, "profile_${System.currentTimeMillis()}.jpg")
+        cameraFile?.delete()
+        cameraFile = file
         androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     } catch (e: Exception) {
         null
@@ -190,7 +215,7 @@ fun ProfileSettingRoute(
             copyJob?.cancel()
             isImageProcessing = false
             selectedImageUri = null
-            selectedImageFile = null
+            replaceImageFile(null)
             isDefaultImageSelected = true
         },
         isDefaultImageSelected = isDefaultImageSelected,
