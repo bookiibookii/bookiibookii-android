@@ -150,6 +150,10 @@ fun GroupEditorRoute(
                 viewModel.submit()
             }
         },
+        // 비활성 버튼을 누르면 화면 위쪽부터 따져 처음 빠진 필수값 하나만 알린다
+        onDisabledSubmit = {
+            uiState.missingRequirement?.let { context.showCustomToast(message = it, isSuccess = false) }
+        },
         onManageAddress = onManageAddress,
         submitError = submitError,
     )
@@ -176,6 +180,7 @@ fun GroupEditorScreen(
     onRemoveCustomRule: (Int) -> Unit,
     onBack: () -> Unit,
     onSubmit: () -> Unit,
+    onDisabledSubmit: () -> Unit = {},
     onManageAddress: (ExchangeType) -> Unit = {},
     submitError: String? = null,
 ) {
@@ -289,6 +294,7 @@ fun GroupEditorScreen(
                 onClick = onSubmit,
                 // 수정 모드는 변경사항이 있을 때만 활성화(isDirty). 비활성 시 FooterButton이 자동 grey 처리
                 enabled = uiState.canSubmit && uiState.isDirty && !uiState.submitting,
+                onDisabledClick = onDisabledSubmit.takeUnless { uiState.submitting },
             )
         }
     }

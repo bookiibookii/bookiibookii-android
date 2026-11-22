@@ -21,6 +21,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -135,6 +137,8 @@ fun FooterButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     style: FooterButtonStyle = FooterButtonStyle.Dark,
+    // 비활성 버튼을 눌렀을 때 이유를 알려주려면 넘긴다. 없으면 비활성 버튼은 탭을 받지 않는다
+    onDisabledClick: (() -> Unit)? = null,
 ) {
     val shape = BookiiBookiiTheme.shape.round20
     val containerColor: Color
@@ -160,7 +164,16 @@ fun FooterButton(
             .height(72.dp)
             .clip(shape)
             .background(containerColor)
-            .clickable(enabled = enabled, onClick = debouncedClick)
+            .then(
+                if (!enabled && onDisabledClick != null) {
+                    // 눌리는 효과 없이 탭만 받고, 접근성에는 비활성으로 알린다
+                    Modifier
+                        .clickable(interactionSource = null, indication = null, onClick = onDisabledClick)
+                        .semantics { disabled() }
+                } else {
+                    Modifier.clickable(enabled = enabled, onClick = debouncedClick)
+                },
+            )
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center,
     ) {
