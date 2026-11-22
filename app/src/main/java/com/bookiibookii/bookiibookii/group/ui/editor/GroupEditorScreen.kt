@@ -118,10 +118,17 @@ fun GroupEditorRoute(
         uiState = uiState,
         onBookSearchQueryChange = viewModel::onBookSearchQueryChange,
         onSearchBooks = viewModel::searchBooks,
-        onClearBookSearch = viewModel::onClearBookSearch,
+        // 책을 바꾸면 이전 책의 제출 오류는 더 이상 맞지 않는다
+        onClearBookSearch = {
+            submitError = null
+            viewModel.onClearBookSearch()
+        },
         onDismissBookDropdown = viewModel::onDismissBookDropdown,
         onBookFieldFocused = viewModel::onBookFieldFocused,
-        onBookSelect = viewModel::onBookSelect,
+        onBookSelect = { book ->
+            submitError = null
+            viewModel.onBookSelect(book)
+        },
         onGroupNameChange = viewModel::onGroupNameChange,
         onTradeTypeSelect = viewModel::onTradeTypeSelect,
         onPlaceSelect = viewModel::onPlaceSelect,

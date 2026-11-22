@@ -88,7 +88,6 @@ private fun LifeBookSearchDialogContent(
 ) {
     val colors = BookiiBookiiTheme.colors
     val typography = BookiiBookiiTheme.typography
-    var selectedBook by remember { mutableStateOf<BookItem?>(null) }
 
     Column(
         modifier = Modifier
@@ -140,12 +139,6 @@ private fun LifeBookSearchDialogContent(
         }
         if (submitError != null) {
             Text(submitError, color = colors.uiPointRed, style = typography.regular16)
-            selectedBook?.let { book ->
-                androidx.compose.material3.TextButton(
-                    enabled = !submitting,
-                    onClick = { onBookSelected(book) },
-                ) { Text("${book.title} 다시 시도") }
-            }
         }
         // 검색 결과
         when (bookSearchState) {
@@ -187,7 +180,7 @@ private fun LifeBookSearchDialogContent(
                             items(bookSearchState.books) { book ->
                                 BookResultItem(
                                     book = book,
-                                    onClick = { if (!submitting) { selectedBook = book; onBookSelected(book) } }
+                                    onClick = { if (!submitting) onBookSelected(book) }
                                 )
                             }
                         }
