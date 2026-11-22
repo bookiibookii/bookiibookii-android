@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.group.vm
 
+import com.bookiibookii.bookiibookii.common.apiFailure
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookiibookii.bookiibookii.common.BOOK_SEARCH_FAILED
@@ -95,10 +96,11 @@ class JoinRequestViewModel : ViewModel() {
         _bookSearchQuery.value = ""
     }
 
-    // 입력 텍스트 변경. 텍스트를 수정하면 기존 책 선택은 해제.
+    // 선택 해제는 X 버튼으로만 한다. 늦은 IME 입력은 선택한 책을 바꾸지 않는다.
     // 쿼리를 디바운스 플로우에도 흘려 타이핑 검색이 동작하게 함
     fun onBookSearchQueryChange(value: String) {
-        _state.update { it.copy(bookSearchQuery = value, isbn13 = null, bookSearchNoResult = false) }
+        if (_state.value.isbn13 != null || _state.value.bookSearchQuery == value) return
+        _state.update { it.copy(bookSearchQuery = value, bookSearchNoResult = false) }
         _bookSearchQuery.value = value
     }
 
@@ -131,7 +133,7 @@ class JoinRequestViewModel : ViewModel() {
                 _state.update { it.copy(bookSearchLoading = false) }
                 return
             }
-            if (res.isSuccessful && res.body()?.isSuccess == true) {
+            if (res.isSuccessful && res.body()?.isSuccess == true && res.body()?.result != null) {
                 val books = res.body()?.result?.books.orEmpty()
                 _state.update {
                     it.copy(
@@ -142,8 +144,15 @@ class JoinRequestViewModel : ViewModel() {
                     )
                 }
             } else {
+                val message = res.apiFailure(BOOK_SEARCH_FAILED).message
                 _state.update {
-                    it.copy(bookSearchError = BOOK_SEARCH_FAILED, bookSearchLoading = false)
+                    it.copy(
+                        bookSearchError = message,
+                        bookSearchLoading = false,
+                        bookSearchNoResult = false,
+                        bookSearchResults = emptyList(),
+                        bookSearchDropdownVisible = false,
+                    )
                 }
             }
         } catch (e: CancellationException) {
@@ -239,8 +248,8 @@ class JoinRequestViewModel : ViewModel() {
         val s = _state.value
         val isbn13 = s.isbn13 ?: return
         if (s.applyMsg.isBlank() || s.submitting) return
+        _state.update { it.copy(submitting = true) }
         viewModelScope.launch {
-            _state.update { it.copy(submitting = true) }
             try {
                 val res = RetrofitClient.grpApi().applyGroup(
                     groupId = groupId,
@@ -249,8 +258,10 @@ class JoinRequestViewModel : ViewModel() {
                 if (res.isSuccessful && res.body()?.isSuccess == true) {
                     _eventFlow.emit(Event.Applied)
                 } else {
-                    _eventFlow.emit(Event.ShowError(res.body()?.message ?: "참여 신청에 실패했어요"))
+                    _eventFlow.emit(Event.ShowError(res.apiFailure("참여 신청에 실패했어요").message))
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _eventFlow.emit(Event.ShowError("네트워크 오류가 발생했어요"))
             } finally {

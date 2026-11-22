@@ -64,6 +64,7 @@ fun GroupApplyDialog(
     bookSelected: Boolean,
     applyMsg: String,
     canSubmit: Boolean,
+    submitting: Boolean = false,
     onQueryChange: (String) -> Unit,
     onSearchClick: () -> Unit,
     onClearClick: () -> Unit,
@@ -135,7 +136,7 @@ fun GroupApplyDialog(
         )
         // 풋터 — "완료" (책 선택 + 한 마디 입력 시 활성)
         ApplyFooterButton(
-            text = "완료",
+            text = if (submitting) "신청 중…" else "완료",
             enabled = canSubmit,
             onClick = onSubmit,
         )
@@ -224,8 +225,10 @@ private fun BookSearchField(
             BasicTextField(
                 value = fieldValue,
                 onValueChange = { newValue ->
+                    val textChanged = fieldValue.text != newValue.text
                     fieldValue = newValue
-                    onQueryChange(newValue.text)
+                    // 커서 이동·IME 조합 종료는 검색어 수정이 아니다.
+                    if (textChanged && !bookSelected) onQueryChange(newValue.text)
                 },
                 // 책을 고르면 입력 세션을 끊어 더 이상 텍스트를 입력/수정할 수 없게 함 (초기화는 X 버튼으로)
                 enabled = !bookSelected,

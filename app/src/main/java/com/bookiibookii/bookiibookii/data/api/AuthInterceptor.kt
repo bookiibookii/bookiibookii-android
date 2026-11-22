@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.data.api
 
+import com.bookiibookii.bookiibookii.common.isLocalBookFailure
 import android.content.Context
 import android.util.Log
 import com.bookiibookii.bookiibookii.data.model.auth.TokenRefreshRequest
@@ -116,7 +117,7 @@ class AuthInterceptor(
                 Log.e("AUTH_INT", "[403_FORBIDDEN] 서버가 접근을 거부했습니다. 권한 문제 또는 토큰 만료일 수 있습니다.")
             }
 
-            if (code >= 500) {
+            if (code >= 500 && !isLocalBookFailure(method, authedRequest.url.encodedPath, code, peekErrorBody(response))) {
                 router.routeComError(ErrorType.SYSTEM)
             }
 

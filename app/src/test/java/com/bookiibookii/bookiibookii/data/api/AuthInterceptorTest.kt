@@ -3,6 +3,7 @@ package com.bookiibookii.bookiibookii.data.api
 import com.bookiibookii.bookiibookii.error.model.ErrorType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -236,6 +237,31 @@ class AuthInterceptorTest {
         )
         assertEquals(400, call().code)
         assertEquals(0, router.logouts.get())
+    }
+
+    @Test fun `도서 제공처 장애는 본문을 보존하고 자동 재전송이나 전역 이동하지 않는다`() {
+        val raw = """{"code":"BOOK503_1","message":"제공처 장애"}"""
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(500) },
+            apiResponses = ArrayDeque(listOf(MockResponse().setResponseCode(503).setBody(raw))),
+        )
+        val response = client.newCall(Request.Builder().url(server.url("/api/groups"))
+            .post("{}".toRequestBody()).build()).execute()
+        response.use {
+            assertEquals(503, it.code)
+            assertEquals(raw, it.body!!.string())
+        }
+        assertTrue(router.comErrors.isEmpty())
+        assertEquals(1, server.requestCount)
+    }
+
+    @Test fun `도서 요청의 일반 503은 기존 전역 오류로 처리한다`() {
+        dispatch(
+            refreshResponse = { MockResponse().setResponseCode(500) },
+            apiResponses = ArrayDeque(listOf(MockResponse().setResponseCode(503).setBody("{}"))),
+        )
+        call("/api/books/search").close()
+        assertEquals(listOf(ErrorType.SYSTEM), router.comErrors)
     }
 
     @Test fun `500이면 SYSTEM 에러 라우팅 후 응답 반환`() {
