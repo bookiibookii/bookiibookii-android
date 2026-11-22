@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import com.bookiibookii.bookiibookii.ui.component.showCustomToast
 import androidx.activity.compose.setContent
 import androidx.core.content.FileProvider
@@ -38,7 +37,6 @@ class OnbStepActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
             if (success) {
                 val uri = cameraImageUri ?: return@registerForActivityResult
-                vm.setProfileUri(uri)
                 vm.uploadProfileImage(contentResolver, uri)
             }
         }
@@ -46,15 +44,7 @@ class OnbStepActivity : AppCompatActivity() {
     // ── 프로필 이미지: 갤러리 ───────────────────────────────────────────────────
     private val pickProfileImageLauncher =
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) {
-                val localUri = copyUriToLocalCache(uri)
-                if (localUri != null) {
-                    vm.setProfileUri(localUri)
-                    vm.uploadProfileImage(contentResolver, localUri)
-                } else {
-                    showCustomToast("이미지를 불러오지 못했습니다.", false)
-                }
-            }
+            if (uri != null) vm.uploadPickedProfileImage(contentResolver, uri, cacheDir)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,23 +104,6 @@ class OnbStepActivity : AppCompatActivity() {
                 )
             }
         takePictureLauncher.launch(uri)
-    }
-
-    // 갤러리 URI를 로컬 캐시에 복사 (클라우드 백업 사진 등 openInputStream이 실패하는 케이스 방어)
-    private fun copyUriToLocalCache(sourceUri: Uri): Uri? {
-        return try {
-            val tempFile = File(cacheDir, "profile_${System.currentTimeMillis()}.jpg")
-            contentResolver.openInputStream(sourceUri)?.use { input ->
-                tempFile.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-            if (tempFile.length() > 0) Uri.fromFile(tempFile) else null
-        } catch (e: Exception) {
-            // TODO: 추후 로그 삭제 (갤러리 URI 복사 실패 확인용)
-            Log.e("OnbStepActivity", "갤러리 URI 로컬 복사 실패", e)
-            null
-        }
     }
 
     // 카메라 출력 = 앱 내부 캐시(cache/camera) 파일의 FileProvider URI.

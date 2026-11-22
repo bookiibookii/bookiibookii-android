@@ -13,6 +13,8 @@ import kotlinx.coroutines.launch
 data class LibraryBookmarkUiState(
     val isLoading: Boolean = false,
     val cards: List<ReadingCard> = emptyList(),
+    // 화면 복귀 때마다 다시 조회하므로 정렬 선택을 여기에 두어야 순서가 유지된다
+    val isLatest: Boolean = true,
     val errorMessage: String? = null,
 )
 
@@ -29,9 +31,10 @@ class LibraryBookmarkViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.libApi().getBookmarkedCards()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    val cards = (response.body()?.result ?: emptyList()).map { it.toReadingCard() }
-                    originalCards = cards.sortedByDescending { it.cardId }
-                    _uiState.update { it.copy(isLoading = false, cards = originalCards) }
+                    originalCards = (response.body()?.result ?: emptyList()).map { it.toReadingCard() }
+                    _uiState.update {
+                        it.copy(isLoading = false, cards = sorted(originalCards, it.isLatest))
+                    }
                 } else {
                     _uiState.update { it.copy(isLoading = false, errorMessage = "북마크를 불러오지 못했습니다.") }
                 }
@@ -42,11 +45,9 @@ class LibraryBookmarkViewModel : ViewModel() {
     }
 
     fun sortByLatest(isLatest: Boolean) {
-        val sorted = if (isLatest) {
-            originalCards.sortedByDescending { it.cardId }
-        } else {
-            originalCards.sortedBy { it.cardId }
-        }
-        _uiState.update { it.copy(cards = sorted) }
+        _uiState.update { it.copy(isLatest = isLatest, cards = sorted(originalCards, isLatest)) }
     }
+
+    private fun sorted(cards: List<ReadingCard>, isLatest: Boolean): List<ReadingCard> =
+        if (isLatest) cards.sortedByDescending { it.cardId } else cards.sortedBy { it.cardId }
 }
