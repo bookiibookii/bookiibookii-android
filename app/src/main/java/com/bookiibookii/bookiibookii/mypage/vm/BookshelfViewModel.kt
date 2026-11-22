@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.mypage.vm
 
+import com.bookiibookii.bookiibookii.common.apiFailure
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -35,7 +36,20 @@ data class GroupReviewNavTarget(
     val endDate: String,
 )
 
+data class FavoriteSubmitState(
+    val loading: Boolean = false,
+    val failure: com.bookiibookii.bookiibookii.common.ApiFailure? = null,
+    val completed: Int = 0,
+)
+
 class BookshelfViewModel : ViewModel() {
+    private val _favoriteSubmitState = MutableLiveData(FavoriteSubmitState())
+    val favoriteSubmitState: LiveData<FavoriteSubmitState> = _favoriteSubmitState
+
+    fun clearFavoriteError() {
+        _favoriteSubmitState.value = _favoriteSubmitState.value?.copy(failure = null)
+    }
+
 
     private val _bookshelf = MutableLiveData<BookshelfResult?>(null)
 
@@ -150,10 +164,10 @@ class BookshelfViewModel : ViewModel() {
         runCatchingCancellable { RetrofitClient.grpApi().searchBooks(query) }
             .onSuccess { response ->
                 val body = response.body()
-                if (body?.isSuccess == true && body.result != null) {
+                if (response.isSuccessful && body?.isSuccess == true && body.result != null) {
                     _bookSearchState.value = BookSearchState.Success(body.result.books)
                 } else {
-                    _bookSearchState.value = BookSearchState.Error(body?.message ?: BOOK_SEARCH_FAILED)
+                    _bookSearchState.value = BookSearchState.Error(response.apiFailure(BOOK_SEARCH_FAILED).message)
                 }
             }
             .onFailure {
@@ -253,21 +267,7 @@ class BookshelfViewModel : ViewModel() {
         }
     }
 
-    fun addFavoriteBook(isbn13: String) {
-        viewModelScope.launch {
-            try {
-                val response = RetrofitClient.mypApi().addFavoriteBook(AddFavoriteBookRequest(isbn13 = isbn13))
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    ensureFavoritesAreRepresentative()
-                } else {
-                    _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "인생 책 등록에 실패했습니다."))
-                }
-            } catch (e: Exception) {
-                Log.e("BookshelfViewModel", "addFavoriteBook error", e)
-                _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
-            }
-        }
-    }
+    fun addFavoriteBook(isbn13: String) = submitFavoriteBook(null, isbn13)
 
     fun deleteFavoriteBook(userBookId: Long) {
         viewModelScope.launch {
@@ -290,20 +290,31 @@ class BookshelfViewModel : ViewModel() {
         }
     }
 
-    fun replaceFavoriteBook(oldUserBookId: Long, isbn13: String) {
+    fun replaceFavoriteBook(oldUserBookId: Long, isbn13: String) = submitFavoriteBook(oldUserBookId, isbn13)
+
+    private fun submitFavoriteBook(oldUserBookId: Long?, isbn13: String) {
+        val previous = _favoriteSubmitState.value ?: FavoriteSubmitState()
+        if (previous.loading) return
+        _favoriteSubmitState.value = previous.copy(loading = true, failure = null)
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.mypApi().replaceFavoriteBook(
-                    oldUserBookId, AddFavoriteBookRequest(isbn13 = isbn13)
-                )
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
+                val result = runCatchingCancellable {
+                    val request = AddFavoriteBookRequest(isbn13)
+                    if (oldUserBookId == null) RetrofitClient.mypApi().addFavoriteBook(request)
+                    else RetrofitClient.mypApi().replaceFavoriteBook(oldUserBookId, request)
+                }
+                val response = result.getOrNull()
+                if (response?.isSuccessful == true && response.body()?.isSuccess == true) {
+                    // 등록 확정 후 닫는다. 후속 책장 조회 실패를 등록 실패로 바꾸지 않는다.
+                    _favoriteSubmitState.value = FavoriteSubmitState(loading = true, completed = previous.completed + 1)
                     ensureFavoritesAreRepresentative()
                 } else {
-                    _eventFlow.emit(Event.ShowToast(response.body()?.message ?: "인생 책 교체에 실패했습니다."))
+                    val failure = response?.apiFailure("인생 책 등록에 실패했습니다.")
+                        ?: com.bookiibookii.bookiibookii.common.ApiFailure(0, null, "네트워크 오류가 발생했습니다.")
+                    _favoriteSubmitState.value = previous.copy(failure = failure)
                 }
-            } catch (e: Exception) {
-                Log.e("BookshelfViewModel", "replaceFavoriteBook error", e)
-                _eventFlow.emit(Event.ShowToast("네트워크 오류가 발생했습니다."))
+            } finally {
+                _favoriteSubmitState.value = _favoriteSubmitState.value?.copy(loading = false)
             }
         }
     }

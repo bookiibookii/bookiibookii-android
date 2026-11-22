@@ -1,5 +1,7 @@
 package com.bookiibookii.bookiibookii.mypage.ui.detail
 
+import androidx.compose.runtime.LaunchedEffect
+import com.bookiibookii.bookiibookii.mypage.vm.FavoriteSubmitState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -94,9 +96,18 @@ internal fun LifeBookSection(
     onDeleteFavoriteBook: (Long) -> Unit,
     onReplaceFavoriteBook: (Long, String) -> Unit,
     onSearch: () -> Unit = {},
+    favoriteSubmitState: FavoriteSubmitState = FavoriteSubmitState(),
+    onClearFavoriteError: () -> Unit = {},
 ) {
     var showSearchDialog by remember { mutableStateOf(false) }
     var editingBook by remember { mutableStateOf<FavoriteBook?>(null) }
+    LaunchedEffect(favoriteSubmitState.completed) {
+        if (showSearchDialog) {
+            showSearchDialog = false
+            editingBook = null
+            onClearSearch()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -181,17 +192,16 @@ internal fun LifeBookSection(
     if (showSearchDialog) {
         LifeBookSearchDialog(
             bookSearchState = bookSearchState,
+            submitting = favoriteSubmitState.loading,
+            submitError = favoriteSubmitState.failure?.message,
             onQueryChange = onSearchBooks,
             onSearch = onSearch,
             onBookSelected = { selectedBook ->
                 val editing = editingBook
                 if (editing != null) onReplaceFavoriteBook(editing.userBookId, selectedBook.isbn13)
                 else onAddFavoriteBook(selectedBook.isbn13)
-                showSearchDialog = false
-                editingBook = null
-                onClearSearch()
             },
-            onDismiss = { showSearchDialog = false; editingBook = null; onClearSearch() },
+            onDismiss = { showSearchDialog = false; editingBook = null; onClearSearch(); onClearFavoriteError() },
         )
     }
 }

@@ -1,6 +1,8 @@
 package com.bookiibookii.bookiibookii.group.model
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -31,6 +33,44 @@ class GroupEditorUiStateTest {
 
     @Test fun `수정 모드는 도서-교환유형-주소 없이도 제출 가능`() =
         assertTrue(GroupEditorUiState(isEdit = true, groupName = "그룹", ruleStyle = style).canSubmit)
+
+    @Test fun `필수값이 모두 있으면 안내 없음`() = assertNull(createValid().missingRequirement)
+
+    @Test fun `여러 필수값이 비면 화면 위쪽 항목 하나만 안내`() {
+        assertEquals("도서를 선택해주세요", GroupEditorUiState().missingRequirement)
+        assertEquals(
+            "그룹명을 입력해주세요",
+            GroupEditorUiState(isbn13 = "9791234567890", groupName = " ").missingRequirement,
+        )
+        assertEquals(
+            "교환 유형을 선택해주세요",
+            createValid().copy(tradeType = null, selectedPlaceId = null, ruleStyle = null).missingRequirement,
+        )
+        assertEquals("독서 스타일을 선택해주세요", createValid().copy(ruleStyle = null).missingRequirement)
+        assertEquals(
+            "그룹 소개는 500자 이하로 작성해주세요",
+            createValid().copy(groupComment = "가".repeat(501)).missingRequirement,
+        )
+    }
+
+    @Test fun `주소는 목록이 비면 등록, 있으면 선택을 안내`() {
+        val direct = createValid().copy(tradeType = ExchangeType.DIRECT, selectedPlaceId = null)
+        assertEquals("희망 교환 장소를 등록해주세요", direct.missingRequirement)
+        assertEquals("희망 교환 장소를 선택해주세요", direct.copy(placesLoading = true).missingRequirement)
+        val delivery = createValid().copy(
+            tradeType = ExchangeType.DELIVERY, selectedPlaceId = null,
+            places = listOf(SelectablePlace(id = 1L, placeName = "집", address = "서울", isDefault = true)),
+        )
+        assertEquals("배송지를 선택해주세요", delivery.missingRequirement)
+    }
+
+    @Test fun `수정 모드는 바꿀 수 없는 도서-교환유형-주소를 안내하지 않음`() {
+        assertNull(GroupEditorUiState(isEdit = true, groupName = "그룹", ruleStyle = style).missingRequirement)
+        assertEquals(
+            "그룹명을 입력해주세요",
+            GroupEditorUiState(isEdit = true, ruleStyle = style).missingRequirement,
+        )
+    }
 
     @Test fun `생성 모드는 항상 dirty`() = assertTrue(createValid().isDirty)
 

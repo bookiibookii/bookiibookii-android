@@ -1,5 +1,6 @@
 package com.bookiibookii.bookiibookii.onboarding.steps
 
+import com.bookiibookii.bookiibookii.common.apiFailure
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.lifecycle.LiveData
@@ -26,7 +27,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import java.io.File
 
 class OnbViewModel : ViewModel() {
@@ -213,11 +213,11 @@ class OnbViewModel : ViewModel() {
             RetrofitClient.grpApi().searchBooks(query)
         }.onSuccess { response ->
             val body = response.body()
-            if (body?.isSuccess == true && body.result != null) {
+            if (response.isSuccessful && body?.isSuccess == true && body.result != null) {
                 _bookSearchState.value = BookSearchState.Success(body.result.books)
             } else {
                 _bookSearchState.value =
-                    BookSearchState.Error(body?.message ?: BOOK_SEARCH_FAILED)
+                    BookSearchState.Error(response.apiFailure(BOOK_SEARCH_FAILED).message)
             }
         }.onFailure { e ->
             _bookSearchState.value =
@@ -269,38 +269,48 @@ class OnbViewModel : ViewModel() {
         // 더블탭 가드 — 이미 제출 중이면 중복 POST 차단
         if (_onboardingSubmitState.value is OnboardingSubmitState.Loading) return
         val state = currentState()
+        if (state.lifeBooks.none { it != null }) {
+            _onboardingSubmitState.value = OnboardingSubmitState.Error("인생 책을 최소 1권 선택해주세요.")
+            return
+        }
+        _onboardingSubmitState.value = OnboardingSubmitState.Loading
         viewModelScope.launch {
-            _onboardingSubmitState.value = OnboardingSubmitState.Loading
-            runCatching {
-                RetrofitClient.userApi().postOnboarding(
-                    OnboardingRequest(
-                        name = state.nickname,
-                        gender = state.gender,
-                        birth = state.birthdate,
-                        // "잘 모르겠어요"(isUnknownMethod)는 recordMethods가 비므로 서버 NO_IDEA로 매핑.
-                        // 서버 tags는 required + minItems 1이라 빈 배열이면 400.
-                        tags = if (state.isUnknownMethod) {
-                            listOf("NO_IDEA")
-                        } else {
-                            state.recordMethods.map { it.serverValue }.distinct()
-                        },
-                        s3Key = state.profileS3Key,
-                        userBooks = state.lifeBooks.filterNotNull().map { OnboardingBook(it.isbn13) },
-                        introduction = state.selfIntro
+            try {
+                runCatchingCancellable {
+                    RetrofitClient.userApi().postOnboarding(
+                        OnboardingRequest(
+                            name = state.nickname,
+                            gender = state.gender,
+                            birth = state.birthdate,
+                            // "잘 모르겠어요"(isUnknownMethod)는 recordMethods가 비므로 서버 NO_IDEA로 매핑.
+                            // 서버 tags는 required + minItems 1이라 빈 배열이면 400.
+                            tags = if (state.isUnknownMethod) {
+                                listOf("NO_IDEA")
+                            } else {
+                                state.recordMethods.map { it.serverValue }.distinct()
+                            },
+                            s3Key = state.profileS3Key,
+                            userBooks = state.lifeBooks.filterNotNull().map { OnboardingBook(it.isbn13) },
+                            introduction = state.selfIntro
+                        )
                     )
-                )
-            }.onSuccess { response ->
-                if (response.isSuccessful && response.body()?.isSuccess == true) {
-                    _onboardingSubmitState.value = OnboardingSubmitState.Success
-                } else {
-                    // 실패 응답(주로 400/404) — errorBody에서 사용자용 사유를 추출해 토스트로 노출
-                    val msg = parseSubmitErrorMessage(response.errorBody()?.string())
-                    _onboardingSubmitState.value = OnboardingSubmitState.Error(msg)
+                }.onSuccess { response ->
+                    if (response.isSuccessful && response.body()?.isSuccess == true) {
+                        _onboardingSubmitState.value = OnboardingSubmitState.Success
+                    } else {
+                        // 실패 응답(주로 400/404) — errorBody에서 사용자용 사유를 추출해 토스트로 노출
+                        val msg = response.apiFailure("잠시 후 다시 시도해주세요.").message
+                        _onboardingSubmitState.value = OnboardingSubmitState.Error(msg)
+                    }
+                }.onFailure {
+                    // 네트워크 예외 → AuthInterceptor가 전역 에러화면을 이미 띄움. fallback 문구만.
+                    _onboardingSubmitState.value =
+                        OnboardingSubmitState.Error("네트워크 연결을 확인한 뒤 다시 시도해주세요.")
                 }
-            }.onFailure {
-                // 네트워크 예외 → AuthInterceptor가 전역 에러화면을 이미 띄움. fallback 문구만.
-                _onboardingSubmitState.value =
-                    OnboardingSubmitState.Error("네트워크 연결을 확인한 뒤 다시 시도해주세요.")
+            } finally {
+                if (_onboardingSubmitState.value is OnboardingSubmitState.Loading) {
+                    _onboardingSubmitState.value = OnboardingSubmitState.Idle
+                }
             }
         }
     }
@@ -319,21 +329,4 @@ private fun Throwable.toUserMessage(fallback: String): String {
     val beforeColon = raw.substringBefore(":").trim()
     // 콜론 앞에 한글이 있을 때만 분할 결과 사용 (영문 기술 메시지는 fallback 처리)
     return if (beforeColon.any { it in '\uAC00'..'\uD7A3' }) beforeColon else fallback
-}
-
-/**
- * 온보딩 실패 응답에서 사용자에게 보여줄 사유를 추출한다.
- * 검증 오류의 result 배열 첫 메시지를 우선하고, 없으면 최상위 message를 사용한다.
- */
-private fun parseSubmitErrorMessage(errorBody: String?): String {
-    val fallback = "\uC7A0\uC2DC \uD6C4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694."
-    if (errorBody.isNullOrBlank()) return fallback
-    return try {
-        val json = JSONObject(errorBody)
-        val result = json.optJSONArray("result")
-        val fromResult = result?.takeIf { it.length() > 0 }?.optString(0)?.takeIf { it.isNotBlank() }
-        fromResult ?: json.optString("message").takeIf { it.isNotBlank() } ?: fallback
-    } catch (_: Exception) {
-        fallback
-    }
 }

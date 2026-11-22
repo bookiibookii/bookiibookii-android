@@ -54,19 +54,23 @@ data class GroupEditorUiState(
 
     // 수정 모드는 PATCH 가능 필드(그룹명/독서기간/소개/규칙)만 검증 — 도서/교환유형/주소는 수정 불가
     val canSubmit: Boolean
-        get() = if (isEdit) {
-            groupName.isNotBlank() &&
-                groupComment.length <= 500 &&
-                ruleStyle != null &&
-                (1 + customRules.count { it.isNotBlank() }) in 1..5
-        } else {
-            isbn13 != null &&
-                groupName.isNotBlank() &&
-                tradeType != null &&
-                selectedPlaceId != null &&
-                groupComment.length <= 500 &&
-                ruleStyle != null &&
-                (1 + customRules.count { it.isNotBlank() }) in 1..5
+        get() = missingRequirement == null && (1 + customRules.count { it.isNotBlank() }) in 1..5
+
+    // 제출할 수 없는 이유 중 화면에서 가장 위에 있는 필수값 하나. 모두 채웠으면 null
+    val missingRequirement: String?
+        get() {
+            val placeLabel = if (tradeType == ExchangeType.DIRECT) "희망 교환 장소" else "배송지"
+            return when {
+                !isEdit && isbn13 == null -> "도서를 선택해주세요"
+                groupName.isBlank() -> "그룹명을 입력해주세요"
+                !isEdit && tradeType == null -> "교환 유형을 선택해주세요"
+                !isEdit && selectedPlaceId == null ->
+                    if (places.isEmpty() && !placesLoading) "${placeLabel}를 등록해주세요"
+                    else "${placeLabel}를 선택해주세요"
+                ruleStyle == null -> "독서 스타일을 선택해주세요"
+                groupComment.length > 500 -> "그룹 소개는 500자 이하로 작성해주세요"
+                else -> null
+            }
         }
 
     // 수정 모드 변경 여부 비교용 원본 스냅샷

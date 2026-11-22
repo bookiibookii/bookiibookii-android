@@ -223,8 +223,10 @@ fun GroupDetailRoute(
         if (showApplyDialog) {
             Dialog(
                 onDismissRequest = {
-                    showApplyDialog = false
-                    applyViewModel.reset()
+                    if (!applyState.submitting) {
+                        showApplyDialog = false
+                        applyViewModel.reset()
+                    }
                 },
                 properties = DialogProperties(usePlatformDefaultWidth = false),
             ) {
@@ -234,6 +236,7 @@ fun GroupDetailRoute(
                     bookSelected = applyState.isbn13 != null,
                     applyMsg = applyState.applyMsg,
                     canSubmit = applyState.canSubmit && !applyState.submitting,
+                    submitting = applyState.submitting,
                     onQueryChange = applyViewModel::onBookSearchQueryChange,
                     onSearchClick = applyViewModel::searchBooks,
                     onClearClick = applyViewModel::onClearBookSearch,
@@ -241,15 +244,17 @@ fun GroupDetailRoute(
                     showBookDropdown = applyState.showBookDropdown,
                     onDismissBookDropdown = applyViewModel::onDismissBookDropdown,
                     onBookFieldFocused = applyViewModel::onBookFieldFocused,
-                    bookSearchHint = applyState.bookSearchHint,
+                    bookSearchHint = applyState.bookSearchError ?: applyState.bookSearchHint,
                     bookSearchLoading = applyState.bookSearchLoading,
                     onApplyMsgChange = applyViewModel::onApplyMsgChange,
                     onSubmit = {
                         uiState.detail?.let { applyViewModel.apply(it.groupId) }
                     },
                     onDismiss = {
-                        showApplyDialog = false
-                        applyViewModel.reset()
+                        if (!applyState.submitting) {
+                            showApplyDialog = false
+                            applyViewModel.reset()
+                        }
                     },
                     modifier = Modifier.padding(horizontal = 24.dp),
                 )

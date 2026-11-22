@@ -118,10 +118,17 @@ fun GroupEditorRoute(
         uiState = uiState,
         onBookSearchQueryChange = viewModel::onBookSearchQueryChange,
         onSearchBooks = viewModel::searchBooks,
-        onClearBookSearch = viewModel::onClearBookSearch,
+        // 책을 바꾸면 이전 책의 제출 오류는 더 이상 맞지 않는다
+        onClearBookSearch = {
+            submitError = null
+            viewModel.onClearBookSearch()
+        },
         onDismissBookDropdown = viewModel::onDismissBookDropdown,
         onBookFieldFocused = viewModel::onBookFieldFocused,
-        onBookSelect = viewModel::onBookSelect,
+        onBookSelect = { book ->
+            submitError = null
+            viewModel.onBookSelect(book)
+        },
         onGroupNameChange = viewModel::onGroupNameChange,
         onTradeTypeSelect = viewModel::onTradeTypeSelect,
         onPlaceSelect = viewModel::onPlaceSelect,
@@ -142,6 +149,10 @@ fun GroupEditorRoute(
                 submitError = null
                 viewModel.submit()
             }
+        },
+        // 비활성 버튼을 누르면 화면 위쪽부터 따져 처음 빠진 필수값 하나만 알린다
+        onDisabledSubmit = {
+            uiState.missingRequirement?.let { context.showCustomToast(message = it, isSuccess = false) }
         },
         onManageAddress = onManageAddress,
         submitError = submitError,
@@ -169,6 +180,7 @@ fun GroupEditorScreen(
     onRemoveCustomRule: (Int) -> Unit,
     onBack: () -> Unit,
     onSubmit: () -> Unit,
+    onDisabledSubmit: () -> Unit = {},
     onManageAddress: (ExchangeType) -> Unit = {},
     submitError: String? = null,
 ) {
@@ -278,10 +290,11 @@ fun GroupEditorScreen(
                 )
             }
             FooterButton(
-                text = if (uiState.isEdit) "그룹 수정" else "그룹 만들기",
+                text = if (uiState.submitting) "저장 중…" else if (uiState.isEdit) "그룹 수정" else "그룹 만들기",
                 onClick = onSubmit,
                 // 수정 모드는 변경사항이 있을 때만 활성화(isDirty). 비활성 시 FooterButton이 자동 grey 처리
                 enabled = uiState.canSubmit && uiState.isDirty && !uiState.submitting,
+                onDisabledClick = onDisabledSubmit.takeUnless { uiState.submitting },
             )
         }
     }
@@ -432,8 +445,10 @@ private fun BookSearchSection(
                 BasicTextField(
                     value = fieldValue,
                     onValueChange = { newValue ->
+                        val textChanged = fieldValue.text != newValue.text
                         fieldValue = newValue
-                        onQueryChange(newValue.text)
+                        // 커서 이동·IME 조합 종료는 검색어 수정이 아니다.
+                        if (textChanged && !bookSelected) onQueryChange(newValue.text)
                     },
                     // 책을 고르면 더 이상 텍스트를 입력/수정할 수 없게 함 (초기화는 X 버튼으로)
                     enabled = !bookSelected,
