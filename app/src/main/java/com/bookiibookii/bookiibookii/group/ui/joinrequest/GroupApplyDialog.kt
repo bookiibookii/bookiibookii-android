@@ -225,8 +225,10 @@ private fun BookSearchField(
             BasicTextField(
                 value = fieldValue,
                 onValueChange = { newValue ->
+                    val textChanged = fieldValue.text != newValue.text
                     fieldValue = newValue
-                    onQueryChange(newValue.text)
+                    // 커서 이동·IME 조합 종료는 검색어 수정이 아니다.
+                    if (textChanged && !bookSelected) onQueryChange(newValue.text)
                 },
                 // 책을 고르면 입력 세션을 끊어 더 이상 텍스트를 입력/수정할 수 없게 함 (초기화는 X 버튼으로)
                 enabled = !bookSelected,

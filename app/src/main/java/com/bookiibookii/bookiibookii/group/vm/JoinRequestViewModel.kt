@@ -96,10 +96,11 @@ class JoinRequestViewModel : ViewModel() {
         _bookSearchQuery.value = ""
     }
 
-    // 입력 텍스트 변경. 텍스트를 수정하면 기존 책 선택은 해제.
+    // 선택 해제는 X 버튼으로만 한다. 늦은 IME 입력은 선택한 책을 바꾸지 않는다.
     // 쿼리를 디바운스 플로우에도 흘려 타이핑 검색이 동작하게 함
     fun onBookSearchQueryChange(value: String) {
-        _state.update { it.copy(bookSearchQuery = value, isbn13 = null, bookSearchNoResult = false) }
+        if (_state.value.isbn13 != null || _state.value.bookSearchQuery == value) return
+        _state.update { it.copy(bookSearchQuery = value, bookSearchNoResult = false) }
         _bookSearchQuery.value = value
     }
 
