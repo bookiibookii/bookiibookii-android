@@ -106,8 +106,10 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.9.0")
 
     //API 연결 간 의존성 추가
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Retrofit 3·Gson 2.11+는 R8 기본 규칙을 라이브러리에 포함한다 (#506)
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+    implementation("com.google.code.gson:gson:2.15.0")
     implementation("com.squareup.okhttp3:logging-interceptor")
 
     //viewModel

@@ -52,8 +52,6 @@ object S3Uploader {
 
     // 압축된 JPEG 바이트를 presigned URL로 PUT
     private fun putBytes(bytes: ByteArray, presignedPutUrl: String) {
-        // TODO: 추후 로그 삭제
-        android.util.Log.d("IMG_UPLOAD", "upload size=${bytes.size}B (${bytes.size / 1024}KB)")
 
         val requestBody = bytes.toRequestBody(MIME_JPEG.toMediaTypeOrNull())
         val request = Request.Builder()
