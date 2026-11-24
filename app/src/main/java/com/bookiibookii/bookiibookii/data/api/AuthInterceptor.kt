@@ -56,11 +56,6 @@ class AuthInterceptor(
         val originalRequest = chain.request()
         val router = if (originalRequest.url.encodedPath in SELF_ROUTED_PATHS) NO_OP_ROUTER else this.router
 
-        //TODO: 추후 로그 삭제 예정
-        val originalUrl = originalRequest.url.toString()
-        val originalMethod = originalRequest.method
-        Log.d("AUTH_INT", "[ENTER] $originalMethod $originalUrl")
-
         val accessToken = tokenStore.getAccessToken()
 
         val authedRequest = if (accessToken.isNullOrEmpty()) {
@@ -81,9 +76,6 @@ class AuthInterceptor(
                 throw e
             }
         }
-
-        //TODO: 추후 로그 삭제 예정
-        Log.d("AUTH_INT", "[RESP] code=${response.code} ${authedRequest.method} ${authedRequest.url}")
 
         val url = authedRequest.url.toString()
         val method = authedRequest.method
@@ -123,9 +115,6 @@ class AuthInterceptor(
 
             return response
         }
-
-        //TODO: 추후 로그 삭제 예정
-        Log.w("AUTH_INT", "[401] detected at ${authedRequest.method} ${authedRequest.url}")
 
         // refresh 자신이 401이면 루프 방지 (경로 비교로 정확히)
         val path = authedRequest.url.encodedPath

@@ -26,7 +26,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (response.isSuccessful) {
                     _loginResult.value = response.body()
-                    Log.d("SERVER_LOGIN", "성공: ${response.body()}")
+                    // 응답 본문에 토큰이 들어 있어 내용은 남기지 않는다
+                    Log.d("SERVER_LOGIN", "성공")
                 } else {
                     Log.e("SERVER_LOGIN", "실패 코드: ${response.code()}")
                 }

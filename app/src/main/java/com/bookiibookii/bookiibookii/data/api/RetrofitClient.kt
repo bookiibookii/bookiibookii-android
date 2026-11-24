@@ -66,7 +66,6 @@ object RetrofitClient {
             libApi = authedRetrofit.create(LibApi::class.java)
             notiApi = authedRetrofit.create(NotiApi::class.java)
             userApi = authedRetrofit.create(UserApi::class.java)
-            recmApi = authedRetrofit.create(RecmApi::class.java)
             kwdApi = authedRetrofit.create(KwdApi::class.java)
             locationApi = authedRetrofit.create(LocationApi::class.java)
 
@@ -86,7 +85,6 @@ object RetrofitClient {
     private lateinit var libApi: LibApi
     private lateinit var notiApi: NotiApi
     private lateinit var userApi: UserApi
-    private lateinit var recmApi: RecmApi
     private lateinit var kwdApi: KwdApi
     private lateinit var locationApi: LocationApi
 
@@ -98,7 +96,6 @@ object RetrofitClient {
     fun libApi(): LibApi { check(); return libApi }
     fun notiApi(): NotiApi { check(); return notiApi }
     fun userApi(): UserApi { check(); return userApi }
-    fun recmApi(): RecmApi { check(); return recmApi }
     fun kwdApi(): KwdApi { check(); return kwdApi }
     fun locationApi(): LocationApi { check(); return locationApi }
 }

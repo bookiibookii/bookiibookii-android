@@ -65,6 +65,17 @@ android {
             )
             buildConfigField("String", "BASE_URL", "\"https://bookiibookii.gyeonseo.com/\"")
         }
+        // R8 검증용 (#506). release와 같은 최적화를 켜되 debug 키로 서명하고 debug 서버에 붙는다.
+        // 기존 release 설정은 검증이 끝나기 전까지 바꾸지 않는다.
+        // google-services.json은 app/src/qa/에 따로 둔다 (gitignore 대상).
+        create("qa") {
+            initWith(getByName("release"))
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+            buildConfigField("String", "BASE_URL", "\"https://bookii.gyeonseo.com/\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -106,8 +117,10 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.9.0")
 
     //API 연결 간 의존성 추가
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Retrofit 3·Gson 2.11+는 R8 기본 규칙을 라이브러리에 포함한다 (#506)
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+    implementation("com.google.code.gson:gson:2.15.0")
     implementation("com.squareup.okhttp3:logging-interceptor")
 
     //viewModel

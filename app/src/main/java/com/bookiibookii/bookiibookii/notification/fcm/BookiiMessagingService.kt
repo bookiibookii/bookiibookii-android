@@ -24,7 +24,6 @@ class BookiiMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, "onNewToken: $token")
         val prefs = applicationContext.getSharedPreferences("bookii_prefs", android.content.Context.MODE_PRIVATE)
         if (TokenManager.hasAccessToken(applicationContext) && prefs.getBoolean("push_notification_enabled", true)) {
             FcmTokenRegistrar.registerToken(token)
@@ -33,7 +32,8 @@ class BookiiMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        Log.d(TAG, "onMessageReceived from=${message.from}, data=${message.data}")
+        // 알림 데이터에는 사용자 정보가 들어갈 수 있어 키만 남긴다
+        Log.d(TAG, "onMessageReceived keys=${message.data.keys}")
 
         // notification 페이로드 기준
         val title = message.notification?.title ?: "부키부키"
